@@ -1,3 +1,4 @@
+from fastapi import FastAPI, HTTPException
 import modules.scripts as scripts
 import gradio as gr
 import os
@@ -7,14 +8,17 @@ import subprocess
 import platform
 import logging
 import time
-
+import uuid
+import select
+import asyncio
+import subprocess
 from modules import images
 from modules.processing import process_images, Processed
 from modules.processing import Processed
 from modules import script_callbacks, shared
 from modules.shared import opts, cmd_opts, state
 import json
-from typing import Dict, Literal, TypedDict
+from typing import IO, Dict, Literal, TypedDict
 
 cwd = os.path.normpath(os.path.join(__file__, "../../"))
 print(shared.config_filename)
@@ -45,8 +49,8 @@ logger.addHandler(file_handler)
 
 def get_global_conf():
     return {
-        "output_dirs": opts.__getattr__("baidu_netdisk_output_dirs"),
-        "upload_dir": opts.__getattr__("baidu_netdisk_upload_dir"),
+        "output_dirs": opts.data["baidu_netdisk_output_dirs"],
+        "upload_dir": opts.data["baidu_netdisk_upload_dir"],
     }
 
 
@@ -119,14 +123,12 @@ def list_file(cwd="/"):
 
 
 def get_curr_user():
-    # 使用正则表达式解析输出
     match = re.search(
         r"uid:\s*(\d+), 用户名:\s*(\w+),",
         exec_ops("who"),
     )
     if not match:
         return
-    # 获取解析结果
     uid = match.group(1)
     if int(uid) == 0:
         return
@@ -146,37 +148,31 @@ def get_curr_user_name():
 
 not_exists_msg = f"找不到{bin_file_name},下载后放到 {cwd} 文件夹下,重启界面"
 
+
 def upload_file_to_baidu_net_disk(pre_log):
     conf = get_global_conf()
-    dirs = str(conf['output_dirs']).split(',')
-    print(["upload", *dirs, conf['upload_dir']])
-    return exec_ops(["upload", *dirs, conf['upload_dir']])
+    dirs = str(conf["output_dirs"]).split(",")
+    print(["upload", *dirs, conf["upload_dir"]])
+
+    return exec_ops(["upload", *dirs, conf["upload_dir"]])
+
 
 def on_ui_tabs():
     exists = check_bin_exists()
     user = get_curr_user()
     if not exists:
         print(f"\033[31m{not_exists_msg}\033[0m")
-    with gr.Blocks(analytics_enabled=False) as image_browser:
+    with gr.Blocks(analytics_enabled=False) as baidu_netdisk:
         gr.Textbox(not_exists_msg, visible=not exists)
         with gr.Row(visible=bool(exists and not user)) as login_form:
             bduss_input = gr.Textbox(interactive=True, label="输入bduss,完成后回车登录")
         with gr.Row(visible=bool(exists and user)) as operation_form:
-            with gr.Column(scale=5):
-                upload_btn = gr.Button("上传")
+            with gr.Column(scale=2):
                 logout_btn = gr.Button("登出账户")
-            with gr.Column(scale=5):
-                log_text = gr.Textbox(get_curr_user_name(), label="log", elem_id="baidu_netdisk_log")
-
-
-            upload_btn.click(
-                fn=upload_file_to_baidu_net_disk,
-                inputs=log_text,
-                outputs=log_text,
-                # _js="document.querySelector(\"body > gradio-app\").shadowRoot.querySelector(\"#baidu_netdisk_log textarea\").value = 'uploading....'"
-            
-            )
-
+            with gr.Column(scale=8):
+                log_text = gr.HTML(
+                    get_curr_user_name(), elem_id="baidu_netdisk_container"
+                )
             def on_bduss_input_enter(bduss):
                 res = login_by_bduss(bduss=bduss)
                 return (
@@ -196,7 +192,7 @@ def on_ui_tabs():
                 return gr.update(visible=True), gr.update(visible=False)
 
             logout_btn.click(fn=on_logout, outputs=[login_form, operation_form])
-        return ((image_browser, "百度云", "baiduyun"),)
+        return ((baidu_netdisk, "百度云", "baiduyun"),)
 
 
 def on_ui_settings():
@@ -240,6 +236,58 @@ def on_ui_settings():
         )
 
 
+subprocess_cache: dict[str, asyncio.subprocess.Process] = {}
+
+
+def is_io_ready(io: IO[bytes]):
+    return select.select([io], [], [], 0) == ([io], [], [])
+
+
+def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
+    pre = "/baidu_netdisk/"
+
+    @app.get(f"{pre}hello")
+    async def greeting():
+        return "hello"
+
+    @app.post(f"{pre}upload")
+    async def upload():
+        id = str(uuid.uuid4())
+        conf = get_global_conf()
+        dirs = str(conf["output_dirs"]).split(",")
+        with cd(cwd):
+            process = await asyncio.create_subprocess_exec(
+                bin_file_name,
+                "upload",
+                *dirs,
+                conf["upload_dir"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+        subprocess_cache[id] = process
+        return {"id": id}
+
+    @app.get(pre + "upload/status/{id}")
+    async def upload_poll(id):
+        p = subprocess_cache.get(id)
+        if not p:
+            raise HTTPException(status_code=404, detail="找不到该subprocess")
+        running = not isinstance(p.returncode, int)
+        msgs = []
+
+        while True:
+            try:
+                line = await asyncio.wait_for(p.stdout.readline(), timeout=0.3)
+                if not line:
+                    break
+                msgs.append(line)
+            except asyncio.TimeoutError:
+                break
+        return {"running": running, "msgs": msgs, "pCode": p.returncode}
+
+
 script_callbacks.on_ui_settings(on_ui_settings)
 
 script_callbacks.on_ui_tabs(on_ui_tabs)
+script_callbacks.on_app_started(baidu_netdisk_api)
