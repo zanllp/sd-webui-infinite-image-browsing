@@ -19,6 +19,7 @@ from modules import script_callbacks, shared
 from modules.shared import opts, cmd_opts, state
 import json
 from typing import IO, Dict, Literal, TypedDict
+from scripts.log_parser import parse_log_line
 
 cwd = os.path.normpath(os.path.join(__file__, "../../"))
 print(shared.config_filename)
@@ -173,6 +174,7 @@ def on_ui_tabs():
                 log_text = gr.HTML(
                     get_curr_user_name(), elem_id="baidu_netdisk_container"
                 )
+
             def on_bduss_input_enter(bduss):
                 res = login_by_bduss(bduss=bduss)
                 return (
@@ -192,7 +194,7 @@ def on_ui_tabs():
                 return gr.update(visible=True), gr.update(visible=False)
 
             logout_btn.click(fn=on_logout, outputs=[login_form, operation_form])
-        return ((baidu_netdisk, "百度云", "baiduyun"),)
+        return ((baidu_netdisk, "百度云上传", "baiduyun"),)
 
 
 def on_ui_settings():
@@ -223,7 +225,7 @@ def on_ui_settings():
         ("baidu_netdisk_upload_dir", "/stable-diffusion-upload", "百度网盘用于接收上传文件的文件夹地址")
     )
 
-    section = ("baidu-netdisk", "百度云")
+    section = ("baidu-netdisk", "百度云上传")
     # Move historic setting names to current names
     for i in range(len(bd_options)):
         shared.opts.add_option(
@@ -237,10 +239,7 @@ def on_ui_settings():
 
 
 subprocess_cache: dict[str, asyncio.subprocess.Process] = {}
-
-
-def is_io_ready(io: IO[bytes]):
-    return select.select([io], [], [], 0) == ([io], [], [])
+# 使用正则表达式匹配信息
 
 
 def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
@@ -274,17 +273,25 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
         if not p:
             raise HTTPException(status_code=404, detail="找不到该subprocess")
         running = not isinstance(p.returncode, int)
-        msgs = []
+        tasks = []
 
         while True:
             try:
-                line = await asyncio.wait_for(p.stdout.readline(), timeout=0.3)
+                line = await asyncio.wait_for(p.stdout.readline(), timeout=0.1)
+                line = line.decode()
+                # logger.info(line)
                 if not line:
+                    #logger.error(line)
                     break
-                msgs.append(line)
+                if line.isspace():
+                    continue
+                info = parse_log_line(line)
+                #if info is None:
+                    #logger.error(line)
+                tasks.append({"info": info, "log": line})
             except asyncio.TimeoutError:
                 break
-        return {"running": running, "msgs": msgs, "pCode": p.returncode}
+        return {"running": running, "tasks": tasks, "pCode": p.returncode}
 
 
 script_callbacks.on_ui_settings(on_ui_settings)
