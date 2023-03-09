@@ -1,5 +1,7 @@
 # WIP
 # stable-diffusion-webui-baidu-netdisk
+实现通过 Vue+FastApi
+
 stable-diffusion-webui百度云上传拓展。适用于远程云gpu,colab，jupyterlab等需要保存的场合
 <img width="1649" alt="image" src="https://user-images.githubusercontent.com/25872019/224115898-bad5ca33-be39-4999-8ea5-a0a20b073ef8.png">
 
