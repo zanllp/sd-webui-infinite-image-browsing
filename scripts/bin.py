@@ -51,7 +51,10 @@ def download_bin_file():
 
     # 移动文件夹到当前目录下
     os.rename(os.path.join(summary, bin_file_name), bin_file_path)
-
+    try:
+        os.chmod(bin_file_path, 0o755)
+    except Exception:
+        pass
     # 删除下载的压缩包和空的文件夹
     os.remove(download_path)
     os.remove(os.path.join(summary, "README.md"))
