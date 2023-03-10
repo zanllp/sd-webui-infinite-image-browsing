@@ -10,9 +10,10 @@ import uuid
 import asyncio
 import subprocess
 from modules import script_callbacks, shared
+from typing import List,Dict,Union
 from modules.shared import opts
 from scripts.log_parser import parse_log_line
-from scripts.bin import download_bin_file, get_matched_summary, check_bin_exists,cwd, is_win, bin_file_name
+from scripts.bin import download_bin_file, get_matched_summary, check_bin_exists,cwd, bin_file_path, bin_file_name
 
 
 # 创建logger对象，设置日志级别为DEBUG
@@ -38,38 +39,24 @@ logger.addHandler(file_handler)
 
 
 def get_global_conf():
+    default_conf = get_default_conf()
     return {
-        "output_dirs": opts.data["baidu_netdisk_output_dirs"],
-        "upload_dir": opts.data["baidu_netdisk_upload_dir"],
+        "output_dirs": opts.data.get("baidu_netdisk_output_dirs") or default_conf.get("output_dirs"),
+        "upload_dir": opts.data.get("baidu_netdisk_upload_dir") or default_conf.get("upload_dir"),
     }
 
 
-@contextmanager
-def cd(newdir):
-    """
-    更改当前的工作目录，并在with语句块结束后恢复原来的工作目录。
-    """
-    prevdir = os.getcwd()
-    os.chdir(newdir)
-    try:
-        yield
-    finally:
-        os.chdir(prevdir)
 
 
-
-
-
-def exec_ops(args: list[str] | str):
+def exec_ops(args: Union[List[str],str]):
     args = [args] if isinstance(args, str) else args
     res = ""
-    if os.path.exists(os.path.join(cwd, bin_file_name)):
-        with cd(cwd):
-            result = subprocess.run([bin_file_name, *args], capture_output=True)
-            try:
-                res = result.stdout.decode().strip()
-            except UnicodeDecodeError:
-                res = result.stdout.decode("gbk", errors="ignore").strip()
+    if check_bin_exists():
+        result = subprocess.run([bin_file_path, *args], capture_output=True)
+        try:
+            res = result.stdout.decode().strip()
+        except UnicodeDecodeError:
+            res = result.stdout.decode("gbk", errors="ignore").strip()
     logger.info(res)
     return res
 
@@ -192,12 +179,9 @@ def on_ui_tabs():
             logout_btn.click(fn=on_logout, outputs=[login_form, operation_form])
         return ((baidu_netdisk, "百度云上传", "baiduyun"),)
 
-
-def on_ui_settings():
-    bd_options = []
-    # [current setting_name], [default], [label], [old setting_name]
+def get_default_conf():
     conf_g = opts.data
-    default_outputs = ",".join(
+    outputs_dirs = ",".join(
         list(
             filter(
                 bool,
@@ -214,11 +198,22 @@ def on_ui_settings():
             )
         )
     )
+    upload_dir = "/stable-diffusion-upload"
+    return {
+        "output_dirs": outputs_dirs,
+        "upload_dir": upload_dir,
+    }
+
+    
+
+def on_ui_settings():
+    bd_options = []
+    default_conf = get_default_conf()
     bd_options.append(
-        ("baidu_netdisk_output_dirs", default_outputs, "上传的本地文件夹列表，多个文件夹使用逗号分隔")
+        ("baidu_netdisk_output_dirs", default_conf["output_dirs"], "上传的本地文件夹列表，多个文件夹使用逗号分隔")
     )
     bd_options.append(
-        ("baidu_netdisk_upload_dir", "/stable-diffusion-upload", "百度网盘用于接收上传文件的文件夹地址")
+        ("baidu_netdisk_upload_dir", default_conf["upload_dir"], "百度网盘用于接收上传文件的文件夹地址")
     )
 
     section = ("baidu-netdisk", "百度云上传")
@@ -234,8 +229,7 @@ def on_ui_settings():
         )
 
 
-subprocess_cache: dict[str, asyncio.subprocess.Process] = {}
-# 使用正则表达式匹配信息
+subprocess_cache: Dict[str, asyncio.subprocess.Process] = {}
 
 
 def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
@@ -250,16 +244,15 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
         id = str(uuid.uuid4())
         conf = get_global_conf()
         dirs = str(conf["output_dirs"]).split(",")
-        with cd(cwd):
-            process = await asyncio.create_subprocess_exec(
-                bin_file_name,
-                "upload",
-                *dirs,
-                conf["upload_dir"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-
+        
+        process = await asyncio.create_subprocess_exec(
+            bin_file_path,
+            "upload",
+            *dirs,
+            conf["upload_dir"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
         subprocess_cache[id] = process
         return {"id": id}
 

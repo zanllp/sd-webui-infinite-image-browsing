@@ -4,7 +4,7 @@ import os
 import platform
 
 cwd = os.path.normpath(os.path.join(__file__, "../../"))
-is_win = platform.system().lower().index("win") != -1
+is_win = platform.system().lower().find("win") != -1
 bin_file_name = "BaiduPCS-Go.exe" if is_win else "BaiduPCS-Go"
 bin_file_path = os.path.join(cwd, bin_file_name)
 
