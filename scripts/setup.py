@@ -5,26 +5,15 @@ import os
 from contextlib import contextmanager
 import re
 import subprocess
-import platform
 import logging
-import time
 import uuid
-import select
 import asyncio
 import subprocess
-from modules import images
-from modules.processing import process_images, Processed
-from modules.processing import Processed
 from modules import script_callbacks, shared
-from modules.shared import opts, cmd_opts, state
-import json
-from typing import IO, Dict, Literal, TypedDict
+from modules.shared import opts
 from scripts.log_parser import parse_log_line
+from scripts.bin import download_bin_file, get_matched_summary, check_bin_exists,cwd, is_win, bin_file_name
 
-cwd = os.path.normpath(os.path.join(__file__, "../../"))
-print(shared.config_filename)
-is_win = platform.system().lower().index("win") != -1
-bin_file_name = "BaiduPCS-Go.exe" if is_win else "BaiduPCS-Go"
 
 # 创建logger对象，设置日志级别为DEBUG
 logger = logging.getLogger(__name__)
@@ -68,8 +57,7 @@ def cd(newdir):
         os.chdir(prevdir)
 
 
-def check_bin_exists():
-    return os.path.exists(os.path.join(cwd, bin_file_name))
+
 
 
 def exec_ops(args: list[str] | str):
@@ -147,7 +135,7 @@ def get_curr_user_name():
     return res["username"] if res else "未登录"
 
 
-not_exists_msg = f"找不到{bin_file_name},下载后放到 {cwd} 文件夹下,重启界面"
+not_exists_msg = f"找不到{bin_file_name},尝试手动从 {get_matched_summary()[1]} 下载,下载后放到 {cwd} 文件夹下,重启界面"
 
 
 def upload_file_to_baidu_net_disk(pre_log):
@@ -160,9 +148,17 @@ def upload_file_to_baidu_net_disk(pre_log):
 
 def on_ui_tabs():
     exists = check_bin_exists()
-    user = get_curr_user()
     if not exists:
-        print(f"\033[31m{not_exists_msg}\033[0m")
+        try:
+            print("缺少必要的二进制文件，开始下载")
+            download_bin_file()
+            print("done")
+        except Exception as e:
+            print("下载二进制文件时出错：", str(e))
+        exists = check_bin_exists()
+        if not exists:
+            print(f"\033[31m{not_exists_msg}\033[0m")
+    user = get_curr_user()
     with gr.Blocks(analytics_enabled=False) as baidu_netdisk:
         gr.Textbox(not_exists_msg, visible=not exists)
         with gr.Row(visible=bool(exists and not user)) as login_form:

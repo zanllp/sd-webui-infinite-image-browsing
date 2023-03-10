@@ -17,6 +17,3 @@ stable-diffusion-webui百度云上传拓展。适用于远程云gpu,colab,jupyte
 
 
 使用bduss登录，持续改进中
-
-暂时需要手动下载对应的[BaiduPCS-Go二进制文件](https://github.com/qjfoidnh/BaiduPCS-Go/releases/tag/v3.9.0)放到拓展根目录。后面会自动下载
-
