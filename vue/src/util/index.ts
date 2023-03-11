@@ -3,6 +3,7 @@ export function gradioApp() {
   const gradioShadowRoot = elems.length == 0 ? null : elems[0].shadowRoot
   return gradioShadowRoot ? gradioShadowRoot : document;
 }
+
 export const asyncCheck = async<T> (getter: () => T, checkSize = 100, timeout = 1000) => {
   return new Promise<T>(x => {
       const check = (num = 0) => {

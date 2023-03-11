@@ -1,20 +1,5 @@
 (() => {
-  const html = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
-    <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-6bab16e5.js"></script>
-    <link rel="stylesheet" href="/baidu_netdisk/fe-static/assets/index-0f49a3a2.css">
-  </head>
-  <body>
-    <div id="zanllp_dev_gradio_fe"></div>
-    
-  </body>
-</html>
-`
+  const html = `__built_html__`
   const asyncCheck = async (getter, checkSize = 100, timeout = 1000) => {
     return new Promise(x => {
       const check = (num = 0) => {

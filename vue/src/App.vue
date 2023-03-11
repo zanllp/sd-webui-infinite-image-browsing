@@ -68,7 +68,7 @@ const progressPercent = computed(() => progress.value * 100 / max.value)
       </div>
     </div>
     <div class="action-bar">
-      <button @click="onUploadBtnClick" :disabled="uploading">开始上传</button>
+      <a-button @click="onUploadBtnClick" :disabled="uploading">开始上传</a-button>
     </div>
     <div class="log-list" ref="logListEl" v-if="allTaskRecord.length">
       <div v-for="msg, idx in allTaskRecord" :key="idx">
@@ -78,17 +78,6 @@ const progressPercent = computed(() => progress.value * 100 / max.value)
   </div>
 </template>
 <style scoped>
-* {
-  all: revert;
-}
-
-button {
-
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid grey;
-}
-
 .action-bar {
   margin: 16px 0;
 }
