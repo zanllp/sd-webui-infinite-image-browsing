@@ -1,3 +1,5 @@
+import { idKey, type UniqueId } from 'vue3-ts-util'
+
 export function gradioApp() {
   const elems = document.getElementsByTagName('gradio-app')
   const gradioShadowRoot = elems.length == 0 ? null : elems[0].shadowRoot
@@ -19,3 +21,5 @@ export const asyncCheck = async<T> (getter: () => T, checkSize = 100, timeout = 
       check();
   });
 }
+
+export const key = (obj: UniqueId) => obj[idKey]

@@ -9,9 +9,11 @@ import uuid
 import asyncio
 import subprocess
 from modules import script_callbacks, shared
-from typing import List, Dict, Union
+from typing import List, Dict, Literal, Union
 from modules.shared import opts
+from scripts.baiduyun_task import BaiduyunTask
 import datetime
+from pydantic import BaseModel
 from scripts.log_parser import parse_log_line
 from scripts.bin import (
     download_bin_file,
@@ -21,6 +23,7 @@ from scripts.bin import (
     bin_file_path,
     bin_file_name,
 )
+import functools
 
 
 # 创建logger对象，设置日志级别为DEBUG
@@ -241,109 +244,96 @@ def on_ui_settings():
         )
 
 
-class UploadTask:
-    def __init__(self, subprocess: asyncio.subprocess.Process):
-        self.subprocess = subprocess
-        self.id = str(uuid.uuid4())
-        self.start_time = datetime.datetime.now()
-        self.running = True
-        self.logs = []
-        self.raw_logs = []
-        self.files_state = {}
-        self.update_state()
+def singleton_async(fn):
+    @functools.wraps(fn)
+    async def wrapper(*args, **kwargs):
+        key = args[0] if len(args) > 0 else None
+        print(wrapper.busy)
+        print(key)
+        if key in wrapper.busy:
+            raise Exception("Function is busy, please try again later.")
+        wrapper.busy.append(key)
+        try:
+            return await fn(*args, **kwargs)
+        finally:
+            wrapper.busy.remove(key)
 
-    def start_time_human_readable(self):
-        return self.start_time.strftime("%Y-%m-%d %H:%M:%S")
-
-    def update_state(self):
-        self.running = not isinstance(self.subprocess.returncode, int)
-
-    def append_log(self, parsed_log, raw_log):
-        self.raw_logs.append(raw_log)
-        self.logs.append(parsed_log)
-        if isinstance(parsed_log, dict) and "id" in parsed_log:
-            self.files_state[parsed_log["id"]] = parsed_log
-
-
-subprocess_cache: Dict[str, UploadTask] = {}
+    wrapper.busy = []
+    return wrapper
 
 
 def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
-    pre = "/baidu_netdisk/"
+    pre = "/baidu_netdisk"
     app.mount(
-        f"{pre}fe-static",
+        f"{pre}/fe-static",
         StaticFiles(directory=f"{cwd}/vue/dist"),
         name="baidu_netdisk-fe-static",
     )
 
-    @app.get(f"{pre}hello")
+    @app.get(f"{pre}/hello")
     async def greeting():
         return "hello"
 
-    @app.post(f"{pre}upload")
-    async def upload():
-        conf = get_global_conf()
-        dirs = str(conf["output_dirs"]).split(",")
-        process = await asyncio.create_subprocess_exec(
-            bin_file_path,
-            "upload",
-            *dirs,
-            conf["upload_dir"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        task = UploadTask(process)
-        subprocess_cache[task.id] = task
+    class BaiduyunUploadDownloadReq(BaseModel):
+        type: Literal["upload", "download"]
+        send_dirs: str
+        recv_dir: str
+
+    @app.post(f"{pre}/task")
+    async def upload(req: BaiduyunUploadDownloadReq):
+        task = await BaiduyunTask.create(**req.dict())
         return {"id": task.id}
 
-    @app.get(f"{pre}upload/tasks")
+    @app.get(f"{pre}/tasks")
     async def upload_tasks():
         tasks = []
-        for key in subprocess_cache:
-            task = subprocess_cache[key]
+        for key in BaiduyunTask.get_cache():
+            task = BaiduyunTask.get_by_id(key)
             task.update_state()
-            tasks.append(
-                {
-                    "id": key,
-                    "running": task.running,
-                    "start_time": task.start_time_human_readable()
-                }
-            )
-        return {"tasks": tasks}
+            tasks.append(task.get_summary())
+        return {"tasks": list(reversed(tasks))}
 
-    @app.get(pre + "upload/task/{id}/files_state")
+    @app.get(pre + "/task/{id}/files_state")
     async def task_files_stat(id):
-        p = subprocess_cache.get(id)
+        p = BaiduyunTask.get_by_id(id)
         if not p:
             raise HTTPException(status_code=404, detail="找不到该上传任务")
-        return {
-            "files_state": p.files_state
-        }
-        
-
-    @app.get(pre + "upload/status/{id}")
+        return {"files_state": p.files_state}
+    
+    upload_poll_promise_dict = {}
+    @app.get(pre + "/task/{id}/tick")
     async def upload_poll(id):
-        p = subprocess_cache.get(id)
-        if not p:
-            raise HTTPException(status_code=404, detail="找不到该上传任务")
-        tasks = []
-        while True:
-            try:
-                line = await asyncio.wait_for(
-                    p.subprocess.stdout.readline(), timeout=0.1
-                )
-                line = line.decode()
-                if not line:
+        async def get_tick():  
+            task = BaiduyunTask.get_by_id(id)
+            if not task:
+                raise HTTPException(status_code=404, detail="找不到该上传任务")
+            tasks = []
+            while True:
+                try:
+                    line = await asyncio.wait_for(
+                        task.subprocess.stdout.readline(), timeout=0.1
+                    )
+                    line = line.decode()
+                    if not line:
+                        break
+                    if line.isspace():
+                        continue
+                    info = parse_log_line(line)
+                    tasks.append({"info": info, "log": line})
+                    task.append_log(info, line)
+                except asyncio.TimeoutError:
                     break
-                if line.isspace():
-                    continue
-                info = parse_log_line(line)
-                tasks.append({"info": info, "log": line})
-                p.append_log(info, line)
-            except asyncio.TimeoutError:
-                break
-        p.update_state()
-        return {"running": p.running, "tasks": tasks}
+            task.update_state()
+            return {"tasks": tasks, "task_summary": task.get_summary()}
+        
+        res = upload_poll_promise_dict.get(id)
+        if res:
+            res = await res
+        else:
+            upload_poll_promise_dict[id] = asyncio.create_task(get_tick()) 
+            res = await upload_poll_promise_dict[id]
+            upload_poll_promise_dict.pop(id)
+        return res
 
 
 script_callbacks.on_ui_settings(on_ui_settings)
