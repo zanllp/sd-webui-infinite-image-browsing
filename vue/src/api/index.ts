@@ -58,23 +58,56 @@ interface UploadTaskQueued {
   local_file_path: string
 }
 
-export interface UploadTaskStatus {
+export type UploadTaskFileStatus =
+  | UploadTaskFastuploadFailed
+  | UploadTaskFileSkipped
+  | UploadTaskPreparing
+  | UploadTaskQueued
+  | UploadTaskSuccess
+  | UploadTaskFailed
+
+export interface UploadTaskTickStatus {
   log: string
   info:
-    | UploadTaskDone
-    | UploadTaskFastuploadFailed
-    | UploadTaskFileSkipped
-    | UploadTaskPreparing
-    | UploadTaskQueued
-    | UploadTaskStart
-    | UploadTaskSuccess
-    | UploadTaskFailed
+  | UploadTaskDone
+  | UploadTaskStart
+  | UploadTaskFileStatus
 }
 
-export const getUploadTaskStatus = async (id: string) => {
+/**
+ * 获取当前时刻的记录，包含日志输出，文件状态变化
+ */
+export const getUploadTaskTickStatus = async (id: string) => {
   const resp = await axiosInst.get(`/upload/status/${id}`)
   return resp.data as {
     running: boolean
-    tasks: UploadTaskStatus[]
+    tasks: UploadTaskTickStatus[]
+  }
+}
+
+export interface UploadTaskSummary {
+  id: string
+  running: boolean
+  start_time: string
+}
+
+/**
+ * 获取指定任务所有上传文件的状态
+ * @param id 
+ */
+export const getUploadTaskFilesState = async (id: string) => {
+  const resp = await axiosInst.get(`upload/task/${id}/files_state`)
+  return resp.data as {
+    files_state: { [x: string]: UploadTaskFileStatus }
+  }
+}
+
+/**
+ * 获取所有上传文件的简介
+ */
+export const getUploadTasks = async () => {
+  const resp = await axiosInst.get('/upload/tasks')
+  return resp.data as {
+    tasks: UploadTaskSummary[]
   }
 }

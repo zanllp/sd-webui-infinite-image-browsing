@@ -11,6 +11,7 @@ import subprocess
 from modules import script_callbacks, shared
 from typing import List, Dict, Union
 from modules.shared import opts
+import datetime
 from scripts.log_parser import parse_log_line
 from scripts.bin import (
     download_bin_file,
@@ -240,7 +241,31 @@ def on_ui_settings():
         )
 
 
-subprocess_cache: Dict[str, asyncio.subprocess.Process] = {}
+class UploadTask:
+    def __init__(self, subprocess: asyncio.subprocess.Process):
+        self.subprocess = subprocess
+        self.id = str(uuid.uuid4())
+        self.start_time = datetime.datetime.now()
+        self.running = True
+        self.logs = []
+        self.raw_logs = []
+        self.files_state = {}
+        self.update_state()
+
+    def start_time_human_readable(self):
+        return self.start_time.strftime("%Y-%m-%d %H:%M:%S")
+
+    def update_state(self):
+        self.running = not isinstance(self.subprocess.returncode, int)
+
+    def append_log(self, parsed_log, raw_log):
+        self.raw_logs.append(raw_log)
+        self.logs.append(parsed_log)
+        if isinstance(parsed_log, dict) and "id" in parsed_log:
+            self.files_state[parsed_log["id"]] = parsed_log
+
+
+subprocess_cache: Dict[str, UploadTask] = {}
 
 
 def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
@@ -257,10 +282,8 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
 
     @app.post(f"{pre}upload")
     async def upload():
-        id = str(uuid.uuid4())
         conf = get_global_conf()
         dirs = str(conf["output_dirs"]).split(",")
-
         process = await asyncio.create_subprocess_exec(
             bin_file_path,
             "upload",
@@ -269,37 +292,60 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        subprocess_cache[id] = process
-        return {"id": id}
+        task = UploadTask(process)
+        subprocess_cache[task.id] = task
+        return {"id": task.id}
+
+    @app.get(f"{pre}upload/tasks")
+    async def upload_tasks():
+        tasks = []
+        for key in subprocess_cache:
+            task = subprocess_cache[key]
+            task.update_state()
+            tasks.append(
+                {
+                    "id": key,
+                    "running": task.running,
+                    "start_time": task.start_time_human_readable()
+                }
+            )
+        return {"tasks": tasks}
+
+    @app.get(pre + "upload/task/{id}/files_state")
+    async def task_files_stat(id):
+        p = subprocess_cache.get(id)
+        if not p:
+            raise HTTPException(status_code=404, detail="找不到该上传任务")
+        return {
+            "files_state": p.files_state
+        }
+        
 
     @app.get(pre + "upload/status/{id}")
     async def upload_poll(id):
         p = subprocess_cache.get(id)
         if not p:
-            raise HTTPException(status_code=404, detail="找不到该subprocess")
-        running = not isinstance(p.returncode, int)
+            raise HTTPException(status_code=404, detail="找不到该上传任务")
         tasks = []
-
         while True:
             try:
-                line = await asyncio.wait_for(p.stdout.readline(), timeout=0.1)
+                line = await asyncio.wait_for(
+                    p.subprocess.stdout.readline(), timeout=0.1
+                )
                 line = line.decode()
-                # logger.info(line)
                 if not line:
-                    # logger.error(line)
                     break
                 if line.isspace():
                     continue
                 info = parse_log_line(line)
-                # if info is None:
-                # logger.error(line)
                 tasks.append({"info": info, "log": line})
+                p.append_log(info, line)
             except asyncio.TimeoutError:
                 break
-        return {"running": running, "tasks": tasks, "pCode": p.returncode}
+        p.update_state()
+        return {"running": p.running, "tasks": tasks}
 
 
 script_callbacks.on_ui_settings(on_ui_settings)
-
 script_callbacks.on_ui_tabs(on_ui_tabs)
 script_callbacks.on_app_started(baidu_netdisk_api)

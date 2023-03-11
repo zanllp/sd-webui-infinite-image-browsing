@@ -1,15 +1,32 @@
 <!-- eslint-disable no-empty -->
 <script setup lang="ts">
 import { onMounted, ref, nextTick, reactive, computed } from 'vue'
-import { getUploadTaskStatus, greeting, upload, type UploadTaskStatus } from './api'
+import { getUploadTaskFilesState, getUploadTasks, getUploadTaskTickStatus, greeting, upload, type UploadTaskFileStatus, type UploadTaskSummary, type UploadTaskTickStatus } from './api'
 import { Task } from 'vue3-ts-util'
+import { message } from 'ant-design-vue'
+
 const pollTask = ref<ReturnType<typeof createUploadPollTask>>()
-const allTaskRecord = ref([] as UploadTaskStatus[])
+const currUploadTaskTickStatusRecord = ref([] as UploadTaskTickStatus[])
+const taskLatestInfo = reactive(new Map<string, UploadTaskFileStatus>())
+const logListEl = ref<HTMLDivElement>()
+const taskSummaryList = ref([] as UploadTaskSummary[])
+
 onMounted(async () => {
   await greeting()
+  const { tasks } = await getUploadTasks()
+  taskSummaryList.value = tasks
+  const [runningTask] = tasks.filter(v => v.running)
+  if (runningTask) {
+    message.info(`检测到一个运行中的任务，开始还原`)
+    const { files_state } = await getUploadTaskFilesState(runningTask.id)
+    Object.entries(files_state).forEach(([k,v]) => taskLatestInfo.set(k,v))
+    pollTask.value = createUploadPollTask(runningTask.id)
+    pollTask.value.completedTask.then(() => {
+      pollTask.value = undefined
+    })
+  }
 })
-const taskLatestInfo = reactive(new Map<string, UploadTaskStatus['info']>())
-const logListEl = ref<HTMLDivElement>()
+
 const logListScroll2bottom = async () => {
   await nextTick()
   const el = logListEl.value
@@ -20,7 +37,7 @@ const logListScroll2bottom = async () => {
 
 const createUploadPollTask = (id: string) => {
   const task = Task.run({
-    action: () => getUploadTaskStatus(id),
+    action: () => getUploadTaskTickStatus(id),
     pollInterval: 500,
     validator (r) {
       r.tasks.forEach(({ info }) => {
@@ -30,7 +47,7 @@ const createUploadPollTask = (id: string) => {
           taskLatestInfo.set(info.id, info)
         }
       })
-      allTaskRecord.value.push(...r.tasks)
+      currUploadTaskTickStatusRecord.value.push(...r.tasks)
       logListScroll2bottom()
       return !r.running
     }
@@ -38,7 +55,7 @@ const createUploadPollTask = (id: string) => {
   return task
 }
 const onUploadBtnClick = async () => {
-  allTaskRecord.value = []
+  currUploadTaskTickStatusRecord.value = []
   const { id } = await upload()
   pollTask.value = createUploadPollTask(id)
   pollTask.value.completedTask.then(() => {
@@ -70,8 +87,13 @@ const progressPercent = computed(() => progress.value * 100 / max.value)
     <div class="action-bar">
       <a-button @click="onUploadBtnClick" :disabled="uploading">开始上传</a-button>
     </div>
-    <div class="log-list" ref="logListEl" v-if="allTaskRecord.length">
-      <div v-for="msg, idx in allTaskRecord" :key="idx">
+    <div>
+      <div v-for="task in taskSummaryList" :key="task.id">
+        在 {{ task.start_time }} 启动的上传任务: {{ task.running ? '进行中' : '已完成' }}
+      </div>
+    </div>
+    <div class="log-list" ref="logListEl" v-if="currUploadTaskTickStatusRecord.length">
+      <div v-for="msg, idx in currUploadTaskTickStatusRecord" :key="idx">
         {{ msg.log }}
       </div>
     </div>

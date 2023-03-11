@@ -8,7 +8,14 @@ const isProd = env.NODE_ENV === "production"
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: isProd ? '/baidu_netdisk/fe-static' : '/',
+  base: isProd ? '/baidu_netdisk/fe-static' : '/', css: {
+    preprocessorOptions: {
+      modules: true,
+      less: {
+        javascriptEnabled: true,
+      }
+    }
+  },
   plugins: [vue(),
   Components({
     resolvers: [AntDesignVueResolver({ importStyle: 'css' })],
@@ -21,7 +28,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/baidu_netdisk/': {
-        target: 'http://127.0.0.1:7860/'
+        target: 'http://127.0.0.1:7861/'
       }
     }
   }
