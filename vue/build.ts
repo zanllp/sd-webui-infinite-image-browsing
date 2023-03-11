@@ -1,5 +1,5 @@
 import { execSync } from 'child_process'
-import { readdir, readFile, rm, writeFile } from 'fs/promises'
+import { readFile, rm, writeFile } from 'fs/promises'
 
 const main = async () => {
   console.log(execSync("yarn build").toString())
@@ -9,7 +9,7 @@ const main = async () => {
   } catch (error) {
     
   }
-  const html = await readFile("dist/index.html")
+  const html = (await readFile("dist/index.html")).toString()
   const js = (await readFile("index.tpl.js")).toString().replace("__built_html__", html)
   await writeFile("../javascript/index.js", js)
 }

@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { onMounted, ref, nextTick, reactive, computed } from 'vue'
 import { getUploadTaskStatus, greeting, upload, type UploadTaskStatus } from './api'
-import { Task } from './util/pollTask'
+import { Task } from 'vue3-ts-util'
 const pollTask = ref<ReturnType<typeof createUploadPollTask>>()
 const allTaskRecord = ref([] as UploadTaskStatus[])
 onMounted(async () => {

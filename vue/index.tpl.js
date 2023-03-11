@@ -16,6 +16,7 @@
     });
   }
 
+  // eslint-disable-next-line no-undef
   asyncCheck(() => gradioApp().querySelector("#baidu_netdisk_container_wrapper"), 500, Infinity).then((el) => {
     /**
      * @type {HTMLDivElement}

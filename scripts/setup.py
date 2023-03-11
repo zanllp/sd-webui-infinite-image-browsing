@@ -9,10 +9,17 @@ import uuid
 import asyncio
 import subprocess
 from modules import script_callbacks, shared
-from typing import List,Dict,Union
+from typing import List, Dict, Union
 from modules.shared import opts
 from scripts.log_parser import parse_log_line
-from scripts.bin import download_bin_file, get_matched_summary, check_bin_exists,cwd, bin_file_path, bin_file_name
+from scripts.bin import (
+    download_bin_file,
+    get_matched_summary,
+    check_bin_exists,
+    cwd,
+    bin_file_path,
+    bin_file_name,
+)
 
 
 # 创建logger对象，设置日志级别为DEBUG
@@ -40,14 +47,14 @@ logger.addHandler(file_handler)
 def get_global_conf():
     default_conf = get_default_conf()
     return {
-        "output_dirs": opts.data.get("baidu_netdisk_output_dirs") or default_conf.get("output_dirs"),
-        "upload_dir": opts.data.get("baidu_netdisk_upload_dir") or default_conf.get("upload_dir"),
+        "output_dirs": opts.data.get("baidu_netdisk_output_dirs")
+        or default_conf.get("output_dirs"),
+        "upload_dir": opts.data.get("baidu_netdisk_upload_dir")
+        or default_conf.get("upload_dir"),
     }
 
 
-
-
-def exec_ops(args: Union[List[str],str]):
+def exec_ops(args: Union[List[str], str]):
     args = [args] if isinstance(args, str) else args
     res = ""
     if check_bin_exists():
@@ -121,7 +128,9 @@ def get_curr_user_name():
     return res["username"] if res else "未登录"
 
 
-not_exists_msg = f"找不到{bin_file_name},尝试手动从 {get_matched_summary()[1]} 下载,下载后放到 {cwd} 文件夹下,重启界面"
+not_exists_msg = (
+    f"找不到{bin_file_name},尝试手动从 {get_matched_summary()[1]} 下载,下载后放到 {cwd} 文件夹下,重启界面"
+)
 
 
 def upload_file_to_baidu_net_disk(pre_log):
@@ -150,11 +159,11 @@ def on_ui_tabs():
         with gr.Row(visible=bool(exists and not user)) as login_form:
             bduss_input = gr.Textbox(interactive=True, label="输入bduss,完成后回车登录")
         with gr.Row(visible=bool(exists and user)) as operation_form:
-            with gr.Column(scale=2):
-                logout_btn = gr.Button("登出账户")
-            with gr.Column(scale=8):
-                log_text = gr.HTML("如果你看到这个那说明此项那说明出现了问题", elem_id="baidu_netdisk_container_wrapper"
+            with gr.Column():
+                html_container = gr.HTML(
+                    "如果你看到这个那说明此项那说明出现了问题", elem_id="baidu_netdisk_container_wrapper"
                 )
+                logout_btn = gr.Button("登出账户")
 
             def on_bduss_input_enter(bduss):
                 res = login_by_bduss(bduss=bduss)
@@ -167,7 +176,7 @@ def on_ui_tabs():
             bduss_input.submit(
                 on_bduss_input_enter,
                 inputs=[bduss_input],
-                outputs=[log_text, operation_form, login_form],
+                outputs=[html_container, operation_form, login_form],
             )
 
             def on_logout():
@@ -176,6 +185,7 @@ def on_ui_tabs():
 
             logout_btn.click(fn=on_logout, outputs=[login_form, operation_form])
         return ((baidu_netdisk, "百度云上传", "baiduyun"),)
+
 
 def get_default_conf():
     conf_g = opts.data
@@ -202,13 +212,16 @@ def get_default_conf():
         "upload_dir": upload_dir,
     }
 
-    
 
 def on_ui_settings():
     bd_options = []
     default_conf = get_default_conf()
     bd_options.append(
-        ("baidu_netdisk_output_dirs", default_conf["output_dirs"], "上传的本地文件夹列表，多个文件夹使用逗号分隔")
+        (
+            "baidu_netdisk_output_dirs",
+            default_conf["output_dirs"],
+            "上传的本地文件夹列表，多个文件夹使用逗号分隔",
+        )
     )
     bd_options.append(
         ("baidu_netdisk_upload_dir", default_conf["upload_dir"], "百度网盘用于接收上传文件的文件夹地址")
@@ -232,7 +245,11 @@ subprocess_cache: Dict[str, asyncio.subprocess.Process] = {}
 
 def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
     pre = "/baidu_netdisk/"
-    app.mount(f"{pre}fe-static", StaticFiles(directory=f"{cwd}/vue/dist"), name="baidu_netdisk-fe-static")
+    app.mount(
+        f"{pre}fe-static",
+        StaticFiles(directory=f"{cwd}/vue/dist"),
+        name="baidu_netdisk-fe-static",
+    )
 
     @app.get(f"{pre}hello")
     async def greeting():
@@ -243,7 +260,7 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
         id = str(uuid.uuid4())
         conf = get_global_conf()
         dirs = str(conf["output_dirs"]).split(",")
-        
+
         process = await asyncio.create_subprocess_exec(
             bin_file_path,
             "upload",
@@ -269,13 +286,13 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
                 line = line.decode()
                 # logger.info(line)
                 if not line:
-                    #logger.error(line)
+                    # logger.error(line)
                     break
                 if line.isspace():
                     continue
                 info = parse_log_line(line)
-                #if info is None:
-                    #logger.error(line)
+                # if info is None:
+                # logger.error(line)
                 tasks.append({"info": info, "log": line})
             except asyncio.TimeoutError:
                 break

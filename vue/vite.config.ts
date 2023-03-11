@@ -3,10 +3,12 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite'
 import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers'
+import { env } from 'node:process'
+const isProd = env.NODE_ENV === "production"
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: 'baidu_netdisk/fe-static',
+  base: isProd ? '/baidu_netdisk/fe-static' : '/',
   plugins: [vue(),
   Components({
     resolvers: [AntDesignVueResolver({ importStyle: 'css' })],
