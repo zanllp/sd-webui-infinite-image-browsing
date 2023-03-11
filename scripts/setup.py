@@ -1,8 +1,7 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 import modules.scripts as scripts
 import gradio as gr
-import os
-from contextlib import contextmanager
 import re
 import subprocess
 import logging
@@ -154,8 +153,7 @@ def on_ui_tabs():
             with gr.Column(scale=2):
                 logout_btn = gr.Button("登出账户")
             with gr.Column(scale=8):
-                log_text = gr.HTML(
-                    get_curr_user_name(), elem_id="baidu_netdisk_container"
+                log_text = gr.HTML("如果你看到这个那说明此项那说明出现了问题", elem_id="baidu_netdisk_container_wrapper"
                 )
 
             def on_bduss_input_enter(bduss):
@@ -234,6 +232,7 @@ subprocess_cache: Dict[str, asyncio.subprocess.Process] = {}
 
 def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
     pre = "/baidu_netdisk/"
+    app.mount(f"{pre}fe-static", StaticFiles(directory=f"{cwd}/vue/dist"), name="baidu_netdisk-fe-static")
 
     @app.get(f"{pre}hello")
     async def greeting():

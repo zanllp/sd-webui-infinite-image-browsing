@@ -52,7 +52,7 @@ def download_bin_file():
     # 移动文件夹到当前目录下
     os.rename(os.path.join(summary, bin_file_name), bin_file_path)
     try:
-        os.chmod(bin_file_path, 0o755)
+        os.chmod(bin_file_path, 0o755) # unix only
     except Exception:
         pass
     # 删除下载的压缩包和空的文件夹
