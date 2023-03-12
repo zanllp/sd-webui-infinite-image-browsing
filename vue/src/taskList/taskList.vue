@@ -64,9 +64,9 @@ const createNewTask = async (idx: number) => {
 const createPollTask = (id: string) => {
   store.taskLogMap.delete(id)
   store.taskLogMap.set(id, [])
-  return Task.run({
+  const task = Task.run({
     action: () => getUploadTaskTickStatus(id),
-    pollInterval: 500,
+    pollInterval: store.pollInterval * 1000,
     validator (r) {
       store.taskLogMap.get(id)!.push(...r.tasks)
       const idx = tasks.value.findIndex(v => v.id === id)
@@ -74,6 +74,8 @@ const createPollTask = (id: string) => {
       return !r.task_summary.running
     }
   })
+  store.queue.pushAction(() => task.completedTask) // 使用queue来判断是否所有任务都已经完成
+  return task
 }
 
 const getIntPercent = (task: UploadTaskSummary) => parseInt((((task.n_failed_files + task.n_success_files) / task.n_files) * 100).toString())
@@ -106,7 +108,7 @@ const addDir2task = (idx: number, dir: string) => {
 <template>
   <div class="wrapper" @click="showDirAutoCompletedIdx = -1">
     <a-select style="display: none" />
-    <a-button @click="addEmptyTask">
+    <a-button @click="addEmptyTask" block>
       <template>
         <plus-outlined />
       </template>
@@ -129,8 +131,9 @@ const addDir2task = (idx: number, dir: string) => {
           <a-textarea auto-size :disabled="task.running" v-model:value="task.send_dirs"
             placeholder="发送文件的文件夹,多个文件夹使用逗号或者换行分隔"></a-textarea>
           <div v-if="idx === showDirAutoCompletedIdx" class="auto-completed-dirs">
-            <a-tooltip v-for="item, tagIdx in autoCompletedDirList" :key="item.dir" :title="item.dir+ '  点击添加'">
-              <a-tag :visible="!task.send_dirs.includes(item.dir)" :color="colors[tagIdx % colors.length]" @click="addDir2task(idx, item.dir)">{{ item.zh}}</a-tag>
+            <a-tooltip v-for="item, tagIdx in autoCompletedDirList" :key="item.dir" :title="item.dir + '  点击添加'">
+              <a-tag :visible="!task.send_dirs.includes(item.dir)" :color="colors[tagIdx % colors.length]"
+                @click="addDir2task(idx, item.dir)">{{ item.zh }}</a-tag>
             </a-tooltip>
           </div>
         </a-form-item>
@@ -138,9 +141,9 @@ const addDir2task = (idx: number, dir: string) => {
           <a-input v-model:value="task.recv_dir" :disabled="task.running" placeholder="用于接收的文件夹，可以使用占位符进行动态生成"></a-input>
         </a-form-item>
         <!--a-form-item label="任务类型">
-                        <search-select v-model:value="task.type" :disabled="task.running" :options="['upload', 'download']"
-                          :conv="{ value: (v) => v, text: (v) => (v === 'upload' ? '上传' : '下载') }"></search-select>
-                      </a-form-item-->
+                          <search-select v-model:value="task.type" :disabled="task.running" :options="['upload', 'download']"
+                            :conv="{ value: (v) => v, text: (v) => (v === 'upload' ? '上传' : '下载') }"></search-select>
+                        </a-form-item-->
       </a-form>
       <div class="action-bar">
         <a-button @click="openLogDetail(idx)" v-if="store.taskLogMap.get(task.id)">查看详细日志</a-button>

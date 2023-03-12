@@ -10,9 +10,16 @@ const percent = computed(() => !store.splitView.open ? 100 : store.splitView.per
 </script>
 
 <template>
-  <div class="split-view-container">
+  <div class="container">
+    <div class="global-setting">
 
-    <split-view :percent="percent">
+      <a-form layout="inline">
+      <a-form-item label="轮询间隔" >
+        <a-input-number v-model:value="store.pollInterval" :min="0.5" :disabled="!store.queue.isIdle"/> (s) <sub>越小对网络压力越大</sub>
+      </a-form-item>
+    </a-form>
+    </div>
+    <split-view v-model:percent="percent">
       <template #left>
         <task-list>
 
@@ -25,8 +32,14 @@ const percent = computed(() => !store.splitView.open ? 100 : store.splitView.per
   </div>
 </template>
 <style scoped lang="scss">
-.split-view-container {
-  height: 95vh; // todo 暂时这样，这个不重要
+.global-setting {
+  padding: 8px;
+  margin: 16px;
+  border-radius: 8px;
+  background: #fafafa;
+}
+.container {
+  height: 100vh; // todo 暂时这样，这个不重要
   width: 95%;
 }
 </style>
