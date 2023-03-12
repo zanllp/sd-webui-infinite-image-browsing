@@ -24,7 +24,7 @@ const copy = (text: string) => {
       </a-form>
       <div class="actions-bar">
         <a-button @click="copy('<#%Y-%m-%d#>')">复制日期占位符</a-button>
-        <a-button @click="copy('<#%H-%M-%S#>')">复制日期占位符</a-button>
+        <a-button @click="copy('<#%H-%M-%S#>')">复制时间占位符</a-button>
         <a-button @click="copy('<#%Y-%m-%d %H-%M-%S#>')">复制日期+时间占位符</a-button>
       </div>
     </div>
