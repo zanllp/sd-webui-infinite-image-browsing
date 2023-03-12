@@ -6,7 +6,7 @@ stable-diffusion-webui百度云上传拓展。适用于远程云gpu,colab,jupyte
 2. 支持从历史记录中创建新的任务
 3. 关闭页面后任务不停，重新打开后恢复进度显示 (这个很重要，sd-webui一刷新页面进度全没了)
 4. 在浏览器前端保存已完成记录，后端保存进行中的任务，对于非跨域链接，历史记录共享
-5. 从stable-diffusion-webui中获取配置，方便进行快速的文件夹输入
+5. 自动从stable-diffusion-webui中获取配置，可以直接快速的文件夹输入
 6. 发送和接受路径均支持使用时间日期占位符
 7. 使用bduss登录，参考 https://blog.csdn.net/ykiwmy/article/details/103730962 ，或者自己搜索
 
@@ -16,3 +16,6 @@ stable-diffusion-webui百度云上传拓展。适用于远程云gpu,colab,jupyte
 <img width="1887" alt="image" src="https://user-images.githubusercontent.com/25872019/224553431-0bb3f9f2-f81a-452d-a024-4b1030ccdca1.png">
 
 <img width="1315" alt="image" src="https://user-images.githubusercontent.com/25872019/224553787-82c4964d-870e-4674-ae93-4ea7e62068ee.png">
+
+
+![image](https://user-images.githubusercontent.com/25872019/224564296-c6d5b0ec-f852-42fd-8bb3-4cac57560995.png)
