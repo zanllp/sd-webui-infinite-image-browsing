@@ -103,13 +103,14 @@ const addDir2task = (idx: number, dir: string) => {
     task.send_dirs += ` , ${dir}`
   }
 }
+
 </script>
 
 <template>
   <div class="wrapper" @click="showDirAutoCompletedIdx = -1">
     <a-select style="display: none" />
-    <a-button @click="addEmptyTask" block>
-      <template>
+    <a-button @click="addEmptyTask" block style="border-radius: 8px;">
+      <template #icon>
         <plus-outlined />
       </template>
       添加一个任务
@@ -129,7 +130,7 @@ const addDir2task = (idx: number, dir: string) => {
       <a-form layout="vertical" label-align="left">
         <a-form-item label="发送的文件夹" @click.stop="showDirAutoCompletedIdx = idx">
           <a-textarea auto-size :disabled="task.running" v-model:value="task.send_dirs"
-            placeholder="发送文件的文件夹,多个文件夹使用逗号或者换行分隔"></a-textarea>
+            placeholder="发送文件的文件夹,多个文件夹使用逗号或者换行分隔。支持使用占位符例如stable-diffusion-webui最常用表示日期的<#%Y-%m-%d#>"></a-textarea>
           <div v-if="idx === showDirAutoCompletedIdx" class="auto-completed-dirs">
             <a-tooltip v-for="item, tagIdx in autoCompletedDirList" :key="item.dir" :title="item.dir + '  点击添加'">
               <a-tag :visible="!task.send_dirs.includes(item.dir)" :color="colors[tagIdx % colors.length]"
@@ -138,7 +139,7 @@ const addDir2task = (idx: number, dir: string) => {
           </div>
         </a-form-item>
         <a-form-item label="百度云文件夹">
-          <a-input v-model:value="task.recv_dir" :disabled="task.running" placeholder="用于接收的文件夹，可以使用占位符进行动态生成"></a-input>
+          <a-input v-model:value="task.recv_dir" :disabled="task.running" placeholder="用于接收的文件夹，支持使用占位符例如stable-diffusion-webui最常用表示日期的<#%Y-%m-%d#>"></a-input>
         </a-form-item>
         <!--a-form-item label="任务类型">
                           <search-select v-model:value="task.type" :disabled="task.running" :options="['upload', 'download']"
@@ -160,9 +161,6 @@ const addDir2task = (idx: number, dir: string) => {
   </div>
 </template>
 <style scoped lang="scss">
-.flex-placeholder {
-  flex: 1;
-}
 
 .wrapper {
   height: 100%;

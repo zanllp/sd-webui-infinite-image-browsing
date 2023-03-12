@@ -1,8 +1,9 @@
 import asyncio
 import datetime
 import os
-from typing import List, Dict, Union, Literal
+from typing import Dict, Literal
 import uuid
+import re
 import subprocess
 from scripts.bin import bin_file_path
 
@@ -74,7 +75,7 @@ class BaiduyunTask:
             bin_file_path,
             type,
             *process_path_arr(str(send_dirs).split(",")),
-            recv_dir,
+            parse_and_replace_time(recv_dir),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
@@ -96,7 +97,7 @@ baiduyun_task_cache: Dict[str, BaiduyunTask] = {}
 
 def process_path_arr(path_arr):
     """
-    处理路径
+    处理路径，顺便替换模板
     如果是绝对路径直接返回，
     如果是相对路径则与当前工作目录拼接返回。
     """
@@ -107,4 +108,12 @@ def process_path_arr(path_arr):
             result.append(path)
         else:
             result.append(os.path.join(cwd, path))
-    return result
+    return list(map(parse_and_replace_time, result))
+
+def parse_and_replace_time(s):
+    pattern = r'<#(.+?)#>'
+    matches = re.findall(pattern, s)
+    for match in matches:
+        formatted_time = datetime.datetime.now().strftime(match)
+        s = s.replace(f'<#{match}#>', formatted_time)
+    return s

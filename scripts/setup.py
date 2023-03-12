@@ -212,7 +212,7 @@ def get_default_conf():
     )
     upload_dir = "/stable-diffusion-upload"
     return {
-        #"output_dirs": outputs_dirs,
+        "output_dirs": outputs_dirs,
         "upload_dir": upload_dir,
     }
 
