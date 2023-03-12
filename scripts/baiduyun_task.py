@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import os
 from typing import List, Dict, Union, Literal
 import uuid
 import subprocess
@@ -72,7 +73,7 @@ class BaiduyunTask:
         process = await asyncio.create_subprocess_exec(
             bin_file_path,
             type,
-            *str(send_dirs).split(","),
+            *process_path_arr(str(send_dirs).split(",")),
             recv_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -92,3 +93,18 @@ class BaiduyunTask:
 
 
 baiduyun_task_cache: Dict[str, BaiduyunTask] = {}
+
+def process_path_arr(path_arr):
+    """
+    处理路径
+    如果是绝对路径直接返回，
+    如果是相对路径则与当前工作目录拼接返回。
+    """
+    cwd = os.getcwd()
+    result = []
+    for path in path_arr:
+        if os.path.isabs(path):
+            result.append(path)
+        else:
+            result.append(os.path.join(cwd, path))
+    return result

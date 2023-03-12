@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import { key } from '@/util'
+import { key, pick } from '@/util'
 import { onMounted, ref } from 'vue'
-import { SearchSelect, type WithId, typedID, Task } from 'vue3-ts-util'
+import { type WithId, typedID, Task } from 'vue3-ts-util'
 import { PlusOutlined, SyncOutlined } from '@/icon'
-import { createBaiduYunTask, getUploadTasks, getUploadTaskTickStatus, type UploadTaskSummary } from '@/api'
+import { createBaiduYunTask, getGlobalSetting, getUploadTasks, getUploadTaskTickStatus, type UploadTaskSummary } from '@/api'
 import { message } from 'ant-design-vue'
-import { pick } from 'lodash-es'
 import { useTaskListStore } from '@/store/useTaskListStore'
+import { getAutoCompletedTagList } from './autoComplete'
+
 const tasks = ref<WithId<UploadTaskSummary>[]>([])
 const ID = typedID<UploadTaskSummary>(true)
 const store = useTaskListStore()
+const autoCompletedDirList = ref([] as ReturnType<typeof getAutoCompletedTagList>)
+const showDirAutoCompletedIdx = ref(-1)
 
 onMounted(async () => {
+  getGlobalSetting().then((resp) => {
+    autoCompletedDirList.value = getAutoCompletedTagList(resp).filter(v => v.dir.trim())
+  })
   const resp = await getUploadTasks()
   tasks.value = resp.tasks.map(ID)
   const runningTasks = tasks.value.filter(v => v.running)
@@ -43,6 +49,11 @@ const addEmptyTask = () => {
 
 const createNewTask = async (idx: number) => {
   const task = tasks.value[idx]
+  task.send_dirs = task.send_dirs.split(/,，\n/).map(v => v.trim()).filter(v => v).join()
+  task.recv_dir = task.recv_dir.trim()
+  if (!task.recv_dir.startsWith('/')) {
+    return message.error('百度云接收位置必须以 “/” 开头')
+  }
   task.running = true
   task.n_files = 100
   const resp = await createBaiduYunTask(task)
@@ -72,7 +83,7 @@ const copyFrom = (idx: number) => {
   const prevTask = tasks.value[idx]
   tasks.value.unshift({
     ...getEmptyTask(),
-    ...pick(prevTask, ['send_dirs', 'type', 'recv_dir'])
+    ...pick(prevTask, 'send_dirs', 'type', 'recv_dir')
   })
   message.success('复制完成，已添加到最前端')
 }
@@ -81,10 +92,19 @@ const openLogDetail = (idx: number) => {
   store.currLogDetailId = tasks.value[idx].id
   store.splitView.open = true
 }
+const colors = ['#f5222d', '#1890ff', '#ff3125', '#d46b08', '#007bff', '#52c41a', '#13c2c2', '#fa541c', '#eb2f96', '#2f54eb']
+const addDir2task = (idx: number, dir: string) => {
+  const task = tasks.value[idx]
+  if (/[,，\n]$/.test(task.send_dirs) || !task.send_dirs.trim()) {
+    task.send_dirs += dir
+  } else {
+    task.send_dirs += ` , ${dir}`
+  }
+}
 </script>
 
 <template>
-  <div class="wrapper">
+  <div class="wrapper" @click="showDirAutoCompletedIdx = -1">
     <a-select style="display: none" />
     <a-button @click="addEmptyTask">
       <template>
@@ -105,17 +125,22 @@ const openLogDetail = (idx: number) => {
         </div>
       </div>
       <a-form layout="vertical" label-align="left">
-        <a-form-item label="发送的文件夹">
+        <a-form-item label="发送的文件夹" @click.stop="showDirAutoCompletedIdx = idx">
           <a-textarea auto-size :disabled="task.running" v-model:value="task.send_dirs"
-            placeholder="发送文件的文件夹,多个文件夹使用逗号分隔"></a-textarea>
+            placeholder="发送文件的文件夹,多个文件夹使用逗号或者换行分隔"></a-textarea>
+          <div v-if="idx === showDirAutoCompletedIdx" class="auto-completed-dirs">
+            <a-tooltip v-for="item, tagIdx in autoCompletedDirList" :key="item.dir" :title="item.dir+ '  点击添加'">
+              <a-tag :visible="!task.send_dirs.includes(item.dir)" :color="colors[tagIdx % colors.length]" @click="addDir2task(idx, item.dir)">{{ item.zh}}</a-tag>
+            </a-tooltip>
+          </div>
         </a-form-item>
         <a-form-item label="百度云文件夹">
           <a-input v-model:value="task.recv_dir" :disabled="task.running" placeholder="用于接收的文件夹，可以使用占位符进行动态生成"></a-input>
         </a-form-item>
         <!--a-form-item label="任务类型">
-                <search-select v-model:value="task.type" :disabled="task.running" :options="['upload', 'download']"
-                  :conv="{ value: (v) => v, text: (v) => (v === 'upload' ? '上传' : '下载') }"></search-select>
-              </a-form-item-->
+                        <search-select v-model:value="task.type" :disabled="task.running" :options="['upload', 'download']"
+                          :conv="{ value: (v) => v, text: (v) => (v === 'upload' ? '上传' : '下载') }"></search-select>
+                      </a-form-item-->
       </a-form>
       <div class="action-bar">
         <a-button @click="openLogDetail(idx)" v-if="store.taskLogMap.get(task.id)">查看详细日志</a-button>
@@ -140,6 +165,7 @@ const openLogDetail = (idx: number) => {
   height: 100%;
   overflow: auto;
   padding: 8px;
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -165,6 +191,10 @@ const openLogDetail = (idx: number) => {
       flex-direction: row;
       margin-bottom: 16px;
 
+    }
+
+    .auto-completed-dirs {
+      margin-top: 16px;
     }
   }
 }

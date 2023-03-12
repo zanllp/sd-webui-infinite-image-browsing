@@ -24,8 +24,9 @@ const percent = computed(() => !store.splitView.open ? 100 : store.splitView.per
     </split-view>
   </div>
 </template>
-<style scoped>
+<style scoped lang="scss">
 .split-view-container {
-  height: 70vh;
+  height: 95vh; // todo 暂时这样，这个不重要
+  width: 95%;
 }
 </style>

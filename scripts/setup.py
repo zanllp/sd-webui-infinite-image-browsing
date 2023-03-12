@@ -212,7 +212,7 @@ def get_default_conf():
     )
     upload_dir = "/stable-diffusion-upload"
     return {
-        "output_dirs": outputs_dirs,
+        #"output_dirs": outputs_dirs,
         "upload_dir": upload_dir,
     }
 
@@ -273,6 +273,13 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
     @app.get(f"{pre}/hello")
     async def greeting():
         return "hello"
+    
+    @app.get(f'{pre}/global_setting')
+    async def global_setting():
+        return {
+            "global_setting": opts.data,
+            "default_conf": get_default_conf()
+        }
 
     class BaiduyunUploadDownloadReq(BaseModel):
         type: Literal["upload", "download"]

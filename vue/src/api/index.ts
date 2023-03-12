@@ -1,4 +1,5 @@
 import axios from 'axios'
+import type { GlobalSettingPart } from './type'
 const axiosInst = axios.create({
   baseURL: '/baidu_netdisk'
 })
@@ -116,5 +117,15 @@ export const getUploadTasks = async () => {
   const resp = await axiosInst.get('/tasks')
   return resp.data as {
     tasks: UploadTaskSummary[]
+  }
+}
+
+export const getGlobalSetting = async () => {
+  const resp = await axiosInst.get('/global_setting')
+  return resp.data as {
+    global_setting: GlobalSettingPart,
+    default_conf: {
+      upload_dir: string
+    }
   }
 }

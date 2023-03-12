@@ -23,3 +23,21 @@ export const asyncCheck = async<T> (getter: () => T, checkSize = 100, timeout = 
 }
 
 export const key = (obj: UniqueId) => obj[idKey]
+export type Dict<T = any> = Record<string, T>
+/**
+ * 推导比loadsh好
+ * @param v 
+ * @param keys 
+ */
+export const pick = <T extends Dict, keys extends Array<keyof T>> (v: T, ...keys: keys) => {
+    return keys.reduce((p, c) => {
+      p[c] = v?.[c]
+      return p
+    }, {} as Pick<T, keys[number]>)
+  }
+  /**
+ * 获取一个异步函数的返回类型，
+ *
+ * ReturnTypeAsync\<typeof fn\>
+ */
+export type ReturnTypeAsync<T extends (...arg: any) => Promise<any>> = Awaited<ReturnType<T>>
