@@ -1,7 +1,8 @@
-import type { UploadTaskTickStatus } from '@/api'
+import type { UploadTaskSummary, UploadTaskTickStatus } from '@/api'
 import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
 import { FetchQueue } from 'vue3-ts-util'
+import type { WithId } from 'vue3-ts-util'
 
 export const useTaskListStore = defineStore('useTaskListStore', () => {
   const taskLogMap = ref(new Map<string, UploadTaskTickStatus[]>())
@@ -9,15 +10,17 @@ export const useTaskListStore = defineStore('useTaskListStore', () => {
   const currLogDetailId = ref('')
   const queue = reactive(new FetchQueue())
   const pollInterval = ref(3)
+  const tasks = ref<WithId<UploadTaskSummary>[]>([])
   return {
     pollInterval,
     taskLogMap,
     splitView,
     currLogDetailId,
-    queue
+    queue,
+    tasks
   }
 }, {
   persist: {
-      paths: ['pollInterval', 'splitView']
+      paths: ['pollInterval', 'splitView', 'tasks']
   }
 })

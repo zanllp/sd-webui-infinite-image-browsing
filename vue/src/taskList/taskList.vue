@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { key, pick } from '@/util'
 import { onMounted, ref } from 'vue'
-import { type WithId, typedID, Task } from 'vue3-ts-util'
+import { typedID, Task } from 'vue3-ts-util'
 import { PlusOutlined, SyncOutlined } from '@/icon'
 import { createBaiduYunTask, getGlobalSetting, getUploadTasks, getUploadTaskTickStatus, type UploadTaskSummary } from '@/api'
 import { message } from 'ant-design-vue'
 import { useTaskListStore } from '@/store/useTaskListStore'
 import { getAutoCompletedTagList } from './autoComplete'
+import { storeToRefs } from 'pinia'
+import { uniqBy } from 'lodash-es'
 
-const tasks = ref<WithId<UploadTaskSummary>[]>([])
 const ID = typedID<UploadTaskSummary>(true)
 const store = useTaskListStore()
+const { tasks } = storeToRefs(store)
 const autoCompletedDirList = ref([] as ReturnType<typeof getAutoCompletedTagList>)
 const showDirAutoCompletedIdx = ref(-1)
 
@@ -19,13 +21,16 @@ onMounted(async () => {
     autoCompletedDirList.value = getAutoCompletedTagList(resp).filter(v => v.dir.trim())
   })
   const resp = await getUploadTasks()
-  tasks.value = resp.tasks.map(ID)
+  tasks.value = uniqBy([...resp.tasks, ...tasks.value].map(ID), v => v.id)
+    .sort((a, b) => Date.parse(b.start_time) - Date.parse(a.start_time))
+    .slice(0, 100)
   const runningTasks = tasks.value.filter(v => v.running)
   if (runningTasks.length) {
     runningTasks.forEach(v => {
       createPollTask(v.id).completedTask.then(() => message.success('上传完成'))
     })
-  } else {
+  }
+  if (!tasks.value.length) {
     addEmptyTask()
   }
 })
@@ -139,12 +144,13 @@ const addDir2task = (idx: number, dir: string) => {
           </div>
         </a-form-item>
         <a-form-item label="百度云文件夹">
-          <a-input v-model:value="task.recv_dir" :disabled="task.running" placeholder="用于接收的文件夹，支持使用占位符例如stable-diffusion-webui最常用表示日期的<#%Y-%m-%d#>"></a-input>
+          <a-input v-model:value="task.recv_dir" :disabled="task.running"
+            placeholder="用于接收的文件夹，支持使用占位符例如stable-diffusion-webui最常用表示日期的<#%Y-%m-%d#>"></a-input>
         </a-form-item>
         <!--a-form-item label="任务类型">
-                          <search-select v-model:value="task.type" :disabled="task.running" :options="['upload', 'download']"
-                            :conv="{ value: (v) => v, text: (v) => (v === 'upload' ? '上传' : '下载') }"></search-select>
-                        </a-form-item-->
+                                <search-select v-model:value="task.type" :disabled="task.running" :options="['upload', 'download']"
+                                  :conv="{ value: (v) => v, text: (v) => (v === 'upload' ? '上传' : '下载') }"></search-select>
+                              </a-form-item-->
       </a-form>
       <div class="action-bar">
         <a-button @click="openLogDetail(idx)" v-if="store.taskLogMap.get(task.id)">查看详细日志</a-button>
@@ -161,7 +167,6 @@ const addDir2task = (idx: number, dir: string) => {
   </div>
 </template>
 <style scoped lang="scss">
-
 .wrapper {
   height: 100%;
   overflow: auto;
