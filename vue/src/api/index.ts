@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type { GlobalSettingPart } from './type'
-const axiosInst = axios.create({
+export const axiosInst = axios.create({
   baseURL: '/baidu_netdisk'
 })
 

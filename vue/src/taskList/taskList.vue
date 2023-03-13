@@ -21,10 +21,14 @@ onMounted(async () => {
     autoCompletedDirList.value = getAutoCompletedTagList(resp).filter(v => v.dir.trim())
   })
   const resp = await getUploadTasks()
-  tasks.value = uniqBy([...resp.tasks, ...tasks.value].map(ID), v => v.id)
+  tasks.value = uniqBy([...resp.tasks, ...tasks.value].map(ID), v => v.id) // 前后端合并
     .sort((a, b) => Date.parse(b.start_time) - Date.parse(a.start_time))
     .slice(0, 100)
-  const runningTasks = tasks.value.filter(v => v.running)
+  let runningTasks = tasks.value.filter(v => v.running)
+  runningTasks.filter(task => !resp.tasks.find(beTask => beTask.id === task.id)).forEach(task => { // 在后端中没找到直接标记已完成，防止继续请求
+    task.running = false
+  })
+  runningTasks = tasks.value.filter(v => v.running)
   if (runningTasks.length) {
     runningTasks.forEach(v => {
       createPollTask(v.id).completedTask.then(() => message.success('上传完成'))

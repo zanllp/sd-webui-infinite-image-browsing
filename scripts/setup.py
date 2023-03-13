@@ -26,24 +26,19 @@ from scripts.bin import (
 import functools
 
 
-# 创建logger对象，设置日志级别为DEBUG
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# 创建控制台输出的handler，设置日志级别为INFO
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
-# 创建文件输出的handler，设置日志级别为DEBUG
 file_handler = logging.FileHandler(f"{cwd}/log.log")
 file_handler.setLevel(logging.DEBUG)
 
-# 定义handler的日志格式
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 console_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)
 
-# 将handler添加到logger对象中
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
@@ -75,9 +70,9 @@ def login_by_bduss(bduss: str):
     output = exec_ops(["login", f"-bduss={bduss}"])
     match = re.search("百度帐号登录成功: (.+)$", output)
     if match:
-        return (True, match.group(1).strip())
+        return {"status": "ok", "msg": match.group(1).strip()}
     else:
-        print(output)
+        return {"status": "error", "msg": output}
 
 
 def get_curr_working_dir():
@@ -101,11 +96,7 @@ def list_file(cwd="/"):
                 "name": match.group(4).strip(),
             }
             files.append(file_info)
-
-    # 打印解析结果
-    for file in files:
-        print(file)
-    return file
+    return files
 
 
 def get_curr_user():
@@ -127,22 +118,9 @@ def logout():
     return bool(match)
 
 
-def get_curr_user_name():
-    res = get_curr_user()
-    return res["username"] if res else "未登录"
-
-
 not_exists_msg = (
     f"找不到{bin_file_name},尝试手动从 {get_matched_summary()[1]} 下载,下载后放到 {cwd} 文件夹下,重启界面"
 )
-
-
-def upload_file_to_baidu_net_disk(pre_log):
-    conf = get_global_conf()
-    dirs = str(conf["output_dirs"]).split(",")
-    print(["upload", *dirs, conf["upload_dir"]])
-
-    return exec_ops(["upload", *dirs, conf["upload_dir"]])
 
 
 def on_ui_tabs():
@@ -157,37 +135,14 @@ def on_ui_tabs():
         exists = check_bin_exists()
         if not exists:
             print(f"\033[31m{not_exists_msg}\033[0m")
-    user = get_curr_user()
     with gr.Blocks(analytics_enabled=False) as baidu_netdisk:
         gr.Textbox(not_exists_msg, visible=not exists)
-        with gr.Row(visible=bool(exists and not user)) as login_form:
-            bduss_input = gr.Textbox(interactive=True, label="输入bduss,完成后回车登录")
-        with gr.Row(visible=bool(exists and user)) as operation_form:
+        with gr.Row(visible=bool(exists)):
             with gr.Column():
-                html_container = gr.HTML(
+                gr.HTML(
                     "如果你看到这个那说明此项那说明出现了问题", elem_id="baidu_netdisk_container_wrapper"
                 )
-                logout_btn = gr.Button("登出账户")
 
-            def on_bduss_input_enter(bduss):
-                res = login_by_bduss(bduss=bduss)
-                return (
-                    f"登陆成功{res[1]}" if res else "登录失败",
-                    gr.update(visible=bool(res)),
-                    gr.update(visible=not res),
-                )
-
-            bduss_input.submit(
-                on_bduss_input_enter,
-                inputs=[bduss_input],
-                outputs=[html_container, operation_form, login_form],
-            )
-
-            def on_logout():
-                logout()
-                return gr.update(visible=True), gr.update(visible=False)
-
-            logout_btn.click(fn=on_logout, outputs=[login_form, operation_form])
         return ((baidu_netdisk, "百度云上传", "baiduyun"),)
 
 
@@ -270,16 +225,31 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
         name="baidu_netdisk-fe-static",
     )
 
+    @app.get(f"{pre}/user")
+    async def user():
+        return get_curr_user()
+
+    @app.post(f"{pre}/user/logout")
+    async def user_logout():
+        return logout()
+
+    class BaiduyunUserLoginReq(BaseModel):
+        bduss: str
+
+    @app.post(f"{pre}/user/login")
+    async def user_login(req: BaiduyunUserLoginReq):
+        res = login_by_bduss(req.bduss)
+        if res["status"] != "ok":
+            raise HTTPException(status_code=401, detail=res["msg"])
+        return get_curr_user()
+
     @app.get(f"{pre}/hello")
     async def greeting():
         return "hello"
-    
-    @app.get(f'{pre}/global_setting')
+
+    @app.get(f"{pre}/global_setting")
     async def global_setting():
-        return {
-            "global_setting": opts.data,
-            "default_conf": get_default_conf()
-        }
+        return {"global_setting": opts.data, "default_conf": get_default_conf()}
 
     class BaiduyunUploadDownloadReq(BaseModel):
         type: Literal["upload", "download"]
@@ -306,11 +276,12 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
         if not p:
             raise HTTPException(status_code=404, detail="找不到该上传任务")
         return {"files_state": p.files_state}
-    
+
     upload_poll_promise_dict = {}
+
     @app.get(pre + "/task/{id}/tick")
     async def upload_poll(id):
-        async def get_tick():  
+        async def get_tick():
             task = BaiduyunTask.get_by_id(id)
             if not task:
                 raise HTTPException(status_code=404, detail="找不到该上传任务")
@@ -332,12 +303,12 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
                     break
             task.update_state()
             return {"tasks": tasks, "task_summary": task.get_summary()}
-        
+
         res = upload_poll_promise_dict.get(id)
         if res:
             res = await res
         else:
-            upload_poll_promise_dict[id] = asyncio.create_task(get_tick()) 
+            upload_poll_promise_dict[id] = asyncio.create_task(get_tick())
             res = await upload_poll_promise_dict[id]
             upload_poll_promise_dict.pop(id)
         return res
