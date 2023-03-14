@@ -1,6 +1,6 @@
 <!-- eslint-disable no-empty -->
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { copy2clipboard, FetchQueue, SplitView } from 'vue3-ts-util'
 import { getUserInfo, type UserInfo, logout, loginByBduss } from './api/user'
 import { useTaskListStore } from './store/useTaskListStore'
@@ -66,7 +66,7 @@ const onLoginBtnClick = async () => {
         </a-form-item>
       </a-form>
     </div>
-    <div class="container" v-if="user">
+    <div class="opreation-container" v-if="user">
       <div class="panel">
         <a-form layout="inline">
           <a-form-item label="轮询间隔">
@@ -80,7 +80,8 @@ const onLoginBtnClick = async () => {
           <a-button @click="copy('<#%Y-%m-%d %H-%M-%S#>')">复制日期+时间占位符</a-button>
         </div>
       </div>
-      <split-view v-model:percent="percent">
+
+      <split-view v-model:percent="percent" class="split-view">
         <template #left>
           <task-list />
         </template>
@@ -105,8 +106,13 @@ const onLoginBtnClick = async () => {
   }
 }
 
-.container {
-  height: 100vh; // todo 暂时这样，这个不重要
-  width: 95%;
+
+.opreation-container {
+  display: flex;
+  flex-direction: column;
+
+  .split-view {
+    height: 900px;
+  }
 }
 </style>

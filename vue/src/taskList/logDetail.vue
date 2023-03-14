@@ -39,7 +39,7 @@ watch(currList, async () => {
 
 .list {
   font-family: Consolas, Menlo, monospace;
-  height: 100%;
+  height: calc(100% - 32px);
   overflow: auto;
   padding: 16px;
   margin: 16px;

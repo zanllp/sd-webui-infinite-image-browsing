@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 import modules.scripts as scripts
@@ -39,9 +40,9 @@ formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(messag
 console_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)
 
-logger.addHandler(console_handler)
 logger.addHandler(file_handler)
-
+if "APP_ENV" in os.environ and os.environ["APP_ENV"] == "dev":
+    logger.addHandler(console_handler)
 
 def get_global_conf():
     default_conf = get_default_conf()
@@ -203,8 +204,6 @@ def singleton_async(fn):
     @functools.wraps(fn)
     async def wrapper(*args, **kwargs):
         key = args[0] if len(args) > 0 else None
-        print(wrapper.busy)
-        print(key)
         if key in wrapper.busy:
             raise Exception("Function is busy, please try again later.")
         wrapper.busy.append(key)

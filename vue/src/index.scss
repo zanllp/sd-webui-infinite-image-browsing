@@ -1,0 +1,16 @@
+.flex-placeholder {
+  flex: 1;
+}
+
+html {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+}
+
+body {
+  position: absolute;
+  width: 100%;
+}

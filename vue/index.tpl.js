@@ -15,7 +15,6 @@
       check();
     });
   }
-
   // eslint-disable-next-line no-undef
   asyncCheck(() => gradioApp().querySelector("#baidu_netdisk_container_wrapper"), 500, Infinity).then((el) => {
     /**
@@ -25,7 +24,12 @@
     wrap.childNodes.forEach(v => wrap.removeChild(v))
     const iframe = document.createElement('iframe')
     iframe.srcdoc = html
-    iframe.style="width:100%;height:100vh"
+    iframe.style = "width:100%;height:768px"
+    window.addEventListener('message', e => {
+      if (e.data.type === 'iframe-size-update') {
+        iframe.style = `width:100%;height:${e.data.height + 128}px`
+      }
+    })
     wrap.appendChild(iframe)
   })
 })()

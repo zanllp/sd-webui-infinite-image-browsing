@@ -6,8 +6,8 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vite App</title>
-    <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-180a9cde.js"></script>
-    <link rel="stylesheet" href="/baidu_netdisk/fe-static/assets/index-f47cac1e.css">
+    <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-8e544d88.js"></script>
+    <link rel="stylesheet" href="/baidu_netdisk/fe-static/assets/index-d8645adb.css">
   </head>
   <body>
     <div id="zanllp_dev_gradio_fe"></div>
@@ -30,7 +30,6 @@
       check();
     });
   }
-
   // eslint-disable-next-line no-undef
   asyncCheck(() => gradioApp().querySelector("#baidu_netdisk_container_wrapper"), 500, Infinity).then((el) => {
     /**
@@ -40,7 +39,12 @@
     wrap.childNodes.forEach(v => wrap.removeChild(v))
     const iframe = document.createElement('iframe')
     iframe.srcdoc = html
-    iframe.style="width:100%;height:100vh"
+    iframe.style = "width:100%;height:768px"
+    window.addEventListener('message', e => {
+      if (e.data.type === 'iframe-size-update') {
+        iframe.style = `width:100%;height:${e.data.height + 128}px`
+      }
+    })
     wrap.appendChild(iframe)
   })
 })()
