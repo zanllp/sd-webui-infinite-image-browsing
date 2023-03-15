@@ -5,7 +5,10 @@ from typing import Dict, Literal
 import uuid
 import re
 import subprocess
+
+from scripts.log_parser import parse_log_line
 from scripts.bin import bin_file_path
+from scripts.logger import logger
 
 
 class BaiduyunTask:
@@ -29,6 +32,7 @@ class BaiduyunTask:
         self.n_files = 0
         self.n_success_files = 0
         self.n_failed_files = 0
+        self.canceled = False
 
     def start_time_human_readable(self):
         return self.start_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -44,7 +48,7 @@ class BaiduyunTask:
                 self.n_success_files += 1
             elif status == "upload-failed":
                 self.n_failed_files += 1
-        self.running = not isinstance(self.subprocess.returncode, int)
+        self.running = False if self.canceled else not isinstance(self.subprocess.returncode, int)
 
     def append_log(self, parsed_log, raw_log):
         self.raw_logs.append(raw_log)
@@ -63,7 +67,38 @@ class BaiduyunTask:
             "n_files": task.n_files,
             "n_failed_files": task.n_failed_files,
             "n_success_files": task.n_success_files,
+            "canceled": task.canceled
         }
+
+    # 
+    async def get_tick(self):
+        tasks = []
+        while True:
+            try:
+                line = await asyncio.wait_for(
+                    self.subprocess.stdout.readline(), timeout=0.1
+                )
+                line = line.decode()
+                logger.info(line)
+                if not line:
+                    break
+                if line.isspace():
+                    continue
+                info = parse_log_line(line)
+                tasks.append({"info": info, "log": line})
+                self.append_log(info, line)
+            except asyncio.TimeoutError:
+                break
+        self.update_state()
+        return {"tasks": tasks, "task_summary": self.get_summary()}
+    
+    async def cancel(self):
+        self.subprocess.terminate()
+        self.canceled = True
+        last_tick = await self.get_tick()
+        return last_tick
+        
+
 
     @staticmethod
     async def create(

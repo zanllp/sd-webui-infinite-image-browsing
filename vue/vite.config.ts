@@ -28,7 +28,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/baidu_netdisk/': {
-        target: 'http://127.0.0.1:7860/'
+        target: 'http://127.0.0.1:7866/'
       }
     }
   }

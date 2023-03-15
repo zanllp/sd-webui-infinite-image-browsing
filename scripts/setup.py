@@ -1,11 +1,9 @@
-import os
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 import modules.scripts as scripts
 import gradio as gr
 import re
 import subprocess
-import logging
 import uuid
 import asyncio
 import subprocess
@@ -25,24 +23,8 @@ from scripts.bin import (
     bin_file_name,
 )
 import functools
+from scripts.logger import logger
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-
-file_handler = logging.FileHandler(f"{cwd}/log.log")
-file_handler.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-console_handler.setFormatter(formatter)
-file_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
-if "APP_ENV" in os.environ and os.environ["APP_ENV"] == "dev":
-    logger.addHandler(console_handler)
 
 def get_global_conf():
     default_conf = get_default_conf()
@@ -276,38 +258,31 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
             raise HTTPException(status_code=404, detail="找不到该上传任务")
         return {"files_state": p.files_state}
 
+    @app.post(pre + "/task/{id}/cancel")
+    async def task_files_stat(id):
+        p = BaiduyunTask.get_by_id(id)
+        if not p:
+            raise HTTPException(status_code=404, detail="找不到该上传任务")
+        last_tick = await p.cancel()
+        return {"last_tick": last_tick}
+
     upload_poll_promise_dict = {}
 
     @app.get(pre + "/task/{id}/tick")
     async def upload_poll(id):
-        async def get_tick():
+        async def get_tick_sync_wait_wrapper():
             task = BaiduyunTask.get_by_id(id)
             if not task:
                 raise HTTPException(status_code=404, detail="找不到该上传任务")
-            tasks = []
-            while True:
-                try:
-                    line = await asyncio.wait_for(
-                        task.subprocess.stdout.readline(), timeout=0.1
-                    )
-                    line = line.decode()
-                    if not line:
-                        break
-                    if line.isspace():
-                        continue
-                    info = parse_log_line(line)
-                    tasks.append({"info": info, "log": line})
-                    task.append_log(info, line)
-                except asyncio.TimeoutError:
-                    break
-            task.update_state()
-            return {"tasks": tasks, "task_summary": task.get_summary()}
+            return await task.get_tick()
 
         res = upload_poll_promise_dict.get(id)
         if res:
             res = await res
         else:
-            upload_poll_promise_dict[id] = asyncio.create_task(get_tick())
+            upload_poll_promise_dict[id] = asyncio.create_task(
+                get_tick_sync_wait_wrapper()
+            )
             res = await upload_poll_promise_dict[id]
             upload_poll_promise_dict.pop(id)
         return res

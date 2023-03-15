@@ -96,6 +96,7 @@ export interface UploadTaskSummary {
   type: 'upload' | 'download'
   n_files: number
   n_failed_files: number
+  canceled: boolean
   n_success_files: number
 }
 
@@ -126,6 +127,17 @@ export const getGlobalSetting = async () => {
     global_setting: GlobalSettingPart,
     default_conf: {
       upload_dir: string
+    }
+  }
+}
+
+
+export const cancelTask = async (id: string) => {
+  const resp = await axiosInst.post(`/task/${id}/cancel`)
+  return resp.data as {
+    last_tick: {
+      tasks: UploadTaskTickStatus[],
+      task_summary: UploadTaskSummary
     }
   }
 }
