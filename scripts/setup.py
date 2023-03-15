@@ -155,33 +155,6 @@ def get_default_conf():
     }
 
 
-def on_ui_settings():
-    bd_options = []
-    default_conf = get_default_conf()
-    bd_options.append(
-        (
-            "baidu_netdisk_output_dirs",
-            default_conf["output_dirs"],
-            "上传的本地文件夹列表，多个文件夹使用逗号分隔",
-        )
-    )
-    bd_options.append(
-        ("baidu_netdisk_upload_dir", default_conf["upload_dir"], "百度网盘用于接收上传文件的文件夹地址")
-    )
-
-    section = ("baidu-netdisk", "百度云上传")
-    # Move historic setting names to current names
-    for i in range(len(bd_options)):
-        shared.opts.add_option(
-            bd_options[i][0],
-            shared.OptionInfo(
-                bd_options[i][1],
-                bd_options[i][2],
-                section=section,
-            ),
-        )
-
-
 def singleton_async(fn):
     @functools.wraps(fn)
     async def wrapper(*args, **kwargs):
@@ -288,6 +261,5 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
         return res
 
 
-script_callbacks.on_ui_settings(on_ui_settings)
 script_callbacks.on_ui_tabs(on_ui_tabs)
 script_callbacks.on_app_started(baidu_netdisk_api)
