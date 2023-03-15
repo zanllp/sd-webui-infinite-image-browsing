@@ -252,14 +252,14 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
         return {"tasks": list(reversed(tasks))}
 
     @app.get(pre + "/task/{id}/files_state")
-    async def task_files_stat(id):
+    async def task_files_state(id):
         p = BaiduyunTask.get_by_id(id)
         if not p:
             raise HTTPException(status_code=404, detail="找不到该上传任务")
         return {"files_state": p.files_state}
 
     @app.post(pre + "/task/{id}/cancel")
-    async def task_files_stat(id):
+    async def cancel_task(id):
         p = BaiduyunTask.get_by_id(id)
         if not p:
             raise HTTPException(status_code=404, detail="找不到该上传任务")
