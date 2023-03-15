@@ -9,6 +9,7 @@ stable-diffusion-webui百度云上传拓展。适用于远程云gpu,colab,jupyte
 5. 自动从stable-diffusion-webui中获取配置，可以直接快速的文件夹输入
 6. 发送和接受路径均支持使用时间日期占位符
 7. 使用bduss登录，参考 https://blog.csdn.net/ykiwmy/article/details/103730962 ，或者自己搜索
+8. 支持取消/恢复任务
 
 
 
