@@ -106,14 +106,25 @@ class BaiduyunTask:
     ):
         if type not in ["upload", "download"]:
             raise Exception("非法参数")
-        process = await asyncio.create_subprocess_exec(
-            bin_file_path,
-            type,
-            *process_path_arr(str(send_dirs).split(",")),
-            parse_and_replace_time(recv_dir),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        if type == "upload" :
+            process = await asyncio.create_subprocess_exec(
+                bin_file_path,
+                type,
+                *process_path_arr(str(send_dirs).split(",")),
+                parse_and_replace_time(recv_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+        elif type == "download":
+            process = await asyncio.create_subprocess_exec(
+                bin_file_path,
+                type,
+                *process_path_arr(str(send_dirs).split(",")),
+                "--saveto",
+                parse_and_replace_time(recv_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
         task = BaiduyunTask(process, type, send_dirs, recv_dir)
         task.update_state()
         baiduyun_task_cache[task.id] = task
