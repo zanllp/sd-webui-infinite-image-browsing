@@ -33,13 +33,13 @@ interface UploadTaskFileSkipped {
 interface UploadTaskPreparing {
   id: string
   status: 'upload-preparing'
-  local_file_path: string
+  local_path: string
 }
 
 interface UploadTaskSuccess {
   id: string
   status: 'upload-success'
-  baidu_netdisk_saved_path: string
+  remote_path: string
 }
 
 interface UploadTaskFastuploadFailed {
@@ -140,4 +140,8 @@ export const cancelTask = async (id: string) => {
       task_summary: UploadTaskSummary
     }
   }
+}
+
+export const removeTask = async (id: string) => {
+  return axiosInst.delete(`/task/${id}`)
 }

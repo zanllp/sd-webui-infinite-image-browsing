@@ -18,6 +18,7 @@ const copy = (text: string) => {
 }
 const queue = reactive(new FetchQueue(-1, 0, 0, 'throw'))
 onMounted(async () => {
+  store.splitView.open = false
   user.value = await queue.pushAction(getUserInfo).res
 })
 

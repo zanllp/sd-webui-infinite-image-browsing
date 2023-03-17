@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
 import { FetchQueue } from 'vue3-ts-util'
 import type { WithId } from 'vue3-ts-util'
+import type { getAutoCompletedTagList } from '@/taskList/autoComplete'
 
 export const useTaskListStore = defineStore('useTaskListStore', () => {
   const taskLogMap = ref(new Map<string, UploadTaskTickStatus[]>())
@@ -11,13 +12,18 @@ export const useTaskListStore = defineStore('useTaskListStore', () => {
   const queue = reactive(new FetchQueue())
   const pollInterval = ref(3)
   const tasks = ref<WithId<UploadTaskSummary>[]>([])
+  
+const autoCompletedDirList = ref([] as ReturnType<typeof getAutoCompletedTagList>)
+const showDirAutoCompletedIdx = ref(-1)
   return {
     pollInterval,
     taskLogMap,
     splitView,
     currLogDetailId,
     queue,
-    tasks
+    tasks,
+    autoCompletedDirList,
+    showDirAutoCompletedIdx
   }
 }, {
   persist: {

@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { key, pick } from '@/util'
 import { onMounted, ref } from 'vue'
-import { typedID, Task } from 'vue3-ts-util'
+import { typedID, Task, SearchSelect } from 'vue3-ts-util'
 import { PlusOutlined, SyncOutlined, MinusCircleOutlined } from '@/icon'
-import { cancelTask, createBaiduYunTask, getGlobalSetting, getUploadTasks, getUploadTaskTickStatus, type UploadTaskSummary } from '@/api'
+import { cancelTask, createBaiduYunTask, getGlobalSetting, getUploadTasks, getUploadTaskTickStatus, removeTask, type UploadTaskSummary } from '@/api'
 import { message } from 'ant-design-vue'
 import { useTaskListStore } from '@/store/useTaskListStore'
 import { getAutoCompletedTagList } from './autoComplete'
 import { storeToRefs } from 'pinia'
 import { uniqBy } from 'lodash-es'
+import localPathShortcut from './localPathShortcut.vue'
 
 const ID = typedID<UploadTaskSummary>(true)
 const store = useTaskListStore()
 const { tasks } = storeToRefs(store)
-const autoCompletedDirList = ref([] as ReturnType<typeof getAutoCompletedTagList>)
-const showDirAutoCompletedIdx = ref(-1)
+const { showDirAutoCompletedIdx, autoCompletedDirList } = storeToRefs(store)
 const pollTaskMap = new Map<string, ReturnType<typeof createPollTask>>()
 
 onMounted(async () => {
@@ -62,8 +62,8 @@ const createNewTask = async (idx: number) => {
   const task = tasks.value[idx]
   task.send_dirs = task.send_dirs.split(/,，\n/).map(v => v.trim()).filter(v => v).join()
   task.recv_dir = task.recv_dir.trim()
-  if (!task.recv_dir.startsWith('/')) {
-    return message.error('百度云接收位置必须以 “/” 开头')
+  if (!(task.type === 'upload' ? task.recv_dir.startsWith('/') : task.send_dirs.split(',').every(v => v.startsWith('/')))) {
+    return message.error('百度云的位置必须以 “/” 开头')
   }
   task.running = true
   task.n_files = 100
@@ -73,7 +73,6 @@ const createNewTask = async (idx: number) => {
 }
 
 const createPollTask = (id: string) => {
-  store.taskLogMap.delete(id)
   store.taskLogMap.set(id, [])
   const task = Task.run({
     action: () => getUploadTaskTickStatus(id),
@@ -91,7 +90,8 @@ const createPollTask = (id: string) => {
 }
 
 const getIntPercent = (task: UploadTaskSummary) => parseInt((((task.n_failed_files + task.n_success_files) / task.n_files) * 100).toString())
-const isDone = (task: UploadTaskSummary) => task.id && !task.running && !task.canceled
+const isDone = (task: UploadTaskSummary) => !!task.id && !task.running && !task.canceled
+const isDisable = (task: UploadTaskSummary) => task.running || isDone(task)
 
 const copyFrom = (idx: number) => {
   const prevTask = tasks.value[idx]
@@ -106,15 +106,6 @@ const openLogDetail = (idx: number) => {
   store.currLogDetailId = tasks.value[idx].id
   store.splitView.open = true
 }
-const colors = ['#f5222d', '#1890ff', '#ff3125', '#d46b08', '#007bff', '#52c41a', '#13c2c2', '#fa541c', '#eb2f96', '#2f54eb']
-const addDir2task = (idx: number, dir: string) => {
-  const task = tasks.value[idx]
-  if (/[,，\n]$/.test(task.send_dirs) || !task.send_dirs.trim()) {
-    task.send_dirs += dir
-  } else {
-    task.send_dirs += ` , ${dir}`
-  }
-}
 
 const cancel = async (idx: number) => {
   const task = tasks.value[idx]
@@ -122,6 +113,13 @@ const cancel = async (idx: number) => {
   store.taskLogMap.get(task.id)!.push(...last_tick.tasks)
   tasks.value[idx] = ID(last_tick.task_summary)
   pollTaskMap.get(task.id)?.clearTask()
+}
+
+const remove = async (idx: number) => {
+  const task = tasks.value[idx]
+  tasks.value.splice(idx, 1)
+  task.id && removeTask(task.id)
+  message.success('删除完成')
 }
 
 </script>
@@ -154,30 +152,31 @@ const cancel = async (idx: number) => {
         </div>
       </div>
       <a-form layout="vertical" label-align="left">
-        <a-form-item label="发送的文件夹" @click.stop="showDirAutoCompletedIdx = idx">
-          <a-textarea auto-size :disabled="task.running" v-model:value="task.send_dirs"
+        <a-form-item label="任务类型">
+          <search-select v-model:value="task.type" :disabled="isDisable(task)" :options="['upload', 'download']"
+            :conv="{ value: (v) => v, text: (v) => (v === 'upload' ? '上传' : '下载') }"></search-select>
+        </a-form-item>
+        <a-form-item :label="`发送的文件夹 (${task.type === 'upload' ? '本地' : '百度云'})`"
+          @click.stop="task.type === 'upload' && (showDirAutoCompletedIdx = idx)">
+          <a-textarea auto-size :disabled="isDisable(task)" v-model:value="task.send_dirs" allow-clear
             placeholder="发送文件的文件夹,多个文件夹使用逗号或者换行分隔。支持使用占位符例如stable-diffusion-webui最常用表示日期的<#%Y-%m-%d#>"></a-textarea>
-          <div v-if="idx === showDirAutoCompletedIdx" class="auto-completed-dirs">
-            <a-tooltip v-for="item, tagIdx in autoCompletedDirList" :key="item.dir" :title="item.dir + '  点击添加'">
-              <a-tag :visible="!task.send_dirs.includes(item.dir)" :color="colors[tagIdx % colors.length]"
-                @click="addDir2task(idx, item.dir)">{{ item.zh }}</a-tag>
-            </a-tooltip>
-          </div>
+          <local-path-shortcut v-if="task.type === 'upload'" :task="task" @update:task="v => tasks[idx] = v" :idx="idx" />
+
         </a-form-item>
-        <a-form-item label="百度云文件夹">
-          <a-input v-model:value="task.recv_dir" :disabled="task.running"
+        <a-form-item :label="`接收的文件夹 (${task.type !== 'upload' ? '本地' : '百度云'})`">
+          <a-input v-model:value="task.recv_dir" :disabled="isDisable(task)" allow-clear
+            @click.stop="task.type === 'download' && (showDirAutoCompletedIdx = idx)"
             placeholder="用于接收的文件夹，支持使用占位符例如stable-diffusion-webui最常用表示日期的<#%Y-%m-%d#>"></a-input>
+          <local-path-shortcut v-if="task.type === 'download'" :task="task" @update:task="v => tasks[idx] = v"
+            :idx="idx" />
         </a-form-item>
-        <!--a-form-item label="任务类型">
-                                      <search-select v-model:value="task.type" :disabled="task.running" :options="['upload', 'download']"
-                                        :conv="{ value: (v) => v, text: (v) => (v === 'upload' ? '上传' : '下载') }"></search-select>
-                                    </a-form-item-->
       </a-form>
+
       <div class="action-bar">
         <a-button @click="openLogDetail(idx)" v-if="store.taskLogMap.get(task.id)">查看详细日志</a-button>
         <a-button @click="copyFrom(idx)">复制该任务</a-button>
         <a-button @click="cancel(idx)" v-if="task.running" danger>取消任务</a-button>
-        <a-button @click="tasks.splice(idx, 1)" :disabled="task.running" danger>移除</a-button>
+        <a-button @click="remove(idx)" :disabled="task.running" danger>移除</a-button>
         <a-button type="primary" v-if="!isDone(task)" :loading="task.running" :disabled="task.running"
           @click="createNewTask(idx)">开始</a-button>
       </div>
@@ -221,9 +220,6 @@ const cancel = async (idx: number) => {
 
     }
 
-    .auto-completed-dirs {
-      margin-top: 16px;
-    }
   }
 }
 </style>

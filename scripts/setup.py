@@ -225,6 +225,13 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
             task.update_state()
             tasks.append(task.get_summary())
         return {"tasks": list(reversed(tasks))}
+    
+    @app.delete(pre + "/task/{id}")
+    async def remove_task_cache(id: str):
+        c = BaiduyunTask.get_cache()
+        if id in c:
+            c.pop(id)
+        
 
     @app.get(pre + "/task/{id}/files_state")
     async def task_files_state(id):
