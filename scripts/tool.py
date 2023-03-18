@@ -1,3 +1,6 @@
+import os
+
+
 def human_readable_size(size_bytes):
     """
     Converts bytes to a human-readable format.
@@ -14,3 +17,11 @@ def human_readable_size(size_bytes):
         i += 1
     # round the result to two decimal points and return as a string
     return '{:.2f} {}'.format(size, units[i])
+
+def get_windows_drives():
+    drives = []
+    for drive in range(ord('A'), ord('Z')+1):
+        drive_name = chr(drive) + ':/'
+        if os.path.exists(drive_name):
+            drives.append(drive_name)
+    return drives
