@@ -9,13 +9,15 @@ import { useTaskListStore } from '@/store/useTaskListStore'
 import { storeToRefs } from 'pinia'
 import { uniqBy } from 'lodash-es'
 import localPathShortcut from './localPathShortcut.vue'
+import { useGlobalStore } from '@/store/useGlobalStore'
 
 const ID = typedID<UploadTaskSummary>(true)
 const store = useTaskListStore()
+const globalStore = useGlobalStore()
 const { tasks } = storeToRefs(store)
 const { showDirAutoCompletedIdx } = storeToRefs(store)
 const pollTaskMap = new Map<string, ReturnType<typeof createPollTask>>()
-  
+
 onMounted(async () => {
   const resp = await getUploadTasks()
   tasks.value = uniqBy([...resp.tasks, ...tasks.value].map(ID), v => v.id) // 前后端合并
@@ -28,12 +30,20 @@ onMounted(async () => {
   runningTasks = tasks.value.filter(v => v.running)
   if (runningTasks.length) {
     runningTasks.forEach(v => {
-      createPollTask(v.id).completedTask.then(() => message.success('上传完成'))
+      createPollTask(v.id).completedTask.then(() => message.success(`${v.type === 'download' ? '下载' : '上传'}完成`))
     })
   }
   if (!tasks.value.length) {
     addEmptyTask()
   }
+
+})
+
+
+globalStore.useEventListen('createNewTask', async task => {
+  tasks.value.unshift(ID({ ...getEmptyTask(), ...task }))
+  await createNewTask(0)
+  message.success('创建完成，在任务列表查看进度')
 })
 
 const getEmptyTask = () => ID({
@@ -51,7 +61,6 @@ const getEmptyTask = () => ID({
 
 const addEmptyTask = () => {
   tasks.value.unshift(getEmptyTask())
-
 }
 
 const createNewTask = async (idx: number) => {
@@ -133,7 +142,7 @@ const remove = async (idx: number) => {
       <div class="top-bar">
 
         <a-tag color="success" v-if="isDone(task)">已完成</a-tag>
-        <a-tag color="processing" v-if="task.running">上传中 <template #icon>
+        <a-tag color="processing" v-if="task.running">{{ task.type === 'download' ? '下载' : '上传' }}中 <template #icon>
             <sync-outlined :spin="true" />
           </template></a-tag>
         <a-tag color="default" v-if="task.canceled">

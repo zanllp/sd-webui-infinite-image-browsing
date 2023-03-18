@@ -25,3 +25,5 @@ def get_windows_drives():
         if os.path.exists(drive_name):
             drives.append(drive_name)
     return drives
+
+is_dev = "APP_ENV" in os.environ and os.environ["APP_ENV"] == "dev"

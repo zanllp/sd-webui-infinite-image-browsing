@@ -1,5 +1,5 @@
 
-import os
+from scripts.tool import is_dev
 from scripts.bin import cwd
 import logging
 logger = logging.getLogger(__name__)
@@ -16,5 +16,5 @@ console_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
-if "APP_ENV" in os.environ and os.environ["APP_ENV"] == "dev":
+if is_dev:
     logger.addHandler(console_handler)

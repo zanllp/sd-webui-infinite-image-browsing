@@ -3,18 +3,21 @@
 import { onMounted, reactive, ref } from 'vue'
 import { FetchQueue } from 'vue3-ts-util'
 import { getUserInfo, type UserInfo, logout, loginByBduss } from './api/user'
-import { LogoutOutlined, LoginOutlined } from '@/icon'
+import { LogoutOutlined, LoginOutlined, Loading3QuartersOutlined } from '@/icon'
 import { message } from 'ant-design-vue'
 import { isAxiosError } from 'axios'
 import fileTransfer from './fileTransfer/fileTransfer.vue'
 import { getGlobalSetting } from './api'
 import { useGlobalStore } from './store/useGlobalStore'
 import { getAutoCompletedTagList } from './taskRecord/autoComplete'
+import { useTaskListStore } from './store/useTaskListStore'
+import TaskOperation from './taskRecord/taskOperation.vue'
 
 const user = ref<UserInfo>()
 const bduss = ref('')
 const queue = reactive(new FetchQueue(-1, 0, 0, 'throw'))
 const globalStore = useGlobalStore()
+const taskStore  = useTaskListStore()
 onMounted(async () => {
   getGlobalSetting().then((resp) => {
     globalStore.conf = resp
@@ -69,8 +72,20 @@ const onLoginBtnClick = async () => {
         </a-form-item>
       </a-form>
     </div>
-
-    <file-transfer />
+    <a-tabs>
+      <a-tab-pane key="1" tab="快速任务">
+        <file-transfer />
+      </a-tab-pane>
+      <a-tab-pane key="2" force-render>
+        <template #tab>
+          <span>
+            任务记录
+            <loading3-quarters-outlined v-if="!taskStore.queue.isIdle" spin />
+          </span>
+        </template>
+        <task-operation/>
+      </a-tab-pane>
+    </a-tabs>
   </a-skeleton>
 </template>
 <style scoped lang="scss">

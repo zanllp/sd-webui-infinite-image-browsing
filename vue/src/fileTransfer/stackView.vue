@@ -10,6 +10,7 @@ import { copy2clipboard, ok } from 'vue3-ts-util'
 import NProgress from 'multi-nprogress'
 import 'multi-nprogress/nprogress.css'
 import type Progress from 'nprogress'
+import { Modal } from 'ant-design-vue'
 
 const np = ref<Progress.NProgress>()
 const el = ref<HTMLDivElement>()
@@ -70,7 +71,7 @@ const back = (idx: number) => {
 }
 
 const to = async (dir: string) => {
-  if (!/^((\w:)|\/)/.test(dir)) {
+  if (!/^((\w:)|\/)/.test(dir)) { // 相对路径
     dir = path.join(global.conf?.sd_cwd ?? '/', dir)
   }
   const frags = dir.split(/\\|\//)
@@ -87,9 +88,24 @@ const to = async (dir: string) => {
   }
 }
 
-const onDrop = (e: DragEvent) => {
-  const data = JSON.parse(e.dataTransfer?.getData("text") || '{}') as FileNodeInfo & { from: typeof props.target }
-  console.log(data)
+const onDrop = async (e: DragEvent) => {
+  const data = JSON.parse(e.dataTransfer?.getData("text") || '{}') as FileNodeInfo & { from: typeof props.target, path: string }
+  if (data.from && data.path && data.type) {
+    if (data.from === props.target) {
+      return
+    }
+    const type = data.from === 'local' ? 'upload' : 'download'
+    const typeZH = type === 'upload' ? '上传' : '下载'
+    const toPath = path.join(...getBasePath())
+    Modal.confirm({
+      title: `确定创建${typeZH}任务${data.type === 'dir' ? ', 这是文件夹!' : ''}`,
+      content: `从 ${props.target !== 'local' ? '本地' : '云盘'} ${data.path} ${typeZH} ${props.target === 'local' ? '本地' : '云盘'} ${toPath}`,
+      maskClosable: true,
+      async onOk () {
+        global.eventEmitter.emit('createNewTask', { send_dirs: data.path, recv_dir: toPath, type })
+      },
+    })
+  }
 }
 </script>
 <template>
@@ -100,7 +116,7 @@ const onDrop = (e: DragEvent) => {
           : item.curr.replace(/:\/$/, '盘') }}</a></a-breadcrumb-item>
       </a-breadcrumb>
       <a-dropdown v-if="props.target === 'local'">
-        <a class="ant-dropdown-link" @click.prevent>
+        <a class="ant-dropdown-link opt" @click.prevent>
           快速移动
           <DownOutlined />
         </a>
@@ -112,13 +128,13 @@ const onDrop = (e: DragEvent) => {
           </a-menu>
         </template>
       </a-dropdown>
-      <a @click.prevent="copyLocation">复制路径</a>
+      <a class="opt" @click.prevent="copyLocation">复制路径</a>
     </div>
     <div v-if="currPage" class="view">
       <ul class="file-list">
         <li class="file" v-for="file in currPage.files" :class="{ 'clickable': file.type === 'dir' }" :key="file.name"
           draggable="true"
-          @dragstart="$event.dataTransfer!.setData('text/plain', JSON.stringify({ from: props.target, ...toRaw(file) }))"
+          @dragstart="$event.dataTransfer!.setData('text/plain', JSON.stringify({ from: props.target, path: path.join(...getBasePath(), file.name), ...toRaw(file) }))"
           @click="openNext(file)">
           <file-outlined v-if="file.type === 'file'" />
           <folder-open-outlined v-else />
@@ -144,7 +160,7 @@ const onDrop = (e: DragEvent) => {
   align-items: center;
   justify-content: space-between;
 
-  a {
+  a.opt {
     margin-left: 8px;
   }
 }
@@ -156,7 +172,7 @@ const onDrop = (e: DragEvent) => {
   .file-list {
     list-style: none;
     padding: 8px;
-    max-height: 900px;
+    height: 900px;
     overflow: auto;
 
 

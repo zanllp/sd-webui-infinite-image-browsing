@@ -9,6 +9,7 @@ import subprocess
 from scripts.log_parser import parse_log_line
 from scripts.bin import bin_file_path
 from scripts.logger import logger
+from scripts.tool import is_dev
 
 
 class BaiduyunTask:
@@ -85,6 +86,8 @@ class BaiduyunTask:
                 if line.isspace():
                     continue
                 info = parse_log_line(line, self.type == "upload")
+                if is_dev and line.find("md5") != -1:
+                    line = ''
                 tasks.append({"info": info, "log": line})
                 self.append_log(info, line)
             except asyncio.TimeoutError:
@@ -120,6 +123,8 @@ class BaiduyunTask:
                 *process_path_arr(str(send_dirs).split(",")),
                 "--saveto",
                 parse_and_replace_time(recv_dir),
+                "-p",
+                str(os.cpu_count() or 4),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
