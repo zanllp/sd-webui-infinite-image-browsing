@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
 import { FetchQueue } from 'vue3-ts-util'
 import type { WithId } from 'vue3-ts-util'
-import type { getAutoCompletedTagList } from '@/taskList/autoComplete'
+import type { getAutoCompletedTagList } from '@/taskRecord/autoComplete'
 
 export const useTaskListStore = defineStore('useTaskListStore', () => {
   const taskLogMap = ref(new Map<string, UploadTaskTickStatus[]>())

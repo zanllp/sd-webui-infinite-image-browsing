@@ -1,26 +1,31 @@
 <script setup lang="ts">
 import { key, pick } from '@/util'
-import { onMounted, ref } from 'vue'
+import { onMounted, watch } from 'vue'
 import { typedID, Task, SearchSelect } from 'vue3-ts-util'
 import { PlusOutlined, SyncOutlined, MinusCircleOutlined } from '@/icon'
-import { cancelTask, createBaiduYunTask, getGlobalSetting, getUploadTasks, getUploadTaskTickStatus, removeTask, type UploadTaskSummary } from '@/api'
+import { cancelTask, createBaiduYunTask, getUploadTasks, getUploadTaskTickStatus, removeTask, type UploadTaskSummary } from '@/api'
 import { message } from 'ant-design-vue'
 import { useTaskListStore } from '@/store/useTaskListStore'
 import { getAutoCompletedTagList } from './autoComplete'
 import { storeToRefs } from 'pinia'
 import { uniqBy } from 'lodash-es'
 import localPathShortcut from './localPathShortcut.vue'
+import { useGlobalStore } from '@/store/useGlobalStore'
 
 const ID = typedID<UploadTaskSummary>(true)
 const store = useTaskListStore()
 const { tasks } = storeToRefs(store)
 const { showDirAutoCompletedIdx, autoCompletedDirList } = storeToRefs(store)
 const pollTaskMap = new Map<string, ReturnType<typeof createPollTask>>()
+const globalStore = useGlobalStore()
+watch(() => globalStore.conf, v => {
+  if (!v) {
+    return
+  }
+  autoCompletedDirList.value = getAutoCompletedTagList(v).filter(v => v.dir.trim())
+})
 
 onMounted(async () => {
-  getGlobalSetting().then((resp) => {
-    autoCompletedDirList.value = getAutoCompletedTagList(resp).filter(v => v.dir.trim())
-  })
   const resp = await getUploadTasks()
   tasks.value = uniqBy([...resp.tasks, ...tasks.value].map(ID), v => v.id) // 前后端合并
     .sort((a, b) => Date.parse(b.start_time) - Date.parse(a.start_time))
@@ -193,9 +198,6 @@ const remove = async (idx: number) => {
   overflow: auto;
   padding: 8px;
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
 
   .action-bar {
     display: flex;
