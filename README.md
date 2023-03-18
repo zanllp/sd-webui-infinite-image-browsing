@@ -1,8 +1,9 @@
 # WIP
 # stable-diffusion-webui-baidu-netdisk
-stable-diffusion-webui百度云上传拓展。适用于远程云gpu,colab,jupyterlab等需要保存的场合，实现通过 Vue+FastApi
+stable-diffusion-webui百度云拓展。适用于远程云gpu,colab,jupyterlab等需要保存的场合，实现通过 Vue+FastApi
 ## 特性
-1. 支持多任务同时上传，单任务内允许多文件(夹)
+1. 极其方便的拖拽生成任务
+1. 支持多任务同时上传/下载，单任务内允许多文件(夹)
 2. 支持从历史记录中创建新的任务
 3. 关闭页面后任务不停，重新打开后恢复进度显示 (这个很重要，sd-webui一刷新页面进度全没了)
 4. 在浏览器前端保存已完成记录，后端保存进行中的任务，对于非跨域链接，历史记录共享

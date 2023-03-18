@@ -18,7 +18,7 @@ watch(currList, async () => {
   <div class="container" v-if="store.splitView.open">
     <a-button @click="store.splitView.open = false" class="close-btn">关闭</a-button>
     <ul class="list" ref="logListEl" >
-      <li v-for="log, idx  in currList" :key="idx">
+      <li v-for="log, idx  in currList" :key="idx" >
         <pre>{{ log.log }}</pre>
       </li>
     </ul>
@@ -28,13 +28,11 @@ watch(currList, async () => {
 .container {
   height: 100%;
   position: relative;
-
   .close-btn {
     position: absolute;
     right: 20px;
     top: 20px;
   }
-
 }
 
 .list {

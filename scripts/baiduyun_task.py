@@ -9,6 +9,7 @@ import subprocess
 from scripts.log_parser import parse_log_line
 from scripts.bin import bin_file_path
 from scripts.logger import logger
+from scripts.tool import is_dev
 
 
 class BaiduyunTask:
@@ -44,7 +45,7 @@ class BaiduyunTask:
         for key in self.files_state:
             status = self.files_state[key]["status"]
             self.n_files += 1
-            if status == "upload-success" or status == "file-skipped":
+            if status == "upload-success" or status == "file-skipped" or status == "download-success":
                 self.n_success_files += 1
             elif status == "upload-failed":
                 self.n_failed_files += 1
@@ -84,7 +85,9 @@ class BaiduyunTask:
                     break
                 if line.isspace():
                     continue
-                info = parse_log_line(line)
+                info = parse_log_line(line, self.type == "upload")
+                if is_dev and line.find("md5") != -1:
+                    line = ''
                 tasks.append({"info": info, "log": line})
                 self.append_log(info, line)
             except asyncio.TimeoutError:
@@ -104,16 +107,29 @@ class BaiduyunTask:
     async def create(
         type: Literal["upload", "download"], send_dirs: str, recv_dir: str
     ):
-        if type not in ["upload", "download"]:
-            raise Exception("非法参数")
-        process = await asyncio.create_subprocess_exec(
-            bin_file_path,
-            type,
-            *process_path_arr(str(send_dirs).split(",")),
-            parse_and_replace_time(recv_dir),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        if type == "upload" :
+            process = await asyncio.create_subprocess_exec(
+                bin_file_path,
+                type,
+                *process_path_arr(str(send_dirs).split(",")),
+                parse_and_replace_time(recv_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+        elif type == "download":
+            process = await asyncio.create_subprocess_exec(
+                bin_file_path,
+                type,
+                *process_path_arr(str(send_dirs).split(",")),
+                "--saveto",
+                parse_and_replace_time(recv_dir),
+                "-p",
+                str(os.cpu_count() or 4),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+        else:
+            raise Exception("unknown task type")
         task = BaiduyunTask(process, type, send_dirs, recv_dir)
         task.update_state()
         baiduyun_task_cache[task.id] = task

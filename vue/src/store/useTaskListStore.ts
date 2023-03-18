@@ -11,16 +11,19 @@ export const useTaskListStore = defineStore('useTaskListStore', () => {
   const queue = reactive(new FetchQueue())
   const pollInterval = ref(3)
   const tasks = ref<WithId<UploadTaskSummary>[]>([])
+
+  const showDirAutoCompletedIdx = ref(-1)
   return {
     pollInterval,
     taskLogMap,
     splitView,
     currLogDetailId,
     queue,
-    tasks
+    tasks,
+    showDirAutoCompletedIdx
   }
 }, {
   persist: {
-      paths: ['pollInterval', 'splitView', 'tasks']
+    paths: ['pollInterval', 'splitView', 'tasks']
   }
 })

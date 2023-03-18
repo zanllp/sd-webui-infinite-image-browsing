@@ -1,23 +1,29 @@
 <!-- eslint-disable no-empty -->
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { copy2clipboard, FetchQueue, SplitView } from 'vue3-ts-util'
+import { onMounted, reactive, ref } from 'vue'
+import { FetchQueue } from 'vue3-ts-util'
 import { getUserInfo, type UserInfo, logout, loginByBduss } from './api/user'
-import { useTaskListStore } from './store/useTaskListStore'
-import LogDetail from './taskList/logDetail.vue'
-import TaskList from './taskList/taskList.vue'
-import { LogoutOutlined, LoginOutlined } from '@/icon'
+import { LogoutOutlined, LoginOutlined, Loading3QuartersOutlined } from '@/icon'
 import { message } from 'ant-design-vue'
 import { isAxiosError } from 'axios'
-const store = useTaskListStore()
+import fileTransfer from './fileTransfer/fileTransfer.vue'
+import { getGlobalSetting } from './api'
+import { useGlobalStore } from './store/useGlobalStore'
+import { getAutoCompletedTagList } from './taskRecord/autoComplete'
+import { useTaskListStore } from './store/useTaskListStore'
+import TaskOperation from './taskRecord/taskOperation.vue'
+
 const user = ref<UserInfo>()
 const bduss = ref('')
-const percent = computed(() => !store.splitView.open ? 100 : store.splitView.percent)
-const copy = (text: string) => {
-  copy2clipboard(text, `复制 "${text}" 成功，粘贴使用"`)
-}
 const queue = reactive(new FetchQueue(-1, 0, 0, 'throw'))
+const globalStore = useGlobalStore()
+const taskStore  = useTaskListStore()
 onMounted(async () => {
+  getGlobalSetting().then((resp) => {
+    globalStore.conf = resp
+
+    globalStore.autoCompletedDirList = getAutoCompletedTagList(resp).filter(v => v.dir.trim())
+  })
   user.value = await queue.pushAction(getUserInfo).res
 })
 
@@ -66,30 +72,20 @@ const onLoginBtnClick = async () => {
         </a-form-item>
       </a-form>
     </div>
-    <div class="opreation-container" v-if="user">
-      <div class="panel">
-        <a-form layout="inline">
-          <a-form-item label="轮询间隔">
-            <a-input-number v-model:value="store.pollInterval" :min="0.5" :disabled="!store.queue.isIdle" /> (s)
-            <sub>越小对网络压力越大</sub>
-          </a-form-item>
-        </a-form>
-        <div class="actions-bar">
-          <a-button @click="copy('<#%Y-%m-%d#>')">复制日期占位符</a-button>
-          <a-button @click="copy('<#%H-%M-%S#>')">复制时间占位符</a-button>
-          <a-button @click="copy('<#%Y-%m-%d %H-%M-%S#>')">复制日期+时间占位符</a-button>
-        </div>
-      </div>
-
-      <split-view v-model:percent="percent" class="split-view">
-        <template #left>
-          <task-list />
+    <a-tabs>
+      <a-tab-pane key="1" tab="快速任务">
+        <file-transfer />
+      </a-tab-pane>
+      <a-tab-pane key="2" force-render>
+        <template #tab>
+          <span>
+            任务记录
+            <loading3-quarters-outlined v-if="!taskStore.queue.isIdle" spin />
+          </span>
         </template>
-        <template #right>
-          <log-detail />
-        </template>
-      </split-view>
-    </div>
+        <task-operation/>
+      </a-tab-pane>
+    </a-tabs>
   </a-skeleton>
 </template>
 <style scoped lang="scss">

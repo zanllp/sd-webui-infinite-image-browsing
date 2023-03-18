@@ -1,3 +1,5 @@
+import os
+from scripts.tool import human_readable_size
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 import modules.scripts as scripts
@@ -21,7 +23,9 @@ from scripts.bin import (
     cwd,
     bin_file_path,
     bin_file_name,
+    is_win,
 )
+from scripts.tool import get_windows_drives
 import functools
 from scripts.logger import logger
 
@@ -63,20 +67,22 @@ def get_curr_working_dir():
 
 
 def list_file(cwd="/"):
-    exec_ops(["cd", cwd])
-    output = exec_ops("ls")
-    pattern = (
-        r"\s+(\d+)\s+(\d+\.\d+\w+)\s+(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})\s+(.*)"
+    output = exec_ops(["ls", cwd])
+    pattern = re.compile(
+        r"\s+(\d+)\s+([\w\-.]+)\s+(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})\s+(.*)"
     )
+    if output.find("获取目录下的文件列表: 网络错误") != -1:
+        raise Exception("获取目录下的文件列表: 网络错误")
     files = []
     for line in output.split("\n"):
         match = re.match(pattern, line)
         if match:
+            name = match.group(4).strip()
             file_info = {
-                "id": int(match.group(1)),
-                "size": match.group(2).strip(),
-                "date": match.group(3).strip(),
-                "name": match.group(4).strip(),
+                "size": match.group(2),
+                # "date": match.group(3),
+                "name": name.strip("/"),
+                "type": "dir" if name.endswith("/") else "file",
             }
             files.append(file_info)
     return files
@@ -203,7 +209,13 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
 
     @app.get(f"{pre}/global_setting")
     async def global_setting():
-        return {"global_setting": opts.data, "default_conf": get_default_conf()}
+        return {
+            "global_setting": opts.data,
+            "default_conf": get_default_conf(),
+            "cwd": cwd,
+            "is_win": is_win,
+            "sd_cwd": os.getcwd(),
+        }
 
     class BaiduyunUploadDownloadReq(BaseModel):
         type: Literal["upload", "download"]
@@ -223,6 +235,12 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
             task.update_state()
             tasks.append(task.get_summary())
         return {"tasks": list(reversed(tasks))}
+
+    @app.delete(pre + "/task/{id}")
+    async def remove_task_cache(id: str):
+        c = BaiduyunTask.get_cache()
+        if id in c:
+            c.pop(id)
 
     @app.get(pre + "/task/{id}/files_state")
     async def task_files_state(id):
@@ -258,7 +276,35 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
             )
             res = await upload_poll_promise_dict[id]
             upload_poll_promise_dict.pop(id)
+
         return res
+
+    @app.get(pre + "/files/{target}")
+    async def get_target_floder_files(
+        target: Literal["local", "netdisk"], folder_path: str
+    ):
+        files = []
+        try:
+            if target == "local":
+                if is_win and folder_path == "/":
+                    for item in get_windows_drives():
+                        files.append({"type": "dir", "size": "-", "name": item})
+                else:
+                    for item in os.listdir(folder_path):
+                        path = os.path.join(folder_path, item)
+                        if os.path.isfile(path):
+                            size = human_readable_size(os.path.getsize(path))
+                            files.append({"type": "file", "size": size, "name": item})
+                        elif os.path.isdir(path):
+                            files.append({"type": "dir", "size": "-", "name": item})
+            else:
+                files = list_file(folder_path)
+
+        except Exception as e:
+            logger.error(e)
+            raise HTTPException(status_code=400, detail=str(e))
+
+        return {"files": files}
 
 
 script_callbacks.on_ui_tabs(on_ui_tabs)

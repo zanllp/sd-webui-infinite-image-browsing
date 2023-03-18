@@ -1,9 +1,17 @@
-import axios from 'axios'
+import { message } from 'ant-design-vue'
+import axios, { isAxiosError } from 'axios'
 import type { GlobalSettingPart } from './type'
 export const axiosInst = axios.create({
-  baseURL: '/baidu_netdisk'
+  baseURL: '/baidu_netdisk',
+  
 })
-
+axiosInst.interceptors.response.use(resp => resp, err => {
+  if (isAxiosError(err)) {
+    const errmsg =  err.response?.data?.detail ?? "发生了个错误"
+    message.error(errmsg)
+  }
+  return err
+})
 export const greeting = async () => {
   const resp = await axiosInst.get('hello')
   return resp.data as string
@@ -33,13 +41,13 @@ interface UploadTaskFileSkipped {
 interface UploadTaskPreparing {
   id: string
   status: 'upload-preparing'
-  local_file_path: string
+  local_path: string
 }
 
 interface UploadTaskSuccess {
   id: string
   status: 'upload-success'
-  baidu_netdisk_saved_path: string
+  remote_path: string
 }
 
 interface UploadTaskFastuploadFailed {
@@ -121,14 +129,19 @@ export const getUploadTasks = async () => {
   }
 }
 
+export interface GlobalConf {
+  global_setting: GlobalSettingPart,
+  is_win: boolean,
+  cwd: string,
+  sd_cwd: string
+  default_conf: {
+    upload_dir: string
+  }
+}
+
 export const getGlobalSetting = async () => {
   const resp = await axiosInst.get('/global_setting')
-  return resp.data as {
-    global_setting: GlobalSettingPart,
-    default_conf: {
-      upload_dir: string
-    }
-  }
+  return resp.data as GlobalConf
 }
 
 
@@ -140,4 +153,8 @@ export const cancelTask = async (id: string) => {
       task_summary: UploadTaskSummary
     }
   }
+}
+
+export const removeTask = async (id: string) => {
+  return axiosInst.delete(`/task/${id}`)
 }
