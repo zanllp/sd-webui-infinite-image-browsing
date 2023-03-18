@@ -9,6 +9,7 @@ import { isAxiosError } from 'axios'
 import fileTransfer from './fileTransfer/fileTransfer.vue'
 import { getGlobalSetting } from './api'
 import { useGlobalStore } from './store/useGlobalStore'
+import { getAutoCompletedTagList } from './taskRecord/autoComplete'
 
 const user = ref<UserInfo>()
 const bduss = ref('')
@@ -17,6 +18,8 @@ const globalStore = useGlobalStore()
 onMounted(async () => {
   getGlobalSetting().then((resp) => {
     globalStore.conf = resp
+
+    globalStore.autoCompletedDirList = getAutoCompletedTagList(resp).filter(v => v.dir.trim())
   })
   user.value = await queue.pushAction(getUserInfo).res
 })
@@ -67,7 +70,7 @@ const onLoginBtnClick = async () => {
       </a-form>
     </div>
 
-    <file-transfer/>
+    <file-transfer />
   </a-skeleton>
 </template>
 <style scoped lang="scss">

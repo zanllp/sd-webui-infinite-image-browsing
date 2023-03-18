@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
 import { last } from 'lodash'
-import { ref, computed, onMounted } from 'vue'
-import { FileOutlined, FolderOpenOutlined } from '@/icon'
+import { ref, computed, onMounted, toRaw } from 'vue'
+import { FileOutlined, FolderOpenOutlined, DownOutlined } from '@/icon'
 import path from 'path-browserify'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { copy2clipboard } from 'vue3-ts-util'
+import { copy2clipboard, ok } from 'vue3-ts-util'
 // @ts-ignore
 import NProgress from 'multi-nprogress'
 import 'multi-nprogress/nprogress.css'
@@ -32,6 +32,7 @@ const sortFile = (files: FileNodeInfo[]) => {
     return sb - sa
   })
 }
+
 onMounted(async () => {
   const resp = await getTargetFolderFiles(props.target, '/')
   stack.value.push({
@@ -68,20 +69,56 @@ const back = (idx: number) => {
   }
 }
 
+const to = async (dir: string) => {
+  if (!/^((\w:)|\/)/.test(dir)) {
+    dir = path.join(global.conf?.sd_cwd ?? '/', dir)
+  }
+  const frags = dir.split(/\\|\//)
+  if (global.conf?.is_win) {
+    frags[0] = frags[0] + '/' // 分割完是c:
+  } else {
+    frags.shift() // /开头的一个是空
+  }
+  back(0) // 回到栈底
+  for (const frag of frags) {
+    const target = currPage.value?.files.find(v => v.name === frag)
+    ok(target)
+    await openNext(target)
+  }
+}
+
+const onDrop = (e: DragEvent) => {
+  const data = JSON.parse(e.dataTransfer?.getData("text") || '{}') as FileNodeInfo & { from: typeof props.target }
+  console.log(data)
+}
 </script>
 <template>
-  <div ref="el">
+  <div ref="el" @dragover.prevent @drop.prevent="onDrop($event)" class="container">
     <div class="location">
-
-      <a-breadcrumb>
+      <a-breadcrumb style="flex: 1;">
         <a-breadcrumb-item v-for="item, idx in stack" :key="idx"><a @click.prevent="back(idx)">{{ item.curr === "/" ? "根"
           : item.curr.replace(/:\/$/, '盘') }}</a></a-breadcrumb-item>
       </a-breadcrumb>
+      <a-dropdown v-if="props.target === 'local'">
+        <a class="ant-dropdown-link" @click.prevent>
+          快速移动
+          <DownOutlined />
+        </a>
+        <template #overlay>
+          <a-menu>
+            <a-menu-item v-for="item in global.autoCompletedDirList" :key="item.dir">
+              <a @click.prevent="to(item.dir)">{{ item.zh }}</a>
+            </a-menu-item>
+          </a-menu>
+        </template>
+      </a-dropdown>
       <a @click.prevent="copyLocation">复制路径</a>
     </div>
-    <div v-if="currPage" class="page-container">
+    <div v-if="currPage" class="view">
       <ul class="file-list">
         <li class="file" v-for="file in currPage.files" :class="{ 'clickable': file.type === 'dir' }" :key="file.name"
+          draggable="true"
+          @dragstart="$event.dataTransfer!.setData('text/plain', JSON.stringify({ from: props.target, ...toRaw(file) }))"
           @click="openNext(file)">
           <file-outlined v-if="file.type === 'file'" />
           <folder-open-outlined v-else />
@@ -97,15 +134,24 @@ const back = (idx: number) => {
   </div>
 </template>
 <style lang="scss" scoped>
+.container {
+  height: 100%;
+}
+
 .location {
   margin: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  a {
+    margin-left: 8px;
+  }
 }
 
-.page-container {
+.view {
   padding: 8px;
+
 
   .file-list {
     list-style: none;

@@ -133,6 +133,7 @@ export interface GlobalConf {
   global_setting: GlobalSettingPart,
   is_win: boolean,
   cwd: string,
+  sd_cwd: string
   default_conf: {
     upload_dir: string
   }
