@@ -1,6 +1,6 @@
 # WIP
 # stable-diffusion-webui-baidu-netdisk
-stable-diffusion-webui百度云拓展。适用于远程云gpu,colab,jupyterlab等需要保存的场合，实现通过 Vue+FastApi
+stable-diffusion-webui百度云拓展。适用于远程云gpu,colab,jupyterlab等需要保存/还原的场合，实现通过 Vue+FastApi
 ## 特性
 1. 使用拖拽在本地与云之间上传下载文件
 1. 支持多任务同时上传/下载，单任务内允许多文件(夹)
