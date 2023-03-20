@@ -1,4 +1,5 @@
 import os
+import time
 from scripts.tool import human_readable_size
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -25,7 +26,7 @@ from scripts.bin import (
     bin_file_name,
     is_win,
 )
-from scripts.tool import get_windows_drives
+from scripts.tool import get_windows_drives, convert_to_bytes
 import functools
 from scripts.logger import logger
 
@@ -78,11 +79,14 @@ def list_file(cwd="/"):
         match = re.match(pattern, line)
         if match:
             name = match.group(4).strip()
+            f_type = "dir" if name.endswith("/") else "file"
+            size = match.group(2)
             file_info = {
-                "size": match.group(2),
-                # "date": match.group(3),
+                "size": size,
+                "date": match.group(3),
                 "name": name.strip("/"),
-                "type": "dir" if name.endswith("/") else "file",
+                "type": f_type,
+                "bytes": convert_to_bytes(size) if size != "-" else size
             }
             files.append(file_info)
     return files
@@ -292,11 +296,26 @@ def baidu_netdisk_api(_: gr.Blocks, app: FastAPI):
                 else:
                     for item in os.listdir(folder_path):
                         path = os.path.join(folder_path, item)
+                        mod_time = os.path.getmtime(path)
+                        date = time.strftime(
+                            "%Y-%m-%d %H:%M:%S", time.localtime(mod_time)
+                        )
                         if os.path.isfile(path):
-                            size = human_readable_size(os.path.getsize(path))
-                            files.append({"type": "file", "size": size, "name": item})
+                            bytes = os.path.getsize(path)
+                            size = human_readable_size(bytes)
+                            files.append(
+                                {
+                                    "type": "file",
+                                    "date": date,
+                                    "size": size,
+                                    "name": item,
+                                    "bytes": bytes,
+                                }
+                            )
                         elif os.path.isdir(path):
-                            files.append({"type": "dir", "size": "-", "name": item})
+                            files.append(
+                                {"type": "dir", "date": date, "size": "-", "name": item}
+                            )
             else:
                 files = list_file(folder_path)
 
