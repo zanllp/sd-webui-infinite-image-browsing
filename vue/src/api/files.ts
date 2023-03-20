@@ -3,7 +3,9 @@ import { axiosInst } from '.'
 export interface FileNodeInfo {
   size: string
   type: 'file' | 'dir'
-  name: string
+  name: string,
+  date: string,
+  bytes: number
 }
 
 export const getTargetFolderFiles = async (target: 'local' | 'netdisk' , folder_path: string) => {

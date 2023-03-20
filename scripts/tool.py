@@ -1,4 +1,5 @@
 import os
+import re
 
 
 def human_readable_size(size_bytes):
@@ -25,5 +26,24 @@ def get_windows_drives():
         if os.path.exists(drive_name):
             drives.append(drive_name)
     return drives
+
+pattern = re.compile(r'(\d+\.?\d*)([KMGT]?B)', re.IGNORECASE)
+def convert_to_bytes(file_size_str):
+    match = re.match(pattern, file_size_str)
+    if match:
+        size_str, unit_str = match.groups()
+        size = float(size_str)
+        unit = unit_str.upper()
+        if unit == "KB":
+            size *= 1024
+        elif unit == "MB":
+            size *= 1024**2
+        elif unit == "GB":
+            size *= 1024**3
+        elif unit == "TB":
+            size *= 1024**4
+        return int(size)
+    else:
+        raise ValueError(f"Invalid file size string '{file_size_str}'")
 
 is_dev = "APP_ENV" in os.environ and os.environ["APP_ENV"] == "dev"
