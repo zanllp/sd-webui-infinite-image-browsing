@@ -1,6 +1,6 @@
 
-from scripts.tool import is_dev
-from scripts.bin import cwd
+from scripts.tool import is_dev,cwd
+
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

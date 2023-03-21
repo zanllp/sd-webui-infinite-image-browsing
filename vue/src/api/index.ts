@@ -134,9 +134,6 @@ export interface GlobalConf {
   is_win: boolean,
   cwd: string,
   sd_cwd: string
-  default_conf: {
-    upload_dir: string
-  }
 }
 
 export const getGlobalSetting = async () => {
