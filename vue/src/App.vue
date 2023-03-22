@@ -22,7 +22,7 @@ onMounted(async () => {
   getGlobalSetting().then((resp) => {
     globalStore.conf = resp
 
-    globalStore.autoCompletedDirList = getAutoCompletedTagList(resp).filter(v => v.dir.trim())
+    globalStore.autoCompletedDirList = getAutoCompletedTagList(resp).filter(v => v?.dir?.trim?.())
   })
   user.value = await queue.pushAction(getUserInfo).res
 })
