@@ -229,6 +229,8 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
                 else:
                     for item in os.listdir(folder_path):
                         path = os.path.join(folder_path, item)
+                        if not os.path.exists(path):
+                            continue
                         mod_time = os.path.getmtime(path)
                         date = time.strftime(
                             "%Y-%m-%d %H:%M:%S", time.localtime(mod_time)

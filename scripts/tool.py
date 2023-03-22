@@ -49,4 +49,4 @@ def convert_to_bytes(file_size_str):
 
 is_dev = "APP_ENV" in os.environ and os.environ["APP_ENV"] == "dev"
 cwd = os.path.normpath(os.path.join(__file__, "../../"))
-is_win = platform.system().lower().find("win") != -1
+is_win = platform.system().lower().find("windows") != -1
