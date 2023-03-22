@@ -6,6 +6,7 @@ html {
   position: relative;
   display: inline-block;
   width: 100%;
+  --scroll-container-max-height: calc(100vh - 256px);
 }
 
 body {
@@ -32,4 +33,5 @@ body {
   ::-webkit-scrollbar-track:hover {
     background-color: #eee; // 滚动条轨道悬停颜色
   }
+
 }

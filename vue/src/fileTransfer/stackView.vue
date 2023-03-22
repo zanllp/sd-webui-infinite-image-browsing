@@ -242,7 +242,7 @@ const refresh = async () => {
   .file-list {
     list-style: none;
     padding: 8px;
-    height: 900px;
+    height: var(--scroll-container-max-height);
     overflow: auto;
 
     .file {

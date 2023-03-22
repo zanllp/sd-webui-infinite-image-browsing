@@ -26,7 +26,7 @@ const addDir2task = (dir: string) => {
 const colors = ['#f5222d', '#1890ff', '#ff3125', '#d46b08', '#007bff', '#52c41a', '#13c2c2', '#fa541c', '#eb2f96', '#2f54eb']
 </script>
 <template>
-  <div v-if="showDirAutoCompletedIdx === idx" class="auto-completed-dirs">
+  <div v-if="showDirAutoCompletedIdx === idx && globalStore.autoCompletedDirList.length" class="auto-completed-dirs">
     <a-tooltip v-for="item, tagIdx in globalStore.autoCompletedDirList" :key="item.dir" :title="item.dir + '  点击添加'">
       <a-tag :visible="!task.send_dirs.includes(item.dir)" :color="colors[tagIdx % colors.length]"
         @click="addDir2task(item.dir)">{{ item.zh }}</a-tag>

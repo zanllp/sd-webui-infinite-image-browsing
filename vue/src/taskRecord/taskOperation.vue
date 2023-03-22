@@ -63,7 +63,7 @@ onMounted(async () => {
   flex-direction: column;
 
   .split-view {
-    height: 900px;
+    height: var(--scroll-container-max-height);
   }
 }
 </style>

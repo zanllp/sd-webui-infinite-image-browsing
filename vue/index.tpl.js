@@ -23,12 +23,11 @@
     const wrap = el
     wrap.childNodes.forEach(v => wrap.removeChild(v))
     const iframe = document.createElement('iframe')
-    iframe.srcdoc = html
-    iframe.style = "width:100%;height:768px"
-    window.addEventListener('message', e => {
-      if (e.data.type === 'iframe-size-update') {
-        iframe.style = `width:100%;height:${e.data.height + 128}px`
-      }
+    iframe.srcdoc = html 
+
+    iframe.style = `width:100%;height:${window.innerHeight - 128}px`
+    window.addEventListener('resize', () => {
+      iframe.style = `width:100%;height:${window.innerHeight - 128}px`
     })
     wrap.appendChild(iframe)
   })

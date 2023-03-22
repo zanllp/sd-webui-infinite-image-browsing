@@ -89,6 +89,11 @@ const onLoginBtnClick = async () => {
   </a-skeleton>
 </template>
 <style scoped lang="scss">
+
+:deep() .ant-tabs-nav {
+  margin: 0 16px;
+}
+
 .panel {
   padding: 8px;
   margin: 16px;
@@ -108,7 +113,7 @@ const onLoginBtnClick = async () => {
   flex-direction: column;
 
   .split-view {
-    height: 900px;
+    height: var(--scroll-container-max-height);
   }
 }
 </style>
