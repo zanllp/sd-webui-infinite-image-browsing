@@ -49,6 +49,9 @@ onMounted(async () => {
   })
   np.value = new NProgress()
   np.value!.configure({ parent: el.value as any })
+  if (props.target == 'local') {
+    global.conf?.home && to(global.conf.home)
+  }
 })
 
 const getBasePath = () =>

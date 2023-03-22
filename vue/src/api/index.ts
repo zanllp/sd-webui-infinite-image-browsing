@@ -3,11 +3,11 @@ import axios, { isAxiosError } from 'axios'
 import type { GlobalSettingPart } from './type'
 export const axiosInst = axios.create({
   baseURL: '/baidu_netdisk',
-  
+
 })
 axiosInst.interceptors.response.use(resp => resp, err => {
   if (isAxiosError(err)) {
-    const errmsg =  err.response?.data?.detail ?? "发生了个错误"
+    const errmsg = err.response?.data?.detail ?? "发生了个错误"
     message.error(errmsg)
   }
   return err
@@ -133,6 +133,7 @@ export interface GlobalConf {
   global_setting: GlobalSettingPart,
   is_win: boolean,
   cwd: string,
+  home: string
   sd_cwd: string
 }
 

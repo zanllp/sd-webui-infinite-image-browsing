@@ -151,6 +151,7 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             "global_setting": conf,
             "cwd": cwd,
             "is_win": is_win,
+            "home": os.environ.get("USERPROFILE") if is_win else os.environ.get("HOME"),
             "sd_cwd": os.getcwd(),
         }
 

@@ -1,7 +1,7 @@
 import type { getGlobalSetting } from '@/api'
 import { pick, type ReturnTypeAsync } from '@/util'
 
-export const getAutoCompletedTagList = ({ global_setting,sd_cwd }: ReturnTypeAsync<typeof getGlobalSetting>) => {
+export const getAutoCompletedTagList = ({ global_setting, sd_cwd, home }: ReturnTypeAsync<typeof getGlobalSetting>) => {
   const picked = pick(global_setting,
     'additional_networks_extra_lora_path',
     'outdir_grids',
@@ -19,7 +19,8 @@ export const getAutoCompletedTagList = ({ global_setting,sd_cwd }: ReturnTypeAsy
     ...picked,
     'embeddings': 'embeddings',
     'hypernetworks': 'models/hypernetworks',
-    'cwd': sd_cwd
+    'cwd': sd_cwd,
+    home
   }
   type Keys = keyof (typeof allTag)
   const cnMap: Record<Keys, string> = {
@@ -34,7 +35,8 @@ export const getAutoCompletedTagList = ({ global_setting,sd_cwd }: ReturnTypeAsy
     hypernetworks: '超网络模型的路径',
     outdir_save: '使用“保存”按钮保存图像的目录',
     embeddings: 'Embedding的文件夹',
-    cwd: '工作文件夹'
+    cwd: '工作文件夹',
+    home: 'home'
   }
   return Object.keys(cnMap).map((k) => {
     const key = k as Keys
