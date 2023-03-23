@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
-import { last } from 'lodash'
-import { ref, computed, onMounted, toRaw } from 'vue'
+import { cloneDeep, last, range, uniq } from 'lodash'
+import { ref, computed, onMounted, toRaw, reactive, watch } from 'vue'
 import { FileOutlined, FolderOpenOutlined, DownOutlined } from '@/icon'
 import path from 'path-browserify'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { copy2clipboard, ok, type SearchSelectConv, SearchSelect } from 'vue3-ts-util'
+import { copy2clipboard, ok, type SearchSelectConv, SearchSelect, useWatchDocument } from 'vue3-ts-util'
 // @ts-ignore
 import NProgress from 'multi-nprogress'
 import 'multi-nprogress/nprogress.css'
@@ -14,7 +14,6 @@ import { Modal } from 'ant-design-vue'
 
 const np = ref<Progress.NProgress>()
 const el = ref<HTMLDivElement>()
-
 const props = defineProps<{
   target: 'local' | 'netdisk'
 }>()
@@ -25,6 +24,11 @@ interface Page {
 const stack = ref<Page[]>([])
 const global = useGlobalStore()
 const currPage = computed(() => last(stack.value))
+const multiSelectedIdxs = ref([] as number[])
+
+useWatchDocument('click', () => multiSelectedIdxs.value = [])
+watch(currPage, () => multiSelectedIdxs.value = [])
+
 type SortMethod = 'date-asc' | 'date-desc' | 'name-asc' | 'name-desc' | 'size-asc' | 'size-desc'
 
 const sortMethodMap: Record<SortMethod, string> = {
@@ -40,6 +44,7 @@ const sortMethodConv: SearchSelectConv<SortMethod> = {
   text: (v) => '按' + sortMethodMap[v]
 }
 const sortMethod = ref<SortMethod>('date-desc')
+const sortedFiles = computed(() => filesSort(currPage.value?.files ?? []))
 
 onMounted(async () => {
   const resp = await getTargetFolderFiles(props.target, '/')
@@ -128,11 +133,14 @@ const to = async (dir: string) => {
 }
 
 const onDrop = async (e: DragEvent) => {
-  const data = JSON.parse(e.dataTransfer?.getData('text') || '{}') as FileNodeInfo & {
+  type Data = {
     from: typeof props.target
-    path: string
+    path: string[],
+    includeDir: boolean
   }
-  if (data.from && data.path && data.type) {
+  const data = JSON.parse(e.dataTransfer?.getData('text') || '{}') as Data
+  console.log(data)
+  if (data.from && data.path && typeof data.includeDir !== 'undefined') {
     if (data.from === props.target) {
       return
     }
@@ -140,12 +148,12 @@ const onDrop = async (e: DragEvent) => {
     const typeZH = type === 'upload' ? '上传' : '下载'
     const toPath = path.join(...getBasePath())
     Modal.confirm({
-      title: `确定创建${typeZH}任务${data.type === 'dir' ? ', 这是文件夹!' : ''}`,
-      content: `从 ${props.target !== 'local' ? '本地' : '云盘'} ${data.path} ${typeZH} ${props.target === 'local' ? '本地' : '云盘'
+      title: `确定创建${typeZH}任务${data.includeDir ? ', 这是文件夹或者包含文件夹!' : ''}`,
+      content: `从 ${props.target !== 'local' ? '本地' : '云盘'} ${data.path.join('\n')} ${typeZH} ${props.target === 'local' ? '本地' : '云盘'
         } ${toPath}`,
       maskClosable: true,
       async onOk () {
-        global.eventEmitter.emit('createNewTask', { send_dirs: data.path, recv_dir: toPath, type })
+        global.eventEmitter.emit('createNewTask', { send_dirs: data.path.join(), recv_dir: toPath, type })
       }
     })
   }
@@ -166,6 +174,43 @@ const refresh = async () => {
     await openNext(currPage.value?.files.find((v) => v.name === last?.curr)!)
   }
 }
+
+const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo) => {
+  e.stopPropagation()
+  const files = sortedFiles.value
+  const idx = files.indexOf(file)
+  if (e.shiftKey) {
+    multiSelectedIdxs.value.push(idx)
+    multiSelectedIdxs.value.sort((a, b) => a - b)
+    const first = multiSelectedIdxs.value[0]
+    const last = multiSelectedIdxs.value[multiSelectedIdxs.value.length - 1]
+    multiSelectedIdxs.value = range(first, last + 1)
+    return
+  }
+  await openNext(file)
+}
+
+const onFileDragStart = (e: DragEvent, idx: number) => {
+  const file = cloneDeep(sortedFiles.value[idx])
+  const names = [file.name]
+  let includeDir = file.type === 'dir'
+  if (multiSelectedIdxs.value.includes(idx)) {
+    const selectedFiles = multiSelectedIdxs.value.map(idx => sortedFiles.value[idx])
+    names.push(...selectedFiles.map(v => v.name))
+    includeDir = selectedFiles.some(v => v.type === 'dir')
+    
+  }
+  const basePath = getBasePath()
+  e.dataTransfer!.setData(
+    'text/plain',
+    JSON.stringify({
+      from: props.target,
+      includeDir,
+      path: uniq(names).map(name => path.join(...basePath, name))
+    })
+  )
+}
+
 </script>
 <template>
   <div ref="el" @dragover.prevent @drop.prevent="onDrop($event)" class="container">
@@ -194,17 +239,9 @@ const refresh = async () => {
     </div>
     <div v-if="currPage" class="view">
       <ul class="file-list">
-        <li class="file" v-for="file in filesSort(currPage.files)" :class="{ clickable: file.type === 'dir' }"
-          :key="file.name" draggable="true" @dragstart="
-            $event.dataTransfer!.setData(
-              'text/plain',
-              JSON.stringify({
-                from: props.target,
-                path: path.join(...getBasePath(), file.name),
-                ...toRaw(file)
-              })
-            )
-          " @click="openNext(file)">
+        <li class="file" v-for="file, idx in sortedFiles"
+          :class="{ clickable: file.type === 'dir', selected: multiSelectedIdxs.includes(idx) }" :key="file.name"
+          draggable="true" @dragstart="onFileDragStart($event, idx)" @click.capture="onFileItemClick($event, file)">
           <file-outlined v-if="file.type === 'file'" />
           <folder-open-outlined v-else />
           <div class="name">
@@ -259,6 +296,10 @@ const refresh = async () => {
 
       &.clickable {
         cursor: pointer;
+      }
+
+      &.selected {
+        outline: #0084ff solid 2px;
       }
 
       .name {
