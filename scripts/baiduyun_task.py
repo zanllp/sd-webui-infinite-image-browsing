@@ -124,7 +124,7 @@ class BaiduyunTask:
                 "--saveto",
                 parse_and_replace_time(recv_dir),
                 "-p",
-                str(os.cpu_count() or 4),
+                "4",
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
