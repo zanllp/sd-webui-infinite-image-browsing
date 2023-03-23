@@ -186,6 +186,8 @@ const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo) => {
     const last = multiSelectedIdxs.value[multiSelectedIdxs.value.length - 1]
     multiSelectedIdxs.value = range(first, last + 1)
     return
+  } else if (e.ctrlKey) {
+    multiSelectedIdxs.value.push(idx)
   }
   await openNext(file)
 }
@@ -198,7 +200,7 @@ const onFileDragStart = (e: DragEvent, idx: number) => {
     const selectedFiles = multiSelectedIdxs.value.map(idx => sortedFiles.value[idx])
     names.push(...selectedFiles.map(v => v.name))
     includeDir = selectedFiles.some(v => v.type === 'dir')
-    
+
   }
   const basePath = getBasePath()
   e.dataTransfer!.setData(
