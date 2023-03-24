@@ -1,0 +1,19 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { deepComputedEffect } from 'vue3-ts-util'
+const props = defineProps<{ loc: string }>()
+const loc = deepComputedEffect(() => props.loc)
+const emit = defineEmits<{ (e: 'to', loc: string): void }>()
+const visible = ref(false)
+const onOK = () => {
+  visible.value = false
+  emit('to', loc.value)
+}
+
+</script>
+<template>
+  <a-modal v-model:visible="visible" title="输入地址回车" @ok="onOK">
+    <a-input @press-enter="onOK" v-model:value="loc" style="width: 300px;" allow-clear></a-input>
+  </a-modal>
+  <a style="margin-left: 4px;" @click="visible = true">前往</a>
+</template>

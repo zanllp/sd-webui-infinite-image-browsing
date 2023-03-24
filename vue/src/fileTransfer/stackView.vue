@@ -12,6 +12,7 @@ import NProgress from 'multi-nprogress'
 import 'multi-nprogress/nprogress.css'
 import type Progress from 'nprogress'
 import { Modal } from 'ant-design-vue'
+import FolderNavigator from './folderNavigator.vue'
 
 const np = ref<Progress.NProgress>()
 const el = ref<HTMLDivElement>()
@@ -26,6 +27,7 @@ const stack = ref<Page[]>([])
 const global = useGlobalStore()
 const currPage = computed(() => last(stack.value))
 const multiSelectedIdxs = ref([] as number[])
+const currLocation = computed(() => path.join(...getBasePath()))
 
 useWatchDocument('click', () => multiSelectedIdxs.value = [])
 useWatchDocument('blur', () => multiSelectedIdxs.value = [])
@@ -56,7 +58,9 @@ onMounted(async () => {
 const getBasePath = () =>
   stack.value.map((v) => v.curr).slice(global.conf?.is_win && props.target === 'local' ? 1 : 0)
 
-const copyLocation = () => copy2clipboard(path.join(...getBasePath()))
+
+
+const copyLocation = () => copy2clipboard(currLocation.value)
 
 const openNext = async (file: FileNodeInfo) => {
   if (file.type !== 'dir') {
@@ -198,28 +202,34 @@ const onFileDragStart = (e: DragEvent, idx: number) => {
 </script>
 <template>
   <div ref="el" @dragover.prevent @drop.prevent="onDrop($event)" class="container">
-    <div class="location">
-      <a-breadcrumb style="flex: 1">
-        <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx"><a @click.prevent="back(idx)">{{
-          item.curr === '/' ? '根' : item.curr.replace(/:\/$/, '盘')
-        }}</a></a-breadcrumb-item>
-      </a-breadcrumb>
-      <SearchSelect v-model:value="sortMethod" :conv="sortMethodConv" :options="Object.keys(sortMethodMap)" />
-      <a class="opt" @click.prevent="refresh"> 刷新 </a>
-      <a-dropdown v-if="props.target === 'local'">
-        <a class="ant-dropdown-link opt" @click.prevent>
-          快速移动
-          <DownOutlined />
-        </a>
-        <template #overlay>
-          <a-menu>
-            <a-menu-item v-for="item in global.autoCompletedDirList" :key="item.dir">
-              <a @click.prevent="to(item.dir)">{{ item.zh }}</a>
-            </a-menu-item>
-          </a-menu>
-        </template>
-      </a-dropdown>
-      <a class="opt" @click.prevent="copyLocation">复制路径</a>
+    <div class="location-bar">
+      <div class="breadcrumb">
+        <a-breadcrumb style="flex: 1">
+          <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx"><a @click.prevent="back(idx)">{{
+            item.curr === '/' ? '根' : item.curr.replace(/:\/$/, '盘')
+          }}</a></a-breadcrumb-item>
+        </a-breadcrumb>
+      </div>
+      <div class="actions">
+
+        <SearchSelect v-model:value="sortMethod" :conv="sortMethodConv" :options="Object.keys(sortMethodMap)" />
+        <a class="opt" @click.prevent="refresh"> 刷新 </a>
+        <a-dropdown v-if="props.target === 'local'">
+          <a class="ant-dropdown-link opt" @click.prevent>
+            快速移动
+            <DownOutlined />
+          </a>
+          <template #overlay>
+            <a-menu>
+              <a-menu-item v-for="item in global.autoCompletedDirList" :key="item.dir">
+                <a @click.prevent="to(item.dir)">{{ item.zh }}</a>
+              </a-menu-item>
+            </a-menu>
+          </template>
+        </a-dropdown>
+        <a class="opt" @click.prevent="copyLocation">复制路径</a>
+        <folder-navigator :loc="currLocation" @to="to"/>
+      </div>
     </div>
     <div v-if="currPage" class="view">
       <ul class="file-list">
@@ -249,11 +259,18 @@ const onFileDragStart = (e: DragEvent, idx: number) => {
   height: 100%;
 }
 
-.location {
-  margin: 32px;
+.location-bar {
+  margin: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  .actions {
+    display: flex;
+    align-items: center;
+
+    flex-shrink: 0;
+  }
 
   a.opt {
     margin-left: 8px;

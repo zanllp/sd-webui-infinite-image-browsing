@@ -60,6 +60,6 @@ export const sortFiles = (files: FileList, method: SortMethod) => {
         throw new Error(`Invalid sort method: ${method}`)
     }
   }
-  return files.slice().sort((a, b) => compare(a, b) || compareByType(a, b))
+  return files.slice().sort((a, b) => compareByType(a, b) || compare(a, b))
 }
 
