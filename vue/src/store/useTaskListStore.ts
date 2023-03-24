@@ -24,6 +24,7 @@ export const useTaskListStore = defineStore('useTaskListStore', () => {
   }
 }, {
   persist: {
-    paths: ['pollInterval', 'splitView', 'tasks']
+    paths: ['pollInterval', 'splitView', 'tasks'],
+    key: 'useTaskListStore-v0.0.1'
   }
 })

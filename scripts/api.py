@@ -157,7 +157,7 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
 
     class BaiduyunUploadDownloadReq(BaseModel):
         type: Literal["upload", "download"]
-        send_dirs: str
+        send_dirs: List[str]
         recv_dir: str
 
     @app.post(f"{pre}/task")

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
 import { cloneDeep, last, range, uniq } from 'lodash'
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, h } from 'vue'
 import { FileOutlined, FolderOpenOutlined, DownOutlined } from '@/icon'
 import { sortMethodMap, sortFiles, SortMethod } from './fileSort'
 import path from 'path-browserify'
@@ -124,13 +124,17 @@ const onDrop = async (e: DragEvent) => {
     const type = data.from === 'local' ? 'upload' : 'download'
     const typeZH = type === 'upload' ? '上传' : '下载'
     const toPath = path.join(...getBasePath())
+    const content = h('div', [
+      h('div', `从 ${props.target !== 'local' ? '本地' : '云盘'} `),
+      h('ol', data.path.map(v => v.split(/[/\\]/).pop()).map(v => h('li', v))),
+      h('div', `${typeZH} ${props.target === 'local' ? '本地' : '云盘'} ${toPath}`)
+    ])
     Modal.confirm({
       title: `确定创建${typeZH}任务${data.includeDir ? ', 这是文件夹或者包含文件夹!' : ''}`,
-      content: `从 ${props.target !== 'local' ? '本地' : '云盘'} ${data.path.join('\n')} ${typeZH} ${props.target === 'local' ? '本地' : '云盘'
-        } ${toPath}`,
+      content,
       maskClosable: true,
       async onOk () {
-        global.eventEmitter.emit('createNewTask', { send_dirs: data.path.join(), recv_dir: toPath, type })
+        global.eventEmitter.emit('createNewTask', { send_dirs: data.path, recv_dir: toPath, type })
       }
     })
   }

@@ -48,7 +48,7 @@ globalStore.useEventListen('createNewTask', async task => {
 
 const getEmptyTask = () => ID({
   type: 'upload',
-  send_dirs: '',
+  send_dirs: [],
   recv_dir: '',
   id: '',
   running: false,
@@ -65,9 +65,9 @@ const addEmptyTask = () => {
 
 const createNewTask = async (idx: number) => {
   const task = tasks.value[idx]
-  task.send_dirs = task.send_dirs.split(/,，\n/).map(v => v.trim()).filter(v => v).join()
+  task.send_dirs = task.send_dirs.map(v => v.trim()).filter(v => v)
   task.recv_dir = task.recv_dir.trim()
-  if (!(task.type === 'upload' ? task.recv_dir.startsWith('/') : task.send_dirs.split(',').every(v => v.startsWith('/')))) {
+  if (!(task.type === 'upload' ? task.recv_dir.startsWith('/') : task.send_dirs.every(v => v.startsWith('/')))) {
     return message.error('百度云的位置必须以 “/” 开头')
   }
   task.running = true
@@ -163,7 +163,7 @@ const remove = async (idx: number) => {
         </a-form-item>
         <a-form-item :label="`发送的文件夹 (${task.type === 'upload' ? '本地' : '百度云'})`"
           @click.stop="task.type === 'upload' && (showDirAutoCompletedIdx = idx)">
-          <a-textarea auto-size :disabled="isDisable(task)" v-model:value="task.send_dirs" allow-clear
+          <a-textarea auto-size :disabled="isDisable(task)" :value="task.send_dirs.join()" @update:value="v => task.send_dirs = v.split(',')" allow-clear
             placeholder="发送文件的文件夹,多个文件夹使用逗号或者换行分隔。支持使用占位符例如stable-diffusion-webui最常用表示日期的<#%Y-%m-%d#>"></a-textarea>
           <local-path-shortcut v-if="task.type === 'upload'" :task="task" @update:task="v => tasks[idx] = v" :idx="idx" />
 

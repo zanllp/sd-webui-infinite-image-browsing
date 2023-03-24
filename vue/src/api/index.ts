@@ -18,7 +18,7 @@ export const greeting = async () => {
 }
 interface BaiduYunTaskCreateReq {
   type: 'upload' | 'download'
-  send_dirs: string
+  send_dirs: string[]
   recv_dir: string
 }
 export const createBaiduYunTask = async (req: BaiduYunTaskCreateReq) => {
@@ -99,7 +99,7 @@ export interface UploadTaskSummary {
   id: string
   running: boolean
   start_time: string
-  send_dirs: string
+  send_dirs: string[]
   recv_dir: string
   type: 'upload' | 'download'
   n_files: number

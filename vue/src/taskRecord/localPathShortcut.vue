@@ -16,12 +16,7 @@ const addDir2task = (dir: string) => {
     task.value.recv_dir = dir
     return
   }
-  const spReg = /[,，\n]$/
-  if (spReg.test(task.value.send_dirs) || !task.value.send_dirs.trim()) {
-    task.value.send_dirs += dir
-  } else {
-    task.value.send_dirs += ` , ${dir}`
-  }
+  task.value.send_dirs.push(dir)
 }
 const colors = ['#f5222d', '#1890ff', '#ff3125', '#d46b08', '#007bff', '#52c41a', '#13c2c2', '#fa541c', '#eb2f96', '#2f54eb']
 </script>
