@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
 import { cloneDeep, last, range, uniq } from 'lodash'
-import { ref, computed, onMounted, toRaw, reactive, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { FileOutlined, FolderOpenOutlined, DownOutlined } from '@/icon'
+import { sortMethodMap, sortFiles, SortMethod } from './fileSort'
 import path from 'path-browserify'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { copy2clipboard, ok, type SearchSelectConv, SearchSelect, useWatchDocument } from 'vue3-ts-util'
@@ -27,24 +28,16 @@ const currPage = computed(() => last(stack.value))
 const multiSelectedIdxs = ref([] as number[])
 
 useWatchDocument('click', () => multiSelectedIdxs.value = [])
+useWatchDocument('blur', () => multiSelectedIdxs.value = [])
 watch(currPage, () => multiSelectedIdxs.value = [])
 
-type SortMethod = 'date-asc' | 'date-desc' | 'name-asc' | 'name-desc' | 'size-asc' | 'size-desc'
 
-const sortMethodMap: Record<SortMethod, string> = {
-  'date-asc': '日期升序',
-  'date-desc': '日期降序',
-  'name-asc': '名称升序',
-  'name-desc': '名称降序',
-  'size-asc': '大小升序',
-  'size-desc': '大小降序'
-}
 const sortMethodConv: SearchSelectConv<SortMethod> = {
   value: (v) => v,
   text: (v) => '按' + sortMethodMap[v]
 }
-const sortMethod = ref<SortMethod>('date-desc')
-const sortedFiles = computed(() => filesSort(currPage.value?.files ?? []))
+const sortMethod = ref(SortMethod.DATE_DESC)
+const sortedFiles = computed(() => sortFiles(currPage.value?.files ?? [], sortMethod.value))
 
 onMounted(async () => {
   const resp = await getTargetFolderFiles(props.target, '/')
@@ -59,33 +52,11 @@ onMounted(async () => {
   }
 })
 
+
 const getBasePath = () =>
   stack.value.map((v) => v.curr).slice(global.conf?.is_win && props.target === 'local' ? 1 : 0)
 
 const copyLocation = () => copy2clipboard(path.join(...getBasePath()))
-
-const filesSort = (files: FileNodeInfo[]) => {
-  return files.slice().sort((a, b) => {
-    const method = sortMethod.value
-    const sa = a.type === 'dir' ? 1 : 0
-    const sb = b.type === 'dir' ? 1 : 0
-    const typeCompare = sb - sa
-    if (typeCompare !== 0) {
-      return typeCompare
-    }
-    if (method === 'date-asc' || method === 'date-desc') {
-      const da = Date.parse(a.date)
-      const db = Date.parse(b.date)
-      return method === 'date-asc' ? da - db : db - da
-    } else if (method === 'name-asc' || method == 'name-desc') {
-      const an = a.name.toLowerCase()
-      const bn = b.name.toLowerCase()
-      return method === 'name-asc' ? an.localeCompare(bn) : bn.localeCompare(an)
-    } else {
-      return method === 'size-asc' ? a.bytes - b.bytes : b.bytes - a.bytes
-    }
-  })
-}
 
 const openNext = async (file: FileNodeInfo) => {
   if (file.type !== 'dir') {
@@ -114,21 +85,27 @@ const back = (idx: number) => {
 }
 
 const to = async (dir: string) => {
-  if (!/^((\w:)|\/)/.test(dir)) {
-    // 相对路径
-    dir = path.join(global.conf?.sd_cwd ?? '/', dir)
-  }
-  const frags = dir.split(/\\|\//)
-  if (global.conf?.is_win) {
-    frags[0] = frags[0] + '/' // 分割完是c:
-  } else {
-    frags.shift() // /开头的一个是空
-  }
-  back(0) // 回到栈底
-  for (const frag of frags) {
-    const target = currPage.value?.files.find((v) => v.name === frag)
-    ok(target)
-    await openNext(target)
+  const backup = cloneDeep(stack.value)
+  try {
+    if (!/^((\w:)|\/)/.test(dir)) {
+      // 相对路径
+      dir = path.join(global.conf?.sd_cwd ?? '/', dir)
+    }
+    const frags = dir.split(/\\|\//)
+    if (global.conf?.is_win) {
+      frags[0] = frags[0] + '/' // 分割完是c:
+    } else {
+      frags.shift() // /开头的一个是空
+    }
+    back(0) // 回到栈底
+    for (const frag of frags) {
+      const target = currPage.value?.files.find((v) => v.name === frag)
+      ok(target)
+      await openNext(target)
+    }
+  } catch (error) {
+    stack.value = backup
+    throw error
   }
 }
 
@@ -185,11 +162,11 @@ const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo) => {
     const first = multiSelectedIdxs.value[0]
     const last = multiSelectedIdxs.value[multiSelectedIdxs.value.length - 1]
     multiSelectedIdxs.value = range(first, last + 1)
-    return
   } else if (e.ctrlKey) {
     multiSelectedIdxs.value.push(idx)
+  } else {
+    await openNext(file)
   }
-  await openNext(file)
 }
 
 const onFileDragStart = (e: DragEvent, idx: number) => {
@@ -212,6 +189,7 @@ const onFileDragStart = (e: DragEvent, idx: number) => {
     })
   )
 }
+
 
 </script>
 <template>
