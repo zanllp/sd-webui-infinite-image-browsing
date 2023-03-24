@@ -11,7 +11,7 @@ import { copy2clipboard, ok, type SearchSelectConv, SearchSelect, useWatchDocume
 import NProgress from 'multi-nprogress'
 import 'multi-nprogress/nprogress.css'
 import type Progress from 'nprogress'
-import { Modal } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import FolderNavigator from './folderNavigator.vue'
 
 const np = ref<Progress.NProgress>()
@@ -96,7 +96,7 @@ const to = async (dir: string) => {
       dir = path.join(global.conf?.sd_cwd ?? '/', dir)
     }
     const frags = dir.split(/\\|\//)
-    if (global.conf?.is_win) {
+    if (global.conf?.is_win && props.target === 'local') {
       frags[0] = frags[0] + '/' // 分割完是c:
     } else {
       frags.shift() // /开头的一个是空
@@ -108,6 +108,7 @@ const to = async (dir: string) => {
       await openNext(target)
     }
   } catch (error) {
+    message.error('移动失败，检查你的路径输入')
     stack.value = backup
     throw error
   }
