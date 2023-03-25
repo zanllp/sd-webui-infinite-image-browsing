@@ -156,3 +156,7 @@ export const cancelTask = async (id: string) => {
 export const removeTask = async (id: string) => {
   return axiosInst.delete(`/task/${id}`)
 }
+
+export const setImgPath = async (path: string) => {
+  return axiosInst.post(`/send_img_path?path=${encodeURIComponent(path)}`)
+}

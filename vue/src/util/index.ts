@@ -1,7 +1,7 @@
 import { idKey, type UniqueId } from 'vue3-ts-util'
 
 export function gradioApp() {
-  const elems = document.getElementsByTagName('gradio-app')
+  const elems = parent.document.getElementsByTagName('gradio-app')
   const gradioShadowRoot = elems.length == 0 ? null : elems[0].shadowRoot
   return gradioShadowRoot ? gradioShadowRoot : document;
 }
@@ -41,3 +41,9 @@ export const pick = <T extends Dict, keys extends Array<keyof T>> (v: T, ...keys
  * ReturnTypeAsync\<typeof fn\>
  */
 export type ReturnTypeAsync<T extends (...arg: any) => Promise<any>> = Awaited<ReturnType<T>>
+
+export function isImageFile(filename: string): boolean {
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+  const extension = filename.split('.').pop()?.toLowerCase();
+  return extension !== undefined && imageExtensions.includes(`.${extension}`);
+}

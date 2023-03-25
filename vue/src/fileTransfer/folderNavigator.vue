@@ -13,7 +13,7 @@ const onOK = () => {
 </script>
 <template>
   <a-modal v-model:visible="visible" title="输入地址回车" @ok="onOK">
-    <a-input @press-enter="onOK" v-model:value="loc" style="width: 300px;" allow-clear></a-input>
+    <a-input @press-enter="onOK" v-model:value="loc" style="width: 100%;" allow-clear></a-input>
   </a-modal>
-  <a style="margin-left: 4px;" @click="visible = true">前往</a>
+  <a style="margin-left: 8px;" @click="visible = true">前往</a>
 </template>
