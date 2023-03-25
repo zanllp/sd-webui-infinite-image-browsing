@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
-import { setImgPath } from '@/api'
-import { cloneDeep, last, range, uniq } from 'lodash'
+import { setImgPath, genInfoCompleted } from '@/api'
+import { cloneDeep, debounce, last, range, uniq } from 'lodash'
 import { ref, computed, onMounted, watch, h } from 'vue'
 import { FileOutlined, FolderOpenOutlined, DownOutlined } from '@/icon'
 import { sortMethodMap, sortFiles, SortMethod } from './fileSort'
 import path from 'path-browserify'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { copy2clipboard, ok, type SearchSelectConv, SearchSelect, useWatchDocument, fallbackImage, delay } from 'vue3-ts-util'
+import { copy2clipboard, ok, type SearchSelectConv, SearchSelect, useWatchDocument, fallbackImage, delay, Task } from 'vue3-ts-util'
 // @ts-ignore
 import NProgress from 'multi-nprogress'
 import 'multi-nprogress/nprogress.css'
@@ -34,7 +34,7 @@ interface FileNodeInfoR extends FileNodeInfo {
 }
 type ViewMode = 'line' | 'grid' | 'large-size-grid'
 const global = useGlobalStore()
-const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to } = useLocation()
+const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to, scroller } = useLocation()
 const { gridItems, sortMethodConv, moreActionsDropdownShow, sortedFiles, sortMethod, viewMode, gridSize, viewModeMap, largeGridSize } = useFilesDisplay()
 const { onDrop, onFileDragStart, multiSelectedIdxs } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick } = useFileItemActions()
@@ -79,11 +79,18 @@ function useFilesDisplay () {
 
 
 function useLocation () {
-
+  const scroller = ref<any>()
   const np = ref<Progress.NProgress>()
   const currPage = computed(() => last(stack.value))
   const stack = ref<Page[]>([])
   const currLocation = computed(() => path.join(...getBasePath()))
+
+  watch(() => stack.value.length, debounce((v,lv) => {
+    if (v !== lv) {
+      scroller.value.scrollToItem(0)
+    }
+  }, 300))
+
   onMounted(async () => {
     const resp = await getTargetFolderFiles(props.target, '/')
     stack.value.push({
@@ -180,7 +187,8 @@ function useLocation () {
     currPage,
     currLocation,
     to,
-    stack
+    stack,
+    scroller
   }
 }
 
@@ -276,6 +284,11 @@ function useFileItemActions () {
       await setImgPath(file.fullpath) // 设置图像路径
       const btn = gradioApp().querySelector('#bd_hidden_img_update_trigger')! as HTMLButtonElement
       btn.click() // 触发图像组件更新
+      await Task.run({
+        pollInterval: 1000,
+        action: genInfoCompleted,
+        validator: v => v
+      }).completedTask // 等待消息生成完成
       await delay(500) // 如果直接点好像会还是设置之前的图片，workaround
       const tabBtn = gradioApp().querySelector(`#bd_hidden_tab_${tab}`) as HTMLButtonElement
       tabBtn.click() // 触发粘贴
@@ -357,7 +370,7 @@ function useFileItemActions () {
       </div>
     </div>
     <div v-if="currPage" class="view">
-      <RecycleScroller class="file-list" :items="sortedFiles" :prerender="10"
+      <RecycleScroller class="file-list" :items="sortedFiles" :prerender="10" ref="scroller"
         :item-size="viewMode === 'line' ? 80 : (viewMode === 'grid' ? gridSize : largeGridSize)" key-field="fullpath"
         :gridItems="gridItems">
         <template v-slot="{ item: file, index: idx }">

@@ -160,3 +160,7 @@ export const removeTask = async (id: string) => {
 export const setImgPath = async (path: string) => {
   return axiosInst.post(`/send_img_path?path=${encodeURIComponent(path)}`)
 }
+
+export const genInfoCompleted = async () => {
+  return (await axiosInst.get(`/gen_info_completed`)).data as boolean
+}
