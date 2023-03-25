@@ -114,7 +114,7 @@ def singleton_async(fn):
 
 send_img_path = { "value": "" }
 
-def baidu_netdisk_api(_: Any = None, app: FastAPI):
+def baidu_netdisk_api(_: Any, app: FastAPI):
     pre = "/baidu_netdisk"
     app.mount(
         f"{pre}/fe-static",
