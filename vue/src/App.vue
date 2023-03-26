@@ -12,16 +12,16 @@ import { useGlobalStore } from './store/useGlobalStore'
 import { getAutoCompletedTagList } from './taskRecord/autoComplete'
 import { useTaskListStore } from './store/useTaskListStore'
 import TaskOperation from './taskRecord/taskOperation.vue'
+import { useIntervalFn } from '@vueuse/core'
 
 const user = ref<UserInfo>()
 const bduss = ref('')
 const queue = reactive(new FetchQueue(-1, 0, 0, 'throw'))
 const globalStore = useGlobalStore()
-const taskStore  = useTaskListStore()
+const taskStore = useTaskListStore()
 onMounted(async () => {
   getGlobalSetting().then((resp) => {
     globalStore.conf = resp
-
     globalStore.autoCompletedDirList = getAutoCompletedTagList(resp).filter(v => v?.dir?.trim?.())
   })
   user.value = await queue.pushAction(getUserInfo).res
@@ -40,6 +40,19 @@ const onLoginBtnClick = async () => {
     message.error(isAxiosError(error) ? error.response?.data?.detail ?? '未知错误' : '未知错误')
   }
 }
+
+const tips = ref('')
+const msgs = [
+  '使用“快速移动”, 可以直接到到达图生图，文生图等文件夹',
+  "你可以通过拖拽调整两边区域的大小",
+  "使用ctrl，shift可以很方便的进行多选",
+  "从百度云向本地拖拽是下载，本地向百度云拖拽是上传",
+  "可以多尝试更多里面的功能",
+  "鼠标在文件上右键可以打开上下文菜单",
+  "提醒任务完成后，你需要手动刷新下才能看到新文件"]
+useIntervalFn(() => {
+  tips.value = msgs[~~(Math.random() * msgs.length)]
+}, 3000)
 </script>
 
 <template>
@@ -50,12 +63,22 @@ const onLoginBtnClick = async () => {
         <div>
           已登录用户：{{ user.username }}
         </div>
-        <a-button @click="onLogoutBtnClick">
-          <template #icon>
-            <logout-outlined />
-          </template>
-          登出
-        </a-button>
+        <div class="flex-placeholder" /><a-alert :message="tips" type="info" show-icon />
+
+        <a-form layout="inline">
+          <a-form-item label="使用缩略图预览">
+            <a-switch v-model:checked="globalStore.enableThumbnail" />
+          </a-form-item>
+          <a-form-item>
+
+            <a-button @click="onLogoutBtnClick">
+              <template #icon>
+                <logout-outlined />
+              </template>
+              登出
+            </a-button>
+          </a-form-item>
+        </a-form>
       </template>
 
       <a-form layout="inline" v-else>
@@ -83,13 +106,12 @@ const onLoginBtnClick = async () => {
             <loading3-quarters-outlined v-if="!taskStore.queue.isIdle" spin />
           </span>
         </template>
-        <task-operation/>
+        <task-operation />
       </a-tab-pane>
     </a-tabs>
   </a-skeleton>
 </template>
 <style scoped lang="scss">
-
 :deep() .ant-tabs-nav {
   margin: 0 16px;
 }
@@ -102,7 +124,7 @@ const onLoginBtnClick = async () => {
   display: flex;
   justify-content: space-between;
 
-  .actions-bar>* {
+  &> :not(:first-child) {
     margin-left: 16px;
   }
 }

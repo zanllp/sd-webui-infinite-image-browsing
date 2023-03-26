@@ -7,9 +7,14 @@ import re
 import subprocess
 import asyncio
 import subprocess
-from typing import Any, List, Literal, Union
+from typing import Any, List, Literal, Optional, Union
 from scripts.baiduyun_task import BaiduyunTask
 from pydantic import BaseModel
+from fastapi.responses import FileResponse
+from PIL import Image
+from io import BytesIO
+import hashlib
+
 from scripts.bin import (
     check_bin_exists,
     cwd,
@@ -67,7 +72,7 @@ def list_file(cwd="/"):
                 "date": match.group(3),
                 "name": name.strip("/"),
                 "type": f_type,
-                "bytes": convert_to_bytes(size) if size != "-" else size
+                "bytes": convert_to_bytes(size) if size != "-" else size,
             }
             files.append(file_info)
     return files
@@ -92,7 +97,6 @@ def logout():
     return bool(match)
 
 
-
 def singleton_async(fn):
     @functools.wraps(fn)
     async def wrapper(*args, **kwargs):
@@ -108,6 +112,7 @@ def singleton_async(fn):
     wrapper.busy = []
     return wrapper
 
+send_img_path = { "value": "" }
 
 def baidu_netdisk_api(_: Any, app: FastAPI):
     pre = "/baidu_netdisk"
@@ -144,8 +149,9 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
         conf = {}
         try:
             from modules.shared import opts
+
             conf = opts.data
-        except: 
+        except:
             pass
         return {
             "global_setting": conf,
@@ -157,7 +163,7 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
 
     class BaiduyunUploadDownloadReq(BaseModel):
         type: Literal["upload", "download"]
-        send_dirs: str
+        send_dirs: List[str]
         recv_dir: str
 
     @app.post(f"{pre}/task")
@@ -260,3 +266,69 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             raise HTTPException(status_code=400, detail=str(e))
 
         return {"files": files}
+
+    @app.get(pre + "/image-thumbnail")
+    async def thumbnail(path: str, size: str = '256,256'):
+        # 生成缓存文件的路径
+        hash = hashlib.md5((path + size).encode('utf-8')).hexdigest()
+        cache_path = f'/tmp/{hash}.webp'
+
+        # 如果缓存文件存在，则直接返回该文件
+        if os.path.exists(cache_path):
+            return FileResponse(
+                cache_path,
+                media_type="image/webp",
+                headers={"Cache-Control": "max-age=31536000", "ETag": hash},
+            )
+
+        # 如果缓存文件不存在，则生成缩略图并保存
+        with open(path, "rb") as f:
+            img = Image.open(BytesIO(f.read()))
+        w,h = size.split(',')
+        img.thumbnail((int(w),int(h)))
+        buffer = BytesIO()
+        img.save(buffer, 'webp')
+
+        # 将二进制数据写入缓存文件中
+        with open(cache_path, 'wb') as f:
+            f.write(buffer.getvalue())
+
+        # 返回缓存文件
+        return FileResponse(
+            cache_path,
+            media_type="image/webp",
+            headers={"Cache-Control": "max-age=31536000", "ETag": hash},
+        )
+    
+    @app.get(pre+"/file")
+    async def get_file(filename: str, disposition: Optional[str] = None):
+        import mimetypes
+        if not os.path.exists(filename):
+            raise HTTPException(status_code=404)
+
+        # 根据文件后缀名获取媒体类型
+        media_type, _ = mimetypes.guess_type(filename)
+        headers = {}
+        if disposition:
+            headers["Content-Disposition"] = f'attachment; filename="{disposition}"'
+
+        return FileResponse(
+            filename,
+            media_type=media_type,
+            headers=headers,
+        )
+    
+    @app.post(pre+"/send_img_path")
+    async def api_set_send_img_path(path: str):
+        send_img_path["value"] = path
+    # 检查图片信息是否生成完成
+    @app.get(pre+"/gen_info_completed")
+    async def api_set_send_img_path():
+        return send_img_path["value"] == ''
+    
+    
+    @app.get(pre+"/image_geninfo")
+    async def image_geninfo(path: str):
+        from modules import extras
+        geninfo,_ = extras.images.read_info_from_image(Image.open(path))
+        return geninfo

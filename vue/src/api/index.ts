@@ -18,7 +18,7 @@ export const greeting = async () => {
 }
 interface BaiduYunTaskCreateReq {
   type: 'upload' | 'download'
-  send_dirs: string
+  send_dirs: string[]
   recv_dir: string
 }
 export const createBaiduYunTask = async (req: BaiduYunTaskCreateReq) => {
@@ -99,7 +99,7 @@ export interface UploadTaskSummary {
   id: string
   running: boolean
   start_time: string
-  send_dirs: string
+  send_dirs: string[]
   recv_dir: string
   type: 'upload' | 'download'
   n_files: number
@@ -155,4 +155,16 @@ export const cancelTask = async (id: string) => {
 
 export const removeTask = async (id: string) => {
   return axiosInst.delete(`/task/${id}`)
+}
+
+export const setImgPath = async (path: string) => {
+  return axiosInst.post(`/send_img_path?path=${encodeURIComponent(path)}`)
+}
+
+export const genInfoCompleted = async () => {
+  return (await axiosInst.get(`/gen_info_completed`)).data as boolean
+}
+
+export const getImageGenerationInfo = async (path: string) => {
+  return (await axiosInst.get(`/image_geninfo?path=${encodeURIComponent(path)}`)).data as string
 }

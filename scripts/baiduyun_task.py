@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import os
-from typing import Dict, Literal
+from typing import Dict, List, Literal
 import uuid
 import re
 import subprocess
@@ -17,7 +17,7 @@ class BaiduyunTask:
         self,
         subprocess: asyncio.subprocess.Process,
         type: Literal["upload", "download"],
-        send_dirs: str,
+        send_dirs: List[str],
         recv_dir: str,
     ):
         self.subprocess = subprocess
@@ -105,13 +105,13 @@ class BaiduyunTask:
 
     @staticmethod
     async def create(
-        type: Literal["upload", "download"], send_dirs: str, recv_dir: str
+        type: Literal["upload", "download"], send_dirs: List[str], recv_dir: str
     ):
         if type == "upload" :
             process = await asyncio.create_subprocess_exec(
                 bin_file_path,
                 type,
-                *process_path_arr(str(send_dirs).split(",")),
+                *process_path_arr(send_dirs),
                 parse_and_replace_time(recv_dir),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -120,7 +120,7 @@ class BaiduyunTask:
             process = await asyncio.create_subprocess_exec(
                 bin_file_path,
                 type,
-                *process_path_arr(str(send_dirs).split(",")),
+                *process_path_arr(send_dirs),
                 "--saveto",
                 parse_and_replace_time(recv_dir),
                 "-p",
