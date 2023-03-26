@@ -273,7 +273,7 @@ function useFileItemActions () {
       const last = multiSelectedIdxs.value[multiSelectedIdxs.value.length - 1]
       multiSelectedIdxs.value = range(first, last + 1)
       e.stopPropagation()
-    } else if (e.ctrlKey) {
+    } else if (e.ctrlKey || e.metaKey) {
       multiSelectedIdxs.value.push(idx)
       e.stopPropagation()
     } else {
