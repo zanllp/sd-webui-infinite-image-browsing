@@ -6,8 +6,8 @@ Stable-Diffusion-WebUI百度云拓展是一个文件上传下载工具，同时�
 
 - 使用拖拽操作进行上传下载，支持Shift、Ctrl进行多选。
 - 支持多任务同时上传/下载。
-- 支持查看图像生成信息，发送图像到其他tab。
-- 基于文件树的预览的结构进行预览，快速查看。
+- 支持查看图像生成信息，发送图像到其他tab，可选的缩略图预览使用。
+- 基于文件树的结构进行预览，做了足够多的优化再多文件也不需要分页。
 
 
 视频演示可以在Bilibili上观看：https://www.bilibili.com/video/BV16N411P7du/?spm_id_from=333.999.list.card_archive.click&vd_source=768942431515ce6cf670f400b365a7e6
