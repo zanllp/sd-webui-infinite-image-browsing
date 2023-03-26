@@ -24,11 +24,11 @@
     wrap.childNodes.forEach(v => wrap.removeChild(v))
     const iframe = document.createElement('iframe')
     iframe.srcdoc = html 
-
-    iframe.style = `width:100%;height:${window.innerHeight - 128}px`
-    window.addEventListener('resize', () => {
-      iframe.style = `width:100%;height:${window.innerHeight - 128}px`
-    })
+    const updateHeight = () => {
+      iframe.style = `width:100%;height:${(window.innerHeight < 1024) ? '100vh' : (window.innerHeight - 128)}px`
+    }
+    updateHeight()
+    window.addEventListener('resize', updateHeight)
     wrap.appendChild(iframe)
   })
 })()

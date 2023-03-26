@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
-import { setImgPath, genInfoCompleted } from '@/api'
+import { setImgPath, genInfoCompleted, getImageGenerationInfo } from '@/api'
 import { cloneDeep, debounce, last, range, uniq } from 'lodash'
-import { ref, computed, onMounted, watch, h } from 'vue'
+import { ref, computed, onMounted, watch, h, reactive } from 'vue'
 import { FileOutlined, FolderOpenOutlined, DownOutlined } from '@/icon'
 import { sortMethodMap, sortFiles, SortMethod } from './fileSort'
 import path from 'path-browserify'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { copy2clipboard, ok, type SearchSelectConv, SearchSelect, useWatchDocument, fallbackImage, delay, Task } from 'vue3-ts-util'
+import { copy2clipboard, ok, type SearchSelectConv, SearchSelect, useWatchDocument, fallbackImage, delay, Task, FetchQueue } from 'vue3-ts-util'
 // @ts-ignore
 import NProgress from 'multi-nprogress'
 import 'multi-nprogress/nprogress.css'
@@ -37,7 +37,7 @@ const global = useGlobalStore()
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to, scroller } = useLocation()
 const { gridItems, sortMethodConv, moreActionsDropdownShow, sortedFiles, sortMethod, viewMode, gridSize, viewModeMap, largeGridSize } = useFilesDisplay()
 const { onDrop, onFileDragStart, multiSelectedIdxs } = useFileTransfer()
-const { onFileItemClick, onContextMenuClick } = useFileItemActions()
+const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions()
 
 const toRawFileUrl = (file: FileNodeInfoR, download = false) => `/baidu_netdisk/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
 const toImageThumbnailUrl = (file: FileNodeInfoR, size = '256,256') => `/baidu_netdisk/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
@@ -85,7 +85,7 @@ function useLocation () {
   const stack = ref<Page[]>([])
   const currLocation = computed(() => path.join(...getBasePath()))
 
-  watch(() => stack.value.length, debounce((v,lv) => {
+  watch(() => stack.value.length, debounce((v, lv) => {
     if (v !== lv) {
       scroller.value.scrollToItem(0)
     }
@@ -201,6 +201,7 @@ function useFileTransfer () {
   useWatchDocument('click', recover)
   useWatchDocument('blur', recover)
   watch(currPage, recover)
+
   const onFileDragStart = (e: DragEvent, idx: number) => {
     const file = cloneDeep(sortedFiles.value[idx])
     const names = [file.name]
@@ -259,6 +260,9 @@ function useFileTransfer () {
 }
 
 function useFileItemActions () {
+  const showGenInfo = ref(false)
+  const imageGenInfo = ref('')
+  const q = reactive(new FetchQueue())
   const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo) => {
     const files = sortedFiles.value
     const idx = files.findIndex(v => v.name === file.name)
@@ -301,19 +305,33 @@ function useFileItemActions () {
       case 'send2img2img': return copyImgTo('img2img')
       case 'send2inpaint': return copyImgTo('inpaint')
       case 'send2extras': return copyImgTo('extras')
+      case 'viewGenInfo': {
+        showGenInfo.value = true
+        imageGenInfo.value = await q.pushAction(() => getImageGenerationInfo(file.fullpath)).res
+      }
 
     }
   }
   return {
     onFileItemClick,
-    onContextMenuClick
+    onContextMenuClick,
+    showGenInfo,
+    imageGenInfo,
+    q
   }
 }
 
 </script>
 <template>
   <div ref="el" @dragover.prevent @drop.prevent="onDrop($event)" class="container">
+    <AModal v-model:visible="showGenInfo" width="50vw">
+      <ASkeleton active :loading="!q.isIdle">
 
+        <pre style="width: 100%; word-break: break-all;white-space: pre-line;">
+            {{ imageGenInfo }}
+          </pre>
+      </ASkeleton>
+    </AModal>
     <div class="location-bar">
       <div class="breadcrumb">
         <a-breadcrumb style="flex: 1">
@@ -405,10 +423,13 @@ function useFileItemActions () {
                 <a-menu-item key="openInNewWindow">在新窗口预览（如果浏览器处理不了会下载，大文件的话谨慎）</a-menu-item>
                 <a-menu-item key="download">直接下载（大文件的话谨慎）</a-menu-item>
                 <a-menu-item key="copyPreviewUrl">复制源文件预览链接</a-menu-item>
-                <a-menu-item key="send2txt2img">发送到文生图</a-menu-item>
-                <a-menu-item key="send2img2img">发送到图生图</a-menu-item>
-                <a-menu-item key="send2inpaint">发送到局部重绘</a-menu-item>
-                <a-menu-item key="send2extras">发送到附加功能</a-menu-item>
+                <template v-if="isImageFile(file.name)">
+                  <a-menu-item key="viewGenInfo">查看生成信息(prompt等)</a-menu-item>
+                  <a-menu-item key="send2txt2img">发送到文生图</a-menu-item>
+                  <a-menu-item key="send2img2img">发送到图生图</a-menu-item>
+                  <a-menu-item key="send2inpaint">发送到局部重绘</a-menu-item>
+                  <a-menu-item key="send2extras">发送到附加功能</a-menu-item>
+                </template>
               </a-menu>
             </template>
           </a-dropdown>

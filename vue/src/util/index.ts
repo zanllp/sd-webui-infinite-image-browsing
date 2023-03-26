@@ -43,6 +43,9 @@ export const pick = <T extends Dict, keys extends Array<keyof T>> (v: T, ...keys
 export type ReturnTypeAsync<T extends (...arg: any) => Promise<any>> = Awaited<ReturnType<T>>
 
 export function isImageFile(filename: string): boolean {
+  if (typeof filename !== 'string') {
+    return false
+  }
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
   const extension = filename.split('.').pop()?.toLowerCase();
   return extension !== undefined && imageExtensions.includes(`.${extension}`);

@@ -325,3 +325,10 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
     @app.get(pre+"/gen_info_completed")
     async def api_set_send_img_path():
         return send_img_path["value"] == ''
+    
+    
+    @app.get(pre+"/image_geninfo")
+    async def image_geninfo(path: str):
+        from modules import extras
+        geninfo,_ = extras.images.read_info_from_image(Image.open(path))
+        return geninfo

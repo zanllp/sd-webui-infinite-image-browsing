@@ -164,3 +164,7 @@ export const setImgPath = async (path: string) => {
 export const genInfoCompleted = async () => {
   return (await axiosInst.get(`/gen_info_completed`)).data as boolean
 }
+
+export const getImageGenerationInfo = async (path: string) => {
+  return (await axiosInst.get(`/image_geninfo?path=${encodeURIComponent(path)}`)).data as string
+}

@@ -6,8 +6,8 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vite App</title>
-    <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-542652c2.js"></script>
-    <link rel="stylesheet" href="/baidu_netdisk/fe-static/assets/index-9e7c5731.css">
+    <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-b4cfc856.js"></script>
+    <link rel="stylesheet" href="/baidu_netdisk/fe-static/assets/index-d1aa52fe.css">
   </head>
   <body>
     <div id="zanllp_dev_gradio_fe"></div>
@@ -39,11 +39,11 @@
     wrap.childNodes.forEach(v => wrap.removeChild(v))
     const iframe = document.createElement('iframe')
     iframe.srcdoc = html 
-
-    iframe.style = `width:100%;height:${window.innerHeight - 128}px`
-    window.addEventListener('resize', () => {
-      iframe.style = `width:100%;height:${window.innerHeight - 128}px`
-    })
+    const updateHeight = () => {
+      iframe.style = `width:100%;height:${(window.innerHeight < 1024) ? '100vh' : (window.innerHeight - 128)}px`
+    }
+    updateHeight()
+    window.addEventListener('resize', updateHeight)
     wrap.appendChild(iframe)
   })
 })()
