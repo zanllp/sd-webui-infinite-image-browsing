@@ -150,7 +150,22 @@ function useLocation () {
       } else {
         frags.shift() // /开头的一个是空
       }
-      back(0) // 回到栈底
+      const currPaths = stack.value.map(v => v.curr)
+      currPaths.shift() // 是 /
+      while (currPaths[0] && frags[0]) {
+        if (currPaths[0] !== frags[0]) {
+          break
+        } else {
+          currPaths.shift()
+          frags.shift()
+        }
+      }
+      for (let index = 0; index < currPaths.length; index++) {
+        stack.value.pop()
+      }
+      if (!frags.length) {
+        return refresh()
+      }
       for (const frag of frags) {
         const target = currPage.value?.files.find((v) => v.name === frag)
         ok(target)
@@ -204,6 +219,7 @@ function useFileTransfer () {
 
   const onFileDragStart = (e: DragEvent, idx: number) => {
     const file = cloneDeep(sortedFiles.value[idx])
+    console.log(file, idx)
     const names = [file.name]
     let includeDir = file.type === 'dir'
     if (multiSelectedIdxs.value.includes(idx)) {
@@ -328,8 +344,8 @@ function useFileItemActions () {
       <ASkeleton active :loading="!q.isIdle">
 
         <pre style="width: 100%; word-break: break-all;white-space: pre-line;">
-            {{ imageGenInfo }}
-          </pre>
+                {{ imageGenInfo }}
+              </pre>
       </ASkeleton>
     </AModal>
     <div class="location-bar">
