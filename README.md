@@ -10,7 +10,7 @@ Stable-Diffusion-WebUI百度云拓展是一个文件上传下载工具，同时�
 - 基于文件树的结构进行预览，做了足够多的优化再多文件也不需要分页。
 
 
-用来预览上千张cg的gal文件夹，个人感觉比win10自带的体验要好
+~~用来查看包含上千张gal cg的文件夹，个人感觉比win10自带的体验要好~~
 
 [视频演示可以在Bilibili上观看](https://www.bilibili.com/video/BV16N411P7du/)
 
