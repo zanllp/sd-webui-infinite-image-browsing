@@ -3,7 +3,7 @@ import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
 import { setImgPath, genInfoCompleted, getImageGenerationInfo } from '@/api'
 import { cloneDeep, debounce, last, range, uniq } from 'lodash'
 import { ref, computed, onMounted, watch, h, reactive } from 'vue'
-import { FileOutlined, FolderOpenOutlined, DownOutlined } from '@/icon'
+import { FileOutlined, FolderOpenOutlined, DownOutlined, LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 import { sortMethodMap, sortFiles, SortMethod } from './fileSort'
 import path from 'path-browserify'
 import { useGlobalStore } from '@/store/useGlobalStore'
@@ -38,15 +38,92 @@ const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to
 const { gridItems, sortMethodConv, moreActionsDropdownShow, sortedFiles, sortMethod, viewMode, gridSize, viewModeMap, largeGridSize } = useFilesDisplay()
 const { onDrop, onFileDragStart, multiSelectedIdxs } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions()
+const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } = usePreview()
 
 const toRawFileUrl = (file: FileNodeInfoR, download = false) => `/baidu_netdisk/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
 const toImageThumbnailUrl = (file: FileNodeInfoR, size = '256,256') => `/baidu_netdisk/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
 
-
+function usePreview () {
+  const previewIdx = ref(-1)
+  const previewing = ref(false)
+  let waitScrollTo = null as number | null
+  const onPreviewVisibleChange = (v: boolean, lv: boolean) => {
+    previewing.value = v
+    if (waitScrollTo != null && !v && lv) {// 关闭预览时滚动过去
+      scroller.value?.scrollToItem(waitScrollTo)
+      waitScrollTo = null
+    }
+  }
+  useWatchDocument('keydown', e => {
+    if (previewing.value) {
+      let next = previewIdx.value
+      if (['ArrowDown', 'ArrowRight'].includes(e.key)) {
+        next++
+        while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+          next++
+        }
+      } else if (['ArrowUp', 'ArrowLeft'].includes(e.key)) {
+        next--
+        while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+          next--
+        }
+      }
+      if (isImageFile(sortedFiles.value[next]?.name) ?? '') {
+        previewIdx.value = next
+        const s = scroller.value
+        if (s && !(next >= s.$_startIndex && next <= s.$_endIndex)) {
+          waitScrollTo = next // 关闭预览时滚动过去
+        }
+      }
+    }
+  })
+  const previewImgMove = (type: 'next' | 'prev') => {
+    let next = previewIdx.value
+    if (type === 'next') {
+      next++
+      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+        next++
+      }
+    } else if (type === 'prev') {
+      next--
+      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+        next--
+      }
+    }
+    if (isImageFile(sortedFiles.value[next]?.name) ?? '') {
+      previewIdx.value = next
+      const s = scroller.value
+      if (s && !(next >= s.$_startIndex && next <= s.$_endIndex)) {
+        waitScrollTo = next // 关闭预览时滚动过去
+      }
+    }
+  }
+  const canPreview = (type: 'next' | 'prev') => {
+    let next = previewIdx.value
+    if (type === 'next') {
+      next++
+      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+        next++
+      }
+    } else if (type === 'prev') {
+      next--
+      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+        next--
+      }
+    } return isImageFile(sortedFiles.value[next]?.name) ?? ''
+  }
+  return {
+    previewIdx,
+    onPreviewVisibleChange,
+    previewing,
+    previewImgMove,
+    canPreview
+  }
+}
 
 function useFilesDisplay () {
   const moreActionsDropdownShow = ref(false)
-  const viewMode = ref<ViewMode>('line')
+  const viewMode = ref<ViewMode>('grid')
   const viewModeMap: Record<ViewMode, string> = { line: '详情列表', 'grid': '预览网格', 'large-size-grid': '大尺寸预览网格' }
   const sortMethodConv: SearchSelectConv<SortMethod> = {
     value: (v) => v,
@@ -79,7 +156,7 @@ function useFilesDisplay () {
 
 
 function useLocation () {
-  const scroller = ref<any>()
+  const scroller = ref<{ $_startIndex: number, $_endIndex: number, scrollToItem (idx: number): void }>()
   const np = ref<Progress.NProgress>()
   const currPage = computed(() => last(stack.value))
   const stack = ref<Page[]>([])
@@ -87,7 +164,7 @@ function useLocation () {
 
   watch(() => stack.value.length, debounce((v, lv) => {
     if (v !== lv) {
-      scroller.value.scrollToItem(0)
+      scroller.value!.scrollToItem(0)
     }
   }, 300))
 
@@ -282,6 +359,7 @@ function useFileItemActions () {
   const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo) => {
     const files = sortedFiles.value
     const idx = files.findIndex(v => v.name === file.name)
+    previewIdx.value = idx
     if (e.shiftKey) {
       multiSelectedIdxs.value.push(idx)
       multiSelectedIdxs.value.sort((a, b) => a - b)
@@ -342,10 +420,10 @@ function useFileItemActions () {
   <div ref="el" @dragover.prevent @drop.prevent="onDrop($event)" class="container">
     <AModal v-model:visible="showGenInfo" width="50vw">
       <ASkeleton active :loading="!q.isIdle">
-
-        <pre style="width: 100%; word-break: break-all;white-space: pre-line;">
-                {{ imageGenInfo }}
-              </pre>
+        <pre style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
+          双击复制
+          {{ imageGenInfo }}
+        </pre>
       </ASkeleton>
     </AModal>
     <div class="location-bar">
@@ -413,10 +491,11 @@ function useFileItemActions () {
               :class="{ clickable: file.type === 'dir', selected: multiSelectedIdxs.includes(idx), grid: viewMode === 'grid', 'large-grid': viewMode === 'large-size-grid' }"
               :key="file.name" draggable="true" @dragstart="onFileDragStart($event, idx)"
               @click.capture="onFileItemClick($event, file)">
-              <a-image :key="file.fullpath"
+              <a-image ref="dd" :key="file.fullpath" :class="`idx-${idx}`"
                 v-if="props.target === 'local' && viewMode !== 'line' && isImageFile(file.name)"
                 :src="global.enableThumbnail ? toImageThumbnailUrl(file, viewMode === 'grid' ? void 0 : '512,512') : toRawFileUrl(file)"
-                :fallback="fallbackImage" :preview="{ src: toRawFileUrl(file) }">
+                :fallback="fallbackImage"
+                :preview="{ src: toRawFileUrl(sortedFiles[previewIdx]), onVisibleChange: onPreviewVisibleChange }">
               </a-image>
               <template v-else>
                 <file-outlined class="icon" v-if="file.type === 'file'" />
@@ -451,10 +530,40 @@ function useFileItemActions () {
           </a-dropdown>
         </template>
       </RecycleScroller>
+      <div v-if="previewing" class="preview-switch">
+        <LeftCircleOutlined @click="previewImgMove('prev')" :class="{ 'disable': !canPreview('prev') }" />
+        <RightCircleOutlined @click="previewImgMove('next')" :class="{ 'disable': !canPreview('next') }" />
+      </div>
     </div>
   </div>
 </template>
 <style lang="scss" scoped>
+.preview-switch {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 11111;
+  pointer-events: none;
+
+  &>* {
+    margin: 16px;
+    font-size: 4em;
+    pointer-events: all;
+    cursor: pointer;
+
+    &.disable {
+      opacity: 0;
+      pointer-events: none;
+      cursor: none;
+    }
+  }
+}
+
 .container {
   height: 100%;
 }
