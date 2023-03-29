@@ -16,7 +16,7 @@ Stable-Diffusion-WebUI百度云拓展是一个文件上传下载工具，同时�
 
 文档后面有空再修改
 ## 登录
-使用bduss登录，[参考这个](https://blog.csdn.net/ykiwmy/article/details/103730962) ，或者自己搜索。
+使用bduss登录，[参考这个](https://www.bilibili.com/read/cv22726491) ，或者自己搜索。
 ## 预览
 
 ### 简单任务使用拖拽在本地与云之间上传下载文件
