@@ -1,4 +1,5 @@
-from scripts.api import baidu_netdisk_api, send_img_path
+from fastapi import FastAPI
+from scripts.api import baidu_netdisk_api, send_img_path, AutoUpload
 from modules import script_callbacks, generation_parameters_copypaste as send, extras
 from scripts.bin import (
     bin_file_name,
@@ -6,8 +7,10 @@ from scripts.bin import (
     check_bin_exists,
     download_bin_file,
 )
-from scripts.tool import cwd
+from scripts.tool import cwd, debounce
 from PIL import Image
+import asyncio
+import datetime
 
 
 """
@@ -70,5 +73,13 @@ def on_ui_tabs():
         return ((baidu_netdisk, "百度云", "baiduyun"),)
 
 
+
+
+
+def on_img_saved(params: script_callbacks.ImageSaveParams):
+    AutoUpload.files.append(params.filename)
+    
+
 script_callbacks.on_ui_tabs(on_ui_tabs)
 script_callbacks.on_app_started(baidu_netdisk_api)
+script_callbacks.on_image_saved(on_img_saved)

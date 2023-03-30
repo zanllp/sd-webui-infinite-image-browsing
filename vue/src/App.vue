@@ -13,6 +13,7 @@ import { getAutoCompletedTagList } from './taskRecord/autoComplete'
 import { useTaskListStore } from './store/useTaskListStore'
 import TaskOperation from './taskRecord/taskOperation.vue'
 import { useIntervalFn } from '@vueuse/core'
+import autoUpload from './autoUpload/autoUpload.vue'
 
 const user = ref<UserInfo>()
 const bduss = ref('')
@@ -107,6 +108,9 @@ useIntervalFn(() => {
           </span>
         </template>
         <task-operation />
+      </a-tab-pane>
+      <a-tab-pane key="3" tab="自动上传">
+        <auto-upload/>
       </a-tab-pane>
     </a-tabs>
   </a-skeleton>

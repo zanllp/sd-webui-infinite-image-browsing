@@ -46,6 +46,29 @@ def convert_to_bytes(file_size_str):
         return int(size)
     else:
         raise ValueError(f"Invalid file size string '{file_size_str}'")
+    
+
+import asyncio
+
+
+def debounce(delay):
+    """用于优化高频事件的装饰器"""
+    
+    def decorator(func):
+        from typing import Union
+        task: Union[None, asyncio.Task] = None
+
+        async def debounced(*args, **kwargs):
+            nonlocal task
+            if task:
+                task.cancel()
+            task = asyncio.create_task(asyncio.sleep(delay))
+            await task
+            return await func(*args, **kwargs)
+
+        return debounced
+
+    return decorator
 
 is_dev = "APP_ENV" in os.environ and os.environ["APP_ENV"] == "dev"
 cwd = os.path.normpath(os.path.join(__file__, "../../"))
