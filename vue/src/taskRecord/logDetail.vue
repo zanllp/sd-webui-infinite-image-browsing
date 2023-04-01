@@ -42,9 +42,9 @@ watch(currList, async () => {
   padding: 16px;
   margin: 16px;
   border-radius: 16px;
-  background-color: #fafafa;
+  background-color: var(--xdt-secondary-background);
 
-  color: rgb(99, 102, 104);
+  color: var(--xdt-primary);
   margin-left: 16px;
   list-style: none;
   font-size: 12px;
@@ -58,19 +58,6 @@ watch(currList, async () => {
     display: none;
   }
 
-  .title {
-    color: rgb(206, 17, 38);
-    font-family: sans-serif;
-  }
-
-  .src-val {
-    font-size: 12px;
-    margin-top: 16px;
-    background-color: rgba(206, 17, 38, 0.05);
-    padding: 8px;
-    border-radius: 4px;
-    color: black;
-  }
 
 }
 </style>
