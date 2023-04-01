@@ -168,3 +168,14 @@ export const genInfoCompleted = async () => {
 export const getImageGenerationInfo = async (path: string) => {
   return (await axiosInst.get(`/image_geninfo?path=${encodeURIComponent(path)}`)).data as string
 }
+
+export const autoUploadOutput = async (recv_dir: string) => {
+  const resp = await axiosInst.post(`/auto_upload`, { recv_dir })
+  return resp.data as {
+    pending_files: string[]
+    tick_info?: {
+      tasks: UploadTaskTickStatus[],
+      task_summary: UploadTaskSummary
+    }
+  }
+}

@@ -495,7 +495,7 @@ function useFileItemActions () {
                 v-if="props.target === 'local' && viewMode !== 'line' && isImageFile(file.name)"
                 :src="global.enableThumbnail ? toImageThumbnailUrl(file, viewMode === 'grid' ? void 0 : '512,512') : toRawFileUrl(file)"
                 :fallback="fallbackImage"
-                :preview="{ src: toRawFileUrl(sortedFiles[previewIdx]), onVisibleChange: onPreviewVisibleChange }">
+                :preview="{ src: sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : '', onVisibleChange: onPreviewVisibleChange }">
               </a-image>
               <template v-else>
                 <file-outlined class="icon" v-if="file.type === 'file'" />

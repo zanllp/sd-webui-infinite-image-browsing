@@ -9,15 +9,17 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
   const autoCompletedDirList = ref([] as ReturnType<typeof getAutoCompletedTagList>)
   const enableThumbnail = ref(true)
   const stackViewSplit = ref(50)
+  const autoUploadRecvDir = ref('/')
   return {
     conf,
     autoCompletedDirList,
     enableThumbnail,
     stackViewSplit,
+    autoUploadRecvDir,
     ...typedEventEmitter<{ createNewTask: Partial<UploadTaskSummary> }>()
   }
 }, {
   persist: {
-    paths: ['enableThumbnail', 'stackViewSplit']
+    paths: ['enableThumbnail', 'stackViewSplit', 'autoUploadRecvDir']
   }
 })

@@ -31,17 +31,20 @@ def get_matched_summary():
             file_name = "BaiduPCS-Go-v3.9.0-windows-x86"
     if not file_name:
         raise Exception(f"找不到对应的文件，请携带此信息找开发者 machine:{machine} system:{system}")
-    return file_name, f"https://github.com/qjfoidnh/BaiduPCS-Go/releases/download/v3.9.0/{file_name}.zip"
+    return file_name, f"https://github.com/qjfoidnh/BaiduPCS-Go/releases/download/v3.9.0/{file_name}.zip", f"http://static.zanllp.cn/{file_name}.zip"
 
 
 def download_bin_file():
-    summary, url = get_matched_summary()
+    summary, url, fallback_url = get_matched_summary()
 
     # 下载文件保存路径
     download_path = "BaiduPCS-Go.zip"
 
+    try:
     # 下载文件并保存
-    urllib.request.urlretrieve(url, download_path)
+        urllib.request.urlretrieve(url, download_path)
+    except:
+        urllib.request.urlretrieve(fallback_url, download_path)
 
     # 解压缩
     with zipfile.ZipFile(download_path, "r") as zip_ref:

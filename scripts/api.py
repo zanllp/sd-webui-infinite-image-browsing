@@ -25,7 +25,11 @@ from scripts.tool import get_windows_drives, convert_to_bytes
 import functools
 from scripts.logger import logger
 
-
+class AutoUpload:
+    # 已成等待发送图像的队列
+    files = []
+    task_id: Union[None, str] = None
+    
 def exec_ops(args: Union[List[str], str]):
     args = [args] if isinstance(args, str) else args
     res = ""
@@ -332,3 +336,26 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
         from modules import extras
         geninfo,_ = extras.images.read_info_from_image(Image.open(path))
         return geninfo
+    
+    class AutoUploadParams(BaseModel):
+        recv_dir: str
+    @app.post(pre+"/auto_upload")
+    async def auto_upload(req: AutoUploadParams):
+        tick_info = None
+        if AutoUpload.task_id:
+            task = BaiduyunTask.get_by_id(AutoUpload.task_id)
+            tick_info = await task.get_tick()
+            if not task.running:
+                AutoUpload.task_id = None
+        else:
+            recived_file = AutoUpload.files
+            AutoUpload.files = []
+            if len(recived_file):
+                logger.info(f"创建上传任务 {recived_file} ----> {req.recv_dir}")
+                task = await BaiduyunTask.create('upload', recived_file, req.recv_dir)
+                AutoUpload.task_id = task.id
+        return {
+            "tick_info": tick_info,
+            "pending_files": AutoUpload.files
+        }
+        
