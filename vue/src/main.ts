@@ -14,12 +14,15 @@ pinia.use(piniaPluginPersistedstate)
 createApp(App).use(pinia).mount('#zanllp_dev_gradio_fe')
 
 const dark = usePreferredDark()
-watch(dark, (dark) => {
+watch(dark, async (dark) => {
+  const head = document.getElementsByTagName('head')[0]
   if (dark) {
-    import('ant-design-vue/dist/antd.dark.css')
+    const darkStyle = document.createElement('style')
+    const { default: css } = await import('ant-design-vue/dist/antd.dark.css?inline')
+    darkStyle.innerHTML = css
+    darkStyle.setAttribute('antd-dark', '')
+    head.appendChild(darkStyle)
   } else {
-    const head = document.getElementsByTagName('head')[0]
-    Array.from(head.querySelectorAll('link[href*="antd.dark"]')).forEach(e => e.remove()); // for prod
-    Array.from(head.querySelectorAll('style[data-vite-dev-id*="antd.dark"]')).forEach(e => e.remove()); // for dev
+    Array.from(head.querySelectorAll('style[antd-dark]')).forEach(e => e.remove()) // for dev
   }
 }, { immediate: true })
