@@ -48,7 +48,7 @@ onMounted(async () => {
   padding: 8px;
   margin: 16px;
   border-radius: 8px;
-  background: #fafafa;
+  background: var(--xdt-secondary-background);
   display: flex;
   justify-content: space-between;
 

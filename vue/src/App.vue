@@ -124,7 +124,7 @@ useIntervalFn(() => {
   padding: 8px;
   margin: 16px;
   border-radius: 8px;
-  background: #fafafa;
+  background: var( --xdt-primary-background);
   display: flex;
   justify-content: space-between;
 

@@ -601,7 +601,7 @@ function useFileItemActions () {
       margin: 8px;
       display: flex;
       align-items: center;
-      background: white;
+      background: var(--xdt-primary-background);
       border-radius: 8px;
       box-shadow: 0 0 4px #ccc;
       position: relative;
