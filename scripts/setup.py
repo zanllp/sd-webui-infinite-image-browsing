@@ -9,8 +9,7 @@ from scripts.bin import (
 )
 from scripts.tool import cwd, debounce
 from PIL import Image
-import asyncio
-import datetime
+from scripts.logger import logger
 
 
 """
@@ -18,7 +17,7 @@ api函数声明和启动分离方便另外一边被外部调用
 """
 
 not_exists_msg = (
-    f"找不到{bin_file_name},尝试手动从 {get_matched_summary()[1]} 下载,下载后放到 {cwd} 文件夹下,重启界面"
+    f"找不到{bin_file_name},尝试手动从 {get_matched_summary()[1]} 或者 {get_matched_summary()[2]} 下载,下载后放到 {cwd} 文件夹下,重启界面"
 )
 
 
