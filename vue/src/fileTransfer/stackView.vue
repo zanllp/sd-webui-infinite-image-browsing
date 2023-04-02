@@ -6,7 +6,7 @@ import { ref, computed, onMounted, watch, h, reactive } from 'vue'
 import { FileOutlined, FolderOpenOutlined, DownOutlined, LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 import { sortMethodMap, sortFiles, SortMethod } from './fileSort'
 import path from 'path-browserify'
-import { useGlobalStore } from '@/store/useGlobalStore'
+import { useGlobalStore, type FileTransferTabPane } from '@/store/useGlobalStore'
 import { copy2clipboard, ok, type SearchSelectConv, SearchSelect, useWatchDocument, fallbackImage, delay, Task, FetchQueue } from 'vue3-ts-util'
 // @ts-ignore
 import NProgress from 'multi-nprogress'
@@ -23,7 +23,10 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 
 const el = ref<HTMLDivElement>()
 const props = defineProps<{
-  target: 'local' | 'netdisk'
+  target: 'local' | 'netdisk',
+  tabIdx: number,
+  paneIdx: number,
+  path?: string
 }>()
 interface Page {
   files: FileNodeInfo[]
@@ -176,7 +179,9 @@ function useLocation () {
     })
     np.value = new NProgress()
     np.value!.configure({ parent: el.value as any })
-    if (props.target == 'local') {
+    if (props.path && props.path !== '/') {
+      to(props.path)
+    } else if (props.target == 'local') {
       global.conf?.home && to(global.conf.home)
     }
   })
@@ -184,7 +189,15 @@ function useLocation () {
   const getBasePath = () =>
     stack.value.map((v) => v.curr).slice(global.conf?.is_win && props.target === 'local' ? 1 : 0)
 
-
+  watch(currLocation, debounce((loc) => {
+    const pane = global.tabList[props.tabIdx].panes[props.paneIdx] as FileTransferTabPane
+    pane.path = loc
+    global.recent = global.recent.filter(v => v.key !== pane.key)
+    global.recent.unshift({ path: loc, target: pane.target, key: pane.key })
+    if (global.recent.length > 20) {
+      global.recent = global.recent.slice(0, 20)
+    }
+  }, 300))
 
   const copyLocation = () => copy2clipboard(currLocation.value)
 
@@ -249,6 +262,7 @@ function useLocation () {
         await openNext(target)
       }
     } catch (error) {
+      console.error(dir)
       message.error('移动失败，检查你的路径输入')
       stack.value = backup
       throw error
@@ -421,9 +435,9 @@ function useFileItemActions () {
     <AModal v-model:visible="showGenInfo" width="50vw">
       <ASkeleton active :loading="!q.isIdle">
         <pre style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
-          双击复制
-          {{ imageGenInfo }}
-        </pre>
+            双击复制
+            {{ imageGenInfo }}
+          </pre>
       </ASkeleton>
     </AModal>
     <div class="location-bar">
@@ -589,11 +603,12 @@ function useFileItemActions () {
 
 .view {
   padding: 8px;
+  height: calc(100vh - 96px);
 
   .file-list {
     list-style: none;
     padding: 8px;
-    height: var(--scroll-container-max-height);
+    height: 100%;
     overflow: auto;
 
     .file {
@@ -610,7 +625,6 @@ function useFileItemActions () {
         padding: 8px;
         height: 256px;
         width: 256px;
-        margin: 16px;
         display: inline-block;
         box-sizing: content-box;
 

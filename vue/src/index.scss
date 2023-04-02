@@ -91,7 +91,7 @@ html {
   position: relative;
   display: inline-block;
   width: 100%;
-  --scroll-container-max-height: calc(100vh - 256px);
+  --scroll-container-max-height: 100vh;
 }
 
 body {

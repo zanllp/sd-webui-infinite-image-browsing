@@ -3,17 +3,14 @@
 import { onMounted, reactive, ref } from 'vue'
 import { FetchQueue } from 'vue3-ts-util'
 import { getUserInfo, type UserInfo, logout, loginByBduss } from './api/user'
-import { LogoutOutlined, LoginOutlined, Loading3QuartersOutlined } from '@/icon'
 import { message } from 'ant-design-vue'
 import { isAxiosError } from 'axios'
-import fileTransfer from './fileTransfer/fileTransfer.vue'
 import { getGlobalSetting } from './api'
 import { useGlobalStore } from './store/useGlobalStore'
 import { getAutoCompletedTagList } from './taskRecord/autoComplete'
 import { useTaskListStore } from './store/useTaskListStore'
-import TaskOperation from './taskRecord/taskOperation.vue'
 import { useIntervalFn } from '@vueuse/core'
-import autoUpload from './autoUpload/autoUpload.vue'
+import SplitViewTab from './SplitViewTab/SplitViewTab.vue'
 
 const user = ref<UserInfo>()
 const bduss = ref('')
@@ -59,7 +56,7 @@ useIntervalFn(() => {
 <template>
   <a-skeleton :loading="!queue.isIdle">
 
-    <div class="panel">
+    <!--div class="panel">
       <template v-if="user">
         <div>
           已登录用户：{{ user.username }}
@@ -95,24 +92,8 @@ useIntervalFn(() => {
           </a-button>
         </a-form-item>
       </a-form>
-    </div>
-    <a-tabs>
-      <a-tab-pane key="1" tab="快速任务">
-        <file-transfer />
-      </a-tab-pane>
-      <a-tab-pane key="2" force-render>
-        <template #tab>
-          <span>
-            任务记录
-            <loading3-quarters-outlined v-if="!taskStore.queue.isIdle" spin />
-          </span>
-        </template>
-        <task-operation />
-      </a-tab-pane>
-      <a-tab-pane key="3" tab="自动上传">
-        <auto-upload/>
-      </a-tab-pane>
-    </a-tabs>
+    </div-->
+    <split-view-tab/>
   </a-skeleton>
 </template>
 <style scoped lang="scss">

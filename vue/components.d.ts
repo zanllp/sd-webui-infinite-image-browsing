@@ -9,7 +9,6 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
-    AAlert: typeof import('ant-design-vue/es')['Alert']
     ABreadcrumb: typeof import('ant-design-vue/es')['Breadcrumb']
     ABreadcrumbItem: typeof import('ant-design-vue/es')['BreadcrumbItem']
     AButton: typeof import('ant-design-vue/es')['Button']
@@ -19,7 +18,6 @@ declare module '@vue/runtime-core' {
     AFormItem: typeof import('ant-design-vue/es')['FormItem']
     AImage: typeof import('ant-design-vue/es')['Image']
     AInput: typeof import('ant-design-vue/es')['Input']
-    AInputNumber: typeof import('ant-design-vue/es')['InputNumber']
     AMenu: typeof import('ant-design-vue/es')['Menu']
     AMenuItem: typeof import('ant-design-vue/es')['MenuItem']
     AModal: typeof import('ant-design-vue/es')['Modal']
@@ -28,7 +26,6 @@ declare module '@vue/runtime-core' {
     ASelect: typeof import('ant-design-vue/es')['Select']
     ASkeleton: typeof import('ant-design-vue/es')['Skeleton']
     AStatistic: typeof import('ant-design-vue/es')['Statistic']
-    ASwitch: typeof import('ant-design-vue/es')['Switch']
     ATabPane: typeof import('ant-design-vue/es')['TabPane']
     ATabs: typeof import('ant-design-vue/es')['Tabs']
     ATag: typeof import('ant-design-vue/es')['Tag']

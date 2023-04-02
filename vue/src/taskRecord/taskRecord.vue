@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { key, pick } from '@/util'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { typedID, Task, SearchSelect } from 'vue3-ts-util'
 import { PlusOutlined, SyncOutlined, MinusCircleOutlined } from '@/icon'
 import { cancelTask, createBaiduYunTask, getUploadTasks, getUploadTaskTickStatus, removeTask, type UploadTaskSummary } from '@/api'
@@ -17,6 +17,7 @@ const globalStore = useGlobalStore()
 const { tasks } = storeToRefs(store)
 const { showDirAutoCompletedIdx } = storeToRefs(store)
 const pollTaskMap = new Map<string, ReturnType<typeof createPollTask>>()
+const loadNum = ref(10)
 
 onMounted(async () => {
   const resp = await getUploadTasks()
@@ -138,7 +139,7 @@ const remove = async (idx: number) => {
       </template>
       添加一个任务
     </a-button>
-    <div v-for="task, idx in tasks" :key="key(task)" class="task-form">
+    <div v-for="task, idx in tasks.slice(0, loadNum)" :key="key(task)" class="task-form">
       <div class="top-bar">
 
         <a-tag color="success" v-if="isDone(task)">已完成</a-tag>
@@ -190,11 +191,14 @@ const remove = async (idx: number) => {
         to: '#87d068'
       }" :percent="getIntPercent(task)" status="active" />
     </div>
+    <a-button @click="loadNum+=5" v-if="loadNum < tasks.length" block style="border-radius: 8px;">
+  继续加载
+    </a-button>
   </div>
 </template>
 <style scoped lang="scss">
 .wrapper {
-  height: 100%;
+  height: calc(100vh - 64px);
   overflow: auto;
   padding: 8px;
 
