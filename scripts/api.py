@@ -16,6 +16,13 @@ from io import BytesIO
 import hashlib
 
 from scripts.bin import (
+    bin_file_name,
+    get_matched_summary,
+    check_bin_exists,
+    download_bin_file,
+)
+
+from scripts.bin import (
     check_bin_exists,
     cwd,
     bin_file_path,
@@ -368,4 +375,17 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
         for path in req.paths:
             res[path] = os.path.exists(path)
         return res
-        
+    
+    not_exists_msg = ()
+
+    @app.get(pre + '/baiduyun_exists')
+    async def baiduyun_exists():
+        return check_bin_exists()
+
+    @app.post(pre + '/download_baiduyun')
+    async def download_baiduyun():
+        if not check_bin_exists():
+            try:
+                download_bin_file()
+            except:
+                raise HTTPException(500, detail=f"安装失败,找不到{bin_file_name},尝试手动从 {get_matched_summary()[1]} 或者 {get_matched_summary()[2]} 下载,下载后放到 {cwd} 文件夹下,重启界面")

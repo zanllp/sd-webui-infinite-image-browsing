@@ -7,6 +7,7 @@ import { FileOutlined, FolderOpenOutlined, DownOutlined, LeftCircleOutlined, Rig
 import { sortMethodMap, sortFiles, SortMethod } from './fileSort'
 import path from 'path-browserify'
 import { useGlobalStore, type FileTransferTabPane } from '@/store/useGlobalStore'
+import { useBaiduyun } from './hook'
 import { copy2clipboard, ok, type SearchSelectConv, SearchSelect, useWatchDocument, fallbackImage, delay, Task, FetchQueue } from 'vue3-ts-util'
 // @ts-ignore
 import NProgress from 'multi-nprogress'
@@ -21,6 +22,8 @@ import { RecycleScroller } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 
+
+const global = useGlobalStore()
 const el = ref<HTMLDivElement>()
 const props = defineProps<{
   target: 'local' | 'netdisk',
@@ -36,7 +39,7 @@ interface FileNodeInfoR extends FileNodeInfo {
   fullpath: string
 }
 type ViewMode = 'line' | 'grid' | 'large-size-grid'
-const global = useGlobalStore()
+const { installBaiduyunBin, installedBaiduyun, failedHint, baiduyunLoading } = useBaiduyun()
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to, scroller } = useLocation()
 const { gridItems, sortMethodConv, moreActionsDropdownShow, sortedFiles, sortMethod, viewMode, gridSize, viewModeMap, largeGridSize } = useFilesDisplay()
 const { onDrop, onFileDragStart, multiSelectedIdxs } = useFileTransfer()
@@ -45,6 +48,7 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
 
 const toRawFileUrl = (file: FileNodeInfoR, download = false) => `/baidu_netdisk/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
 const toImageThumbnailUrl = (file: FileNodeInfoR, size = '256,256') => `/baidu_netdisk/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
+
 
 function usePreview () {
   const previewIdx = ref(-1)
@@ -172,6 +176,9 @@ function useLocation () {
   }, 300))
 
   onMounted(async () => {
+    if (props.target === 'netdisk' && installedBaiduyun.value) {
+      return
+    }
     const resp = await getTargetFolderFiles(props.target, '/')
     stack.value.push({
       files: resp.files,
@@ -183,6 +190,16 @@ function useLocation () {
       to(props.path)
     } else if (props.target == 'local') {
       global.conf?.home && to(global.conf.home)
+    }
+  })
+
+  watch(() => props.target === 'netdisk' && installedBaiduyun.value, async v => {
+    if (v) {
+      const resp = await getTargetFolderFiles(props.target, '/')
+      stack.value = [{
+        files: resp.files,
+        curr: '/'
+      }]
     }
   })
 
@@ -432,13 +449,18 @@ function useFileItemActions () {
 </script>
 <template>
   <ASelect style="display: none;"></ASelect>
-  <div ref="el" @dragover.prevent @drop.prevent="onDrop($event)" class="container">
+  <div v-if="props.target === 'netdisk' && !installedBaiduyun" class="uninstalled-hint">
+    <div>尚未安装依赖，当前不可用</div>
+    <AButton type="primary" :loading="baiduyunLoading" @click="installBaiduyunBin">点此安装</AButton>
+    <p v-if="failedHint">{{ failedHint }}</p>
+  </div>
+  <div ref="el" @dragover.prevent @drop.prevent="onDrop($event)" class="container" v-else>
     <AModal v-model:visible="showGenInfo" width="50vw">
       <ASkeleton active :loading="!q.isIdle">
         <pre style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
-                  双击复制
-                  {{ imageGenInfo }}
-                </pre>
+                        双击复制
+                        {{ imageGenInfo }}
+                      </pre>
       </ASkeleton>
     </AModal>
     <div class="location-bar">
@@ -466,19 +488,21 @@ function useFileItemActions () {
           </template>
         </a-dropdown>
 
-        <a-dropdown  :trigger="['click']" v-model:visible="moreActionsDropdownShow" placement="bottomLeft" :getPopupContainer="trigger => trigger.parentNode as HTMLDivElement">
+        <a-dropdown :trigger="['click']" v-model:visible="moreActionsDropdownShow" placement="bottomLeft"
+          :getPopupContainer="trigger => trigger.parentNode as HTMLDivElement">
           <a class="opt" @click.prevent>
             更多
           </a>
           <template #overlay>
-            <div 
+            <div
               style="  width: 384px; background: white; padding: 16px; border-radius: 4px; box-shadow: 0 0 4px #aaa; border: 1px solid #aaa;">
               <a-form v-bind="{
                 labelCol: { span: 6 },
                 wrapperCol: { span: 18 }
               }">
-                <a-form-item label="查看模式" >
-                  <search-select v-model:value="viewMode" @click.stop :conv="{ value: v => v, text: v => viewModeMap[v as ViewMode] }"
+                <a-form-item label="查看模式">
+                  <search-select v-model:value="viewMode" @click.stop
+                    :conv="{ value: v => v, text: v => viewModeMap[v as ViewMode] }"
                     :options="Object.keys(viewModeMap)" />
                 </a-form-item>
                 <a-form-item label="排序方法">
@@ -553,6 +577,19 @@ function useFileItemActions () {
   </div>
 </template>
 <style lang="scss" scoped>
+.uninstalled-hint {
+  margin: 256px auto;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+
+  &>* {
+    margin: 16px;
+    text-align: center;
+  }
+}
+
 .preview-switch {
   position: fixed;
   top: 0;

@@ -6,8 +6,8 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vite App</title>
-    <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-cba93bef.js"></script>
-    <link rel="stylesheet" href="/baidu_netdisk/fe-static/assets/index-bca67b7d.css">
+    <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-b129b19c.js"></script>
+    <link rel="stylesheet" href="/baidu_netdisk/fe-static/assets/index-f3d71b55.css">
   </head>
   <body>
     <div id="zanllp_dev_gradio_fe"></div>
