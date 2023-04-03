@@ -97,11 +97,7 @@ useIntervalFn(() => {
     <split-view-tab />
   </a-skeleton>
 </template>
-<style scoped lang="scss">
-:deep() .ant-tabs-nav {
-  margin: 0 16px;
-}
-
+<style scoped lang="scss"> 
 .panel {
   padding: 8px;
   margin: 16px;

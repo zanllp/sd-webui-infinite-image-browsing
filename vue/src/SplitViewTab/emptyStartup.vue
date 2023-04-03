@@ -3,6 +3,7 @@ import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { uniqueId } from 'lodash'
 import { computed } from 'vue'
 import { ID } from 'vue3-ts-util'
+import { CloudDownloadOutlined, FileDoneOutlined } from '@/icon'
 
 const global = useGlobalStore()
 const props = defineProps<{ tabIdx: number, paneIdx: number }>()
@@ -40,19 +41,36 @@ const lastRecord = computed(() => global.lastTabListRecord?.[1])
     <div class="record-restore" v-if="lastRecord?.tabs">
       <a @click.prevent="global.tabList = lastRecord!.tabs.map(V => ID(V, true))">还原上次记录</a>
     </div>
-    <ul>
-      <h2>启动</h2>
-      <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp">
-        <a @click.prevent="onCreateNewTab(comp)">{{ compCnMap[comp] }}</a>
-      </li>
-    </ul>
-    <ul>
-      <h2>最近</h2>
-      <li v-for="item in global.recent" :key="item.key">
-        <a @click.prevent="onCreateNewTab(item.target as any, item.path)">{{ item.target === 'local' ? '本地' : '云盘' }} : {{
-          item.path }}</a>
-      </li>
-    </ul>
+    <div class="quick-start">
+      <div style="margin-right: 128px;">
+
+        <ul>
+          <h2>启动</h2>
+          <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp">
+            <a @click.prevent="onCreateNewTab(comp)">{{ compCnMap[comp] }}</a>
+          </li>
+        </ul>
+        <ul>
+          <h2>最近</h2>
+          <li v-for="item in global.recent" :key="item.key">
+          <CloudDownloadOutlined v-if="item.target !== 'local'"/>
+          <FileDoneOutlined v-else/>
+            {{ item.target === 'local' ? '本地' : '云盘' }}
+            : <a @click.prevent="onCreateNewTab(item.target as any, item.path)">{{ item.path }}</a>
+          </li>
+        </ul>
+      </div>
+      <div>
+
+        <ul>
+          <h2>从快速移动启动</h2>
+          <li v-for="dir in global.autoCompletedDirList" :key="dir.key" class="quick">
+            <a @click.prevent="onCreateNewTab('local', dir.dir)">{{ dir.zh }}</a>
+          </li>
+        </ul>
+      </div>
+
+    </div>
   </div>
 </template>
 <style scoped lang="scss">
@@ -60,8 +78,23 @@ const lastRecord = computed(() => global.lastTabListRecord?.[1])
   margin: 32px;
 }
 
-ul {
-  padding: 16px 0;
-  list-style: none;
+.quick-start {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 64px;
+
+  ul {
+    flex-shrink: 0;
+    padding: 16px 0;
+    list-style: none;
+    margin-right: 20%;
+    width: 512px;
+
+
+    li {
+      padding: 4px 0;
+    }
+  }
+
 }
 </style>
