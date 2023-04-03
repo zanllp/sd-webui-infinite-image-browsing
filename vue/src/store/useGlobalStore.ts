@@ -1,5 +1,6 @@
 import type { GlobalConf, UploadTaskSummary } from '@/api'
 import type { getAutoCompletedTagList } from '@/taskRecord/autoComplete'
+import type { ReturnTypeAsync } from '@/util'
 import { uniqueId } from 'lodash'
 import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
@@ -28,7 +29,7 @@ export interface Tab extends UniqueId {
 
 export const useGlobalStore = defineStore('useGlobalStore', () => {
   const conf = ref<GlobalConf>()
-  const autoCompletedDirList = ref([] as ReturnType<typeof getAutoCompletedTagList>)
+  const autoCompletedDirList = ref([] as ReturnTypeAsync<typeof getAutoCompletedTagList>)
   const enableThumbnail = ref(true)
   const stackViewSplit = ref(50)
   const autoUploadRecvDir = ref('/')

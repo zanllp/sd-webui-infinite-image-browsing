@@ -358,4 +358,14 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             "tick_info": tick_info,
             "pending_files": AutoUpload.files
         }
+    
+    class CheckPathExistsReq(BaseModel):
+        paths: List[str]
+
+    @app.post(pre + '/check_path_exists')
+    async def check_path_exists(req: CheckPathExistsReq):
+        res = {}
+        for path in req.paths:
+            res[path] = os.path.exists(path)
+        return res
         

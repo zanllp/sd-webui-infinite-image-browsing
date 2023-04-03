@@ -142,6 +142,11 @@ export const getGlobalSetting = async () => {
   return resp.data as GlobalConf
 }
 
+export const checkPathExists = async (paths: string[]) => {
+  const resp = await axiosInst.post('/check_path_exists',{ paths })
+  return resp.data as Record<string, boolean>
+}
+
 
 export const cancelTask = async (id: string) => {
   const resp = await axiosInst.post(`/task/${id}/cancel`)

@@ -18,9 +18,10 @@ const queue = reactive(new FetchQueue(-1, 0, 0, 'throw'))
 const globalStore = useGlobalStore()
 const taskStore = useTaskListStore()
 onMounted(async () => {
-  getGlobalSetting().then((resp) => {
+  getGlobalSetting().then(async (resp) => {
     globalStore.conf = resp
-    globalStore.autoCompletedDirList = getAutoCompletedTagList(resp).filter(v => v?.dir?.trim?.())
+    const r = await getAutoCompletedTagList(resp)
+    globalStore.autoCompletedDirList = r.filter(v => v?.dir?.trim?.())
   })
   user.value = await queue.pushAction(getUserInfo).res
 })
@@ -57,43 +58,43 @@ useIntervalFn(() => {
   <a-skeleton :loading="!queue.isIdle">
 
     <!--div class="panel">
-      <template v-if="user">
-        <div>
-          已登录用户：{{ user.username }}
-        </div>
-        <div class="flex-placeholder" /><a-alert :message="tips" type="info" show-icon />
+        <template v-if="user">
+          <div>
+            已登录用户：{{ user.username }}
+          </div>
+          <div class="flex-placeholder" /><a-alert :message="tips" type="info" show-icon />
 
-        <a-form layout="inline">
-          <a-form-item label="使用缩略图预览">
-            <a-switch v-model:checked="globalStore.enableThumbnail" />
+          <a-form layout="inline">
+            <a-form-item label="使用缩略图预览">
+              <a-switch v-model:checked="globalStore.enableThumbnail" />
+            </a-form-item>
+            <a-form-item>
+
+              <a-button @click="onLogoutBtnClick">
+                <template #icon>
+                  <logout-outlined />
+                </template>
+                登出
+              </a-button>
+            </a-form-item>
+          </a-form>
+        </template>
+
+        <a-form layout="inline" v-else>
+          <a-form-item label="bduss">
+            <a-input v-model:value="bduss" style="width:300px"></a-input>
           </a-form-item>
           <a-form-item>
-
-            <a-button @click="onLogoutBtnClick">
+            <a-button @click="onLoginBtnClick" type="primary">
               <template #icon>
-                <logout-outlined />
+                <login-outlined />
               </template>
-              登出
+              登录
             </a-button>
           </a-form-item>
         </a-form>
-      </template>
-
-      <a-form layout="inline" v-else>
-        <a-form-item label="bduss">
-          <a-input v-model:value="bduss" style="width:300px"></a-input>
-        </a-form-item>
-        <a-form-item>
-          <a-button @click="onLoginBtnClick" type="primary">
-            <template #icon>
-              <login-outlined />
-            </template>
-            登录
-          </a-button>
-        </a-form-item>
-      </a-form>
-    </div-->
-    <split-view-tab/>
+      </div-->
+    <split-view-tab />
   </a-skeleton>
 </template>
 <style scoped lang="scss">
@@ -105,7 +106,7 @@ useIntervalFn(() => {
   padding: 8px;
   margin: 16px;
   border-radius: 8px;
-  background: var( --xdt-primary-background);
+  background: var(--xdt-primary-background);
   display: flex;
   justify-content: space-between;
 
