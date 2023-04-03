@@ -431,13 +431,14 @@ function useFileItemActions () {
 
 </script>
 <template>
+  <ASelect style="display: none;"></ASelect>
   <div ref="el" @dragover.prevent @drop.prevent="onDrop($event)" class="container">
     <AModal v-model:visible="showGenInfo" width="50vw">
       <ASkeleton active :loading="!q.isIdle">
         <pre style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
-            双击复制
-            {{ imageGenInfo }}
-          </pre>
+                  双击复制
+                  {{ imageGenInfo }}
+                </pre>
       </ASkeleton>
     </AModal>
     <div class="location-bar">
@@ -465,24 +466,24 @@ function useFileItemActions () {
           </template>
         </a-dropdown>
 
-        <a-dropdown :trigger="['click']" v-model:visible="moreActionsDropdownShow" placement="bottomLeft">
+        <a-dropdown  :trigger="['click']" v-model:visible="moreActionsDropdownShow" placement="bottomLeft" :getPopupContainer="trigger => trigger.parentNode as HTMLDivElement">
           <a class="opt" @click.prevent>
             更多
           </a>
           <template #overlay>
-            <div @click.stop
+            <div 
               style="  width: 384px; background: white; padding: 16px; border-radius: 4px; box-shadow: 0 0 4px #aaa; border: 1px solid #aaa;">
               <a-form v-bind="{
                 labelCol: { span: 6 },
                 wrapperCol: { span: 18 }
               }">
-                <a-form-item label="查看模式">
-                  <search-select v-model:value="viewMode" :conv="{ value: v => v, text: v => viewModeMap[v as ViewMode] }"
+                <a-form-item label="查看模式" >
+                  <search-select v-model:value="viewMode" @click.stop :conv="{ value: v => v, text: v => viewModeMap[v as ViewMode] }"
                     :options="Object.keys(viewModeMap)" />
                 </a-form-item>
                 <a-form-item label="排序方法">
 
-                  <search-select v-model:value="sortMethod" :conv="sortMethodConv"
+                  <search-select v-model:value="sortMethod" @click.stop :conv="sortMethodConv"
                     :options="Object.keys(sortMethodMap)" />
                 </a-form-item>
                 <a-form-item>
@@ -583,7 +584,7 @@ function useFileItemActions () {
 }
 
 .location-bar {
-  margin: 16px;
+  margin: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
