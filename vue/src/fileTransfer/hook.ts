@@ -511,6 +511,7 @@ export function useFileTransfer (props: Props) {
         content,
         maskClosable: true,
         async onOk () {
+          await global.createTaskRecordPaneIfNotExist(props.tabIdx)
           global.eventEmitter.emit('createNewTask', { send_dirs: data.path, recv_dir: toPath, type })
         }
       })

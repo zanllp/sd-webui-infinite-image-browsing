@@ -3,11 +3,20 @@ import type { getAutoCompletedTagList } from '@/taskRecord/autoComplete'
 import type { ReturnTypeAsync } from '@/util'
 import { uniqueId } from 'lodash'
 import { defineStore } from 'pinia'
-import { reactive, ref } from 'vue'
+import { nextTick } from 'vue'
+import { ref } from 'vue'
 import { typedEventEmitter, type UniqueId, ID } from 'vue3-ts-util'
 
 interface OtherTabPane {
-  type: 'auto-upload' | 'task-record' | 'empty'
+  type: 'auto-upload' | 'task-record' | 'empty' | 'log-detail'
+  name: string
+  readonly key: string
+}
+// logDetailId
+
+interface LogDetailTabPane {
+  type: 'log-detail'
+  logDetailId: string
   name: string
   readonly key: string
 }
@@ -21,7 +30,7 @@ export interface FileTransferTabPane {
   walkMode?: boolean
 }
 
-export type TabPane = FileTransferTabPane | OtherTabPane
+export type TabPane = FileTransferTabPane | OtherTabPane | LogDetailTabPane
 
 export interface Tab extends UniqueId {
   panes: TabPane[]
@@ -51,6 +60,27 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     }
     lastTabListRecord.value = lastTabListRecord.value.slice(0, 2) as any
   }
+
+  const waitTaskRecordLoaded = ref(Promise.resolve())
+  const createTaskRecordPaneIfNotExist = async (tabIdx = 0) => {
+    if (!tabList.value.map(v => v.panes).flat().find(v => v.type === 'task-record')) {
+      tabList.value[tabIdx].panes.push({ type: 'task-record', key: uniqueId(), name: '任务记录' })
+    }
+    await nextTick()
+    await waitTaskRecordLoaded.value
+  }
+  const openLogDetailInRight = async (tabIdx: number, id: string) => {
+    const tab = tabList.value[tabIdx + 1]
+    const log: LogDetailTabPane = { type: 'log-detail', logDetailId: id, key: uniqueId(), name: `日志详情:${id.split('-')[0]}...` }
+    if (!tab) {
+      tabList.value.push(ID({ panes: [log], key: log.key }))
+    } else {
+      tab.key = log.key
+      tab.panes.push(log) 
+    }
+
+  }
+
   return {
     tabList,
     conf,
@@ -61,6 +91,9 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     dragingTab,
     saveRecord,
     recent, lastTabListRecord,
+    openLogDetailInRight,
+    waitTaskRecordLoaded,
+    createTaskRecordPaneIfNotExist,
     ...typedEventEmitter<{ createNewTask: Partial<UploadTaskSummary> }>()
   }
 }, {

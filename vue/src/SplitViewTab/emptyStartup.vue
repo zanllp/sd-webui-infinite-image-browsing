@@ -4,6 +4,7 @@ import { uniqueId } from 'lodash'
 import { computed } from 'vue'
 import { ID } from 'vue3-ts-util'
 import { CloudDownloadOutlined, FileDoneOutlined } from '@/icon'
+import { message } from 'ant-design-vue'
 
 const global = useGlobalStore()
 const props = defineProps<{ tabIdx: number, paneIdx: number }>()
@@ -15,10 +16,13 @@ const compCnMap: Partial<Record<TabPane['type'], string>> = {
 }
 const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false) => {
   let pane: TabPane
-
+  if (type === 'task-record' && global.tabList.map(v => v.panes).flat().find(v => v.type === 'task-record')) {
+    return message.error('任务记录有且只能有一个，如果特殊需求请前往仓库提issue') // 如果允许多个需要处理一些监听器，懒得改后面再说
+  }
   switch (type) {
     case 'auto-upload':
     case 'task-record':
+    case 'log-detail':
     case 'empty':
       pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId() }
       break
