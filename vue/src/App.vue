@@ -102,7 +102,7 @@ useIntervalFn(() => {
   padding: 8px;
   margin: 16px;
   border-radius: 8px;
-  background: var(--xdt-primary-background);
+  background: var(--zp-primary-background);
   display: flex;
   justify-content: space-between;
 

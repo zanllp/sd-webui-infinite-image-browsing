@@ -18,6 +18,7 @@ export interface FileTransferTabPane {
   name: string
   readonly key: string
   path?: string
+  walkMode?: boolean
 }
 
 export type TabPane = FileTransferTabPane | OtherTabPane

@@ -1,6 +1,6 @@
 <!-- eslint-disable no-empty -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { copy2clipboard, SplitView } from 'vue3-ts-util'
 import { useTaskListStore } from '../store/useTaskListStore'
 import LogDetail from './logDetail.vue'
@@ -48,7 +48,7 @@ onMounted(async () => {
   padding: 8px;
   margin: 16px;
   border-radius: 8px;
-  background: var(--xdt-secondary-background);
+  background: var(--zp-secondary-background);
   display: flex;
   justify-content: space-between;
 

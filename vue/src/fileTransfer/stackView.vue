@@ -1,450 +1,42 @@
 <script setup lang="ts">
-import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
-import { setImgPath, genInfoCompleted, getImageGenerationInfo } from '@/api'
-import { cloneDeep, debounce, last, range, uniq } from 'lodash'
-import { ref, computed, onMounted, watch, h, reactive } from 'vue'
 import { FileOutlined, FolderOpenOutlined, DownOutlined, LeftCircleOutlined, RightCircleOutlined } from '@/icon'
-import { sortMethodMap, sortFiles, SortMethod } from './fileSort'
-import path from 'path-browserify'
-import { useGlobalStore, type FileTransferTabPane } from '@/store/useGlobalStore'
-import { useBaiduyun } from './hook'
-import { copy2clipboard, ok, type SearchSelectConv, SearchSelect, useWatchDocument, fallbackImage, delay, Task, FetchQueue } from 'vue3-ts-util'
-// @ts-ignore
-import NProgress from 'multi-nprogress'
+import { sortMethodMap } from './fileSort'
+import { useGlobalStore } from '@/store/useGlobalStore'
+import { useFileTransfer, useFilesDisplay, useHookShareState, useLocation, usePreview, type ViewMode, useFileItemActions, toImageThumbnailUrl, toRawFileUrl } from './hook'
+import { copy2clipboard, SearchSelect, fallbackImage } from 'vue3-ts-util'
+
 import 'multi-nprogress/nprogress.css'
-import type Progress from 'nprogress'
-import { message, Modal } from 'ant-design-vue'
 import FolderNavigator from './folderNavigator.vue'
-import { gradioApp, isImageFile } from '@/util'
-import { useElementSize } from '@vueuse/core'
+import { isImageFile } from '@/util'
 // @ts-ignore
 import { RecycleScroller } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
-import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
+import { watch } from 'vue'
 
 
 const global = useGlobalStore()
-const el = ref<HTMLDivElement>()
 const props = defineProps<{
   target: 'local' | 'netdisk',
   tabIdx: number,
   paneIdx: number,
-  path?: string
+  path?: string,
+  walkMode?: boolean
 }>()
-interface Page {
-  files: FileNodeInfo[]
-  curr: string
-}
-interface FileNodeInfoR extends FileNodeInfo {
-  fullpath: string
-}
-type ViewMode = 'line' | 'grid' | 'large-size-grid'
-const { installBaiduyunBin, installedBaiduyun, failedHint, baiduyunLoading } = useBaiduyun()
-const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to, scroller } = useLocation()
-const { gridItems, sortMethodConv, moreActionsDropdownShow, sortedFiles, sortMethod, viewMode, gridSize, viewModeMap, largeGridSize } = useFilesDisplay()
-const { onDrop, onFileDragStart, multiSelectedIdxs } = useFileTransfer()
-const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions()
+const { installBaiduyunBin, installedBaiduyun, failedHint, baiduyunLoading, scroller, stackViewEl, props: _props } = useHookShareState().toRefs()
+watch(() => props, () => {
+  _props.value = props
+}, { immediate: true })
+
+const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to } = useLocation(props)
+const { gridItems, sortMethodConv, moreActionsDropdownShow, 
+  sortedFiles, sortMethod, viewMode, gridSize, viewModeMap, largeGridSize,
+  loadNextDir, loadNextDirLoading, canLoadNext,
+   onScroll } = useFilesDisplay(props)
+const { onDrop, onFileDragStart, multiSelectedIdxs } = useFileTransfer(props)
+const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions({ openNext })
 const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } = usePreview()
 
-const toRawFileUrl = (file: FileNodeInfoR, download = false) => `/baidu_netdisk/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
-const toImageThumbnailUrl = (file: FileNodeInfoR, size = '256,256') => `/baidu_netdisk/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
 
-
-function usePreview () {
-  const previewIdx = ref(-1)
-  const previewing = ref(false)
-  let waitScrollTo = null as number | null
-  const onPreviewVisibleChange = (v: boolean, lv: boolean) => {
-    previewing.value = v
-    if (waitScrollTo != null && !v && lv) {// 关闭预览时滚动过去
-      scroller.value?.scrollToItem(waitScrollTo)
-      waitScrollTo = null
-    }
-  }
-  useWatchDocument('keydown', e => {
-    if (previewing.value) {
-      let next = previewIdx.value
-      if (['ArrowDown', 'ArrowRight'].includes(e.key)) {
-        next++
-        while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
-          next++
-        }
-      } else if (['ArrowUp', 'ArrowLeft'].includes(e.key)) {
-        next--
-        while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
-          next--
-        }
-      }
-      if (isImageFile(sortedFiles.value[next]?.name) ?? '') {
-        previewIdx.value = next
-        const s = scroller.value
-        if (s && !(next >= s.$_startIndex && next <= s.$_endIndex)) {
-          waitScrollTo = next // 关闭预览时滚动过去
-        }
-      }
-    }
-  })
-  const previewImgMove = (type: 'next' | 'prev') => {
-    let next = previewIdx.value
-    if (type === 'next') {
-      next++
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
-        next++
-      }
-    } else if (type === 'prev') {
-      next--
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
-        next--
-      }
-    }
-    if (isImageFile(sortedFiles.value[next]?.name) ?? '') {
-      previewIdx.value = next
-      const s = scroller.value
-      if (s && !(next >= s.$_startIndex && next <= s.$_endIndex)) {
-        waitScrollTo = next // 关闭预览时滚动过去
-      }
-    }
-  }
-  const canPreview = (type: 'next' | 'prev') => {
-    let next = previewIdx.value
-    if (type === 'next') {
-      next++
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
-        next++
-      }
-    } else if (type === 'prev') {
-      next--
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
-        next--
-      }
-    } return isImageFile(sortedFiles.value[next]?.name) ?? ''
-  }
-  return {
-    previewIdx,
-    onPreviewVisibleChange,
-    previewing,
-    previewImgMove,
-    canPreview
-  }
-}
-
-function useFilesDisplay () {
-  const moreActionsDropdownShow = ref(false)
-  const viewMode = ref<ViewMode>('grid')
-  const viewModeMap: Record<ViewMode, string> = { line: '详情列表', 'grid': '预览网格', 'large-size-grid': '大尺寸预览网格' }
-  const sortMethodConv: SearchSelectConv<SortMethod> = {
-    value: (v) => v,
-    text: (v) => '按' + sortMethodMap[v]
-  }
-  const sortMethod = ref(SortMethod.DATE_DESC)
-  const sortedFiles = computed(() => sortFiles(currPage.value?.files ?? [], sortMethod.value).map(v => ({ ...v, fullpath: path.join(currLocation.value, v.name) })))
-  const gridSize = 288
-  const largeGridSize = gridSize * 2
-  const { width } = useElementSize(el)
-  const gridItems = computed(() => {
-    const w = width.value
-    if (viewMode.value === 'line' || !w) {
-      return
-    }
-    return ~~(w / (viewMode.value === 'grid' ? gridSize : largeGridSize))
-  })
-  return {
-    gridItems,
-    sortedFiles,
-    sortMethodConv,
-    viewModeMap,
-    moreActionsDropdownShow,
-    viewMode,
-    gridSize,
-    sortMethod,
-    largeGridSize
-  }
-}
-
-
-function useLocation () {
-  const scroller = ref<{ $_startIndex: number, $_endIndex: number, scrollToItem (idx: number): void }>()
-  const np = ref<Progress.NProgress>()
-  const currPage = computed(() => last(stack.value))
-  const stack = ref<Page[]>([])
-  const currLocation = computed(() => path.join(...getBasePath()))
-
-  watch(() => stack.value.length, debounce((v, lv) => {
-    if (v !== lv) {
-      scroller.value!.scrollToItem(0)
-    }
-  }, 300))
-
-  onMounted(async () => {
-    if (props.target === 'netdisk' && installedBaiduyun.value) {
-      return
-    }
-    const resp = await getTargetFolderFiles(props.target, '/')
-    stack.value.push({
-      files: resp.files,
-      curr: '/'
-    })
-    np.value = new NProgress()
-    np.value!.configure({ parent: el.value as any })
-    if (props.path && props.path !== '/') {
-      to(props.path)
-    } else if (props.target == 'local') {
-      global.conf?.home && to(global.conf.home)
-    }
-  })
-
-  watch(() => props.target === 'netdisk' && installedBaiduyun.value, async v => {
-    if (v) {
-      const resp = await getTargetFolderFiles(props.target, '/')
-      stack.value = [{
-        files: resp.files,
-        curr: '/'
-      }]
-    }
-  })
-
-  const getBasePath = () =>
-    stack.value.map((v) => v.curr).slice(global.conf?.is_win && props.target === 'local' ? 1 : 0)
-
-  watch(currLocation, debounce((loc) => {
-    const pane = global.tabList[props.tabIdx].panes[props.paneIdx] as FileTransferTabPane
-    pane.path = loc
-    global.recent = global.recent.filter(v => v.key !== pane.key)
-    global.recent.unshift({ path: loc, target: pane.target, key: pane.key })
-    if (global.recent.length > 20) {
-      global.recent = global.recent.slice(0, 20)
-    }
-  }, 300))
-
-  const copyLocation = () => copy2clipboard(currLocation.value)
-
-  const openNext = async (file: FileNodeInfo) => {
-    if (file.type !== 'dir') {
-      return
-    }
-    try {
-      np.value?.start()
-      const prev = getBasePath()
-      const { files } = await getTargetFolderFiles(
-        props.target,
-        path.normalize(path.join(...prev, file.name))
-      )
-      stack.value.push({
-        files,
-        curr: file.name
-      })
-    } finally {
-      np.value?.done()
-    }
-  }
-
-  const back = (idx: number) => {
-    while (idx < stack.value.length - 1) {
-      stack.value.pop()
-    }
-  }
-
-  const to = async (dir: string) => {
-    const backup = cloneDeep(stack.value)
-    try {
-      if (!/^((\w:)|\/)/.test(dir)) {
-        // 相对路径
-        dir = path.join(global.conf?.sd_cwd ?? '/', dir)
-      }
-      const frags = dir.split(/\\|\//)
-      if (global.conf?.is_win && props.target === 'local') {
-        frags[0] = frags[0] + '/' // 分割完是c:
-      } else {
-        frags.shift() // /开头的一个是空
-      }
-      const currPaths = stack.value.map(v => v.curr)
-      currPaths.shift() // 是 /
-      while (currPaths[0] && frags[0]) {
-        if (currPaths[0] !== frags[0]) {
-          break
-        } else {
-          currPaths.shift()
-          frags.shift()
-        }
-      }
-      for (let index = 0; index < currPaths.length; index++) {
-        stack.value.pop()
-      }
-      if (!frags.length) {
-        return refresh()
-      }
-      for (const frag of frags) {
-        const target = currPage.value?.files.find((v) => v.name === frag)
-        ok(target)
-        await openNext(target)
-      }
-    } catch (error) {
-      console.error(dir)
-      message.error('移动失败，检查你的路径输入')
-      stack.value = backup
-      throw error
-    }
-  }
-
-
-  const refresh = async () => {
-    if (stack.value.length === 1) {
-      const resp = await getTargetFolderFiles(props.target, '/')
-      stack.value = [
-        {
-          files: resp.files,
-          curr: '/'
-        }
-      ]
-    } else {
-      const last = currPage.value
-      stack.value.pop()
-      await openNext(currPage.value?.files.find((v) => v.name === last?.curr)!)
-    }
-  }
-  return {
-    refresh,
-    copyLocation,
-    back,
-    openNext,
-    currPage,
-    currLocation,
-    to,
-    stack,
-    scroller
-  }
-}
-
-
-function useFileTransfer () {
-  const multiSelectedIdxs = ref([] as number[])
-  const recover = () => {
-    multiSelectedIdxs.value = []
-  }
-  useWatchDocument('click', recover)
-  useWatchDocument('blur', recover)
-  watch(currPage, recover)
-
-  const onFileDragStart = (e: DragEvent, idx: number) => {
-    const file = cloneDeep(sortedFiles.value[idx])
-    console.log(file, idx)
-    const names = [file.name]
-    let includeDir = file.type === 'dir'
-    if (multiSelectedIdxs.value.includes(idx)) {
-      const selectedFiles = multiSelectedIdxs.value.map(idx => sortedFiles.value[idx])
-      names.push(...selectedFiles.map(v => v.name))
-      includeDir = selectedFiles.some(v => v.type === 'dir')
-
-    }
-    e.dataTransfer!.setData(
-      'text/plain',
-      JSON.stringify({
-        from: props.target,
-        includeDir,
-        path: uniq(names).map(name => path.join(currLocation.value, name))
-      })
-    )
-  }
-
-  const onDrop = async (e: DragEvent) => {
-    type Data = {
-      from: typeof props.target
-      path: string[],
-      includeDir: boolean
-    }
-    const data = JSON.parse(e.dataTransfer?.getData('text') || '{}') as Data
-    console.log(data)
-    if (data.from && data.path && typeof data.includeDir !== 'undefined') {
-      if (data.from === props.target) {
-        return
-      }
-      const type = data.from === 'local' ? 'upload' : 'download'
-      const typeZH = type === 'upload' ? '上传' : '下载'
-      const toPath = currLocation.value
-      const content = h('div', [
-        h('div', `从 ${props.target !== 'local' ? '本地' : '云盘'} `),
-        h('ol', data.path.map(v => v.split(/[/\\]/).pop()).map(v => h('li', v))),
-        h('div', `${typeZH} ${props.target === 'local' ? '本地' : '云盘'} ${toPath}`)
-      ])
-      Modal.confirm({
-        title: `确定创建${typeZH}任务${data.includeDir ? ', 这是文件夹或者包含文件夹!' : ''}`,
-        content,
-        maskClosable: true,
-        async onOk () {
-          global.eventEmitter.emit('createNewTask', { send_dirs: data.path, recv_dir: toPath, type })
-        }
-      })
-    }
-  }
-  return {
-    onFileDragStart,
-    onDrop,
-    multiSelectedIdxs
-  }
-}
-
-function useFileItemActions () {
-  const showGenInfo = ref(false)
-  const imageGenInfo = ref('')
-  const q = reactive(new FetchQueue())
-  const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo) => {
-    const files = sortedFiles.value
-    const idx = files.findIndex(v => v.name === file.name)
-    previewIdx.value = idx
-    if (e.shiftKey) {
-      multiSelectedIdxs.value.push(idx)
-      multiSelectedIdxs.value.sort((a, b) => a - b)
-      const first = multiSelectedIdxs.value[0]
-      const last = multiSelectedIdxs.value[multiSelectedIdxs.value.length - 1]
-      multiSelectedIdxs.value = range(first, last + 1)
-      e.stopPropagation()
-    } else if (e.ctrlKey || e.metaKey) {
-      multiSelectedIdxs.value.push(idx)
-      e.stopPropagation()
-    } else {
-      await openNext(file)
-    }
-  }
-
-
-  const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfoR) => {
-    const url = toRawFileUrl(file)
-    const copyImgTo = async (tab: ["txt2img", "img2img", "inpaint", "extras"][number]) => {
-      await setImgPath(file.fullpath) // 设置图像路径
-      const btn = gradioApp().querySelector('#bd_hidden_img_update_trigger')! as HTMLButtonElement
-      btn.click() // 触发图像组件更新
-      await Task.run({
-        pollInterval: 1000,
-        action: genInfoCompleted,
-        validator: v => v
-      }).completedTask // 等待消息生成完成
-      await delay(500) // 如果直接点好像会还是设置之前的图片，workaround
-      const tabBtn = gradioApp().querySelector(`#bd_hidden_tab_${tab}`) as HTMLButtonElement
-      tabBtn.click() // 触发粘贴
-    }
-    switch (e.key) {
-      case 'openInNewWindow': return window.open(url)
-      case 'download': return window.open(toRawFileUrl(file, true))
-      case 'copyPreviewUrl': return copy2clipboard(location.host + url)
-      case 'send2txt2img': return copyImgTo('txt2img')
-      case 'send2img2img': return copyImgTo('img2img')
-      case 'send2inpaint': return copyImgTo('inpaint')
-      case 'send2extras': return copyImgTo('extras')
-      case 'viewGenInfo': {
-        showGenInfo.value = true
-        imageGenInfo.value = await q.pushAction(() => getImageGenerationInfo(file.fullpath)).res
-      }
-
-    }
-  }
-  return {
-    onFileItemClick,
-    onContextMenuClick,
-    showGenInfo,
-    imageGenInfo,
-    q
-  }
-}
 
 </script>
 <template>
@@ -454,13 +46,13 @@ function useFileItemActions () {
     <AButton type="primary" :loading="baiduyunLoading" @click="installBaiduyunBin">点此安装</AButton>
     <p v-if="failedHint">{{ failedHint }}</p>
   </div>
-  <div ref="el" @dragover.prevent @drop.prevent="onDrop($event)" class="container" v-else>
+  <div ref="stackViewEl" @dragover.prevent @drop.prevent="onDrop($event)" class="container" v-else>
     <AModal v-model:visible="showGenInfo" width="50vw">
       <ASkeleton active :loading="!q.isIdle">
         <pre style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
-                        双击复制
-                        {{ imageGenInfo }}
-                      </pre>
+                          双击复制
+                          {{ imageGenInfo }}
+                        </pre>
       </ASkeleton>
     </AModal>
     <div class="location-bar">
@@ -521,7 +113,7 @@ function useFileItemActions () {
       </div>
     </div>
     <div v-if="currPage" class="view">
-      <RecycleScroller class="file-list" :items="sortedFiles" :prerender="10" ref="scroller"
+      <RecycleScroller class="file-list" :items="sortedFiles" :prerender="10" ref="scroller" @scroll="onScroll"
         :item-size="viewMode === 'line' ? 80 : (viewMode === 'grid' ? gridSize : largeGridSize)" key-field="fullpath"
         :gridItems="gridItems">
         <template v-slot="{ item: file, index: idx }">
@@ -567,6 +159,9 @@ function useFileItemActions () {
               </a-menu>
             </template>
           </a-dropdown>
+        </template>
+        <template v-if="props.walkMode" #after>
+          <AButton @click="loadNextDir" :loading="loadNextDirLoading" block type="primary" :disabled="!canLoadNext" ghost>加载下一页</AButton>
         </template>
       </RecycleScroller>
       <div v-if="previewing" class="preview-switch">
@@ -654,7 +249,7 @@ function useFileItemActions () {
       margin: 8px;
       display: flex;
       align-items: center;
-      background: var(--xdt-primary-background);
+      background: var(--zp-primary-background);
       border-radius: 8px;
       box-shadow: 0 0 4px #ccc;
       position: relative;

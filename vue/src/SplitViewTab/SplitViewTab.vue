@@ -74,11 +74,11 @@ watch(() => global.tabList, async () => {
 <style scoped lang="scss">
 :deep() .splitpanes {
   .splitpanes__splitter {
-    background: var(--xdt-primary-background);
+    background: var(--zp-primary-background);
   }
 
   .splitpanes__pane {
-    background: var(--xdt-primary-background);
+    background: var(--zp-primary-background);
     height: 100vh;
   }
 }

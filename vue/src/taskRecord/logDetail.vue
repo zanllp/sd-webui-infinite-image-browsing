@@ -42,9 +42,9 @@ watch(currList, async () => {
   padding: 16px;
   margin: 16px;
   border-radius: 16px;
-  background-color: var(--xdt-secondary-background);
+  background-color: var(--zp-secondary-background);
 
-  color: var(--xdt-primary);
+  color: var(--zp-primary);
   margin-left: 16px;
   list-style: none;
   font-size: 12px;

@@ -13,7 +13,7 @@ const compCnMap: Partial<Record<TabPane['type'], string>> = {
   netdisk: '百度云',
   "task-record": '任务记录'
 }
-const onCreateNewTab = (type: TabPane['type'], path?: string) => {
+const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false) => {
   let pane: TabPane
 
   switch (type) {
@@ -24,7 +24,7 @@ const onCreateNewTab = (type: TabPane['type'], path?: string) => {
       break
     case 'local':
     case 'netdisk':
-      pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId(), target: type, path }
+      pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId(), target: type, path, walkMode }
   }
   const tab = global.tabList[props.tabIdx]
   tab.panes.splice(props.paneIdx, 1, pane)
@@ -32,13 +32,17 @@ const onCreateNewTab = (type: TabPane['type'], path?: string) => {
 }
 
 const lastRecord = computed(() => global.lastTabListRecord?.[1])
+
+
+const walkModeSupportedDir = computed(() => global.autoCompletedDirList.filter(({ key: k }) => k === 'outdir_txt2img_samples' || k === 'outdir_img2img_samples' || k === 'outdir_extras_samples' || k === 'outdir_save' || k === 'outdir_samples'))
+
 </script>
 <template>
   <div class="container">
     <h1>
       欢迎
     </h1>
-    <div class="record-restore" v-if="lastRecord?.tabs">
+    <div class="record-restore" v-if="lastRecord?.tabs.length">
       <a @click.prevent="global.tabList = lastRecord!.tabs.map(V => ID(V, true))">还原上次记录</a>
     </div>
     <div class="quick-start">
@@ -47,16 +51,22 @@ const lastRecord = computed(() => global.lastTabListRecord?.[1])
         <ul>
           <h2>启动</h2>
           <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp">
-            <a @click.prevent="onCreateNewTab(comp)">{{ compCnMap[comp] }}</a>
+            <a @click.prevent="openInCurrentTab(comp)">{{ compCnMap[comp] }}</a>
           </li>
         </ul>
+        <ul v-if="walkModeSupportedDir.length" class="walk-mode">
+          <h2>使用Walk模式浏览图片</h2>
+          <li v-for="item in walkModeSupportedDir" :key="item.dir" >
+            <AButton @click="openInCurrentTab('local', item.dir, true)" ghost type="primary" block>{{ item.zh }}</AButton>
+          </li>
+          </ul>
         <ul>
           <h2>最近</h2>
           <li v-for="item in global.recent" :key="item.key">
-          <CloudDownloadOutlined v-if="item.target !== 'local'"/>
-          <FileDoneOutlined v-else/>
+            <CloudDownloadOutlined v-if="item.target !== 'local'" />
+            <FileDoneOutlined v-else />
             {{ item.target === 'local' ? '本地' : '云盘' }}
-            : <a @click.prevent="onCreateNewTab(item.target as any, item.path)">{{ item.path }}</a>
+            : <a @click.prevent="openInCurrentTab(item.target as any, item.path)">{{ item.path }}</a>
           </li>
         </ul>
       </div>
@@ -65,7 +75,7 @@ const lastRecord = computed(() => global.lastTabListRecord?.[1])
         <ul>
           <h2>从快速移动启动</h2>
           <li v-for="dir in global.autoCompletedDirList" :key="dir.key" class="quick">
-            <a @click.prevent="onCreateNewTab('local', dir.dir)">{{ dir.zh }}</a>
+            <a @click.prevent="openInCurrentTab('local', dir.dir)">{{ dir.zh }}</a>
           </li>
         </ul>
       </div>

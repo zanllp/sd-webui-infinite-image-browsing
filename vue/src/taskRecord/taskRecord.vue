@@ -215,7 +215,7 @@ const remove = async (idx: number) => {
 
   .task-form {
     border-radius: 16px;
-    background: var(--xdt-secondary-background);
+    background: var(--zp-secondary-background);
     padding: 16px;
     margin: 16px 8px;
 

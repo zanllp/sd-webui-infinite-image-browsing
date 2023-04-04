@@ -84,6 +84,7 @@ def list_file(cwd="/"):
                 "name": name.strip("/"),
                 "type": f_type,
                 "bytes": convert_to_bytes(size) if size != "-" else size,
+                "fullpath": os.path.normpath(os.path.join(cwd, name.strip("/"))),
             }
             files.append(file_info)
     return files
@@ -243,7 +244,7 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             if target == "local":
                 if is_win and folder_path == "/":
                     for item in get_windows_drives():
-                        files.append({"type": "dir", "size": "-", "name": item})
+                        files.append({"type": "dir", "size": "-", "name": item, "fullpath": item})
                 else:
                     for item in os.listdir(folder_path):
                         path = os.path.join(folder_path, item)
@@ -263,11 +264,12 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
                                     "size": size,
                                     "name": item,
                                     "bytes": bytes,
+                                    "fullpath": os.path.normpath(os.path.join(folder_path, item))
                                 }
                             )
                         elif os.path.isdir(path):
                             files.append(
-                                {"type": "dir", "date": date, "size": "-", "name": item}
+                                {"type": "dir", "date": date, "size": "-", "name": item, "fullpath": os.path.normpath(os.path.join(folder_path, item))}
                             )
             else:
                 files = list_file(folder_path)

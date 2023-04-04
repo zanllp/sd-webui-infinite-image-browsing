@@ -41,43 +41,38 @@ $success-color: #28a745;
   --light-border-color: var(--grey-5);
   --main-text-color: var(--grey-11);
   --main-bg-color: var(--grey-3);
-
-  // 新的xdt
-  --xdt-black: #222222;
-  --xdt-grey96: #2b2b2b;
-  --xdt-grey90: #383838;
-  --xdt-grey80: #4e4e4e;
-  --xdt-grey70: #646464;
-  --xdt-grey60: #7a7a7a;
-  --xdt-grey50: #909090;
-  --xdt-grey40: #a7a7a7;
-  --xdt-grey30: #bdbdbd;
-  --xdt-grey20: #d3d3d3;
-  --xdt-grey10: #e9e9e9;
-  --xdt-grey7: #f0f0f0;
-  --xdt-grey4: #f6f6f6;
-  --xdt-white: #ffffff;
-
-  // 主要内容颜色
-  --xdt-primary: var(--xdt-black);
-  --xdt-secondary: var(--xdt-grey50);
-  --xdt-tertiary: var(--xdt-grey30);
-  // 背景颜色
-  --xdt-primary-background: var(--xdt-white);
-  --xdt-secondary-background: var(--xdt-grey4);
-  --xdt-tertiary-background: var(--xdt-white);
-  --xdt-secondary-variant-background: var(--xdt-grey7);
+  --zp-black: #222222;
+  --zp-grey96: #2b2b2b;
+  --zp-grey90: #383838;
+  --zp-grey80: #4e4e4e;
+  --zp-grey70: #646464;
+  --zp-grey60: #7a7a7a;
+  --zp-grey50: #909090;
+  --zp-grey40: #a7a7a7;
+  --zp-grey30: #bdbdbd;
+  --zp-grey20: #d3d3d3;
+  --zp-grey10: #e9e9e9;
+  --zp-grey7: #f0f0f0;
+  --zp-grey4: #f6f6f6;
+  --zp-white: #ffffff;
+  --zp-primary: var(--zp-black);
+  --zp-secondary: var(--zp-grey50);
+  --zp-tertiary: var(--zp-grey30);
+  --zp-primary-background: var(--zp-white);
+  --zp-secondary-background: var(--zp-grey4);
+  --zp-tertiary-background: var(--zp-white);
+  --zp-secondary-variant-background: var(--zp-grey7);
   // 边框颜色
-  --xdt-border: var(--xdt-grey4);
+  --zp-border: var(--zp-grey4);
   @media (prefers-color-scheme: dark) {
-    --xdt-primary: var(--xdt-grey20);
-    --xdt-secondary: var(--xdt-grey60);
-    --xdt-tertiary: var(--xdt-grey70);
-    --xdt-primary-background: var(--xdt-black);
-    --xdt-secondary-background: var(--xdt-grey96);
-    --xdt-secondary-variant-background: var(--xdt-grey90);
-    --xdt-tertiary-background: var(--xdt-grey4);
-    --xdt-border: var(--xdt-grey96);
+    --zp-primary: var(--zp-grey20);
+    --zp-secondary: var(--zp-grey60);
+    --zp-tertiary: var(--zp-grey70);
+    --zp-primary-background: var(--zp-black);
+    --zp-secondary-background: var(--zp-grey96);
+    --zp-secondary-variant-background: var(--zp-grey90);
+    --zp-tertiary-background: var(--zp-grey4);
+    --zp-border: var(--zp-grey96);
 
   }
 }
@@ -99,11 +94,11 @@ body {
   width: 100%;
   ::-webkit-scrollbar {
     width: 10px; // 滚动条宽度
-    background-color: var(--xdt-secondary-variant-background); // 滚动条背景颜色
+    background-color: var(--zp-secondary-variant-background); // 滚动条背景颜色
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: var(--xdt-secondary); // 滚动条拖动块颜色
+    background-color: var(--zp-secondary); // 滚动条拖动块颜色
     border-radius: 5px; // 滚动条拖动块圆角
   }
 
@@ -112,12 +107,12 @@ body {
   }
 
   ::-webkit-scrollbar-track {
-    background-color: var(--xdt-secondary-variant-background); // 滚动条轨道颜色
+    background-color: var(--zp-secondary-variant-background); // 滚动条轨道颜色
   }
 
   ::-webkit-scrollbar-track:hover {
-    background-color: var(--xdt-secondary-background); // 滚动条轨道悬停颜色
+    background-color: var(--zp-secondary-background); // 滚动条轨道悬停颜色
   }
-  background: var(--xdt-primary-background);
-  color: var(--xdt-primary);
+  background: var(--zp-primary-background);
+  color: var(--zp-primary);
 }
