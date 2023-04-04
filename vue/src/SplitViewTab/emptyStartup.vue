@@ -50,7 +50,7 @@ const walkModeSupportedDir = computed(() => global.autoCompletedDirList.filter((
 
         <ul>
           <h2>启动</h2>
-          <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp">
+          <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp" >
             <a @click.prevent="openInCurrentTab(comp)">{{ compCnMap[comp] }}</a>
           </li>
         </ul>

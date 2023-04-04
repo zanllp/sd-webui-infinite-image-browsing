@@ -2,7 +2,7 @@
 // @ts-ignore
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
-import { useGlobalStore,  type TabPane } from '@/store/useGlobalStore'
+import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { defineAsyncComponent, watch, ref, nextTick } from 'vue'
 import { key } from '@/util'
 import { uniqueId } from 'lodash'
@@ -22,7 +22,9 @@ const onEdit = (idx: number, targetKey: any, action: string) => {
     tab.panes.push(empty)
     tab.key = empty.key
   } else {
-    tab.panes = tab.panes.filter(v => v.key !== targetKey)
+    const idx = tab.panes.findIndex(v => v.key === targetKey)
+    tab.key = tab.panes[idx - 1]?.key ?? tab.panes[0]?.key
+    tab.panes.splice(idx, 1)
     if (tab.panes.length === 0) {
       global.tabList.splice(idx, 1)
     }

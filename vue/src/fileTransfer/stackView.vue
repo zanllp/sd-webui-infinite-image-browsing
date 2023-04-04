@@ -28,13 +28,13 @@ watch(() => props, () => {
 }, { immediate: true })
 
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to } = useLocation(props)
-const { gridItems, sortMethodConv, moreActionsDropdownShow, 
+const { gridItems, sortMethodConv, moreActionsDropdownShow,
   sortedFiles, sortMethod, viewMode, gridSize, viewModeMap, largeGridSize,
   loadNextDir, loadNextDirLoading, canLoadNext,
-   onScroll } = useFilesDisplay(props)
+  onScroll } = useFilesDisplay(props)
 const { onDrop, onFileDragStart, multiSelectedIdxs } = useFileTransfer(props)
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions({ openNext })
-const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } = usePreview()
+const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } = usePreview(props)
 
 
 
@@ -50,9 +50,9 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
     <AModal v-model:visible="showGenInfo" width="50vw">
       <ASkeleton active :loading="!q.isIdle">
         <pre style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
-                          双击复制
-                          {{ imageGenInfo }}
-                        </pre>
+                            双击复制
+                            {{ imageGenInfo }}
+                          </pre>
       </ASkeleton>
     </AModal>
     <div class="location-bar">
@@ -161,7 +161,8 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
           </a-dropdown>
         </template>
         <template v-if="props.walkMode" #after>
-          <AButton @click="loadNextDir" :loading="loadNextDirLoading" block type="primary" :disabled="!canLoadNext" ghost>加载下一页</AButton>
+          <AButton @click="loadNextDir" :loading="loadNextDirLoading" block type="primary" :disabled="!canLoadNext" ghost>
+            加载下一页</AButton>
         </template>
       </RecycleScroller>
       <div v-if="previewing" class="preview-switch">

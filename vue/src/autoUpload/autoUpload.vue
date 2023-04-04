@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watchEffect } from 'vue'
+import { computed, reactive, ref, watchEffect } from 'vue'
 import { autoUploadOutput, type UploadTaskSummary } from '@/api/index'
 import { delay, Task } from 'vue3-ts-util'
 import { useGlobalStore } from '@/store/useGlobalStore'
