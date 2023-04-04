@@ -5,7 +5,7 @@ import { ref, computed, watch, onMounted, h, reactive } from 'vue'
 
 import { downloadBaiduyun, genInfoCompleted, getImageGenerationInfo, setImgPath } from '@/api'
 import { isAxiosError } from 'axios'
-import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook, copy2clipboard, Task, delay, FetchQueue } from 'vue3-ts-util'
+import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook, copy2clipboard, Task, delay, FetchQueue, typedEventEmitter } from 'vue3-ts-util'
 import { gradioApp, isImageFile } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
@@ -36,11 +36,29 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
   const basePath = computed(() => stack.value.map((v) => v.curr).slice(global.conf?.is_win && props.value.target === 'local' ? 1 : 0))
   const currLocation = computed(() => path.join(...basePath.value))
   const sortMethod = ref(SortMethod.DATE_DESC)
-  const sortedFiles = computed(() => sortFiles(currPage.value?.files ?? [], sortMethod.value))
-
+  const sortedFiles = computed(() => {
+    if (!currPage.value) {
+      return []
+    }
+    const files = currPage.value?.files ?? []
+    const method = sortMethod.value
+    const { walkFiles } = currPage.value!
+    if (props.value.walkMode) {
+      /**
+       * @see Page
+       */
+      return walkFiles
+        ? walkFiles.map(dir => sortFiles(dir, method)).flat()
+        : sortFiles(files, method)
+    }
+    return sortFiles(files, method)
+  })
   const multiSelectedIdxs = ref([] as number[])
   const previewIdx = ref(-1)
+
+  const canLoadNext = ref(true)
   return {
+    canLoadNext,
     multiSelectedIdxs,
     previewIdx,
     basePath,
@@ -52,7 +70,8 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     scroller: ref<Scroller>(),
     stackViewEl: ref<HTMLDivElement>(),
     props,
-    ...useBaiduyun()
+    ...useBaiduyun(),
+    ...typedEventEmitter<{ loadNextDir: undefined }>()
   }
 })
 
@@ -96,10 +115,11 @@ export const useBaiduyun = () => {
 
 interface Page {
   files: FileNodeInfo[]
+  walkFiles?: FileNodeInfo[][] // 使用walk时，各个文件夹之间分散排序，避免创建时间不同的带来的干扰
   curr: string
 }
-export function usePreview () {
-  const { scroller, sortedFiles, previewIdx } = useHookShareState().toRefs()
+export function usePreview (props: Props) {
+  const { scroller, sortedFiles, previewIdx, eventEmitter, canLoadNext } = useHookShareState().toRefs()
   const previewing = ref(false)
   let waitScrollTo = null as number | null
   const onPreviewVisibleChange = (v: boolean, lv: boolean) => {
@@ -110,6 +130,16 @@ export function usePreview () {
       waitScrollTo = null
     }
   }
+
+  const loadNextIfNeeded = () => {
+    if (props.walkMode && props.target === 'local') {
+      if (!canPreview('next') && canLoadNext) {
+        message.info('即将加载下一个文件夹的文件')
+        eventEmitter.value.emit('loadNextDir')
+      }
+    }
+  }
+
   useWatchDocument('keydown', (e) => {
     if (previewing.value) {
       let next = previewIdx.value
@@ -131,6 +161,7 @@ export function usePreview () {
           waitScrollTo = next // 关闭预览时滚动过去
         }
       }
+      loadNextIfNeeded()
     }
   })
   const previewImgMove = (type: 'next' | 'prev') => {
@@ -149,12 +180,11 @@ export function usePreview () {
     if (isImageFile(sortedFiles.value[next]?.name) ?? '') {
       previewIdx.value = next
       const s = scroller.value
-      console.log(s)
-
       if (s && !(next >= s.$_startIndex && next <= s.$_endIndex)) {
         waitScrollTo = next // 关闭预览时滚动过去
       }
     }
+    loadNextIfNeeded()
   }
   const canPreview = (type: 'next' | 'prev') => {
     let next = previewIdx.value
@@ -171,6 +201,7 @@ export function usePreview () {
     }
     return isImageFile(sortedFiles.value[next]?.name) ?? ''
   }
+
   return {
     previewIdx,
     onPreviewVisibleChange,
@@ -342,7 +373,9 @@ export function useLocation (props: Props) {
 
 
 export function useFilesDisplay (props: Props) {
-  const { scroller, sortedFiles, stack, sortMethod, currLocation, currPage, stackViewEl } = useHookShareState().toRefs()
+  const { scroller, sortedFiles, stack, sortMethod, currLocation, currPage, stackViewEl,
+    canLoadNext } = useHookShareState().toRefs()
+  const { state } = useHookShareState()
   const moreActionsDropdownShow = ref(false)
   const viewMode = ref<ViewMode>('grid')
   const viewModeMap: Record<ViewMode, string> = { line: '详情列表', 'grid': '预览网格', 'large-size-grid': '大尺寸预览网格' }
@@ -363,7 +396,6 @@ export function useFilesDisplay (props: Props) {
 
   const loadNextDirLoading = ref(false)
 
-  const canLoadNext = ref(true)
 
   const loadNextDir = async () => {
     if (loadNextDirLoading.value || !props.walkMode || !canLoadNext.value) {
@@ -378,8 +410,12 @@ export function useFilesDisplay (props: Props) {
         const next = parFilesSorted[currIdx + 1]
         const p = path.normalize(path.join(currLocation.value, '../', next.name))
         const r = await getTargetFolderFiles(props.target, p)
-        currPage.value!.curr = next.name
-        currPage.value?.files.push(...r.files)
+        const page = currPage.value!
+        page.curr = next.name
+        if (!page.walkFiles) {
+          page.walkFiles = [page.files]
+        }
+        page.walkFiles.push(r.files)
         console.log("curr page files length", currPage.value?.files.length)
       }
     } catch (e) {
@@ -387,7 +423,14 @@ export function useFilesDisplay (props: Props) {
     } finally {
       loadNextDirLoading.value = false
     }
+    const s = scroller.value
+    // 填充够一页，直到不行为止
+    while (s && s.$_endIndex > sortedFiles.value.length - 10 && canLoadNext.value) {
+      await loadNextDir()
+    }
   }
+
+  state.useEventListen('loadNextDir', loadNextDir)
 
   const onScroll = debounce(async () => {
     const s = scroller.value
@@ -425,7 +468,6 @@ export function useFileTransfer (props: Props) {
 
   const onFileDragStart = (e: DragEvent, idx: number) => {
     const file = cloneDeep(sortedFiles.value[idx])
-    console.log(file, idx)
     const names = [file.name]
     let includeDir = file.type === 'dir'
     if (multiSelectedIdxs.value.includes(idx)) {
