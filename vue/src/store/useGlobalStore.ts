@@ -1,4 +1,5 @@
 import type { GlobalConf, UploadTaskSummary } from '@/api'
+import type { UserInfo } from '@/api/user'
 import type { getAutoCompletedTagList } from '@/taskRecord/autoComplete'
 import type { ReturnTypeAsync } from '@/util'
 import { uniqueId } from 'lodash'
@@ -8,7 +9,7 @@ import { ref } from 'vue'
 import { typedEventEmitter, type UniqueId, ID } from 'vue3-ts-util'
 
 interface OtherTabPane {
-  type: 'auto-upload' | 'task-record' | 'empty' | 'log-detail'
+  type: 'auto-upload' | 'task-record' | 'empty' | 'log-detail' | 'global-setting'
   name: string
   readonly key: string
 }
@@ -39,6 +40,7 @@ export interface Tab extends UniqueId {
 
 export const useGlobalStore = defineStore('useGlobalStore', () => {
   const conf = ref<GlobalConf>()
+  const user = ref<UserInfo>()
   const autoCompletedDirList = ref([] as ReturnTypeAsync<typeof getAutoCompletedTagList>)
   const enableThumbnail = ref(true)
   const stackViewSplit = ref(50)
@@ -76,12 +78,13 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
       tabList.value.push(ID({ panes: [log], key: log.key }))
     } else {
       tab.key = log.key
-      tab.panes.push(log) 
+      tab.panes.push(log)
     }
 
   }
 
   return {
+    user,
     tabList,
     conf,
     autoCompletedDirList,

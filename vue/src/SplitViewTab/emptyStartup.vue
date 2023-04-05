@@ -12,7 +12,8 @@ const compCnMap: Partial<Record<TabPane['type'], string>> = {
   "auto-upload": '自动上传',
   local: '本地文件',
   netdisk: '百度云',
-  "task-record": '任务记录'
+  "task-record": '任务记录',
+  'global-setting': '全局设置'
 }
 const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false) => {
   let pane: TabPane
@@ -23,6 +24,7 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
     case 'auto-upload':
     case 'task-record':
     case 'log-detail':
+    case 'global-setting':
     case 'empty':
       pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId() }
       break
@@ -181,5 +183,8 @@ const openInNewWindow = () => window.parent.open('/baidu_netdisk')
 .quick-start__text {
   flex: 1;
   font-size: 16px;
+}
+.quick-start__icon {
+  margin-right: 8px;
 }
 </style>

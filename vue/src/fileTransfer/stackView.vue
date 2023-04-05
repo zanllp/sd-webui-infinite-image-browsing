@@ -22,7 +22,9 @@ const props = defineProps<{
   path?: string,
   walkMode?: boolean
 }>()
-const { installBaiduyunBin, installedBaiduyun, failedHint, baiduyunLoading, scroller, stackViewEl, props: _props } = useHookShareState().toRefs()
+const { installBaiduyunBin, installedBaiduyun, failedHint, baiduyunLoading,
+  scroller, stackViewEl, props: _props, bduss, onLoginBtnClick
+} = useHookShareState().toRefs()
 watch(() => props, () => {
   _props.value = props
 }, { immediate: true })
@@ -41,18 +43,36 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
 </script>
 <template>
   <ASelect style="display: none;"></ASelect>
-  <div v-if="props.target === 'netdisk' && !installedBaiduyun" class="uninstalled-hint">
-    <div>尚未安装依赖，当前不可用</div>
-    <AButton type="primary" :loading="baiduyunLoading" @click="installBaiduyunBin">点此安装</AButton>
-    <p v-if="failedHint">{{ failedHint }}</p>
+  <div v-if="props.target === 'netdisk' && (!installedBaiduyun || !global.user)" class="uninstalled-hint">
+    <template v-if="!installedBaiduyun">
+
+      <div>尚未安装依赖，当前不可用</div>
+      <AButton type="primary" :loading="baiduyunLoading" @click="installBaiduyunBin">点此安装</AButton>
+      <p v-if="failedHint">{{ failedHint }}</p>
+    </template>
+    <template v-else>
+      <a-form layout="inline">
+        <a-form-item label="bduss">
+          <a-input v-model:value="bduss" style="width:300px"></a-input>
+        </a-form-item>
+        <a-form-item>
+          <a-button @click="onLoginBtnClick" type="primary" :loading="baiduyunLoading">
+            <template #icon>
+              <login-outlined />
+            </template>
+            登录
+          </a-button>
+        </a-form-item>
+      </a-form>
+    </template>
   </div>
   <div ref="stackViewEl" @dragover.prevent @drop.prevent="onDrop($event)" class="container" v-else>
     <AModal v-model:visible="showGenInfo" width="50vw">
       <ASkeleton active :loading="!q.isIdle">
         <pre style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
-                                                  双击复制
-                                                  {{ imageGenInfo }}
-                                                </pre>
+                                                        双击复制
+                                                        {{ imageGenInfo }}
+                                                      </pre>
       </ASkeleton>
     </AModal>
     <div class="location-bar">

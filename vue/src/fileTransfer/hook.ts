@@ -17,6 +17,7 @@ import NProgress from 'multi-nprogress'
 import { Modal, message } from 'ant-design-vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { nextTick } from 'vue'
+import { loginByBduss } from '@/api/user'
 
 const global = useGlobalStore()
 export const toRawFileUrl = (file: FileNodeInfo, download = false) => `/baidu_netdisk/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
@@ -87,6 +88,8 @@ export type ViewMode = 'line' | 'grid' | 'large-size-grid'
 
 export const useBaiduyun = () => {
   const taskListStore = useTaskListStore()
+  
+  const bduss = ref('')
   const installedBaiduyun = computedAsync(taskListStore.checkBaiduyunInstalled, false)
   const baiduyunLoading = ref(false)
   const failedHint = ref('')
@@ -105,11 +108,29 @@ export const useBaiduyun = () => {
       baiduyunLoading.value = false
     }
   }
+
+  const onLoginBtnClick = async () => {
+    if (baiduyunLoading.value) {
+      return
+    }
+    try {
+      baiduyunLoading.value = true
+      global.user = await loginByBduss(bduss.value)
+    } catch (error) {
+      console.error(error)
+      message.error(isAxiosError(error) ? error.response?.data?.detail ?? '未知错误' : '未知错误')
+    } finally {
+      baiduyunLoading.value = false
+    }
+  }
+
   return {
     installBaiduyunBin,
     installedBaiduyun,
     failedHint,
-    baiduyunLoading
+    baiduyunLoading,
+    bduss,
+    onLoginBtnClick
   }
 }
 
@@ -218,7 +239,7 @@ export function useLocation (props: Props) {
 
   watch(() => stack.value.length, debounce((v, lv) => {
     if (v !== lv) {
-      scroller.value!.scrollToItem(0)
+      scroller.value?.scrollToItem(0)
     }
   }, 300))
 
@@ -251,7 +272,7 @@ export function useLocation (props: Props) {
   /**
    * 登录后重新获取
    */
-  watch(() => props.target === 'netdisk' && installedBaiduyun.value, async (v, last) => {
+  watch(() => props.target === 'netdisk' && installedBaiduyun.value && global.user, async (v, last) => {
     if (v && !last) {
       const resp = await getTargetFolderFiles(props.target, '/')
       stack.value = [{

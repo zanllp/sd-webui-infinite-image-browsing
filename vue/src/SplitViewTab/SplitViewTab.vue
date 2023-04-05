@@ -15,7 +15,8 @@ const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> 
   netdisk: defineAsyncComponent(() => import('@/fileTransfer/stackView.vue')),
   "task-record": defineAsyncComponent(() => import('@/taskRecord/taskRecord.vue')),
   empty: defineAsyncComponent(() => import('./emptyStartup.vue')),
-  "log-detail": defineAsyncComponent(() => import('@/taskRecord/logDetail.vue'))
+  "log-detail": defineAsyncComponent(() => import('@/taskRecord/logDetail.vue')),
+  "global-setting": defineAsyncComponent(() => import('@/page/globalSetting.vue'))
 }
 const onEdit = (idx: number, targetKey: any, action: string) => {
   const tab = global.tabList[idx]
