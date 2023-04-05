@@ -1,8 +1,13 @@
-import type { getGlobalSetting } from '@/api'
+import { checkPathExists, type getGlobalSetting } from '@/api'
 import { pick, type ReturnTypeAsync } from '@/util'
 
-export const getAutoCompletedTagList = ({ global_setting, sd_cwd, home }: ReturnTypeAsync<typeof getGlobalSetting>) => {
-  const picked = pick(global_setting,
+export const getAutoCompletedTagList = async ({
+  global_setting,
+  sd_cwd,
+  home
+}: ReturnTypeAsync<typeof getGlobalSetting>) => {
+  const picked = pick(
+    global_setting,
     'additional_networks_extra_lora_path',
     'outdir_grids',
     'outdir_extras_samples',
@@ -15,14 +20,15 @@ export const getAutoCompletedTagList = ({ global_setting, sd_cwd, home }: Return
     'outdir_txt2img_samples',
     'outdir_save'
   )
-  const allTag = {
+  const pathMap = {
     ...picked,
-    'embeddings': 'embeddings',
-    'hypernetworks': 'models/hypernetworks',
-    'cwd': sd_cwd,
+    embeddings: 'embeddings',
+    hypernetworks: 'models/hypernetworks',
+    cwd: sd_cwd,
     home
   }
-  type Keys = keyof (typeof allTag)
+  const exists = await checkPathExists(Object.values(pathMap))
+  type Keys = keyof typeof pathMap
   const cnMap: Record<Keys, string> = {
     outdir_txt2img_samples: '文生图的输出目录',
     outdir_img2img_samples: '图生图的输出目录',
@@ -36,14 +42,16 @@ export const getAutoCompletedTagList = ({ global_setting, sd_cwd, home }: Return
     hypernetworks: '超网络模型的路径',
     embeddings: 'Embedding的文件夹',
     cwd: '工作文件夹',
-    home: 'home',
+    home: 'home'
   }
-  return Object.keys(cnMap).map((k) => {
-    const key = k as Keys
-    return {
-      key,
-      zh: cnMap[key],
-      dir: allTag[key]
-    }
-  })
+  return Object.keys(cnMap)
+    .filter((k) => exists[pathMap[k as keyof typeof pathMap] as string])
+    .map((k) => {
+      const key = k as Keys
+      return {
+        key,
+        zh: cnMap[key],
+        dir: pathMap[key]
+      }
+    })
 }

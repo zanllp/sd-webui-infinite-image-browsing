@@ -6,6 +6,7 @@ export interface FileNodeInfo {
   name: string,
   date: string,
   bytes: number
+  fullpath: string
 }
 
 export const getTargetFolderFiles = async (target: 'local' | 'netdisk' , folder_path: string) => {

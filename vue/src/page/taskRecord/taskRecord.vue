@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { key, pick } from '@/util'
-import { onMounted } from 'vue'
-import { typedID, Task, SearchSelect } from 'vue3-ts-util'
+import { onMounted, ref } from 'vue'
+import { typedID, Task, SearchSelect, copy2clipboard } from 'vue3-ts-util'
 import { PlusOutlined, SyncOutlined, MinusCircleOutlined } from '@/icon'
 import { cancelTask, createBaiduYunTask, getUploadTasks, getUploadTaskTickStatus, removeTask, type UploadTaskSummary } from '@/api'
 import { message } from 'ant-design-vue'
@@ -10,6 +10,9 @@ import { storeToRefs } from 'pinia'
 import { uniqBy } from 'lodash-es'
 import localPathShortcut from './localPathShortcut.vue'
 import { useGlobalStore } from '@/store/useGlobalStore'
+import { onBeforeUnmount } from 'vue'
+
+const props = defineProps<{ tabIdx: number, paneIdx: number }>()
 
 const ID = typedID<UploadTaskSummary>(true)
 const store = useTaskListStore()
@@ -17,26 +20,33 @@ const globalStore = useGlobalStore()
 const { tasks } = storeToRefs(store)
 const { showDirAutoCompletedIdx } = storeToRefs(store)
 const pollTaskMap = new Map<string, ReturnType<typeof createPollTask>>()
+const loadNum = ref(10)
 
-onMounted(async () => {
-  const resp = await getUploadTasks()
-  tasks.value = uniqBy([...resp.tasks, ...tasks.value].map(ID), v => v.id) // 前后端合并
-    .sort((a, b) => Date.parse(b.start_time) - Date.parse(a.start_time))
-    .slice(0, 100)
-  let runningTasks = tasks.value.filter(v => v.running)
-  runningTasks.filter(task => !resp.tasks.find(beTask => beTask.id === task.id)).forEach(task => { // 在后端中没找到直接标记已完成，防止继续请求
-    task.running = false
-  })
-  runningTasks = tasks.value.filter(v => v.running)
-  if (runningTasks.length) {
-    runningTasks.forEach(v => {
-      createPollTask(v.id).completedTask.then(() => message.success(`${v.type === 'download' ? '下载' : '上传'}完成`))
+onBeforeUnmount(() => {
+  pollTaskMap.forEach(v => v.clearTask())
+})
+
+globalStore.waitTaskRecordLoaded = new Promise(resolve => {
+  onMounted(async () => {
+    const resp = await getUploadTasks()
+    tasks.value = uniqBy([...resp.tasks, ...tasks.value].map(ID), v => v.id) // 前后端合并
+      .sort((a, b) => Date.parse(b.start_time) - Date.parse(a.start_time))
+      .slice(0, 100)
+    let runningTasks = tasks.value.filter(v => v.running)
+    runningTasks.filter(task => !resp.tasks.find(beTask => beTask.id === task.id)).forEach(task => { // 在后端中没找到直接标记已完成，防止继续请求
+      task.running = false
     })
-  }
-  if (!tasks.value.length) {
-    addEmptyTask()
-  }
-
+    runningTasks = tasks.value.filter(v => v.running)
+    if (runningTasks.length) {
+      runningTasks.forEach(v => {
+        createPollTask(v.id).completedTask.then(() => message.success(`${v.type === 'download' ? '下载' : '上传'}完成`))
+      })
+    }
+    if (!tasks.value.length) {
+      addEmptyTask()
+    }
+    resolve()
+  })
 })
 
 
@@ -45,7 +55,6 @@ globalStore.useEventListen('createNewTask', async task => {
   await createNewTask(0)
   message.success('创建完成，在任务列表查看进度')
 })
-
 const getEmptyTask = () => ID({
   type: 'upload',
   send_dirs: [],
@@ -74,7 +83,7 @@ const createNewTask = async (idx: number) => {
   task.n_files = 100
   const resp = await createBaiduYunTask(task)
   task.id = resp.id
-  createPollTask(resp.id).completedTask.then(() => message.success('上传完成'))
+  createPollTask(resp.id).completedTask.then(() => message.success(task.type === 'upload' ? '上传完成' : '下载完成'))
 }
 
 const createPollTask = (id: string) => {
@@ -108,8 +117,7 @@ const copyFrom = (idx: number) => {
 }
 
 const openLogDetail = (idx: number) => {
-  store.currLogDetailId = tasks.value[idx].id
-  store.splitView.open = true
+  globalStore.openLogDetailInRight(props.tabIdx, tasks.value[idx].id)
 }
 
 const cancel = async (idx: number) => {
@@ -127,9 +135,22 @@ const remove = async (idx: number) => {
   message.success('删除完成')
 }
 
+
+const copy = (text: string) => {
+  copy2clipboard(text, `复制 "${text}" 成功，粘贴使用"`)
+}
+
 </script>
 
 <template>
+  <div class="panel">
+
+    <div class="actions-bar">
+      <a-button @click="copy('<#%Y-%m-%d#>')">复制日期占位符</a-button>
+      <a-button @click="copy('<#%H-%M-%S#>')">复制时间占位符</a-button>
+      <a-button @click="copy('<#%Y-%m-%d %H-%M-%S#>')">复制日期+时间占位符</a-button>
+    </div>
+  </div>
   <div class="wrapper" @click="showDirAutoCompletedIdx = -1">
     <a-select style="display: none" />
     <a-button @click="addEmptyTask" block style="border-radius: 8px;">
@@ -138,7 +159,7 @@ const remove = async (idx: number) => {
       </template>
       添加一个任务
     </a-button>
-    <div v-for="task, idx in tasks" :key="key(task)" class="task-form">
+    <div v-for="task, idx in tasks.slice(0, loadNum)" :key="key(task)" class="task-form">
       <div class="top-bar">
 
         <a-tag color="success" v-if="isDone(task)">已完成</a-tag>
@@ -163,7 +184,8 @@ const remove = async (idx: number) => {
         </a-form-item>
         <a-form-item :label="`发送的文件夹 (${task.type === 'upload' ? '本地' : '百度云'})`"
           @click.stop="task.type === 'upload' && (showDirAutoCompletedIdx = idx)">
-          <a-textarea auto-size :disabled="isDisable(task)" :value="task.send_dirs.join()" @update:value="v => task.send_dirs = v.split(',')" allow-clear
+          <a-textarea auto-size :disabled="isDisable(task)" :value="task.send_dirs.join()"
+            @update:value="v => task.send_dirs = v.split(',')" allow-clear
             placeholder="发送文件的文件夹,多个文件夹使用逗号或者换行分隔。支持使用占位符例如stable-diffusion-webui最常用表示日期的<#%Y-%m-%d#>"></a-textarea>
           <local-path-shortcut v-if="task.type === 'upload'" :task="task" @update:task="v => tasks[idx] = v" :idx="idx" />
 
@@ -190,11 +212,24 @@ const remove = async (idx: number) => {
         to: '#87d068'
       }" :percent="getIntPercent(task)" status="active" />
     </div>
+    <a-button @click="loadNum += 5" v-if="loadNum < tasks.length" block style="border-radius: 8px;">
+      继续加载
+    </a-button>
   </div>
 </template>
 <style scoped lang="scss">
+.panel {
+  display: flex;
+  padding: 4px;
+  justify-content: space-between;
+
+  .actions-bar>* {
+    margin-left: 16px;
+  }
+}
+
 .wrapper {
-  height: 100%;
+  height: calc(100vh - 128px);
   overflow: auto;
   padding: 8px;
 
@@ -211,7 +246,7 @@ const remove = async (idx: number) => {
 
   .task-form {
     border-radius: 16px;
-    background: var(--xdt-secondary-background);
+    background: var(--zp-secondary-background);
     padding: 16px;
     margin: 16px 8px;
 

@@ -142,6 +142,11 @@ export const getGlobalSetting = async () => {
   return resp.data as GlobalConf
 }
 
+export const checkPathExists = async (paths: string[]) => {
+  const resp = await axiosInst.post('/check_path_exists',{ paths })
+  return resp.data as Record<string, boolean>
+}
+
 
 export const cancelTask = async (id: string) => {
   const resp = await axiosInst.post(`/task/${id}/cancel`)
@@ -179,3 +184,6 @@ export const autoUploadOutput = async (recv_dir: string) => {
     }
   }
 }
+
+export const checkBaiduyunExists = () => axiosInst.get('/baiduyun_exists').then(v => v.data as boolean)
+export const downloadBaiduyun = () =>  axiosInst.post('/download_baiduyun')

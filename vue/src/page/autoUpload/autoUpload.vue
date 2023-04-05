@@ -3,6 +3,7 @@ import { computed, reactive, ref, watchEffect } from 'vue'
 import { autoUploadOutput, type UploadTaskSummary } from '@/api/index'
 import { delay, Task } from 'vue3-ts-util'
 import { useGlobalStore } from '@/store/useGlobalStore'
+import { onBeforeUnmount } from 'vue'
 
 const emit = defineEmits<{ (e: 'runningChange', v: boolean): void }>()
 const global = useGlobalStore()
@@ -15,6 +16,10 @@ const taskLogList = computed(() => Array.from(taskLog.values()))
 const completedFiles = computed(() => taskLogList.value.reduce((p, c) => p + c.n_success_files, 0))
 const failededFiles = computed(() => taskLogList.value.reduce((p, c) => p + c.n_failed_files, 0))
 // const allFiles = computed(() => taskLogList.value.reduce((p, c) => p + c.n_files, 0) + pendingFiles.value.length)
+
+onBeforeUnmount(() => {
+  task.value?.clearTask()
+})
 
 const runPollTask = () => {
   return Task.run({

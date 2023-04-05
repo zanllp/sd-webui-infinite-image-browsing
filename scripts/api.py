@@ -16,6 +16,13 @@ from io import BytesIO
 import hashlib
 
 from scripts.bin import (
+    bin_file_name,
+    get_matched_summary,
+    check_bin_exists,
+    download_bin_file,
+)
+
+from scripts.bin import (
     check_bin_exists,
     cwd,
     bin_file_path,
@@ -77,6 +84,7 @@ def list_file(cwd="/"):
                 "name": name.strip("/"),
                 "type": f_type,
                 "bytes": convert_to_bytes(size) if size != "-" else size,
+                "fullpath": os.path.normpath(os.path.join(cwd, name.strip("/"))),
             }
             files.append(file_info)
     return files
@@ -236,7 +244,7 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             if target == "local":
                 if is_win and folder_path == "/":
                     for item in get_windows_drives():
-                        files.append({"type": "dir", "size": "-", "name": item})
+                        files.append({"type": "dir", "size": "-", "name": item, "fullpath": item})
                 else:
                     for item in os.listdir(folder_path):
                         path = os.path.join(folder_path, item)
@@ -256,11 +264,12 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
                                     "size": size,
                                     "name": item,
                                     "bytes": bytes,
+                                    "fullpath": os.path.normpath(os.path.join(folder_path, item))
                                 }
                             )
                         elif os.path.isdir(path):
                             files.append(
-                                {"type": "dir", "date": date, "size": "-", "name": item}
+                                {"type": "dir", "date": date, "size": "-", "name": item, "fullpath": os.path.normpath(os.path.join(folder_path, item))}
                             )
             else:
                 files = list_file(folder_path)
@@ -358,4 +367,31 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             "tick_info": tick_info,
             "pending_files": AutoUpload.files
         }
-        
+    
+    class CheckPathExistsReq(BaseModel):
+        paths: List[str]
+
+    @app.post(pre + '/check_path_exists')
+    async def check_path_exists(req: CheckPathExistsReq):
+        res = {}
+        for path in req.paths:
+            res[path] = os.path.exists(path)
+        return res
+    
+    not_exists_msg = ()
+
+    @app.get(pre + '/baiduyun_exists')
+    async def baiduyun_exists():
+        return check_bin_exists()
+    
+    @app.get(pre)
+    def index_bd():
+        return FileResponse(os.path.join(cwd, "vue/dist/index.html"))
+
+    @app.post(pre + '/download_baiduyun')
+    async def download_baiduyun():
+        if not check_bin_exists():
+            try:
+                download_bin_file()
+            except:
+                raise HTTPException(500, detail=f"安装失败,找不到{bin_file_name},尝试手动从 {get_matched_summary()[1]} 或者 {get_matched_summary()[2]} 下载,下载后放到 {cwd} 文件夹下,重启界面")

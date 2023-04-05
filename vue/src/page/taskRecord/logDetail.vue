@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 import { useTaskListStore } from '@/store/useTaskListStore'
 import { computed, watch, nextTick, ref } from 'vue'
-
+const props = defineProps<{
+  logDetailId: string
+}>()
 const store = useTaskListStore()
 const logListEl = ref<HTMLDivElement>()
-const currList = computed(() => store.taskLogMap.get(store.currLogDetailId))
+const currList = computed(() => store.taskLogMap.get(props.logDetailId))
 watch(currList, async () => {
   await nextTick()
   const el = logListEl.value
@@ -15,8 +17,7 @@ watch(currList, async () => {
 
 </script>
 <template>
-  <div class="container" v-if="store.splitView.open">
-    <a-button @click="store.splitView.open = false" class="close-btn">关闭</a-button>
+  <div class="container" >
     <ul class="list" ref="logListEl" >
       <li v-for="log, idx  in currList" :key="idx" >
         <pre>{{ log.log }}</pre>
@@ -37,14 +38,14 @@ watch(currList, async () => {
 
 .list {
   font-family: Consolas, Menlo, monospace;
-  height: calc(100% - 32px);
+  height: 90vh;
   overflow: auto;
   padding: 16px;
   margin: 16px;
   border-radius: 16px;
-  background-color: var(--xdt-secondary-background);
+  background-color: var(--zp-secondary-background);
 
-  color: var(--xdt-primary);
+  color: var(--zp-primary);
   margin-left: 16px;
   list-style: none;
   font-size: 12px;
