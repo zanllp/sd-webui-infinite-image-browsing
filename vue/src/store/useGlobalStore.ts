@@ -63,13 +63,11 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     lastTabListRecord.value = lastTabListRecord.value.slice(0, 2) as any
   }
 
-  const waitTaskRecordLoaded = ref(Promise.resolve())
   const createTaskRecordPaneIfNotExist = async (tabIdx = 0) => {
     if (!tabList.value.map(v => v.panes).flat().find(v => v.type === 'task-record')) {
       tabList.value[tabIdx].panes.push({ type: 'task-record', key: uniqueId(), name: '任务记录' })
     }
     await nextTick()
-    await waitTaskRecordLoaded.value
   }
   const openLogDetailInRight = async (tabIdx: number, id: string) => {
     const tab = tabList.value[tabIdx + 1]
@@ -95,7 +93,6 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     saveRecord,
     recent, lastTabListRecord,
     openLogDetailInRight,
-    waitTaskRecordLoaded,
     createTaskRecordPaneIfNotExist,
     ...typedEventEmitter<{ createNewTask: Partial<UploadTaskSummary> }>()
   }
