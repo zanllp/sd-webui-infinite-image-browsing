@@ -71,6 +71,7 @@ watch(() => global.tabList, async () => {
         <edge-trigger :tabIdx="tabIdx">
           <a-tabs type="editable-card" v-model:activeKey="tab.key" @edit="(key, act) => onEdit(tabIdx, key, act)">
             <a-tab-pane v-for="pane, paneIdx in tab.panes" :key="pane.key" :tab="pane.name"
+            class="pane"
               :force-render="pane.type === 'task-record'">
               <component :is="compMap[pane.type]" :tabIdx="tabIdx" :paneIdx="paneIdx" v-bind="pane" />
             </a-tab-pane>
@@ -90,5 +91,8 @@ watch(() => global.tabList, async () => {
     background: var(--zp-primary-background);
     height: 100vh;
   }
+}
+.pane {
+  height: calc(100vh - 40px);
 }
 </style>

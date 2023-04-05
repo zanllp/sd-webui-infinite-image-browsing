@@ -29,7 +29,7 @@ watch(() => props, () => {
 
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to } = useLocation(props)
 const { gridItems, sortMethodConv, moreActionsDropdownShow,
-  sortedFiles, sortMethod, viewMode, gridSize, viewModeMap, largeGridSize,
+  sortedFiles, sortMethod, viewMode, viewModeMap, itemSize,
   loadNextDir, loadNextDirLoading, canLoadNext,
   onScroll } = useFilesDisplay(props)
 const { onDrop, onFileDragStart, multiSelectedIdxs } = useFileTransfer(props)
@@ -50,9 +50,9 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
     <AModal v-model:visible="showGenInfo" width="50vw">
       <ASkeleton active :loading="!q.isIdle">
         <pre style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
-                            双击复制
-                            {{ imageGenInfo }}
-                          </pre>
+                                                  双击复制
+                                                  {{ imageGenInfo }}
+                                                </pre>
       </ASkeleton>
     </AModal>
     <div class="location-bar">
@@ -114,24 +114,43 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
     </div>
     <div v-if="currPage" class="view">
       <RecycleScroller class="file-list" :items="sortedFiles" :prerender="10" ref="scroller" @scroll="onScroll"
-        :item-size="viewMode === 'line' ? 80 : (viewMode === 'grid' ? gridSize : largeGridSize)" key-field="fullpath"
-        :gridItems="gridItems">
+        :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems">
         <template v-slot="{ item: file, index: idx }">
           <a-dropdown :trigger="['contextmenu']">
             <li class="file"
-              :class="{ clickable: file.type === 'dir', selected: multiSelectedIdxs.includes(idx), grid: viewMode === 'grid', 'large-grid': viewMode === 'large-size-grid' }"
+              :class="{ clickable: file.type === 'dir', selected: multiSelectedIdxs.includes(idx), grid: viewMode === 'grid' || viewMode === 'large-size-grid', 'large-grid': viewMode === 'large-size-grid' }"
               :key="file.name" draggable="true" @dragstart="onFileDragStart($event, idx)"
               @click.capture="onFileItemClick($event, file)">
-              <a-image ref="dd" :key="file.fullpath" :class="`idx-${idx}`"
-                v-if="props.target === 'local' && viewMode !== 'line' && isImageFile(file.name)"
-                :src="global.enableThumbnail ? toImageThumbnailUrl(file, viewMode === 'grid' ? void 0 : '512,512') : toRawFileUrl(file)"
-                :fallback="fallbackImage"
-                :preview="{ src: sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : '', onVisibleChange: onPreviewVisibleChange }">
-              </a-image>
+              <div v-if="viewMode !== 'line'">
+                <a-image :key="file.fullpath" :class="`idx-${idx}`"
+                  v-if="props.target === 'local' && isImageFile(file.name)"
+                  :src="global.enableThumbnail ? toImageThumbnailUrl(file, viewMode === 'grid' ? void 0 : '512,512') : toRawFileUrl(file)"
+                  :fallback="fallbackImage"
+                  :preview="{ src: sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : '', onVisibleChange: onPreviewVisibleChange }">
+                </a-image>
+                <div v-else class="preview-icon-wrap">
+
+                  <file-outlined class="icon center" v-if="file.type === 'file'" />
+                  <folder-open-outlined class="icon center" v-else />
+                </div>
+                <div class="profile">
+                  <div class="name">
+                    {{ file.name }}
+                  </div>
+                  <div class="basic-info">
+                    <div>
+                      {{ file.size }}
+                    </div>
+                    <div>
+                      {{ file.date }}
+                    </div>
+                  </div>
+                </div>
+              </div>
               <template v-else>
                 <file-outlined class="icon" v-if="file.type === 'file'" />
                 <folder-open-outlined class="icon" v-else />
-                <div class="name">
+                <div class="name line-clamp-1">
                   {{ file.name }}
                 </div>
                 <div class="basic-info">
@@ -214,10 +233,13 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
 
 .container {
   height: 100%;
+  background: var(--zp-secondary-background);
 }
 
 .location-bar {
-  margin: 0 16px;
+  padding: 4px 16px;
+  background: var(--zp-primary-background);
+  border-bottom: 1px solid var(--zp-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -233,6 +255,12 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
   a.opt {
     margin-left: 8px;
   }
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .view {
@@ -252,71 +280,68 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
       align-items: center;
       background: var(--zp-primary-background);
       border-radius: 8px;
-      box-shadow: 0 0 4px #ccc;
+      box-shadow: 0 0 4px var(--zp-secondary-variant-background);
       position: relative;
+      overflow: hidden;
 
       &.grid {
-        padding: 8px;
-        height: 256px;
-        width: 256px;
+        padding: 0;
         display: inline-block;
         box-sizing: content-box;
+        box-shadow: unset;
 
+
+        background-color: var(--zp-secondary-background);
 
         :deep() {
           .icon {
-            font-size: 6em;
-            margin-top: 16px;
+            font-size: 8em;
           }
 
-          .name {
-            margin: 16px 0;
+
+          .profile {
+            padding: 0 4px;
+
+            .name {
+              font-weight: 500;
+              padding: 0;
+            }
+
+            .basic-info {
+              display: flex;
+              justify-content: space-between;
+              flex-direction: row;
+              margin: 0;
+              font-size: .7em;
+            }
           }
 
-          .basic-info {
-            position: absolute;
-            bottom: 16px;
-            right: 16px;
+          .ant-image,
+          .preview-icon-wrap {
+            border: 1px solid var(--zp-secondary);
+            background-color: var(--zp-secondary-variant-background);
+            border-radius: 8px;
+            overflow: hidden;
           }
 
-          img {
+          img,
+          .preview-icon-wrap>[role="img"] {
             height: 256px;
             width: 256px;
             object-fit: contain;
+
           }
         }
       }
 
 
       &.large-grid {
-        padding: 8px;
-        height: 512px;
-        width: 512px;
-        margin: 16px;
-        display: inline-block;
-        box-sizing: content-box;
-
-
         :deep() {
-          .icon {
-            font-size: 6em;
-            margin-top: 16px;
-          }
 
-          .name {
-            margin: 16px 0;
-          }
-
-          .basic-info {
-            position: absolute;
-            bottom: 16px;
-            right: 16px;
-          }
-
-          img {
+          img,
+          .preview-icon-wrap>[role="img"] {
             height: 512px;
             width: 512px;
-            object-fit: contain;
           }
         }
       }

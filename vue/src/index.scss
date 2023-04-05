@@ -1,4 +1,4 @@
-$primary-color: #1890ff;
+$primary-color: #d03f0a;
 $danger-color: #fa114f;
 $info-color: #17a2b8;
 $success-color: #28a745;
@@ -63,7 +63,7 @@ $success-color: #28a745;
   --zp-tertiary-background: var(--zp-white);
   --zp-secondary-variant-background: var(--zp-grey7);
   // 边框颜色
-  --zp-border: var(--zp-grey4);
+  --zp-border: var(--zp-grey20);
   @media (prefers-color-scheme: dark) {
     --zp-primary: var(--zp-grey20);
     --zp-secondary: var(--zp-grey60);
@@ -115,4 +115,23 @@ body {
   }
   background: var(--zp-primary-background);
   color: var(--zp-primary);
+  .ant-tabs > div.ant-tabs-nav {
+    margin: 0;
+  }
+}
+
+@mixin line-clamp($n: 1) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $n;
+  overflow: hidden;
+}
+.line-clamp-1 {
+  @include line-clamp(1);
+}
+.line-clamp-2 {
+  @include line-clamp(2);
+}
+.line-clamp-3 {
+  @include line-clamp(3);
 }

@@ -383,7 +383,8 @@ export function useFilesDisplay (props: Props) {
     value: (v) => v,
     text: (v) => '按' + sortMethodMap[v]
   }
-  const gridSize = 288
+  const gridSize = 272
+  const profileHeight = 64
   const largeGridSize = gridSize * 2
   const { width } = useElementSize(stackViewEl)
   const gridItems = computed(() => {
@@ -392,6 +393,19 @@ export function useFilesDisplay (props: Props) {
       return
     }
     return ~~(w / (viewMode.value === 'grid' ? gridSize : largeGridSize))
+  })
+
+  const itemSize = computed(() => {
+    const mode = viewMode.value
+    if (mode === 'line') {
+      return { first: 80, second: undefined }
+    }
+    const second =  (mode === 'grid' ? gridSize : largeGridSize)
+    const first = second + profileHeight
+    return {
+      first,
+      second
+    }
   })
 
   const loadNextDirLoading = ref(false)
@@ -451,7 +465,8 @@ export function useFilesDisplay (props: Props) {
     onScroll,
     loadNextDir,
     loadNextDirLoading,
-    canLoadNext
+    canLoadNext,
+    itemSize
   }
 }
 
