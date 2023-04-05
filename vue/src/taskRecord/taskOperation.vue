@@ -7,11 +7,6 @@ import LogDetail from './logDetail.vue'
 import TaskList from './taskRecord.vue'
 
 const store = useTaskListStore()
-const percent = computed(() => !store.splitView.open ? 100 : store.splitView.percent)
-onMounted(async () => {
-  store.splitView.open = false
-})
-
 </script>
 
 <template>

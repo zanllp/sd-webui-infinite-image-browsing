@@ -38,13 +38,20 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
 const lastRecord = computed(() => global.lastTabListRecord?.[1])
 
 
-const walkModeSupportedDir = computed(() => global.autoCompletedDirList.filter(({ key: k }) => k === 'outdir_txt2img_samples' || k === 'outdir_img2img_samples' || k === 'outdir_extras_samples' || k === 'outdir_save' || k === 'outdir_samples'))
 
+
+const walkModeSupportedDir = computed(() => global.autoCompletedDirList.filter(({ key: k }) => k === 'outdir_txt2img_samples' || k === 'outdir_img2img_samples' || k === 'outdir_extras_samples' || k === 'outdir_save' || k === 'outdir_samples'))
+const canOpenInNewWindow = window.parent !== window
+const openInNewWindow = () => window.parent.open('/baidu_netdisk')
 </script>
 <template>
   <div class="container">
     <div class="header">
       <h1>欢迎</h1>
+      <div flex-placeholder/>
+      <div v-if="canOpenInNewWindow" class="last-record" @click="openInNewWindow ">
+        <a >在新页面打开</a>
+      </div>
       <div class="last-record">
         <a v-if="lastRecord?.tabs.length"
           @click.prevent="global.tabList = lastRecord!.tabs.map(V => ID(V, true))">还原上次记录</a>
@@ -117,6 +124,7 @@ const walkModeSupportedDir = computed(() => global.autoCompletedDirList.filter((
 }
 
 .last-record {
+  margin-left: 8px;
   font-size: 14px;
   color: var(--zp-tertiary);
 }

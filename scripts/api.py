@@ -383,6 +383,10 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
     @app.get(pre + '/baiduyun_exists')
     async def baiduyun_exists():
         return check_bin_exists()
+    
+    @app.get(pre)
+    def index_bd():
+        return FileResponse(os.path.join(cwd, "vue/dist/index.html"))
 
     @app.post(pre + '/download_baiduyun')
     async def download_baiduyun():
