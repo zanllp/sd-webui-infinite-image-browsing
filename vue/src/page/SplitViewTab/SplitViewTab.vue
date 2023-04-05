@@ -10,12 +10,12 @@ import edgeTrigger from './edgeTrigger.vue'
 import { message } from 'ant-design-vue'
 const global = useGlobalStore()
 const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> = {
-  'auto-upload': defineAsyncComponent(() => import('@/autoUpload/autoUpload.vue')),
-  local: defineAsyncComponent(() => import('@/fileTransfer/stackView.vue')),
-  netdisk: defineAsyncComponent(() => import('@/fileTransfer/stackView.vue')),
-  "task-record": defineAsyncComponent(() => import('@/taskRecord/taskRecord.vue')),
+  'auto-upload': defineAsyncComponent(() => import('@/page/autoUpload/autoUpload.vue')),
+  local: defineAsyncComponent(() => import('@/page/fileTransfer/stackView.vue')),
+  netdisk: defineAsyncComponent(() => import('@/page/fileTransfer/stackView.vue')),
+  "task-record": defineAsyncComponent(() => import('@/page/taskRecord/taskRecord.vue')),
   empty: defineAsyncComponent(() => import('./emptyStartup.vue')),
-  "log-detail": defineAsyncComponent(() => import('@/taskRecord/logDetail.vue')),
+  "log-detail": defineAsyncComponent(() => import('@/page/taskRecord/logDetail.vue')),
   "global-setting": defineAsyncComponent(() => import('@/page/globalSetting.vue'))
 }
 const onEdit = (idx: number, targetKey: any, action: string) => {

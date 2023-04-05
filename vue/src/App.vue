@@ -5,8 +5,8 @@ import { FetchQueue } from 'vue3-ts-util'
 import { getUserInfo } from './api/user'
 import { getGlobalSetting } from './api'
 import { useGlobalStore } from './store/useGlobalStore'
-import { getAutoCompletedTagList } from './taskRecord/autoComplete'
-import SplitViewTab from './SplitViewTab/SplitViewTab.vue'
+import { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
+import SplitViewTab from '@/page/SplitViewTab/SplitViewTab.vue'
 
 const globalStore = useGlobalStore()
 const queue = reactive(new FetchQueue(-1, 0, 0, 'throw'))

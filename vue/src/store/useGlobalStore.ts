@@ -1,6 +1,6 @@
 import type { GlobalConf, UploadTaskSummary } from '@/api'
 import type { UserInfo } from '@/api/user'
-import type { getAutoCompletedTagList } from '@/taskRecord/autoComplete'
+import type { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
 import type { ReturnTypeAsync } from '@/util'
 import { uniqueId } from 'lodash'
 import { defineStore } from 'pinia'
