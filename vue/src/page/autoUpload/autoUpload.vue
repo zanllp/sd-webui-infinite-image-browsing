@@ -4,6 +4,7 @@ import { autoUploadOutput, type UploadTaskSummary } from '@/api/index'
 import { delay, Task } from 'vue3-ts-util'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { onBeforeUnmount } from 'vue'
+import { Loading3QuartersOutlined } from '@/icon'
 
 const emit = defineEmits<{ (e: 'runningChange', v: boolean): void }>()
 const global = useGlobalStore()
@@ -50,20 +51,25 @@ const onStart = async () => {
 <template>
   <div class="container">
     <AInput v-model:value="global.autoUploadRecvDir"></AInput>
-    <AButton @click="onStart" :loading="running">{{ task ? '暂停' : '开始' }}</AButton>
+    <AButton @click="onStart">
+      <template v-if="task">
+        <Loading3QuartersOutlined spin />
+      </template>
+      {{ task ? '暂停' : '开始' }}
+    </AButton>
     <a-row>
-    <a-col :span="12">
-      <a-statistic title="等待上传数量" :value="pendingFiles.length" style="margin-right: 50px" />
-    </a-col>
-    <a-col :span="12">
-      <a-statistic title="上传失败数量"  :value="failededFiles" />
-    </a-col>
-  </a-row>
-  <a-row>
-    <a-col :span="12">
-      <a-statistic title="已完成数量" :value="completedFiles" style="margin-right: 50px" />
-    </a-col>
-  </a-row>
+      <a-col :span="12">
+        <a-statistic title="等待上传数量" :value="pendingFiles.length" style="margin-right: 50px" />
+      </a-col>
+      <a-col :span="12">
+        <a-statistic title="上传失败数量" :value="failededFiles" />
+      </a-col>
+    </a-row>
+    <a-row>
+      <a-col :span="12">
+        <a-statistic title="已完成数量" :value="completedFiles" style="margin-right: 50px" />
+      </a-col>
+    </a-row>
   </div>
 </template>
 <style lang="scss" scoped>

@@ -78,13 +78,14 @@ def list_file(cwd="/"):
             name = match.group(4).strip()
             f_type = "dir" if name.endswith("/") else "file"
             size = match.group(2)
+            name = name.strip("/")
             file_info = {
                 "size": size,
                 "date": match.group(3),
-                "name": name.strip("/"),
+                "name": name,
                 "type": f_type,
                 "bytes": convert_to_bytes(size) if size != "-" else size,
-                "fullpath": os.path.normpath(os.path.join(cwd, name.strip("/"))),
+                "fullpath": f"{cwd}/{name}",
             }
             files.append(file_info)
     return files
