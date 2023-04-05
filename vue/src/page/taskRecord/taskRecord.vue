@@ -11,6 +11,7 @@ import { uniqBy } from 'lodash-es'
 import localPathShortcut from './localPathShortcut.vue'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { onBeforeUnmount } from 'vue'
+import { watch } from 'vue'
 
 const props = defineProps<{ tabIdx: number, paneIdx: number }>()
 
@@ -25,36 +26,41 @@ const loadNum = ref(10)
 onBeforeUnmount(() => {
   pollTaskMap.forEach(v => v.clearTask())
 })
+const canProcessQueue = ref(false)
+watch([() => store.pendingBaiduyunTaskQueue, canProcessQueue], async ([q, can]) => {
+  if (!q.length || !can) {
+    return
+  }
+  console.log('processQueue', q)
+  for (const task of q) {
+    tasks.value.unshift(ID({ ...getEmptyTask(), ...task }))
+    createNewTask(0).then(() => message.success('创建完成，在任务列表查看进度'))
+  }
+  store.pendingBaiduyunTaskQueue = []
+}, { deep: true, immediate: true })
 
-globalStore.waitTaskRecordLoaded = new Promise(resolve => {
-  onMounted(async () => {
-    const resp = await getUploadTasks()
-    tasks.value = uniqBy([...resp.tasks, ...tasks.value].map(ID), v => v.id) // 前后端合并
-      .sort((a, b) => Date.parse(b.start_time) - Date.parse(a.start_time))
-      .slice(0, 100)
-    let runningTasks = tasks.value.filter(v => v.running)
-    runningTasks.filter(task => !resp.tasks.find(beTask => beTask.id === task.id)).forEach(task => { // 在后端中没找到直接标记已完成，防止继续请求
-      task.running = false
-    })
-    runningTasks = tasks.value.filter(v => v.running)
-    if (runningTasks.length) {
-      runningTasks.forEach(v => {
-        createPollTask(v.id).completedTask.then(() => message.success(`${v.type === 'download' ? '下载' : '上传'}完成`))
-      })
-    }
-    if (!tasks.value.length) {
-      addEmptyTask()
-    }
-    resolve()
+onMounted(async () => {
+  const resp = await getUploadTasks()
+  tasks.value = uniqBy([...resp.tasks, ...tasks.value].map(ID), v => v.id) // 前后端合并
+    .sort((a, b) => Date.parse(b.start_time) - Date.parse(a.start_time))
+    .slice(0, 100)
+  let runningTasks = tasks.value.filter(v => v.running)
+  runningTasks.filter(task => !resp.tasks.find(beTask => beTask.id === task.id)).forEach(task => { // 在后端中没找到直接标记已完成，防止继续请求
+    task.running = false
   })
+  runningTasks = tasks.value.filter(v => v.running)
+  if (runningTasks.length) {
+    runningTasks.forEach(v => {
+      createPollTask(v.id).completedTask.then(() => message.success(`${v.type === 'download' ? '下载' : '上传'}完成`))
+    })
+  }
+  if (!tasks.value.length) {
+    addEmptyTask()
+  }
+  canProcessQueue.value = true
+  console.log('task record load')
 })
 
-
-globalStore.useEventListen('createNewTask', async task => {
-  tasks.value.unshift(ID({ ...getEmptyTask(), ...task }))
-  await createNewTask(0)
-  message.success('创建完成，在任务列表查看进度')
-})
 const getEmptyTask = () => ID({
   type: 'upload',
   send_dirs: [],

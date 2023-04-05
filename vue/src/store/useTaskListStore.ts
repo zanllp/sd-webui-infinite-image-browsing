@@ -9,7 +9,10 @@ export const useTaskListStore = defineStore('useTaskListStore', () => {
   const queue = reactive(new FetchQueue())
   const pollInterval = ref(3)
   const tasks = ref<WithId<UploadTaskSummary>[]>([])
-
+  /**
+   * 添加进去等待taskRecord处理
+   */
+  const pendingBaiduyunTaskQueue = reactive([] as Partial<UploadTaskSummary>[])
   const showDirAutoCompletedIdx = ref(-1)
   const baiduyunInstalled = ref(null as null | Promise<boolean>)
   const checkBaiduyunInstalled = async () => {
@@ -18,6 +21,7 @@ export const useTaskListStore = defineStore('useTaskListStore', () => {
     }
     return baiduyunInstalled.value
   }
+
   return {
     checkBaiduyunInstalled,
     baiduyunInstalled,
@@ -25,7 +29,8 @@ export const useTaskListStore = defineStore('useTaskListStore', () => {
     taskLogMap,
     queue,
     tasks,
-    showDirAutoCompletedIdx
+    showDirAutoCompletedIdx,
+    pendingBaiduyunTaskQueue
   }
 }, {
   persist: {

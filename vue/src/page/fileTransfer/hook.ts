@@ -9,7 +9,7 @@ import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook,
 import { gradioApp, isImageFile } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
-import { cloneDeep, debounce, last, range, uniq } from 'lodash-es'
+import { cloneDeep, debounce, last, range, uniqBy } from 'lodash-es'
 import path from 'path-browserify'
 import type Progress from 'nprogress'
 // @ts-ignore
@@ -85,9 +85,9 @@ export interface Props {
 }
 
 export type ViewMode = 'line' | 'grid' | 'large-size-grid'
+const taskListStore = useTaskListStore()
 
 export const useBaiduyun = () => {
-  const taskListStore = useTaskListStore()
   
   const bduss = ref('')
   const installedBaiduyun = computedAsync(taskListStore.checkBaiduyunInstalled, false)
@@ -503,12 +503,13 @@ export function useFileTransfer (props: Props) {
   watch(currPage, recover)
 
   const onFileDragStart = (e: DragEvent, idx: number) => {
-    const file = cloneDeep(sortedFiles.value[idx])
-    const names = [file.name]
+    const file = cloneDeep(sortedFiles.value[idx] )
+    console.log('onFileDragStart set drag file ', e, idx, file)
+    const files = [file]
     let includeDir = file.type === 'dir'
     if (multiSelectedIdxs.value.includes(idx)) {
       const selectedFiles = multiSelectedIdxs.value.map(idx => sortedFiles.value[idx])
-      names.push(...selectedFiles.map(v => v.name))
+      files.push(...selectedFiles)
       includeDir = selectedFiles.some(v => v.type === 'dir')
 
     }
@@ -517,7 +518,7 @@ export function useFileTransfer (props: Props) {
       JSON.stringify({
         from: props.target,
         includeDir,
-        path: uniq(names).map(name => path.join(currLocation.value, name))
+        path: uniqBy(files, 'fullpath').map(f => f.fullpath)
       })
     )
   }
@@ -548,7 +549,8 @@ export function useFileTransfer (props: Props) {
         maskClosable: true,
         async onOk () {
           await global.createTaskRecordPaneIfNotExist(props.tabIdx)
-          global.eventEmitter.emit('createNewTask', { send_dirs: data.path, recv_dir: toPath, type })
+          console.log('request createNewTask', { send_dirs: data.path, recv_dir: toPath, type })
+          taskListStore.pendingBaiduyunTaskQueue.push({ send_dirs: data.path, recv_dir: toPath, type })
         }
       })
     }

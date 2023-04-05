@@ -154,7 +154,7 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
                   <folder-open-outlined class="icon center" v-else />
                 </div>
                 <div class="profile">
-                  <div class="name">
+                  <div class="name line-clamp-1">
                     {{ file.name }}
                   </div>
                   <div class="basic-info">
