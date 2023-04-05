@@ -43,72 +43,135 @@ const walkModeSupportedDir = computed(() => global.autoCompletedDirList.filter((
 </script>
 <template>
   <div class="container">
-    <h1>
-      欢迎
-    </h1>
-    <div class="record-restore" v-if="lastRecord?.tabs.length">
-      <a @click.prevent="global.tabList = lastRecord!.tabs.map(V => ID(V, true))">还原上次记录</a>
+    <div class="header">
+      <h1>欢迎</h1>
+      <div class="last-record">
+        <a v-if="lastRecord?.tabs.length"
+          @click.prevent="global.tabList = lastRecord!.tabs.map(V => ID(V, true))">还原上次记录</a>
+      </div>
     </div>
-    <div class="quick-start">
-      <div style="margin-right: 128px;">
-
+    <div class="content">
+      <div class="quick-start">
+        <h2>启动</h2>
         <ul>
-          <h2>启动</h2>
-          <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp" >
-            <a @click.prevent="openInCurrentTab(comp)">{{ compCnMap[comp] }}</a>
+          <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp" class="quick-start__item"
+            @click.prevent="openInCurrentTab(comp)">
+            <span class="quick-start__text line-clamp-1">{{ compCnMap[comp] }}</span>
           </li>
         </ul>
-        <ul v-if="walkModeSupportedDir.length" class="walk-mode">
-          <h2>使用Walk模式浏览图片</h2>
-          <li v-for="item in walkModeSupportedDir" :key="item.dir" >
+      </div>
+      <div class="quick-start">
+        <h2>使用 Walk 模式浏览图片</h2>
+        <ul v-if="walkModeSupportedDir.length">
+          <li v-for="item in walkModeSupportedDir" :key="item.dir" class="quick-start__item">
             <AButton @click="openInCurrentTab('local', item.dir, true)" ghost type="primary" block>{{ item.zh }}</AButton>
           </li>
-          </ul>
+        </ul>
+      </div>
+      <div class="quick-start">
+        <h2>从快速移动启动</h2>
         <ul>
-          <h2>最近</h2>
-          <li v-for="item in global.recent" :key="item.key">
-            <CloudDownloadOutlined v-if="item.target !== 'local'" />
-            <FileDoneOutlined v-else />
-            {{ item.target === 'local' ? '本地' : '云盘' }}
-            : <a @click.prevent="openInCurrentTab(item.target as any, item.path)">{{ item.path }}</a>
+          <li v-for="dir in global.autoCompletedDirList" :key="dir.key" class="quick-start__item"
+            @click.prevent="openInCurrentTab('local', dir.dir)">
+            <span class="quick-start__text line-clamp-1">{{ dir.zh }}</span>
+          </li>
+        </ul>
+
+      </div>
+
+      <div class="quick-start">
+        <h2>最近</h2>
+        <ul>
+          <li v-for="item in global.recent" :key="item.key" class="quick-start__item"
+            @click.prevent="openInCurrentTab(item.target as any, item.path)">
+            <CloudDownloadOutlined class="quick-start__icon" v-if="item.target !== 'local'" />
+            <FileDoneOutlined class="quick-start__icon" v-else />
+            <span class="quick-start__text line-clamp-1">{{ item.path
+            }}</span>
           </li>
         </ul>
       </div>
-      <div>
-
-        <ul>
-          <h2>从快速移动启动</h2>
-          <li v-for="dir in global.autoCompletedDirList" :key="dir.key" class="quick">
-            <a @click.prevent="openInCurrentTab('local', dir.dir)">{{ dir.zh }}</a>
-          </li>
-        </ul>
-      </div>
-
     </div>
   </div>
 </template>
+
 <style scoped lang="scss">
 .container {
-  margin: 32px;
+  padding: 20px;
+  background-color: var(--zp-secondary-background);
+  height: 100%;
+  overflow: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--zp-primary);
+}
+
+.last-record {
+  font-size: 14px;
+  color: var(--zp-tertiary);
+}
+
+.last-record a {
+  text-decoration: none;
+  color: var(--zp-tertiary);
+}
+
+.last-record a:hover {
+  color: var(--zp-primary);
+}
+
+.content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-gap: 20px;
 }
 
 .quick-start {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 64px;
+  background-color: var(--zp-primary-background);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 
   ul {
-    flex-shrink: 0;
-    padding: 16px 0;
     list-style: none;
-    margin-right: 20%;
-    width: 512px;
-
-
-    li {
-      padding: 4px 0;
-    }
+    padding: 4px;
   }
+}
 
+.quick-start h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--zp-primary);
+}
+
+.quick-start__item {
+  margin-bottom: 10px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    background: var(--zp-secondary-background);
+    border-radius: 4px;
+    color: var(--primary-color);
+    cursor: pointer;
+  }
+}
+
+.quick-start__text {
+  flex: 1;
+  font-size: 16px;
 }
 </style>
