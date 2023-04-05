@@ -19,10 +19,11 @@
 
 
 
-[视频演示可以在Bilibili上观看](https://www.bilibili.com/video/BV16N411P7du/)
+[视频演示可以在Bilibili上观看](https://space.bilibili.com/27227392/channel/series)
 
 文档后面有空再修改
-## 登录
+## 百度云登录
+这是可选的，你如果不用百度云可以不用看这个
 使用bduss登录，[参考这个](https://www.bilibili.com/read/cv22726491) ，或者自己搜索。
 ## 预览
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/230064374-47ba209e-562b-47b8-a2ce-d867e3afe204.png">
