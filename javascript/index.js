@@ -1,24 +1,23 @@
 ;(() => {
   const html = `<!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Expires" content="0" />
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-0bae835f.js"></script>
+    <link rel="stylesheet" href="/baidu_netdisk/fe-static/assets/index-a2045d1f.css">
+  </head>
 
-<head>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Expires" content="0">
-  <meta charset="UTF-8">
-  <link rel="icon" href="/favicon.ico">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vite App</title>
-  <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-db76c961.js"></script>
-  <link rel="stylesheet" href="/baidu_netdisk/fe-static/assets/index-a2045d1f.css">
-</head>
-
-<body>
-  <div id="zanllp_dev_gradio_fe"></div>
-  
-</body>
-
-</html>`
+  <body>
+    <div id="zanllp_dev_gradio_fe"></div>
+    
+  </body>
+</html>
+`
   const asyncCheck = async (getter, checkSize = 100, timeout = 1000) => {
     return new Promise((x) => {
       const check = (num = 0) => {

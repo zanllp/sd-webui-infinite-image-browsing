@@ -1,6 +1,7 @@
+from datetime import datetime, timedelta
 import os
 import time
-from scripts.tool import human_readable_size
+from scripts.tool import human_readable_size, is_valid_image_path
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 import re
@@ -162,7 +163,6 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
         conf = {}
         try:
             from modules.shared import opts
-
             conf = opts.data
         except:
             pass
@@ -314,6 +314,44 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             headers={"Cache-Control": "max-age=31536000", "ETag": hash},
         )
     
+    forever_cache_path = []
+    try:
+        from modules.shared import opts
+        conf = opts.data
+        def get_config_path(conf):
+            # 获取配置项
+            keys = ['outdir_txt2img_samples', 'outdir_img2img_samples', 'outdir_save',
+                    'outdir_extras_samples', 'additional_networks_extra_lora_path',
+                    'outdir_grids', 'outdir_img2img_grids', 'outdir_samples', 'outdir_txt2img_grids']
+            paths = [conf.get(key) for key in keys]
+            
+            # 判断路径是否有效并转为绝对路径
+            abs_paths = []
+            for path in paths:
+                if os.path.isabs(path):  # 已经是绝对路径
+                    abs_path = path
+                else:  # 转为绝对路径
+                    abs_path = os.path.join(os.getcwd(), path)
+                if os.path.exists(abs_path):  # 判断路径是否存在
+                    abs_paths.append(abs_path)
+            
+            return abs_paths
+        forever_cache_path = get_config_path(conf)
+    except:
+        pass
+
+    def need_cache(path, parent_paths = forever_cache_path):
+        """
+        判断 path 是否是 parent_paths 中某个路径的子路径
+        """
+        try:            
+            for parent_path in parent_paths:
+                if os.path.commonpath([path, parent_path]) == parent_path:
+                    return True
+        except:
+            pass
+        return False
+    
     @app.get(pre+"/file")
     async def get_file(filename: str, disposition: Optional[str] = None):
         import mimetypes
@@ -325,6 +363,9 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
         headers = {}
         if disposition:
             headers["Content-Disposition"] = f'attachment; filename="{disposition}"'
+        if need_cache(filename) and is_valid_image_path(filename): # 认为永远不变,不要协商缓存了试试
+            headers["Cache-Control"] = "public, max-age=31536000"
+            headers["Expires"] = (datetime.now() + timedelta(days=365)).strftime("%a, %d %b %Y %H:%M:%S GMT")
 
         return FileResponse(
             filename,

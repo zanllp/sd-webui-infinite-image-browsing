@@ -69,15 +69,15 @@ const openInNewWindow = () => window.parent.open('/baidu_netdisk')
           </li>
         </ul>
       </div>
-      <div class="quick-start">
+      <div class="quick-start" v-if="walkModeSupportedDir.length">
         <h2>使用 Walk 模式浏览图片</h2>
-        <ul v-if="walkModeSupportedDir.length">
+        <ul >
           <li v-for="item in walkModeSupportedDir" :key="item.dir" class="quick-start__item">
             <AButton @click="openInCurrentTab('local', item.dir, true)" ghost type="primary" block>{{ item.zh }}</AButton>
           </li>
         </ul>
       </div>
-      <div class="quick-start">
+      <div class="quick-start" v-if="global.autoCompletedDirList.length">
         <h2>从快速移动启动</h2>
         <ul>
           <li v-for="dir in global.autoCompletedDirList" :key="dir.key" class="quick-start__item"
@@ -88,7 +88,7 @@ const openInNewWindow = () => window.parent.open('/baidu_netdisk')
 
       </div>
 
-      <div class="quick-start">
+      <div class="quick-start" v-if="global.recent.length">
         <h2>最近</h2>
         <ul>
           <li v-for="item in global.recent" :key="item.key" class="quick-start__item"

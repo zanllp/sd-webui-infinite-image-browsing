@@ -2,6 +2,9 @@ import os
 import platform
 import re
 
+import imghdr
+
+
 
 def human_readable_size(size_bytes):
     """
@@ -69,6 +72,21 @@ def debounce(delay):
         return debounced
 
     return decorator
+
+
+def is_valid_image_path(path):
+    """
+    判断给定的路径是否是图像文件
+    """
+    abs_path = os.path.abspath(path)  # 转为绝对路径
+    if not os.path.exists(abs_path):  # 判断路径是否存在
+        return False
+    if not os.path.isfile(abs_path):  # 判断是否是文件
+        return False
+    if not imghdr.what(abs_path):  # 判断是否是图像文件
+        return False
+    return True
+
 
 is_dev = "APP_ENV" in os.environ and os.environ["APP_ENV"] == "dev"
 cwd = os.path.normpath(os.path.join(__file__, "../../"))
