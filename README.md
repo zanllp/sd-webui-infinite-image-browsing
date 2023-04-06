@@ -9,6 +9,8 @@
 
 还有一个独立不依赖sd-webui的版本[baiduyun-web-transfer](https://github.com/zanllp/baiduyun-web-transfer)
 
+> If you need an English version of this project, please create an issue to let us know.
+
 ## 主要特性
 
 - 类chrome,vscode的多标签页多窗格。自由拖拽创建，同时预览多个文件夹，在多窗格之间移动文件
@@ -27,6 +29,7 @@
 使用bduss登录，[参考这个](https://www.bilibili.com/read/cv22726491) ，或者自己搜索。
 ## 预览
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/230064374-47ba209e-562b-47b8-a2ce-d867e3afe204.png">
+<img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/230425580-127af4fb-c725-44a7-ae6d-a4ce6ab77bb5.png">
 
 <img width="1916" alt="image" src="https://user-images.githubusercontent.com/25872019/230064879-c95866ac-999d-4d4b-87ea-3e38c8479415.png">
 
