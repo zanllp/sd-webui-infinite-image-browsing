@@ -1,0 +1,1 @@
+import{b as s}from"./index-b3a928ed.js";import{bB as n,aF as t}from"./index-0bae835f.js";function i(e,o){return e&&e.length?n(e,s(o)):[]}const r=(e,o)=>(t.success({content:o??`已复制内容 "${e}" 到粘贴板`}),navigator.clipboard.writeText(e));export{r as c,i as u};
