@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import os
 import time
-from scripts.tool import human_readable_size, is_valid_image_path
+from scripts.tool import human_readable_size, is_valid_image_path, temp_path
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 import re
@@ -11,10 +11,11 @@ import subprocess
 from typing import Any, List, Literal, Optional, Union
 from scripts.baiduyun_task import BaiduyunTask
 from pydantic import BaseModel
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from PIL import Image
 from io import BytesIO
 import hashlib
+from urllib.parse import urlencode
 
 from scripts.bin import (
     bin_file_name,
@@ -283,10 +284,12 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
 
     @app.get(pre + "/image-thumbnail")
     async def thumbnail(path: str, size: str = '256,256'):
+        if not temp_path:
+            encoded_params = urlencode({ "filename": path })
+            return RedirectResponse(url=f"{pre}/file?{encoded_params}")
         # 生成缓存文件的路径
         hash = hashlib.md5((path + size).encode('utf-8')).hexdigest()
-        temp_path = os.getenv('TEMP')
-        cache_path = f'{temp_path}{os.path.sep}{hash}.webp'
+        cache_path = os.path.join(temp_path, f'{hash}.webp')
 
         # 如果缓存文件存在，则直接返回该文件
         if os.path.exists(cache_path):

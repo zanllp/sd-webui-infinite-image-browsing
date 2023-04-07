@@ -1,7 +1,7 @@
 import os
 import platform
 import re
-
+import tempfile
 import imghdr
 
 
@@ -91,3 +91,31 @@ def is_valid_image_path(path):
 is_dev = "APP_ENV" in os.environ and os.environ["APP_ENV"] == "dev"
 cwd = os.path.normpath(os.path.join(__file__, "../../"))
 is_win = platform.system().lower().find("windows") != -1
+
+
+def get_temp_path():
+    """获取跨平台的临时文件目录路径"""
+    temp_path = None
+    try:
+        # 尝试获取系统环境变量中的临时文件目录路径
+        temp_path = os.environ.get('TMPDIR') or os.environ.get('TMP') or os.environ.get('TEMP')
+    except Exception as e:
+        print("获取系统环境变量临时文件目录路径失败，错误信息：", e)
+
+    # 如果系统环境变量中没有设置临时文件目录路径，则使用 Python 的 tempfile 模块创建临时文件目录
+    if not temp_path:
+        try:
+            temp_path = tempfile.gettempdir()
+        except Exception as e:
+            print("使用 Python 的 tempfile 模块创建临时文件目录失败，错误信息：", e)
+
+    # 确保临时文件目录存在
+    if not os.path.exists(temp_path):
+        try:
+            os.makedirs(temp_path)
+        except Exception as e:
+            print("创建临时文件目录失败，错误信息：", e)
+
+    return temp_path
+
+temp_path = get_temp_path()
