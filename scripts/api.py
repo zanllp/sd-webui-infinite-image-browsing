@@ -285,7 +285,8 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
     async def thumbnail(path: str, size: str = '256,256'):
         # 生成缓存文件的路径
         hash = hashlib.md5((path + size).encode('utf-8')).hexdigest()
-        cache_path = f'/tmp/{hash}.webp'
+        temp_path = os.getenv('TEMP')
+        cache_path = f'{temp_path}{os.path.sep}{hash}.webp'
 
         # 如果缓存文件存在，则直接返回该文件
         if os.path.exists(cache_path):
