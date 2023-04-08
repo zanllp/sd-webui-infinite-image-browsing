@@ -32,7 +32,7 @@ watch(() => props, () => {
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to } = useLocation(props)
 const { gridItems, sortMethodConv, moreActionsDropdownShow,
   sortedFiles, sortMethod, viewMode, viewModeMap, itemSize,
-  loadNextDir, loadNextDirLoading, canLoadNext,
+  loadNextDir, loadNextDirLoading, canLoadNext, thumbnailSize,
   onScroll } = useFilesDisplay(props)
 const { onDrop, onFileDragStart, multiSelectedIdxs } = useFileTransfer(props)
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions({ openNext })
@@ -70,9 +70,9 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
     <AModal v-model:visible="showGenInfo" width="50vw">
       <ASkeleton active :loading="!q.isIdle">
         <pre style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
-                                                        双击复制
-                                                        {{ imageGenInfo }}
-                                                      </pre>
+                                                          双击复制
+                                                          {{ imageGenInfo }}
+                                                        </pre>
       </ASkeleton>
     </AModal>
     <div class="location-bar">
@@ -144,7 +144,7 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
               <div v-if="viewMode !== 'line'">
                 <a-image :key="file.fullpath" :class="`idx-${idx}`"
                   v-if="props.target === 'local' && isImageFile(file.name)"
-                  :src="global.enableThumbnail ? toImageThumbnailUrl(file, viewMode === 'grid' ? void 0 : '512,512') : toRawFileUrl(file)"
+                  :src="global.enableThumbnail ? toImageThumbnailUrl(file, thumbnailSize) : toRawFileUrl(file)"
                   :fallback="fallbackImage"
                   :preview="{ src: sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : '', onVisibleChange: onPreviewVisibleChange }">
                 </a-image>
