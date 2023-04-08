@@ -47,7 +47,7 @@ def on_ui_tabs():
                 )
             )
 
-        return ((baidu_netdisk, "百度云", "baiduyun"),)
+        return ((baidu_netdisk, "无边图像浏览", "infinite-image-browsing"),)
 
 
 
