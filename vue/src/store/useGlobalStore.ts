@@ -81,6 +81,9 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
 
   }
 
+  const gridThumbnailSize = ref(256)
+  const largeGridThumbnailSize = ref(512)
+
   return {
     user,
     tabList,
@@ -93,11 +96,13 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     saveRecord,
     recent, lastTabListRecord,
     openLogDetailInRight,
+    gridThumbnailSize,
+    largeGridThumbnailSize,
     createTaskRecordPaneIfNotExist,
     ...typedEventEmitter<{ createNewTask: Partial<UploadTaskSummary> }>()
   }
 }, {
   persist: {
-    paths: ['enableThumbnail', 'lastTabListRecord', 'stackViewSplit', 'autoUploadRecvDir', 'recent']
+    paths: ['enableThumbnail', 'lastTabListRecord', 'stackViewSplit', 'autoUploadRecvDir', 'recent', 'gridThumbnailSize', 'largeGridThumbnailSize']
   }
 })

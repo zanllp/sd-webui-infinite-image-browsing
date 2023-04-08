@@ -21,7 +21,7 @@ import { loginByBduss } from '@/api/user'
 
 const global = useGlobalStore()
 export const toRawFileUrl = (file: FileNodeInfo, download = false) => `/baidu_netdisk/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
-export const toImageThumbnailUrl = (file: FileNodeInfo, size = '256,256') => `/baidu_netdisk/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
+export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) => `/baidu_netdisk/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
 
 
 export interface Scroller {
@@ -139,8 +139,13 @@ interface Page {
   walkFiles?: FileNodeInfo[][] // 使用walk时，各个文件夹之间分散排序，避免创建时间不同的带来的干扰
   curr: string
 }
+/**
+ * 全屏预览
+ * @param props 
+ * @returns 
+ */
 export function usePreview (props: Props) {
-  const { scroller, sortedFiles, previewIdx, eventEmitter, canLoadNext } = useHookShareState().toRefs()
+  const { scroller, sortedFiles, previewIdx, eventEmitter, canLoadNext, } = useHookShareState().toRefs()
   const previewing = ref(false)
   let waitScrollTo = null as number | null
   const onPreviewVisibleChange = (v: boolean, lv: boolean) => {
@@ -222,7 +227,7 @@ export function usePreview (props: Props) {
     }
     return isImageFile(sortedFiles.value[next]?.name) ?? ''
   }
-
+  
   return {
     previewIdx,
     onPreviewVisibleChange,
@@ -473,6 +478,8 @@ export function useFilesDisplay (props: Props) {
       loadNextDir()
     }
   }, 300)
+  
+  const thumbnailSize = computed(() => viewMode.value === 'grid' ? [global.gridThumbnailSize, global.gridThumbnailSize].join() : [global.largeGridThumbnailSize, global.largeGridThumbnailSize].join())
   return {
     gridItems,
     sortedFiles,
@@ -487,7 +494,8 @@ export function useFilesDisplay (props: Props) {
     loadNextDir,
     loadNextDirLoading,
     canLoadNext,
-    itemSize
+    itemSize,
+    thumbnailSize
   }
 }
 
