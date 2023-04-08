@@ -4,10 +4,14 @@ import { autoUploadOutput, type UploadTaskSummary } from '@/api/index'
 import { delay, Task } from 'vue3-ts-util'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { onBeforeUnmount } from 'vue'
-import { Loading3QuartersOutlined } from '@/icon'
+import { Loading3QuartersOutlined, CloseCircleOutlined } from '@/icon'
+import { useTaskListStore } from '@/store/useTaskListStore'
+
+const props = defineProps<{ tabIdx: number }>()
 
 const emit = defineEmits<{ (e: 'runningChange', v: boolean): void }>()
 const global = useGlobalStore()
+const taskStore = useTaskListStore()
 const pendingFiles = ref<string[]>([])
 const task = ref<ReturnType<typeof runPollTask>>()
 const running = computed(() => !!(task.value || pendingFiles.value.length))
@@ -27,7 +31,9 @@ const runPollTask = () => {
     action: async () => {
       const res = await autoUploadOutput(global.autoUploadRecvDir)
       if (res.tick_info) {
-        taskLog.set(res.tick_info.task_summary.id, res.tick_info.task_summary)
+        const info = res.tick_info!
+        taskLog.set(info.task_summary.id, info.task_summary)
+        taskStore.taskLogMap.set(info.task_summary.id, info.tasks)
       }
       pendingFiles.value = res.pending_files
       await delay(10000 * Math.random())
@@ -46,6 +52,10 @@ const onStart = async () => {
   } else {
     task.value = runPollTask()
   }
+}
+
+const openLogDetail = (id: string) => {
+  global.openLogDetailInRight(props.tabIdx, id)
 }
 </script>
 <template>
@@ -70,6 +80,19 @@ const onStart = async () => {
         <a-statistic title="已完成数量" :value="completedFiles" style="margin-right: 50px" />
       </a-col>
     </a-row>
+    <div class="log-container">
+      <h2>
+        实时日志
+      </h2> <a-alert message="提示"
+        description="点击下面查看具体日志，若有日志错误内包含名字不合规，可尝试在sd-webui的设置页换一种图像文件名格式，例如[datetime<%Y-%m-%d %H-%M-%S>]" type="info"
+        show-icon />
+      <ul class="scroll-container">
+        <li v-for="item in taskLog.values()" :key="item.id" :class="{ err: item.n_failed_files }"
+          @click="openLogDetail(item.id)">
+          <CloseCircleOutlined v-if="item.n_failed_files" /> 开始于：{{ item.start_time }}
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 <style lang="scss" scoped>
@@ -78,6 +101,33 @@ const onStart = async () => {
 
   &>* {
     margin: 8px;
+  }
+}
+
+.log-container {
+  margin-top: 24px;
+
+  .scroll-container {
+
+    max-height: 512px;
+    overflow: auto;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0px;
+
+    li {
+      display: inline-block;
+      padding: 8px;
+      margin: 8px;
+      background: var(--zp-secondary-background);
+      border-radius: 4px;
+
+      &.err {
+        color: red;
+      }
+    }
   }
 }
 </style>
