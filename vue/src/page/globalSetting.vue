@@ -29,6 +29,12 @@ const onLogoutBtnClick = async () => {
         <a-input-number v-model:value="taskStore.pollInterval" :min="0.5" :disabled="!taskStore.queue.isIdle" /> (s)
         <sub>越小对网络压力越大</sub>
       </a-form-item>
+      <a-form-item label="网格缩略图宽度">
+        <a-input-number v-model:value="globalStore.gridThumbnailSize" :min="256" :max="1024"/> (px)
+      </a-form-item>
+      <a-form-item label="大尺寸网格缩略图宽度">
+        <a-input-number v-model:value="globalStore.largeGridThumbnailSize" :min="256" :max="1024"/> (px)
+      </a-form-item>
       <template v-if="user">
         <a-form-item label="百度云已登录用户">
           {{ user.username }}

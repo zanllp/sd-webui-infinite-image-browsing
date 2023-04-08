@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
-    <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-0bae835f.js"></script>
+    <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-17d0f6c7.js"></script>
     <link rel="stylesheet" href="/baidu_netdisk/fe-static/assets/index-a2045d1f.css">
   </head>
 
