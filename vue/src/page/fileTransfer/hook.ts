@@ -7,7 +7,7 @@ import { downloadBaiduyun, genInfoCompleted, getImageGenerationInfo, setImgPath 
 import { isAxiosError } from 'axios'
 import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook, copy2clipboard, Task, delay, FetchQueue, typedEventEmitter } from 'vue3-ts-util'
 import { gradioApp, isImageFile } from '@/util'
-import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
+import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
 import { cloneDeep, debounce, last, range, uniqBy } from 'lodash-es'
 import path from 'path-browserify'
@@ -23,6 +23,8 @@ const global = useGlobalStore()
 export const toRawFileUrl = (file: FileNodeInfo, download = false) => `/baidu_netdisk/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
 export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) => `/baidu_netdisk/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
 
+
+const { eventEmitter: events, useEventListen } = typedEventEmitter<{ removeFiles: [paths: string[], loc: string], addFiles: [paths: string[], loc: string] }>()
 
 export interface Scroller {
   $_startIndex: number
@@ -72,7 +74,7 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     stackViewEl: ref<HTMLDivElement>(),
     props,
     ...useBaiduyun(),
-    ...typedEventEmitter<{ loadNextDir: undefined }>()
+    ...typedEventEmitter<{ loadNextDir: undefined, refresh: void }>()
   }
 })
 
@@ -88,7 +90,7 @@ export type ViewMode = 'line' | 'grid' | 'large-size-grid'
 const taskListStore = useTaskListStore()
 
 export const useBaiduyun = () => {
-  
+
   const bduss = ref('')
   const installedBaiduyun = computedAsync(taskListStore.checkBaiduyunInstalled, false)
   const baiduyunLoading = ref(false)
@@ -227,7 +229,7 @@ export function usePreview (props: Props) {
     }
     return isImageFile(sortedFiles.value[next]?.name) ?? ''
   }
-  
+
   return {
     previewIdx,
     onPreviewVisibleChange,
@@ -240,7 +242,7 @@ export function usePreview (props: Props) {
 
 export function useLocation (props: Props) {
   const np = ref<Progress.NProgress>()
-  const { installedBaiduyun, scroller, stackViewEl, stack, currPage, currLocation, basePath, sortMethod } = useHookShareState().toRefs()
+  const { installedBaiduyun, scroller, stackViewEl, stack, currPage, currLocation, basePath, sortMethod, useEventListen } = useHookShareState().toRefs()
 
   watch(() => stack.value.length, debounce((v, lv) => {
     if (v !== lv) {
@@ -370,20 +372,29 @@ export function useLocation (props: Props) {
 
 
   const refresh = async () => {
-    if (stack.value.length === 1) {
-      const resp = await getTargetFolderFiles(props.target, '/')
-      stack.value = [
-        {
-          files: resp.files,
-          curr: '/'
-        }
-      ]
-    } else {
-      const last = currPage.value
-      stack.value.pop()
-      await openNext(currPage.value?.files.find((v) => v.name === last?.curr)!)
+    try {
+      np.value?.start()
+      if (stack.value.length === 1) {
+        const resp = await getTargetFolderFiles(props.target, '/')
+        stack.value = [
+          {
+            files: resp.files,
+            curr: '/'
+          }
+        ]
+      } else {
+        const { files } = await getTargetFolderFiles(props.target, currLocation.value)
+        last(stack.value)!.files = files
+      }
+    } finally {
+      np.value?.done()
     }
+
   }
+
+  useEventListen.value('refresh', refresh)
+
+
   return {
     refresh,
     copyLocation,
@@ -426,7 +437,7 @@ export function useFilesDisplay (props: Props) {
     if (mode === 'line') {
       return { first: 80, second: undefined }
     }
-    const second =  (mode === 'grid' ? gridSize : largeGridSize)
+    const second = (mode === 'grid' ? gridSize : largeGridSize)
     const first = second + profileHeight
     return {
       first,
@@ -478,7 +489,7 @@ export function useFilesDisplay (props: Props) {
       loadNextDir()
     }
   }, 300)
-  
+
   const thumbnailSize = computed(() => viewMode.value === 'grid' ? [global.gridThumbnailSize, global.gridThumbnailSize].join() : [global.largeGridThumbnailSize, global.largeGridThumbnailSize].join())
   return {
     gridItems,
@@ -502,7 +513,7 @@ export function useFilesDisplay (props: Props) {
 
 
 export function useFileTransfer (props: Props) {
-  const { currLocation, sortedFiles, currPage, multiSelectedIdxs } = useHookShareState().toRefs()
+  const { currLocation, sortedFiles, currPage, multiSelectedIdxs, eventEmitter } = useHookShareState().toRefs()
   const recover = () => {
     multiSelectedIdxs.value = []
   }
@@ -511,7 +522,7 @@ export function useFileTransfer (props: Props) {
   watch(currPage, recover)
 
   const onFileDragStart = (e: DragEvent, idx: number) => {
-    const file = cloneDeep(sortedFiles.value[idx] )
+    const file = cloneDeep(sortedFiles.value[idx])
     console.log('onFileDragStart set drag file ', e, idx, file)
     const files = [file]
     let includeDir = file.type === 'dir'
@@ -526,6 +537,7 @@ export function useFileTransfer (props: Props) {
       JSON.stringify({
         from: props.target,
         includeDir,
+        loc: currLocation.value,
         path: uniqBy(files, 'fullpath').map(f => f.fullpath)
       })
     )
@@ -535,32 +547,51 @@ export function useFileTransfer (props: Props) {
     type Data = {
       from: typeof props.target
       path: string[],
+      loc: string
       includeDir: boolean
     }
     const data = JSON.parse(e.dataTransfer?.getData('text') || '{}') as Data
     console.log(data)
-    if (data.from && data.path && typeof data.includeDir !== 'undefined') {
-      if (data.from === props.target) {
+    if (data.from && data.path && typeof data.includeDir !== 'undefined' && data.loc) {
+      const toPath = currLocation.value
+      if (data.from === props.target && data.loc === toPath) {
         return
       }
-      const type = data.from === 'local' ? 'upload' : 'download'
-      const typeZH = type === 'upload' ? '上传' : '下载'
-      const toPath = currLocation.value
-      const content = h('div', [
-        h('div', `从 ${props.target !== 'local' ? '本地' : '云盘'} `),
-        h('ol', data.path.map(v => v.split(/[/\\]/).pop()).map(v => h('li', v))),
-        h('div', `${typeZH} ${props.target === 'local' ? '本地' : '云盘'} ${toPath}`)
-      ])
-      Modal.confirm({
-        title: `确定创建${typeZH}任务${data.includeDir ? ', 这是文件夹或者包含文件夹!' : ''}`,
-        content,
-        maskClosable: true,
-        async onOk () {
-          await global.createTaskRecordPaneIfNotExist(props.tabIdx)
-          console.log('request createNewTask', { send_dirs: data.path, recv_dir: toPath, type })
-          taskListStore.pendingBaiduyunTaskQueue.push({ send_dirs: data.path, recv_dir: toPath, type })
-        }
-      })
+      if (props.target == data.from) {
+        const content = h('div', [
+          h('div', `下列文件移动至${toPath}`),
+          h('ol', data.path.map(v => v.split(/[/\\]/).pop()).map(v => h('li', v))),
+        ])
+        Modal.confirm({
+          title: `确定?`,
+          content,
+          maskClosable: true,
+          async onOk () {
+            await moveFiles(props.target, data.path, toPath)
+            events.emit('removeFiles', [data.path, data.loc])
+            await eventEmitter.value.emit('refresh')
+          }
+        })
+      } else {
+        const type = data.from === 'local' ? 'upload' : 'download'
+        const typeZH = type === 'upload' ? '上传' : '下载'
+        const content = h('div', [
+          h('div', `从 ${props.target !== 'local' ? '本地' : '云盘'} `),
+          h('ol', data.path.map(v => v.split(/[/\\]/).pop()).map(v => h('li', v))),
+          h('div', `${typeZH} ${props.target === 'local' ? '本地' : '云盘'} ${toPath}`)
+        ])
+        Modal.confirm({
+          title: `确定创建${typeZH}任务${data.includeDir ? ', 这是文件夹或者包含文件夹!' : ''}`,
+          content,
+          maskClosable: true,
+          async onOk () {
+            await global.createTaskRecordPaneIfNotExist(props.tabIdx)
+            console.log('request createNewTask', { send_dirs: data.path, recv_dir: toPath, type })
+            taskListStore.pendingBaiduyunTaskQueue.push({ send_dirs: data.path, recv_dir: toPath, type })
+          }
+        })
+      }
+
     }
   }
   return {
@@ -572,10 +603,23 @@ export function useFileTransfer (props: Props) {
 
 
 
-export function useFileItemActions ({ openNext }: { openNext: (file: FileNodeInfo) => Promise<void> }) {
+export function useFileItemActions (props: Props, { openNext }: { openNext: (file: FileNodeInfo) => Promise<void> }) {
   const showGenInfo = ref(false)
   const imageGenInfo = ref('')
-  const { sortedFiles, previewIdx, multiSelectedIdxs } = useHookShareState().toRefs()
+  const { sortedFiles, previewIdx, multiSelectedIdxs, stack, currLocation } = useHookShareState().toRefs()
+
+  useEventListen('removeFiles', ([paths, loc]: [paths: string[], loc: string]) => {
+    if (loc !== currLocation.value) {
+      return
+    }
+    const top = last(stack.value)!
+    top.files = top.files.filter(v => !paths.includes(v.fullpath))
+    if (top.walkFiles) {
+      top.walkFiles = top.walkFiles.map(files => files.filter(file => !paths.includes(file.fullpath)))
+    }
+  })
+
+
   const q = reactive(new FetchQueue())
   const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo) => {
     const files = sortedFiles.value
@@ -587,6 +631,8 @@ export function useFileItemActions ({ openNext }: { openNext: (file: FileNodeInf
       const first = multiSelectedIdxs.value[0]
       const last = multiSelectedIdxs.value[multiSelectedIdxs.value.length - 1]
       multiSelectedIdxs.value = range(first, last + 1)
+      console.log(multiSelectedIdxs.value)
+
       e.stopPropagation()
     } else if (e.ctrlKey || e.metaKey) {
       multiSelectedIdxs.value.push(idx)
@@ -597,7 +643,7 @@ export function useFileItemActions ({ openNext }: { openNext: (file: FileNodeInf
   }
 
 
-  const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfo) => {
+  const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfo, idx: number) => {
     const url = toRawFileUrl(file)
     const copyImgTo = async (tab: ["txt2img", "img2img", "inpaint", "extras"][number]) => {
       await setImgPath(file.fullpath) // 设置图像路径
@@ -623,6 +669,25 @@ export function useFileItemActions ({ openNext }: { openNext: (file: FileNodeInf
       case 'viewGenInfo': {
         showGenInfo.value = true
         imageGenInfo.value = await q.pushAction(() => getImageGenerationInfo(file.fullpath)).res
+        break
+      }
+      case 'deleteFiles': {
+        let selectedFiles: FileNodeInfo[] = []
+        if (multiSelectedIdxs.value.includes(idx)) {
+          selectedFiles = multiSelectedIdxs.value.map(idx => sortedFiles.value[idx])
+        } else {
+          selectedFiles.push(file)
+        }
+        Modal.confirm({
+          title: '确认删除？',
+          content: h('ol', { style: 'max-height:50vh;overflow:auto;' }, selectedFiles.map(v => v.fullpath.split(/[/\\]/).pop()).map(v => h('li', v))),
+          async onOk () {
+            const paths = selectedFiles.map(v => v.fullpath)
+            await deleteFiles(props.target, paths)
+            message.success('删除成功')
+            events.emit('removeFiles', [paths, currLocation.value])
+          },
+        })
       }
 
     }
