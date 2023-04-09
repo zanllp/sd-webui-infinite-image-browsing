@@ -135,6 +135,7 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
       <RecycleScroller class="file-list" :items="sortedFiles" :prerender="10" ref="scroller" @scroll="onScroll"
         :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems">
         <template v-slot="{ item: file, index: idx }">
+          <!-- idx 和file有可能丢失 -->
           <a-dropdown :trigger="['contextmenu']">
             <li class="file"
               :class="{ clickable: file.type === 'dir', selected: multiSelectedIdxs.includes(idx), grid: viewMode === 'grid' || viewMode === 'large-size-grid', 'large-grid': viewMode === 'large-size-grid' }"

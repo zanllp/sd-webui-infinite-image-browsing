@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import os
+import shutil
 import time
 from scripts.tool import human_readable_size, is_valid_image_path, temp_path
 from fastapi import FastAPI, HTTPException
@@ -252,6 +253,21 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
                     raise HTTPException(400, detail=f"删除文件{path}时出错：{e}")
         else:
             exec_ops(["rm", *req.file_paths]) #没检查是否失败，暂时先这样
+
+    class MoveFilesReq(BaseModel):
+        file_paths: list[str]
+        dest: str
+
+    @app.post(pre+"/move_files/{target}")
+    async def move_files(req: MoveFilesReq, target: Literal["local", "netdisk"]):
+        if target == "local":
+           for path in req.file_paths:
+            try:
+                shutil.move(path, req.dest)
+            except OSError as e:
+                raise HTTPException(400, detail=f"移动文件{path}到{req.dest}时出错：{e}")
+        else:
+            exec_ops(["mv", *req.file_paths, req.dest]) #没检查是否失败，暂时先这样
 
     @app.get(pre + "/files/{target}")
     async def get_target_floder_files(

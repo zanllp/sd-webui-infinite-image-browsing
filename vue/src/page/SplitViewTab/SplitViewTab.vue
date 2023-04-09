@@ -5,7 +5,7 @@ import 'splitpanes/dist/splitpanes.css'
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { defineAsyncComponent, watch, ref, nextTick } from 'vue'
 import { key } from '@/util'
-import { uniqueId } from 'lodash'
+import { uniqueId } from 'lodash-es'
 import edgeTrigger from './edgeTrigger.vue'
 import { message } from 'ant-design-vue'
 const global = useGlobalStore()

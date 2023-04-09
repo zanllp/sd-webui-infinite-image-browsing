@@ -19,7 +19,7 @@ export const deleteFiles = async (target: 'local' | 'netdisk' , file_paths: stri
   return resp.data as { files: FileNodeInfo[] }
 }
 
-export const moveFiles = async (target: 'local' | 'netdisk' , file_paths: string[]) => {
-  const resp = await axiosInst.post(`/move_files/${target}`, { file_paths })
+export const moveFiles = async (target: 'local' | 'netdisk' , file_paths: string[], dest: string) => {
+  const resp = await axiosInst.post(`/move_files/${target}`, { file_paths, dest })
   return resp.data as { files: FileNodeInfo[] }
 }

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
-import { uniqueId } from 'lodash'
+import { uniqueId } from 'lodash-es'
 import { computed } from 'vue'
 import { ID } from 'vue3-ts-util'
 import { CloudDownloadOutlined, FileDoneOutlined } from '@/icon'
