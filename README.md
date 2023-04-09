@@ -38,7 +38,7 @@ https://user-images.githubusercontent.com/25872019/230768207-daab786b-d4ab-489f-
 
 
 
-### drak mode
+### 深色模式
 
 <img width="1916" alt="image" src="https://user-images.githubusercontent.com/25872019/230064879-c95866ac-999d-4d4b-87ea-3e38c8479415.png">
 
