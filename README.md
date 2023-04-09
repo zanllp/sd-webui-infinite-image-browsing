@@ -7,7 +7,12 @@
 
 还有一个独立不依赖sd-webui的版本[baiduyun-web-transfer](https://github.com/zanllp/baiduyun-web-transfer)
 
+
+如果您对该项目有任何疑问或建议，请在GitHub上提交issue。
+
 > If you need an English version of this project, please create an issue to let us know.
+
+
 
 ## 主要特性
 
@@ -22,13 +27,18 @@
 [视频演示可以在Bilibili上观看](https://space.bilibili.com/27227392/channel/series)
 
 文档后面有空再修改
-## 百度云登录
-这是可选的，你如果不用百度云可以不用看这个
-使用bduss登录，[参考这个](https://www.bilibili.com/read/cv22726491) ，或者自己搜索。
 ## 预览
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/230064374-47ba209e-562b-47b8-a2ce-d867e3afe204.png">
 
-https://user-images.githubusercontent.com/25872019/230767683-715fa128-bad5-4725-8632-d1f433864185.mp4
+
+
+
+https://user-images.githubusercontent.com/25872019/230768207-daab786b-d4ab-489f-ba6a-e9656bd530b8.mp4
+
+
+
+
+### drak mode
 
 <img width="1916" alt="image" src="https://user-images.githubusercontent.com/25872019/230064879-c95866ac-999d-4d4b-87ea-3e38c8479415.png">
 
@@ -36,4 +46,3 @@ https://user-images.githubusercontent.com/25872019/230767683-715fa128-bad5-4725-
 
 
 
-如果您对该项目有任何疑问或建议，请在GitHub上提交issue。
