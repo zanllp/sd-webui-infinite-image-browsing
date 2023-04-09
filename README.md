@@ -27,9 +27,13 @@
 使用bduss登录，[参考这个](https://www.bilibili.com/read/cv22726491) ，或者自己搜索。
 ## 预览
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/230064374-47ba209e-562b-47b8-a2ce-d867e3afe204.png">
-<img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/230425580-127af4fb-c725-44a7-ae6d-a4ce6ab77bb5.png">
+
+https://user-images.githubusercontent.com/25872019/230767683-715fa128-bad5-4725-8632-d1f433864185.mp4
 
 <img width="1916" alt="image" src="https://user-images.githubusercontent.com/25872019/230064879-c95866ac-999d-4d4b-87ea-3e38c8479415.png">
+
+
+
 
 
 如果您对该项目有任何疑问或建议，请在GitHub上提交issue。
