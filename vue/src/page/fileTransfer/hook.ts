@@ -7,7 +7,7 @@ import { downloadBaiduyun, genInfoCompleted, getImageGenerationInfo, setImgPath 
 import { isAxiosError } from 'axios'
 import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook, copy2clipboard, Task, delay, FetchQueue, typedEventEmitter } from 'vue3-ts-util'
 import { gradioApp, isImageFile } from '@/util'
-import { getTargetFolderFiles, type FileNodeInfo } from '@/api/files'
+import { getTargetFolderFiles, type FileNodeInfo, deleteFiles } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
 import { cloneDeep, debounce, last, range, uniqBy } from 'lodash-es'
 import path from 'path-browserify'
@@ -88,7 +88,7 @@ export type ViewMode = 'line' | 'grid' | 'large-size-grid'
 const taskListStore = useTaskListStore()
 
 export const useBaiduyun = () => {
-  
+
   const bduss = ref('')
   const installedBaiduyun = computedAsync(taskListStore.checkBaiduyunInstalled, false)
   const baiduyunLoading = ref(false)
@@ -227,7 +227,7 @@ export function usePreview (props: Props) {
     }
     return isImageFile(sortedFiles.value[next]?.name) ?? ''
   }
-  
+
   return {
     previewIdx,
     onPreviewVisibleChange,
@@ -426,7 +426,7 @@ export function useFilesDisplay (props: Props) {
     if (mode === 'line') {
       return { first: 80, second: undefined }
     }
-    const second =  (mode === 'grid' ? gridSize : largeGridSize)
+    const second = (mode === 'grid' ? gridSize : largeGridSize)
     const first = second + profileHeight
     return {
       first,
@@ -478,7 +478,7 @@ export function useFilesDisplay (props: Props) {
       loadNextDir()
     }
   }, 300)
-  
+
   const thumbnailSize = computed(() => viewMode.value === 'grid' ? [global.gridThumbnailSize, global.gridThumbnailSize].join() : [global.largeGridThumbnailSize, global.largeGridThumbnailSize].join())
   return {
     gridItems,
@@ -511,7 +511,7 @@ export function useFileTransfer (props: Props) {
   watch(currPage, recover)
 
   const onFileDragStart = (e: DragEvent, idx: number) => {
-    const file = cloneDeep(sortedFiles.value[idx] )
+    const file = cloneDeep(sortedFiles.value[idx])
     console.log('onFileDragStart set drag file ', e, idx, file)
     const files = [file]
     let includeDir = file.type === 'dir'
@@ -572,10 +572,10 @@ export function useFileTransfer (props: Props) {
 
 
 
-export function useFileItemActions ({ openNext }: { openNext: (file: FileNodeInfo) => Promise<void> }) {
+export function useFileItemActions (props: Props, { openNext }: { openNext: (file: FileNodeInfo) => Promise<void> }) {
   const showGenInfo = ref(false)
   const imageGenInfo = ref('')
-  const { sortedFiles, previewIdx, multiSelectedIdxs } = useHookShareState().toRefs()
+  const { sortedFiles, previewIdx, multiSelectedIdxs, stack } = useHookShareState().toRefs()
   const q = reactive(new FetchQueue())
   const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo) => {
     const files = sortedFiles.value
@@ -587,6 +587,8 @@ export function useFileItemActions ({ openNext }: { openNext: (file: FileNodeInf
       const first = multiSelectedIdxs.value[0]
       const last = multiSelectedIdxs.value[multiSelectedIdxs.value.length - 1]
       multiSelectedIdxs.value = range(first, last + 1)
+      console.log(multiSelectedIdxs.value)
+
       e.stopPropagation()
     } else if (e.ctrlKey || e.metaKey) {
       multiSelectedIdxs.value.push(idx)
@@ -597,7 +599,7 @@ export function useFileItemActions ({ openNext }: { openNext: (file: FileNodeInf
   }
 
 
-  const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfo) => {
+  const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfo, idx: number) => {
     const url = toRawFileUrl(file)
     const copyImgTo = async (tab: ["txt2img", "img2img", "inpaint", "extras"][number]) => {
       await setImgPath(file.fullpath) // 设置图像路径
@@ -623,6 +625,29 @@ export function useFileItemActions ({ openNext }: { openNext: (file: FileNodeInf
       case 'viewGenInfo': {
         showGenInfo.value = true
         imageGenInfo.value = await q.pushAction(() => getImageGenerationInfo(file.fullpath)).res
+        break
+      }
+      case 'deleteFiles': {
+        let selectedFiles: FileNodeInfo[] = []
+        if (multiSelectedIdxs.value.includes(idx)) {
+          selectedFiles = multiSelectedIdxs.value.map(idx => sortedFiles.value[idx])
+        } else {
+          selectedFiles.push(file)
+        }
+        Modal.confirm({
+          title: '确认删除？',
+          content: h('ol', { style: 'max-height:50vh;overflow:auto;' }, selectedFiles.map(v => v.fullpath.split(/[/\\]/).pop()).map(v => h('li', v))),
+          async onOk () {
+            const paths = selectedFiles.map(v => v.fullpath)
+            await deleteFiles(props.target, paths)
+            message.success('删除成功')
+            const top = last(stack.value)!
+            top.files = top.files.filter(v => !paths.includes(v.fullpath))
+            if (top.walkFiles) {
+              top.walkFiles = top.walkFiles.map(files => files.filter(file => !paths.includes(file.fullpath)))
+            }
+          },
+        })
       }
 
     }

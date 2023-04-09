@@ -236,6 +236,22 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             upload_poll_promise_dict.pop(id)
 
         return res
+    
+    class DeleteFilesReq(BaseModel):
+        file_paths: list[str]
+
+    @app.post(pre+"/delete_files/{target}")
+    async def delete_files(req: DeleteFilesReq, target: Literal["local", "netdisk"]):
+        if target == "local":
+            for path in req.file_paths:
+                try:
+                    # 删除文件
+                    os.remove(path)
+                except OSError as e:
+                    # 处理删除失败的情况
+                    raise HTTPException(400, detail=f"删除文件{path}时出错：{e}")
+        else:
+            exec_ops(["rm", *req.file_paths]) #没检查是否失败，暂时先这样
 
     @app.get(pre + "/files/{target}")
     async def get_target_floder_files(

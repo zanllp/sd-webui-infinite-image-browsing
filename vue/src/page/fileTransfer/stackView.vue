@@ -23,7 +23,7 @@ const props = defineProps<{
   walkMode?: boolean
 }>()
 const { installBaiduyunBin, installedBaiduyun, failedHint, baiduyunLoading,
-  scroller, stackViewEl, props: _props, bduss, onLoginBtnClick
+  scroller, stackViewEl, props: _props, bduss, onLoginBtnClick, multiSelectedIdxs
 } = useHookShareState().toRefs()
 watch(() => props, () => {
   _props.value = props
@@ -34,10 +34,9 @@ const { gridItems, sortMethodConv, moreActionsDropdownShow,
   sortedFiles, sortMethod, viewMode, viewModeMap, itemSize,
   loadNextDir, loadNextDirLoading, canLoadNext, thumbnailSize,
   onScroll } = useFilesDisplay(props)
-const { onDrop, onFileDragStart, multiSelectedIdxs } = useFileTransfer(props)
-const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions({ openNext })
+const { onDrop, onFileDragStart } = useFileTransfer(props)
+const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions(props, { openNext })
 const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } = usePreview(props)
-
 
 
 </script>
@@ -70,9 +69,9 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
     <AModal v-model:visible="showGenInfo" width="50vw">
       <ASkeleton active :loading="!q.isIdle">
         <pre style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
-                                                          双击复制
-                                                          {{ imageGenInfo }}
-                                                        </pre>
+                                                              双击复制
+                                                              {{ imageGenInfo }}
+                                                            </pre>
       </ASkeleton>
     </AModal>
     <div class="location-bar">
@@ -184,16 +183,19 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
               </template>
             </li>
             <template #overlay>
-              <a-menu v-if="props.target === 'local' && file.type === 'file'" @click="onContextMenuClick($event, file)">
-                <a-menu-item key="openInNewWindow">在新窗口预览（如果浏览器处理不了会下载，大文件的话谨慎）</a-menu-item>
-                <a-menu-item key="download">直接下载（大文件的话谨慎）</a-menu-item>
-                <a-menu-item key="copyPreviewUrl">复制源文件预览链接</a-menu-item>
-                <template v-if="isImageFile(file.name)">
-                  <a-menu-item key="viewGenInfo">查看生成信息(prompt等)</a-menu-item>
-                  <a-menu-item key="send2txt2img">发送到文生图</a-menu-item>
-                  <a-menu-item key="send2img2img">发送到图生图</a-menu-item>
-                  <a-menu-item key="send2inpaint">发送到局部重绘</a-menu-item>
-                  <a-menu-item key="send2extras">发送到附加功能</a-menu-item>
+              <a-menu  @click="onContextMenuClick($event, file, idx)">
+                <a-menu-item key="deleteFiles">删除选中</a-menu-item>
+                <template v-if="file.type === 'file' && props.target === 'local'">
+                  <a-menu-item key="openInNewWindow">在新窗口预览（如果浏览器处理不了会下载，大文件的话谨慎）</a-menu-item>
+                  <a-menu-item key="download">直接下载（大文件的话谨慎）</a-menu-item>
+                  <a-menu-item key="copyPreviewUrl">复制源文件预览链接</a-menu-item>
+                  <template v-if="isImageFile(file.name)">
+                    <a-menu-item key="viewGenInfo">查看生成信息(prompt等)</a-menu-item>
+                    <a-menu-item key="send2txt2img">发送到文生图</a-menu-item>
+                    <a-menu-item key="send2img2img">发送到图生图</a-menu-item>
+                    <a-menu-item key="send2inpaint">发送到局部重绘</a-menu-item>
+                    <a-menu-item key="send2extras">发送到附加功能</a-menu-item>
+                  </template>
                 </template>
               </a-menu>
             </template>
