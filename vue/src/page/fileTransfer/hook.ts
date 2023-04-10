@@ -60,6 +60,11 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
   const previewIdx = ref(-1)
 
   const canLoadNext = ref(true)
+
+  const walkModePath = ref<string>()
+
+  
+
   return {
     canLoadNext,
     multiSelectedIdxs,
@@ -72,6 +77,7 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     sortedFiles,
     scroller: ref<Scroller>(),
     stackViewEl: ref<HTMLDivElement>(),
+    walkModePath,
     props,
     ...useBaiduyun(),
     ...typedEventEmitter<{ loadNextDir: undefined, refresh: void }>()
@@ -242,7 +248,9 @@ export function usePreview (props: Props) {
 
 export function useLocation (props: Props) {
   const np = ref<Progress.NProgress>()
-  const { installedBaiduyun, scroller, stackViewEl, stack, currPage, currLocation, basePath, sortMethod, useEventListen } = useHookShareState().toRefs()
+  const { installedBaiduyun, scroller, stackViewEl, stack, currPage, currLocation, basePath
+    , sortMethod, useEventListen ,walkModePath
+  } = useHookShareState().toRefs()
 
   watch(() => stack.value.length, debounce((v, lv) => {
     if (v !== lv) {
@@ -328,7 +336,7 @@ export function useLocation (props: Props) {
     }
   }
 
-  const to = async (dir: string) => {
+  const to = async (dir: string, refreshIfCurrPage = true) => {
     const backup = cloneDeep(stack.value)
     try {
       if (!/^((\w:)|\/)/.test(dir)) {
@@ -354,7 +362,7 @@ export function useLocation (props: Props) {
       for (let index = 0; index < currPaths.length; index++) {
         stack.value.pop()
       }
-      if (!frags.length) {
+      if (!frags.length && refreshIfCurrPage) {
         return refresh()
       }
       for (const frag of frags) {
@@ -374,16 +382,15 @@ export function useLocation (props: Props) {
   const refresh = async () => {
     try {
       np.value?.start()
-      if (stack.value.length === 1) {
-        const resp = await getTargetFolderFiles(props.target, '/')
-        stack.value = [
-          {
-            files: resp.files,
-            curr: '/'
-          }
-        ]
+      if (walkModePath.value) {
+        await to(walkModePath.value, false)
+        await delay()
+        const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(v => v.type === 'dir')
+        if (firstDir) {
+          await to(firstDir.fullpath, false)
+        }
       } else {
-        const { files } = await getTargetFolderFiles(props.target, currLocation.value)
+        const { files } = await getTargetFolderFiles(props.target, stack.value.length === 1 ? '/' : currLocation.value)
         last(stack.value)!.files = files
       }
     } finally {

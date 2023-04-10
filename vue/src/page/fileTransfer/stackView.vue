@@ -23,10 +23,13 @@ const props = defineProps<{
   walkMode?: boolean
 }>()
 const { installBaiduyunBin, installedBaiduyun, failedHint, baiduyunLoading,
-  scroller, stackViewEl, props: _props, bduss, onLoginBtnClick, multiSelectedIdxs
+  scroller, walkModePath, stackViewEl, props: _props, bduss, onLoginBtnClick, multiSelectedIdxs
 } = useHookShareState().toRefs()
 watch(() => props, () => {
   _props.value = props
+  if (props.walkMode) {
+    walkModePath.value = props.path
+  }
 }, { immediate: true })
 
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to } = useLocation(props)
@@ -68,10 +71,10 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
   <div ref="stackViewEl" @dragover.prevent @drop.prevent="onDrop($event)" class="container" v-else>
     <AModal v-model:visible="showGenInfo" width="50vw">
       <ASkeleton active :loading="!q.isIdle">
-        <pre style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
+        <div style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
                                                               双击复制
                                                               {{ imageGenInfo }}
-                                                            </pre>
+        </div>
       </ASkeleton>
     </AModal>
     <div class="location-bar">

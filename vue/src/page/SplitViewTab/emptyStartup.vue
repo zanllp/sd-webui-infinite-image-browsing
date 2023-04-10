@@ -30,7 +30,7 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
       break
     case 'local':
     case 'netdisk':
-      pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId(), target: type, path, walkMode }
+      pane = { type, name: compCnMap[type]! + (walkMode ? `(Walk:${global.autoCompletedDirList.find(v => v.dir === path)?.zh ?? path})` :''), key: Date.now() + uniqueId(), target: type, path, walkMode }
   }
   const tab = global.tabList[props.tabIdx]
   tab.panes.splice(props.paneIdx, 1, pane)
