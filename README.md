@@ -28,8 +28,11 @@
 
 文档后面有空再修改
 ## 预览
+
+
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/230064374-47ba209e-562b-47b8-a2ce-d867e3afe204.png">
 
+<img width="517" alt="image" src="https://user-images.githubusercontent.com/25872019/230896820-26344b09-2297-4a2f-a6a7-4c2f0edb8a2c.png">
 
 
 
