@@ -1,6 +1,11 @@
 import { idKey, type UniqueId } from 'vue3-ts-util'
 
 export function gradioApp() {
+  try {
+    return (parent.window as any).gradioApp()
+  } catch (error) {
+    // 
+  }
   const elems = parent.document.getElementsByTagName('gradio-app')
   const gradioShadowRoot = elems.length == 0 ? null : elems[0].shadowRoot
   return gradioShadowRoot ? gradioShadowRoot : document;
