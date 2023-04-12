@@ -412,9 +412,14 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
     @app.post(pre+"/send_img_path")
     async def api_set_send_img_path(path: str):
         send_img_path["value"] = path
-    # 检查图片信息是否生成完成
+
+    # 等待图片信息生成完成
     @app.get(pre+"/gen_info_completed")
     async def api_set_send_img_path():
+        for _ in range(600): # 等待60s
+            if send_img_path["value"] == '':
+                return True
+            await asyncio.sleep(0.1)
         return send_img_path["value"] == ''
     
     
