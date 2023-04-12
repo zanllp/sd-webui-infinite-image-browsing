@@ -63,9 +63,10 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
 
   const walkModePath = ref<string>()
 
-  
+  const spinning = ref(false)
 
   return {
+    spinning,
     canLoadNext,
     multiSelectedIdxs,
     previewIdx,
@@ -613,7 +614,7 @@ export function useFileTransfer (props: Props) {
 export function useFileItemActions (props: Props, { openNext }: { openNext: (file: FileNodeInfo) => Promise<void> }) {
   const showGenInfo = ref(false)
   const imageGenInfo = ref('')
-  const { sortedFiles, previewIdx, multiSelectedIdxs, stack, currLocation } = useHookShareState().toRefs()
+  const { sortedFiles, previewIdx, multiSelectedIdxs, stack, currLocation,spinning } = useHookShareState().toRefs()
 
   useEventListen('removeFiles', ([paths, loc]: [paths: string[], loc: string]) => {
     if (loc !== currLocation.value) {
@@ -653,16 +654,23 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
   const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfo, idx: number) => {
     const url = toRawFileUrl(file)
     const copyImgTo = async (tab: ["txt2img", "img2img", "inpaint", "extras"][number]) => {
+      if (spinning.value) {
+        return
+      }
       try {
+        spinning.value = true
         await setImgPath(file.fullpath) // 设置图像路径
         const btn = gradioApp().querySelector('#bd_hidden_img_update_trigger')! as HTMLButtonElement
         btn.click() // 触发图像组件更新
         ok(await genInfoCompleted(), '图像信息生成超时') // 等待消息生成完成
+        await delay(300)
         const tabBtn = gradioApp().querySelector(`#bd_hidden_tab_${tab}`) as HTMLButtonElement
         tabBtn.click() // 触发粘贴
       } catch (error) {
         console.error(error)
         message.error('发送图像失败，请携带console的错误消息找开发者')
+      } finally {
+        spinning.value = false
       }
     }
     switch (e.key) {
