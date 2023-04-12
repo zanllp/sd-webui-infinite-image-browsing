@@ -657,7 +657,7 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
         await setImgPath(file.fullpath) // 设置图像路径
         const btn = gradioApp().querySelector('#bd_hidden_img_update_trigger')! as HTMLButtonElement
         btn.click() // 触发图像组件更新
-        await genInfoCompleted() // 等待消息生成完成
+        ok(await genInfoCompleted(), '图像信息生成超时') // 等待消息生成完成
         const tabBtn = gradioApp().querySelector(`#bd_hidden_tab_${tab}`) as HTMLButtonElement
         tabBtn.click() // 触发粘贴
       } catch (error) {
