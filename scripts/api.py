@@ -239,7 +239,7 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
         return res
     
     class DeleteFilesReq(BaseModel):
-        file_paths: list[str]
+        file_paths: List[str]
 
     @app.post(pre+"/delete_files/{target}")
     async def delete_files(req: DeleteFilesReq, target: Literal["local", "netdisk"]):
@@ -255,7 +255,7 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             exec_ops(["rm", *req.file_paths]) #没检查是否失败，暂时先这样
 
     class MoveFilesReq(BaseModel):
-        file_paths: list[str]
+        file_paths: List[str]
         dest: str
 
     @app.post(pre+"/move_files/{target}")
@@ -417,7 +417,7 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
     @app.get(pre+"/gen_info_completed")
     async def api_set_send_img_path():
         for _ in range(600): # 等待60s
-            if send_img_path["value"] == '':
+            if send_img_path["value"] == '': # 等待setup里面生成完成
                 return True
             await asyncio.sleep(0.1)
         return send_img_path["value"] == ''
