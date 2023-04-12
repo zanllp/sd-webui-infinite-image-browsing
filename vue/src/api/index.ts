@@ -167,7 +167,7 @@ export const setImgPath = async (path: string) => {
 }
 
 export const genInfoCompleted = async () => {
-  return (await axiosInst.get(`/gen_info_completed`)).data as boolean
+  return (await axiosInst.get(`/gen_info_completed`, { timeout: 60_000 })).data as boolean
 }
 
 export const getImageGenerationInfo = async (path: string) => {
