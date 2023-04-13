@@ -45,7 +45,7 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
 
 </script>
 <template>
-  <ASpin :spinning="spinning">
+  <ASpin :spinning="spinning" size="large">
     <ASelect style="display: none;"></ASelect>
     <div v-if="props.target === 'netdisk' && (!installedBaiduyun || !global.user)" class="uninstalled-hint">
       <template v-if="!installedBaiduyun">
@@ -71,9 +71,11 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
       </template>
     </div>
     <div ref="stackViewEl" @dragover.prevent @drop.prevent="onDrop($event)" class="container" v-else>
-      <AModal v-model:visible="showGenInfo" width="50vw">
+      <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
+        <template #cancelText />
         <ASkeleton active :loading="!q.isIdle">
-          <div style="width: 100%; word-break: break-all;white-space: pre-line;" @dblclick="copy2clipboard(imageGenInfo)">
+          <div style="width: 100%; word-break: break-all;white-space: pre-line;max-height: 70vh;overflow: auto;"
+            @dblclick="copy2clipboard(imageGenInfo, 'copied')">
             双击复制
             {{ imageGenInfo }}
           </div>
