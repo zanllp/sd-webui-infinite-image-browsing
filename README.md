@@ -10,7 +10,7 @@
 
 如果您对该项目有任何疑问或建议，请在GitHub上提交issue。
 
-> If you need an English version of this project, please create an issue to let us know.
+> English version coming soon.
 
 
 
