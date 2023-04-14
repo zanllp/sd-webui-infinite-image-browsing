@@ -1,13 +1,14 @@
 import { message } from 'ant-design-vue'
 import axios, { isAxiosError } from 'axios'
 import type { GlobalSettingPart } from './type'
+import { t } from '@/i18n'
 export const axiosInst = axios.create({
   baseURL: '/baidu_netdisk',
 
 })
 axiosInst.interceptors.response.use(resp => resp, err => {
   if (isAxiosError(err)) {
-    const errmsg = err.response?.data?.detail ?? "发生了个错误"
+    const errmsg = err.response?.data?.detail ?? t('errorOccurred')
     message.error(errmsg)
   }
   return err

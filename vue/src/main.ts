@@ -8,10 +8,11 @@ import './index.scss'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { usePreferredDark } from '@vueuse/core'
+import { i18n } from './i18n'
 
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
-createApp(App).use(pinia).mount('#zanllp_dev_gradio_fe')
+createApp(App).use(pinia).use(i18n).mount('#zanllp_dev_gradio_fe')
 
 const dark = usePreferredDark()
 watch(dark, async (dark) => {

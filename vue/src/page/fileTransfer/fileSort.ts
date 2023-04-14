@@ -1,12 +1,13 @@
 import type { FileNodeInfo } from '@/api/files'
+import { t } from '@/i18n'
 
 export const sortMethodMap: Record<SortMethod, string> = {
-  'date-asc': '日期升序',
-  'date-desc': '日期降序',
-  'name-asc': '名称升序',
-  'name-desc': '名称降序',
-  'size-asc': '大小升序',
-  'size-desc': '大小降序'
+  'date-asc': t('sortByDateAscending'),
+  'date-desc': t('sortByDateDescending'),
+  'name-asc': t('sortByNameAscending'),
+  'name-desc': t('sortByNameDescending'),
+  'size-asc': t('sortBySizeAscending'),
+  'size-desc': t('sortBySizeDescending')
 }
 export enum SortMethod {
   DATE_ASC = 'date-asc',

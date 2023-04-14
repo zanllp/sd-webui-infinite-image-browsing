@@ -5,20 +5,21 @@ import { computed } from 'vue'
 import { ID } from 'vue3-ts-util'
 import { CloudDownloadOutlined, FileDoneOutlined } from '@/icon'
 import { message } from 'ant-design-vue'
+import { t } from '@/i18n'
 
 const global = useGlobalStore()
 const props = defineProps<{ tabIdx: number, paneIdx: number }>()
 const compCnMap: Partial<Record<TabPane['type'], string>> = {
-  "auto-upload": '自动上传',
-  local: '本地文件',
-  netdisk: '百度云',
-  "task-record": '任务记录',
-  'global-setting': '全局设置'
+  local: t('local'),
+  netdisk: t('baiduCloud'),
+  "task-record":t('taskRecord'),
+  'global-setting': t('globalSettings'),
+  "auto-upload": t('autoUpload'),
 }
 const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false) => {
   let pane: TabPane
   if (type === 'task-record' && global.tabList.map(v => v.panes).flat().find(v => v.type === 'task-record')) {
-    return message.error('任务记录有且只能有一个，如果特殊需求请前往仓库提issue') // 如果允许多个需要处理一些监听器，懒得改后面再说
+    return message.error(t('onlyOneTaskRecordAllowed')) // 如果允许多个需要处理一些监听器，懒得改后面再说
   }
   switch (type) {
     case 'auto-upload':
@@ -30,7 +31,7 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
       break
     case 'local':
     case 'netdisk':
-      pane = { type, name: compCnMap[type]! + (walkMode ? `(Walk:${global.autoCompletedDirList.find(v => v.dir === path)?.zh ?? path})` :''), key: Date.now() + uniqueId(), target: type, path, walkMode }
+      pane = { type, name: compCnMap[type]! + (walkMode ? ` (Walk:${global.autoCompletedDirList.find(v => v.dir === path)?.zh ?? path})` :''), key: Date.now() + uniqueId(), target: type, path, walkMode }
   }
   const tab = global.tabList[props.tabIdx]
   tab.panes.splice(props.paneIdx, 1, pane)
@@ -43,25 +44,25 @@ const lastRecord = computed(() => global.lastTabListRecord?.[1])
 
 
 const walkModeSupportedDir = computed(() => global.autoCompletedDirList.filter(({ key: k }) => k === 'outdir_txt2img_samples' || k === 'outdir_img2img_samples' || k === 'outdir_extras_samples' || k === 'outdir_save' || k === 'outdir_samples'))
-const canOpenInNewWindow = window.parent !== window
-const openInNewWindow = () => window.parent.open('/baidu_netdisk')
+const canpreviewInNewWindow = window.parent !== window
+const previewInNewWindow = () => window.parent.open('/baidu_netdisk')
 </script>
 <template>
   <div class="container">
     <div class="header">
-      <h1>欢迎</h1>
+      <h1>{{ $t('welcome') }}</h1>
       <div flex-placeholder/>
-      <div v-if="canOpenInNewWindow" class="last-record" @click="openInNewWindow ">
-        <a >在新页面打开</a>
+      <div v-if="canpreviewInNewWindow" class="last-record" @click="previewInNewWindow ">
+        <a >{{ $t('openInNewWindow') }}</a>
       </div>
       <div class="last-record">
         <a v-if="lastRecord?.tabs.length"
-          @click.prevent="global.tabList = lastRecord!.tabs.map(V => ID(V, true))">还原上次记录</a>
+          @click.prevent="global.tabList = lastRecord!.tabs.map(V => ID(V, true))">{{ $t('restoreLastRecord') }}</a>
       </div>
     </div>
     <div class="content">
       <div class="quick-start">
-        <h2>启动</h2>
+        <h2>{{ $t('launch') }}</h2>
         <ul>
           <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp" class="quick-start__item"
             @click.prevent="openInCurrentTab(comp)">
@@ -70,7 +71,7 @@ const openInNewWindow = () => window.parent.open('/baidu_netdisk')
         </ul>
       </div>
       <div class="quick-start" v-if="walkModeSupportedDir.length">
-        <h2>使用 Walk 模式浏览图片</h2>
+        <h2>{{ $t('walkMode') }}</h2>
         <ul >
           <li v-for="item in walkModeSupportedDir" :key="item.dir" class="quick-start__item">
             <AButton @click="openInCurrentTab('local', item.dir, true)" ghost type="primary" block>{{ item.zh }}</AButton>
@@ -78,7 +79,7 @@ const openInNewWindow = () => window.parent.open('/baidu_netdisk')
         </ul>
       </div>
       <div class="quick-start" v-if="global.autoCompletedDirList.length">
-        <h2>从快速移动启动</h2>
+        <h2>{{ $t('launchFromQuickMove') }}</h2>
         <ul>
           <li v-for="dir in global.autoCompletedDirList" :key="dir.key" class="quick-start__item"
             @click.prevent="openInCurrentTab('local', dir.dir)">
@@ -89,7 +90,7 @@ const openInNewWindow = () => window.parent.open('/baidu_netdisk')
       </div>
 
       <div class="quick-start" v-if="global.recent.length">
-        <h2>最近</h2>
+        <h2>{{ $t('recent') }}</h2>
         <ul>
           <li v-for="item in global.recent" :key="item.key" class="quick-start__item"
             @click.prevent="openInCurrentTab(item.target as any, item.path)">

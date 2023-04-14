@@ -8,6 +8,7 @@ import { key } from '@/util'
 import { uniqueId } from 'lodash-es'
 import edgeTrigger from './edgeTrigger.vue'
 import { message } from 'ant-design-vue'
+import { t } from '@/i18n'
 const global = useGlobalStore()
 const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> = {
   'auto-upload': defineAsyncComponent(() => import('@/page/autoUpload/autoUpload.vue')),
@@ -21,12 +22,12 @@ const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> 
 const onEdit = (idx: number, targetKey: any, action: string) => {
   const tab = global.tabList[idx]
   if (action === 'add') {
-    const empty: TabPane = { type: 'empty', key: uniqueId(), name: '空启动页' }
+    const empty: TabPane = { type: 'empty', key: uniqueId(), name: t('emptyStartPage') }
     tab.panes.push(empty)
     tab.key = empty.key
   } else {
     if (global.tabList.reduce((p, c) => p + c.panes.length, 0) === 1) {
-      return message.error('在仅剩一个pane的情况下，不允许删除!!!')
+      return message.error(t('deleteNotAllowedWithOnePaneLeft'))
     }
     const paneIdx = tab.panes.findIndex(v => v.key === targetKey)
     if (tab.key === targetKey) { // 只有在前台时才跳过去

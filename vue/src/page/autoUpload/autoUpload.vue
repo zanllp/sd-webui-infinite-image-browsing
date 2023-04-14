@@ -6,8 +6,11 @@ import { useGlobalStore } from '@/store/useGlobalStore'
 import { onBeforeUnmount } from 'vue'
 import { Loading3QuartersOutlined, CloseCircleOutlined } from '@/icon'
 import { useTaskListStore } from '@/store/useTaskListStore'
+import { onMounted } from 'vue'
 
-const props = defineProps<{ tabIdx: number }>()
+const props = defineProps<{ tabIdx: number, paneIdx: number }>()
+
+
 
 const emit = defineEmits<{ (e: 'runningChange', v: boolean): void }>()
 const global = useGlobalStore()
@@ -21,6 +24,8 @@ const taskLogList = computed(() => Array.from(taskLog.values()))
 const completedFiles = computed(() => taskLogList.value.reduce((p, c) => p + c.n_success_files, 0))
 const failededFiles = computed(() => taskLogList.value.reduce((p, c) => p + c.n_failed_files, 0))
 // const allFiles = computed(() => taskLogList.value.reduce((p, c) => p + c.n_files, 0) + pendingFiles.value.length)
+
+onMounted(() => global.openBaiduYunIfNotLogged(props.tabIdx, props.paneIdx))
 
 onBeforeUnmount(() => {
   task.value?.clearTask()
@@ -65,31 +70,29 @@ const openLogDetail = (id: string) => {
       <template v-if="task">
         <Loading3QuartersOutlined spin />
       </template>
-      {{ task ? '暂停' : '开始' }}
+      {{ task ? $t('start') : $t('pause') }}
     </AButton>
     <a-row>
       <a-col :span="12">
-        <a-statistic title="等待上传数量" :value="pendingFiles.length" style="margin-right: 50px" />
+        <a-statistic :title="$t('waitingUploadCount')" :value="pendingFiles.length" style="margin-right: 50px" />
       </a-col>
       <a-col :span="12">
-        <a-statistic title="上传失败数量" :value="failededFiles" />
+        <a-statistic :title="$t('uploadFailureCount')" :value="failededFiles" />
       </a-col>
     </a-row>
     <a-row>
       <a-col :span="12">
-        <a-statistic title="已完成数量" :value="completedFiles" style="margin-right: 50px" />
+        <a-statistic :title="$t('completedCount')" :value="completedFiles" style="margin-right: 50px" />
       </a-col>
     </a-row>
     <div class="log-container">
       <h2>
-        实时日志
-      </h2> <a-alert message="提示"
-        description="点击下面查看具体日志，若有日志错误内包含名字不合规，可尝试在sd-webui的设置页换一种图像文件名格式，例如[datetime<%Y-%m-%d %H-%M-%S>]" type="info"
-        show-icon />
+        {{ $t('realTimeLog') }}
+      </h2> <a-alert :message="$t('tip')" :description="$t('clickToViewLogs')" type="info" show-icon />
       <ul class="scroll-container">
         <li v-for="item in taskLog.values()" :key="item.id" :class="{ err: item.n_failed_files }"
           @click="openLogDetail(item.id)">
-          <CloseCircleOutlined v-if="item.n_failed_files" /> 开始于：{{ item.start_time }}
+          <CloseCircleOutlined v-if="item.n_failed_files" /> {{ $t('startedAt') + item.start_time }}
         </li>
       </ul>
     </div>

@@ -1,9 +1,12 @@
 import type { GlobalConf, UploadTaskSummary } from '@/api'
 import type { UserInfo } from '@/api/user'
+import { i18n, t } from '@/i18n'
+import { getPreferredLang } from '@/i18n'
 import type { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
 import type { ReturnTypeAsync } from '@/util'
 import { uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
+import { watch } from 'vue'
 import { nextTick } from 'vue'
 import { ref } from 'vue'
 import { typedEventEmitter, type UniqueId, ID } from 'vue3-ts-util'
@@ -24,7 +27,7 @@ interface LogDetailTabPane {
 
 export interface FileTransferTabPane {
   type: 'local' | 'netdisk'
-  target: 'local' | 'netdisk'
+  target: 'local' | 'netdisk' // type 和target一致
   name: string
   readonly key: string
   path?: string
@@ -45,7 +48,7 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
   const enableThumbnail = ref(true)
   const stackViewSplit = ref(50)
   const autoUploadRecvDir = ref('/')
-  const emptyPane: TabPane = { type: 'empty', name: '空启动页', key: uniqueId() }
+  const emptyPane: TabPane = { type: 'empty', name: t('emptyStartPage'), key: uniqueId() }
   const tabList = ref<Tab[]>([ID({ panes: [emptyPane], key: emptyPane.key })])
   const dragingTab = ref<{ tabIdx: number, paneIdx: number }>()
   const recent = ref(new Array<{ path: string, key: string, target: string }>())
@@ -84,7 +87,18 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
   const gridThumbnailSize = ref(256)
   const largeGridThumbnailSize = ref(512)
 
+  const lang = ref(getPreferredLang())
+  watch(lang, v => i18n.global.locale.value = v as any)
+
+  const openBaiduYunIfNotLogged = (tabIdx: number, paneIdx: number) => {
+    if (!user.value) {
+      const pane: FileTransferTabPane = { key: uniqueId(), type: 'netdisk',  target: 'netdisk', name: t('login') }
+      tabList.value[tabIdx].panes[paneIdx] = pane
+      tabList.value[tabIdx].key = pane.key
+    }
+  }
   return {
+    lang,
     user,
     tabList,
     conf,
@@ -99,10 +113,11 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     gridThumbnailSize,
     largeGridThumbnailSize,
     createTaskRecordPaneIfNotExist,
+    openBaiduYunIfNotLogged,
     ...typedEventEmitter<{ createNewTask: Partial<UploadTaskSummary> }>()
   }
 }, {
   persist: {
-    paths: ['enableThumbnail', 'lastTabListRecord', 'stackViewSplit', 'autoUploadRecvDir', 'recent', 'gridThumbnailSize', 'largeGridThumbnailSize']
+    paths: ['lang', 'enableThumbnail', 'lastTabListRecord', 'stackViewSplit', 'autoUploadRecvDir', 'recent', 'gridThumbnailSize', 'largeGridThumbnailSize']
   }
 })
