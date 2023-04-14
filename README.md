@@ -37,7 +37,8 @@
 
 
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/230064374-47ba209e-562b-47b8-a2ce-d867e3afe204.png">
-<img width="1879" alt="image" src="https://user-images.githubusercontent.com/25872019/232162134-1a21dc43-51a7-44de-9545-9b3412027376.png">
+
+<img width="1906" alt="image" src="https://user-images.githubusercontent.com/25872019/232167416-32a8b19d-b766-4f98-88f6-a1d48eaebec0.png">
 
 ### 右键菜单
 <img width="517" alt="image" src="https://user-images.githubusercontent.com/25872019/230896820-26344b09-2297-4a2f-a6a7-4c2f0edb8a2c.png">
