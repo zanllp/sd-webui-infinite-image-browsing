@@ -14,7 +14,7 @@ If you have any questions or suggestions about this project, please submit an is
 - Multi-tab and multi-pane like Chrome and VS Code. Create tabs and preview multiple folders, move files between panes.
 - Supports walk mode to browse images without pagination. Tested to work normally with 12000+ files.
 - View image generation information, send images to other tabs, optional thumbnail preview, full-screen preview, and move.
-- Preview based on file tree structure, with enough optimization to avoid pagination even with multiple files.
+- Preview based on the file tree structure, supports basic file operations as well as multi-select deletion/moving.
 - Supports file transfer with Baidu Cloud, with dependencies downloaded only when necessary. Use drag and drop to upload and download files, and support Shift and Ctrl for multiple selection. Supports multiple tasks simultaneously.
 
 [Video demos can be viewed on Bilibili](https://space.bilibili.com/27227392/channel/series)
