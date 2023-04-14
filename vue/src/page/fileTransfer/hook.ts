@@ -5,7 +5,7 @@ import { ref, computed, watch, onMounted, h, reactive } from 'vue'
 
 import { downloadBaiduyun, genInfoCompleted, getImageGenerationInfo, setImgPath } from '@/api'
 import { isAxiosError } from 'axios'
-import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook, copy2clipboard, Task, delay, FetchQueue, typedEventEmitter } from 'vue3-ts-util'
+import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook, copy2clipboard, delay, FetchQueue, typedEventEmitter } from 'vue3-ts-util'
 import { gradioApp, isImageFile } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
@@ -18,6 +18,8 @@ import { Modal, message } from 'ant-design-vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { nextTick } from 'vue'
 import { loginByBduss } from '@/api/user'
+import { t } from '@/i18n'
+import { locale } from '@/i18n'
 
 const global = useGlobalStore()
 export const toRawFileUrl = (file: FileNodeInfo, download = false) => `/baidu_netdisk/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
@@ -127,7 +129,7 @@ export const useBaiduyun = () => {
       global.user = await loginByBduss(bduss.value)
     } catch (error) {
       console.error(error)
-      message.error(isAxiosError(error) ? error.response?.data?.detail ?? '未知错误' : '未知错误')
+      message.error(isAxiosError(error) ? error.response?.data?.detail ?? t('unknownError') : t('unknownError'))
     } finally {
       baiduyunLoading.value = false
     }
@@ -169,7 +171,7 @@ export function usePreview (props: Props) {
   const loadNextIfNeeded = () => {
     if (props.walkMode && props.target === 'local') {
       if (!canPreview('next') && canLoadNext) {
-        message.info('即将加载下一个文件夹的文件')
+        message.info(t('loadingNextFolder'))
         eventEmitter.value.emit('loadNextDir')
       }
     }
@@ -250,7 +252,7 @@ export function usePreview (props: Props) {
 export function useLocation (props: Props) {
   const np = ref<Progress.NProgress>()
   const { installedBaiduyun, scroller, stackViewEl, stack, currPage, currLocation, basePath
-    , sortMethod, useEventListen ,walkModePath
+    , sortMethod, useEventListen, walkModePath
   } = useHookShareState().toRefs()
 
   watch(() => stack.value.length, debounce((v, lv) => {
@@ -373,7 +375,7 @@ export function useLocation (props: Props) {
       }
     } catch (error) {
       console.error(dir)
-      message.error('移动失败，检查你的路径输入')
+      message.error(t('moveFailedCheckPath'))
       stack.value = backup
       throw error
     }
@@ -423,10 +425,10 @@ export function useFilesDisplay (props: Props) {
   const { state } = useHookShareState()
   const moreActionsDropdownShow = ref(false)
   const viewMode = ref<ViewMode>('grid')
-  const viewModeMap: Record<ViewMode, string> = { line: '详情列表', 'grid': '预览网格', 'large-size-grid': '大尺寸预览网格' }
+  const viewModeMap: Record<ViewMode, string> = { line: t('detailList'), 'grid': t('previewGrid'), 'large-size-grid': t('largePreviewGrid') }
   const sortMethodConv: SearchSelectConv<SortMethod> = {
     value: (v) => v,
-    text: (v) => '按' + sortMethodMap[v]
+    text: (v) => t('sortBy') + ' ' + sortMethodMap[v].toLocaleLowerCase()
   }
   const gridSize = 272
   const profileHeight = 64
@@ -567,11 +569,11 @@ export function useFileTransfer (props: Props) {
       }
       if (props.target == data.from) {
         const content = h('div', [
-          h('div', `下列文件移动至${toPath}`),
+          h('div', `${t('moveSelectedFilesTo')}${toPath}`),
           h('ol', data.path.map(v => v.split(/[/\\]/).pop()).map(v => h('li', v))),
         ])
         Modal.confirm({
-          title: `确定?`,
+          title: t('confirm'),
           content,
           maskClosable: true,
           async onOk () {
@@ -582,14 +584,14 @@ export function useFileTransfer (props: Props) {
         })
       } else {
         const type = data.from === 'local' ? 'upload' : 'download'
-        const typeZH = type === 'upload' ? '上传' : '下载'
+        const typeT = type === 'upload' ? t('upload') : t('download')
         const content = h('div', [
-          h('div', `从 ${props.target !== 'local' ? '本地' : '云盘'} `),
+          h('div', `${locale.value === 'en' ? 'from' : '从'} ${props.target !== 'local' ? t('local') : t('cloud')} `),
           h('ol', data.path.map(v => v.split(/[/\\]/).pop()).map(v => h('li', v))),
-          h('div', `${typeZH} ${props.target === 'local' ? '本地' : '云盘'} ${toPath}`)
+          h('div', `${typeT} ${props.target === 'local' ? t('local') : t('cloud')} ${toPath}`)
         ])
         Modal.confirm({
-          title: `确定创建${typeZH}任务${data.includeDir ? ', 这是文件夹或者包含文件夹!' : ''}`,
+          title: t('confirmCreateTask', { type: typeT, more: locale.value === 'zh' ? ', 这是文件夹或者包含文件夹!' : ',which contains folders!' }),
           content,
           maskClosable: true,
           async onOk () {
@@ -614,7 +616,7 @@ export function useFileTransfer (props: Props) {
 export function useFileItemActions (props: Props, { openNext }: { openNext: (file: FileNodeInfo) => Promise<void> }) {
   const showGenInfo = ref(false)
   const imageGenInfo = ref('')
-  const { sortedFiles, previewIdx, multiSelectedIdxs, stack, currLocation,spinning } = useHookShareState().toRefs()
+  const { sortedFiles, previewIdx, multiSelectedIdxs, stack, currLocation, spinning } = useHookShareState().toRefs()
 
   useEventListen('removeFiles', ([paths, loc]: [paths: string[], loc: string]) => {
     if (loc !== currLocation.value) {
@@ -662,7 +664,7 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
         await setImgPath(file.fullpath) // 设置图像路径
         const btn = gradioApp().querySelector('#bd_hidden_img_update_trigger')! as HTMLButtonElement
         btn.click() // 触发图像组件更新
-        ok(await genInfoCompleted(), '图像信息生成超时') // 等待消息生成完成
+        ok(await genInfoCompleted(), 'genInfoCompleted timeout') // 等待消息生成完成
         const tabBtn = gradioApp().querySelector(`#bd_hidden_tab_${tab}`) as HTMLButtonElement
         tabBtn.click() // 触发粘贴
       } catch (error) {
@@ -673,7 +675,7 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
       }
     }
     switch (e.key) {
-      case 'openInNewWindow': return window.open(url)
+      case 'previewInNewWindow': return window.open(url)
       case 'download': return window.open(toRawFileUrl(file, true))
       case 'copyPreviewUrl': return copy2clipboard(location.host + url)
       case 'send2txt2img': return copyImgTo('txt2img')
@@ -693,12 +695,12 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
           selectedFiles.push(file)
         }
         Modal.confirm({
-          title: '确认删除？',
+          title: t('confirmDelete'),
           content: h('ol', { style: 'max-height:50vh;overflow:auto;' }, selectedFiles.map(v => v.fullpath.split(/[/\\]/).pop()).map(v => h('li', v))),
           async onOk () {
             const paths = selectedFiles.map(v => v.fullpath)
             await deleteFiles(props.target, paths)
-            message.success('删除成功')
+            message.success(t('deleteSuccess'))
             events.emit('removeFiles', [paths, currLocation.value])
           },
         })

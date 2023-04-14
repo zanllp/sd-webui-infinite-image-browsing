@@ -1,4 +1,5 @@
 import { checkPathExists, type getGlobalSetting } from '@/api'
+import { t } from '@/i18n'
 import { pick, type ReturnTypeAsync } from '@/util'
 
 export const getAutoCompletedTagList = async ({
@@ -30,18 +31,18 @@ export const getAutoCompletedTagList = async ({
   const exists = await checkPathExists(Object.values(pathMap).filter(v => v))
   type Keys = keyof typeof pathMap
   const cnMap: Record<Keys, string> = {
-    outdir_txt2img_samples: '文生图',
-    outdir_img2img_samples: '图生图',
-    outdir_save: '使用“保存”按钮保存图像的目录',
-    outdir_extras_samples: '附加',
-    additional_networks_extra_lora_path: 'LoRA 模型',
-    outdir_grids: '宫格图',
-    outdir_img2img_grids: '图生图网格',
-    outdir_samples: '图像',
-    outdir_txt2img_grids: '文生图宫格',
-    hypernetworks: '超网络模型',
+    outdir_txt2img_samples: t('t2i'),
+    outdir_img2img_samples: t('i2i'),
+    outdir_save: t('saveButtonSavesTo'),
+    outdir_extras_samples: t('extra'),
+    additional_networks_extra_lora_path: 'LoRA',
+    outdir_grids: t('gridImage'),
+    outdir_img2img_grids: t('i2i-grid'),
+    outdir_samples: t('image'),
+    outdir_txt2img_grids: t('t2i-grid'),
+    hypernetworks: t('hypernetworks'),
     embeddings: 'Embedding',
-    cwd: '工作文件夹',
+    cwd: t('workingFolder'),
     home: 'home'
   }
   return Object.keys(cnMap)

@@ -23,6 +23,8 @@ const { showDirAutoCompletedIdx } = storeToRefs(store)
 const pollTaskMap = new Map<string, ReturnType<typeof createPollTask>>()
 const loadNum = ref(10)
 
+onMounted(() => globalStore.openBaiduYunIfNotLogged(props.tabIdx, props.paneIdx))
+
 onBeforeUnmount(() => {
   pollTaskMap.forEach(v => v.clearTask())
 })

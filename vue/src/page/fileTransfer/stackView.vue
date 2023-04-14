@@ -49,8 +49,7 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
     <ASelect style="display: none;"></ASelect>
     <div v-if="props.target === 'netdisk' && (!installedBaiduyun || !global.user)" class="uninstalled-hint">
       <template v-if="!installedBaiduyun">
-
-        <div>尚未安装依赖，当前不可用</div>
+        <div>{{ $t('dependenciesNotInstalled') }}</div>
         <AButton type="primary" :loading="baiduyunLoading" @click="installBaiduyunBin">点此安装</AButton>
         <p v-if="failedHint">{{ failedHint }}</p>
       </template>
@@ -64,7 +63,7 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
               <template #icon>
                 <login-outlined />
               </template>
-              登录
+              {{ $t('login') }}
             </a-button>
           </a-form-item>
         </a-form>
@@ -76,7 +75,7 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
         <ASkeleton active :loading="!q.isIdle">
           <div style="width: 100%; word-break: break-all;white-space: pre-line;max-height: 70vh;overflow: auto;"
             @dblclick="copy2clipboard(imageGenInfo, 'copied')">
-            双击复制
+            <div class="hint">{{ $t('doubleClickToCopy') }}</div>
             {{ imageGenInfo }}
           </div>
         </ASkeleton>
@@ -85,16 +84,16 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
         <div class="breadcrumb">
           <a-breadcrumb style="flex: 1">
             <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx"><a @click.prevent="back(idx)">{{
-              item.curr === '/' ? '根' : item.curr.replace(/:\/$/, '盘')
+              item.curr === '/' ? $t('root') : item.curr.replace(/:\/$/, $t('drive'))
             }}</a></a-breadcrumb-item>
           </a-breadcrumb>
         </div>
         <div class="actions">
 
-          <a class="opt" @click.prevent="refresh"> 刷新 </a>
+          <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
           <a-dropdown v-if="props.target === 'local'">
             <a class="opt" @click.prevent>
-              快速移动
+              {{ $t('quickMove') }}
               <down-outlined />
             </a>
             <template #overlay>
@@ -109,27 +108,27 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
           <a-dropdown :trigger="['click']" v-model:visible="moreActionsDropdownShow" placement="bottomLeft"
             :getPopupContainer="trigger => trigger.parentNode as HTMLDivElement">
             <a class="opt" @click.prevent>
-              更多
+              {{ $t('more') }}
             </a>
             <template #overlay>
               <div
-                style="  width: 384px; background: white; padding: 16px; border-radius: 4px; box-shadow: 0 0 4px #aaa; border: 1px solid #aaa;">
+                style="  width: 512px; background: white; padding: 16px; border-radius: 4px; box-shadow: 0 0 4px #aaa; border: 1px solid #aaa;">
                 <a-form v-bind="{
                   labelCol: { span: 6 },
                   wrapperCol: { span: 18 }
                 }">
-                  <a-form-item label="查看模式">
+                  <a-form-item :label="$t('viewMode')">
                     <search-select v-model:value="viewMode" @click.stop
                       :conv="{ value: v => v, text: v => viewModeMap[v as ViewMode] }"
                       :options="Object.keys(viewModeMap)" />
                   </a-form-item>
-                  <a-form-item label="排序方法">
+                  <a-form-item :label="$t('sortingMethod')">
 
                     <search-select v-model:value="sortMethod" @click.stop :conv="sortMethodConv"
                       :options="Object.keys(sortMethodMap)" />
                   </a-form-item>
                   <a-form-item>
-                    <a @click.prevent="copyLocation">复制路径</a>
+                    <a @click.prevent="copyLocation">{{ $t('copyPath') }}</a>
                     <folder-navigator :loc="currLocation" @to="to" />
                   </a-form-item>
                 </a-form>
@@ -192,17 +191,17 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
               </li>
               <template #overlay>
                 <a-menu @click="onContextMenuClick($event, file, idx)">
-                  <a-menu-item key="deleteFiles">删除选中</a-menu-item>
+                  <a-menu-item key="deleteFiles">{{ $t('deleteSelected') }}</a-menu-item>
                   <template v-if="file.type === 'file' && props.target === 'local'">
-                    <a-menu-item key="openInNewWindow">在新窗口预览（如果浏览器处理不了会下载，大文件的话谨慎）</a-menu-item>
-                    <a-menu-item key="download">直接下载（大文件的话谨慎）</a-menu-item>
-                    <a-menu-item key="copyPreviewUrl">复制源文件预览链接</a-menu-item>
+                    <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
+                    <a-menu-item key="download">{{ $t('downloadDirectly') }}</a-menu-item>
+                    <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
                     <template v-if="isImageFile(file.name)">
-                      <a-menu-item key="viewGenInfo">查看生成信息(prompt等)</a-menu-item>
-                      <a-menu-item key="send2txt2img">发送到文生图</a-menu-item>
-                      <a-menu-item key="send2img2img">发送到图生图</a-menu-item>
-                      <a-menu-item key="send2inpaint">发送到局部重绘</a-menu-item>
-                      <a-menu-item key="send2extras">发送到附加功能</a-menu-item>
+                      <a-menu-item key="viewGenInfo">{{ $t('viewGenerationInfo') }}</a-menu-item>
+                      <a-menu-item key="send2txt2img">{{ $t('sendToTxt2img') }}</a-menu-item>
+                      <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
+                      <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
+                      <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
                     </template>
                   </template>
                 </a-menu>
@@ -212,7 +211,7 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
           <template v-if="props.walkMode" #after>
             <AButton @click="loadNextDir" :loading="loadNextDirLoading" block type="primary" :disabled="!canLoadNext"
               ghost>
-              加载下一页</AButton>
+              {{ $t('loadNextPage') }}</AButton>
           </template>
         </RecycleScroller>
         <div v-if="previewing" class="preview-switch">
@@ -399,5 +398,11 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
       }
     }
   }
+}
+.hint {
+  padding: 4px;
+  border: 4px;
+  background: var(--zp-secondary-background);
+  border: 1px solid var(--zp-border);
 }
 </style>

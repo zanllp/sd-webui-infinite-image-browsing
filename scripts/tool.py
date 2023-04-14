@@ -119,3 +119,11 @@ def get_temp_path():
     return temp_path
 
 temp_path = get_temp_path()
+
+
+def get_locale():
+    import locale
+    lang, _ = locale.getdefaultlocale()
+    return 'zh' if lang.startswith('zh') else 'en'
+
+locale = get_locale()

@@ -1,9 +1,7 @@
-from fastapi import FastAPI
 from scripts.api import baidu_netdisk_api, send_img_path, AutoUpload
 from modules import script_callbacks, generation_parameters_copypaste as send, extras
-from scripts.tool import cwd, debounce
+from scripts.tool import locale
 from PIL import Image
-from scripts.logger import logger
 
 
 """
@@ -14,7 +12,7 @@ api函数声明和启动分离方便另外一边被外部调用
 
 def on_ui_tabs():
     import gradio as gr
-    with gr.Blocks(analytics_enabled=False) as baidu_netdisk:
+    with gr.Blocks(analytics_enabled=False) as view:
         with gr.Row():
             with gr.Column():
                 gr.HTML(
@@ -51,7 +49,7 @@ def on_ui_tabs():
                 )
             )
 
-        return ((baidu_netdisk, "无边图像浏览", "infinite-image-browsing"),)
+        return ((view, "无边图像浏览" if locale == "zh" else "Infinite image browsing", "infinite-image-browsing"),)
 
 
 
