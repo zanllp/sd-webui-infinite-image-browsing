@@ -25,8 +25,9 @@ It is strongly recommended to use "Open in new tab" (in the upper right corner o
 
 ## Preview
 
-<img width="1901" alt="image" src="https://user-images.githubusercontent.com/25872019/232162078-71dc4165-783c-4f52-a698-6625f9983ec2.png">
-<img width="1879" alt="image" src="https://user-images.githubusercontent.com/25872019/232162134-1a21dc43-51a7-44de-9545-9b3412027376.png">
+<img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/232167682-67f83b00-4391-4394-a7f6-6e4c9d11f252.png">
+
+<img width="1906" alt="image" src="https://user-images.githubusercontent.com/25872019/232167416-32a8b19d-b766-4f98-88f6-a1d48eaebec0.png">
 
 ### Right-click menu
 <img width="536" alt="image" src="https://user-images.githubusercontent.com/25872019/232162244-e728d510-b6c6-45e6-afb3-872bd67db05b.png">
