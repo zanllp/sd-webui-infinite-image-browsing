@@ -24,6 +24,6 @@ watch(dark, async (dark) => {
     darkStyle.setAttribute('antd-dark', '')
     head.appendChild(darkStyle)
   } else {
-    Array.from(head.querySelectorAll('style[antd-dark]')).forEach(e => e.remove()) // for dev
+    Array.from(head.querySelectorAll('style[antd-dark]')).forEach(e => e.remove()) 
   }
 }, { immediate: true })

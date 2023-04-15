@@ -5,11 +5,11 @@ import { ref, computed, watch, onMounted, h, reactive } from 'vue'
 
 import { downloadBaiduyun, genInfoCompleted, getImageGenerationInfo, setImgPath } from '@/api'
 import { isAxiosError } from 'axios'
-import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook, copy2clipboard, delay, FetchQueue, typedEventEmitter } from 'vue3-ts-util'
+import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook, copy2clipboard, delay, FetchQueue, typedEventEmitter, ID } from 'vue3-ts-util'
 import { gradioApp, isImageFile } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
-import { cloneDeep, debounce, last, range, uniqBy } from 'lodash-es'
+import { cloneDeep, debounce, last, range, uniqBy, uniqueId } from 'lodash-es'
 import path from 'path-browserify'
 import type Progress from 'nprogress'
 // @ts-ignore
@@ -20,6 +20,8 @@ import { nextTick } from 'vue'
 import { loginByBduss } from '@/api/user'
 import { t } from '@/i18n'
 import { locale } from '@/i18n'
+
+export const stackCache = new Map<string, Page[]>()
 
 const global = useGlobalStore()
 export const toRawFileUrl = (file: FileNodeInfo, download = false) => `/baidu_netdisk/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
@@ -145,7 +147,7 @@ export const useBaiduyun = () => {
   }
 }
 
-interface Page {
+export interface Page {
   files: FileNodeInfo[]
   walkFiles?: FileNodeInfo[][] // 使用walk时，各个文件夹之间分散排序，避免创建时间不同的带来的干扰
   curr: string
@@ -265,11 +267,13 @@ export function useLocation (props: Props) {
     if (props.target === 'netdisk' && installedBaiduyun.value) {
       return
     }
-    const resp = await getTargetFolderFiles(props.target, '/')
-    stack.value.push({
-      files: resp.files,
-      curr: '/'
-    })
+    if (!stack.value.length) { // 有传入stack时直接使用传入的
+      const resp = await getTargetFolderFiles(props.target, '/')
+      stack.value.push({
+        files: resp.files,
+        curr: '/'
+      })
+    }
     np.value = new NProgress()
     np.value!.configure({ parent: stackViewEl.value as any })
     if (props.path && props.path !== '/') {
@@ -340,7 +344,7 @@ export function useLocation (props: Props) {
   }
 
   const to = async (dir: string, refreshIfCurrPage = true) => {
-    const backup = cloneDeep(stack.value)
+    const backup = stack.value.slice()
     try {
       if (!/^((\w:)|\/)/.test(dir)) {
         // 相对路径
@@ -655,6 +659,7 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
 
   const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfo, idx: number) => {
     const url = toRawFileUrl(file)
+    const path = currLocation.value
     const copyImgTo = async (tab: ["txt2img", "img2img", "inpaint", "extras"][number]) => {
       if (spinning.value) {
         return
@@ -682,6 +687,40 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
       case 'send2img2img': return copyImgTo('img2img')
       case 'send2inpaint': return copyImgTo('inpaint')
       case 'send2extras': return copyImgTo('extras')
+      case 'openInNewTab': {
+        stackCache.set(path, stack.value)
+        const tab = global.tabList[props.tabIdx]
+        const pane: FileTransferTabPane = {
+          type: props.target,
+          target: props.target,
+          key: uniqueId(),
+          path: file.fullpath,
+          name: props.target === 'local' ? t('local') : t('cloud'),
+          stackKey: path
+        }
+        tab.panes.push(pane)
+        tab.key = pane.key
+        break
+      }
+      case 'openOnTheRight': {
+        stackCache.set(path, stack.value)
+        let tab = global.tabList[props.tabIdx + 1]
+        if (!tab) {
+          tab = ID({ panes: [], key: '' })
+          global.tabList[props.tabIdx + 1] = tab
+        }
+        const pane: FileTransferTabPane = {
+          type: props.target,
+          target: props.target,
+          key: uniqueId(),
+          path: file.fullpath,
+          name: props.target === 'local' ? t('local') : t('cloud'),
+          stackKey: path
+        }
+        tab.panes.push(pane)
+        tab.key = pane.key
+        break
+      }
       case 'viewGenInfo': {
         showGenInfo.value = true
         imageGenInfo.value = await q.pushAction(() => getImageGenerationInfo(file.fullpath)).res
@@ -696,6 +735,7 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
         }
         Modal.confirm({
           title: t('confirmDelete'),
+          maskClosable: true,
           content: h('ol', { style: 'max-height:50vh;overflow:auto;' }, selectedFiles.map(v => v.fullpath.split(/[/\\]/).pop()).map(v => h('li', v))),
           async onOk () {
             const paths = selectedFiles.map(v => v.fullpath)
