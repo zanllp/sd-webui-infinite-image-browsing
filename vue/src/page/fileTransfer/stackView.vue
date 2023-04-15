@@ -12,8 +12,6 @@ import { isImageFile } from '@/util'
 import { RecycleScroller } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { watch } from 'vue'
-import { toRaw } from 'vue'
-import { cloneDeep } from 'lodash-es'
 
 
 const global = useGlobalStore()
@@ -208,6 +206,7 @@ watch(() => props, () => {
                   <template v-if="file.type === 'dir'">
                     <a-menu-item key="openInNewTab">{{ $t('openInNewTab') }}</a-menu-item>
                     <a-menu-item key="openOnTheRight">{{ $t('openOnTheRight') }}</a-menu-item>
+                    <a-menu-item key="openWithWalkMode">{{ $t('openWithWalkMode') }}</a-menu-item>
                   </template>
                   <template v-if="file.type === 'file' && props.target === 'local'">
                     <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
