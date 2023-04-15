@@ -2,7 +2,7 @@
 import { FileOutlined, FolderOpenOutlined, DownOutlined, LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 import { sortMethodMap } from './fileSort'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { useFileTransfer, useFilesDisplay, useHookShareState, useLocation, usePreview, type ViewMode, useFileItemActions, toImageThumbnailUrl, toRawFileUrl } from './hook'
+import { useFileTransfer, useFilesDisplay, useHookShareState, useLocation, usePreview, type ViewMode, useFileItemActions, toImageThumbnailUrl, toRawFileUrl, stackCache } from './hook'
 import { copy2clipboard, SearchSelect, fallbackImage } from 'vue3-ts-util'
 
 import 'multi-nprogress/nprogress.css'
@@ -12,6 +12,8 @@ import { isImageFile } from '@/util'
 import { RecycleScroller } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { watch } from 'vue'
+import { toRaw } from 'vue'
+import { cloneDeep } from 'lodash-es'
 
 
 const global = useGlobalStore()
@@ -19,20 +21,20 @@ const props = defineProps<{
   target: 'local' | 'netdisk',
   tabIdx: number,
   paneIdx: number,
+  /**
+   * 初始打开路径
+   */
   path?: string,
   walkMode?: boolean,
+  /**
+   * 页面栈,跳过不必要的api请求
+   */
+  stackKey?: string
 }>()
 const { installBaiduyunBin, installedBaiduyun, failedHint, baiduyunLoading,
   scroller, walkModePath, stackViewEl, props: _props, bduss, onLoginBtnClick, multiSelectedIdxs,
   spinning
 } = useHookShareState().toRefs()
-watch(() => props, () => {
-  _props.value = props
-  if (props.walkMode) {
-    walkModePath.value = props.path
-  }
-}, { immediate: true })
-
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to } = useLocation(props)
 const { gridItems, sortMethodConv, moreActionsDropdownShow,
   sortedFiles, sortMethod, viewMode, viewModeMap, itemSize,
@@ -41,6 +43,17 @@ const { gridItems, sortMethodConv, moreActionsDropdownShow,
 const { onDrop, onFileDragStart } = useFileTransfer(props)
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions(props, { openNext })
 const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } = usePreview(props)
+
+watch(() => props, () => {
+  _props.value = props
+  if (props.walkMode) {
+    walkModePath.value = props.path
+  }
+  const stackC = stackCache.get(props.stackKey ?? '')
+  if (stackC) {
+    stack.value = stackC.slice() // 浅拷贝
+  }
+}, { immediate: true })
 
 
 </script>
@@ -192,6 +205,10 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
               <template #overlay>
                 <a-menu @click="onContextMenuClick($event, file, idx)">
                   <a-menu-item key="deleteFiles">{{ $t('deleteSelected') }}</a-menu-item>
+                  <template v-if="file.type === 'dir'">
+                    <a-menu-item key="openInNewTab">{{ $t('openInNewTab') }}</a-menu-item>
+                    <a-menu-item key="openOnTheRight">{{ $t('openOnTheRight') }}</a-menu-item>
+                  </template>
                   <template v-if="file.type === 'file' && props.target === 'local'">
                     <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
                     <a-menu-item key="download">{{ $t('downloadDirectly') }}</a-menu-item>
@@ -399,6 +416,7 @@ const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPrevi
     }
   }
 }
+
 .hint {
   padding: 4px;
   border: 4px;

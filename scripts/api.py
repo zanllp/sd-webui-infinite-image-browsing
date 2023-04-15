@@ -246,8 +246,7 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
         if target == "local":
             for path in req.file_paths:
                 try:
-                    # 删除文件
-                    os.remove(path)
+                    shutil.rmtree(path)
                 except OSError as e:
                     # 处理删除失败的情况
                     raise HTTPException(400, detail=f"删除文件{path}时出错：{e}")

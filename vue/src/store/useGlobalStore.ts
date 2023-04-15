@@ -4,12 +4,14 @@ import { i18n, t } from '@/i18n'
 import { getPreferredLang } from '@/i18n'
 import type { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
 import type { ReturnTypeAsync } from '@/util'
+import { message } from 'ant-design-vue'
 import { uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { watch } from 'vue'
 import { nextTick } from 'vue'
 import { ref } from 'vue'
 import { typedEventEmitter, type UniqueId, ID } from 'vue3-ts-util'
+
 
 interface OtherTabPane {
   type: 'auto-upload' | 'task-record' | 'empty' | 'log-detail' | 'global-setting'
@@ -32,6 +34,7 @@ export interface FileTransferTabPane {
   readonly key: string
   path?: string
   walkMode?: boolean
+  stackKey?: string
 }
 
 export type TabPane = FileTransferTabPane | OtherTabPane | LogDetailTabPane
@@ -40,6 +43,7 @@ export interface Tab extends UniqueId {
   panes: TabPane[]
   key: string
 }
+
 
 export const useGlobalStore = defineStore('useGlobalStore', () => {
   const conf = ref<GlobalConf>()
@@ -92,7 +96,8 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
 
   const openBaiduYunIfNotLogged = (tabIdx: number, paneIdx: number) => {
     if (!user.value) {
-      const pane: FileTransferTabPane = { key: uniqueId(), type: 'netdisk',  target: 'netdisk', name: t('login') }
+      message.info(t('loginPrompt'))
+      const pane: FileTransferTabPane = { key: uniqueId(), type: 'netdisk', target: 'netdisk', name: t('baiduCloud') + '  ' + t('login') }
       tabList.value[tabIdx].panes[paneIdx] = pane
       tabList.value[tabIdx].key = pane.key
     }

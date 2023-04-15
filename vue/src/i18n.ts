@@ -60,8 +60,8 @@ const messages = {
     "downloadDirectly": "直接下载（大文件的话谨慎）",
     "copySourceFilePreviewLink": "复制源文件预览链接",
     "viewGenerationInfo": "查看生成信息(prompt等)",
-    "sendTot2i": "发送到文生图",
-    "sendToi2i": "发送到图生图",
+    "sendToTxt2img": "发送到文生图",
+    "sendToImg2img": "发送到图生图",
     "sendToInpaint": "发送到局部重绘",
     "sendToExtraFeatures": "发送到附加功能",
     "loadNextPage": "加载下一页",
@@ -91,7 +91,10 @@ const messages = {
     "workingFolder": "工作文件夹",
     lang: "语言",
     'langChangeReload': '重新加载: 一些变化可能需要在重新加载后生效',
-    hypernetworks: '超网络模型'
+    hypernetworks: '超网络模型',
+    openOnTheRight: "在右边打开",
+    openInNewTab: '在新标签打开',
+    loginPrompt: '这个功能要求你先使用BDUSS登录到百度云盘。'
   },
   "en": {
     "errorOccurred": "An error occurred",
@@ -139,7 +142,7 @@ const messages = {
     "login": "Login",
     "doubleClickToCopy": "Double-click to copy",
     "root": "Root",
-    "drive": "Drive",
+    "drive": " drive",
     "refresh": "Refresh",
     "quickMove": "Quick move",
     "more": "More",
@@ -182,7 +185,10 @@ const messages = {
     "workingFolder": "Working folder",
     lang: "Language",
     'langChangeReload': 'Reload: Some changes may require a reload to take effect',
-    hypernetworks: 'hypernetworks'
+    hypernetworks: 'hypernetworks',
+    openOnTheRight: "Open on the right",
+    openInNewTab: 'Open in a new tab',
+    loginPrompt: 'This feature requires you to log in to Baidu Cloud Drive using your BDUSS.'
   }
 }
 
