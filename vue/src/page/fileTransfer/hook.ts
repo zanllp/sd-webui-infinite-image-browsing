@@ -20,6 +20,7 @@ import { nextTick } from 'vue'
 import { loginByBduss } from '@/api/user'
 import { t } from '@/i18n'
 import { locale } from '@/i18n'
+import { CloudServerOutlined, DatabaseOutlined } from '@/icon'
 
 export const stackCache = new Map<string, Page[]>()
 
@@ -308,6 +309,17 @@ export function useLocation (props: Props) {
   watch(currLocation, debounce((loc) => {
     const pane = global.tabList[props.tabIdx].panes[props.paneIdx] as FileTransferTabPane
     pane.path = loc
+    const filename = pane.path!.split('/').pop()
+    const getTitle = () => {
+      if (!props.walkMode) {
+        return filename
+      }
+      return 'Walk: ' +  (global.autoCompletedDirList.find(v => v.dir === walkModePath.value)?.zh ?? filename)
+    }
+    pane.name = h('div', { style: 'display:flex;align-items:center' }, [
+      h(props.target === 'local' ? DatabaseOutlined : CloudServerOutlined),
+      h('span', { class: 'line-clamp-1', style: 'max-width: 256px' }, getTitle())
+    ]) as any as string
     global.recent = global.recent.filter(v => v.key !== pane.key)
     global.recent.unshift({ path: loc, target: pane.target, key: pane.key })
     if (global.recent.length > 20) {
@@ -687,6 +699,22 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
       case 'send2img2img': return copyImgTo('img2img')
       case 'send2inpaint': return copyImgTo('inpaint')
       case 'send2extras': return copyImgTo('extras')
+      case 'openWithWalkMode': {
+        stackCache.set(path, stack.value)
+        const tab = global.tabList[props.tabIdx]
+        const pane: FileTransferTabPane = {
+          type: props.target,
+          target: props.target,
+          key: uniqueId(),
+          path: file.fullpath,
+          name: props.target === 'local' ? t('local') : t('cloud'),
+          stackKey: path,
+          walkMode: true
+        }
+        tab.panes.push(pane)
+        tab.key = pane.key
+        break
+      }
       case 'openInNewTab': {
         stackCache.set(path, stack.value)
         const tab = global.tabList[props.tabIdx]
