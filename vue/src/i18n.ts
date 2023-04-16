@@ -96,7 +96,7 @@ const messages = {
     openInNewTab: '在新标签打开',
     loginPrompt: '这个功能要求你先使用BDUSS登录到百度云盘。',
     openWithWalkMode: '使用 Walk 模式打开',
-    longPressOpenContextMenu: '使用支持使用长按打开右键菜单'
+    longPressOpenContextMenu: '支持使用长按打开右键菜单'
   },
   "en": {
     "errorOccurred": "An error occurred",
