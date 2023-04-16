@@ -50,4 +50,4 @@ https://user-images.githubusercontent.com/25872019/230768207-daab786b-d4ab-489f-
 
 You need to enable "Support long press to open right-click menu" in the global settings first, and then use long press to perform the operation instead of right-clicking to open the right-click menu.
 
-<img  alt="image" src="https://user-images.githubusercontent.com/25872019/232274767-cc0ec850-343c-416c-aa80-2c85c76a05d8.jpg">
+![Screenshot_20230416_141759_com android chrome](https://user-images.githubusercontent.com/25872019/232276303-c175e78a-d127-4afd-9281-85080bf75c5a.jpg)
