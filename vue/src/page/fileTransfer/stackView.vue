@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { FileOutlined, FolderOpenOutlined, DownOutlined, LeftCircleOutlined, RightCircleOutlined } from '@/icon'
+import { FileOutlined, FolderOpenOutlined, DownOutlined, LeftCircleOutlined, RightCircleOutlined, LoginOutlined } from '@/icon'
 import { sortMethodMap } from './fileSort'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { useFileTransfer, useFilesDisplay, useHookShareState, useLocation, usePreview, type ViewMode, useFileItemActions, toImageThumbnailUrl, toRawFileUrl, stackCache } from './hook'
+import { useFileTransfer, useFilesDisplay, useHookShareState, useLocation, usePreview, type ViewMode, useFileItemActions, toImageThumbnailUrl, toRawFileUrl, stackCache, useMobileOptimization } from './hook'
 import { copy2clipboard, SearchSelect, fallbackImage } from 'vue3-ts-util'
 
 import 'multi-nprogress/nprogress.css'
@@ -41,6 +41,7 @@ const { gridItems, sortMethodConv, moreActionsDropdownShow,
 const { onDrop, onFileDragStart } = useFileTransfer(props)
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions(props, { openNext })
 const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } = usePreview(props)
+const { showMenuIdx } = useMobileOptimization()
 
 watch(() => props, () => {
   _props.value = props
@@ -149,14 +150,16 @@ watch(() => props, () => {
         </div>
       </div>
       <div v-if="currPage" class="view">
-        <RecycleScroller class="file-list" :items="sortedFiles" :prerender="10" ref="scroller" @scroll="onScroll"
+        <RecycleScroller class="file-list" :items="sortedFiles" ref="scroller" @scroll="onScroll"
           :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems">
           <template v-slot="{ item: file, index: idx }">
             <!-- idx 和file有可能丢失 -->
-            <a-dropdown :trigger="['contextmenu']">
-              <li class="file"
+            <a-dropdown :trigger="['contextmenu']"
+              :visible="!global.longPressOpenContextMenu ? undefined : ((typeof idx === 'number') && showMenuIdx === idx)"
+              @update:visible="v => ((typeof idx === 'number') && (showMenuIdx = v ? idx : -1))">
+              <li class="file file-item-trigger"
                 :class="{ clickable: file.type === 'dir', selected: multiSelectedIdxs.includes(idx), grid: viewMode === 'grid' || viewMode === 'large-size-grid', 'large-grid': viewMode === 'large-size-grid' }"
-                :key="file.name" draggable="true" @dragstart="onFileDragStart($event, idx)"
+                :data-idx="idx" :key="file.name" draggable="true" @dragstart="onFileDragStart($event, idx)"
                 @click.capture="onFileItemClick($event, file)">
                 <div v-if="viewMode !== 'line'">
                   <a-image :key="file.fullpath" :class="`idx-${idx}`"

@@ -38,6 +38,9 @@ const w = window
       <a-form-item :label="$t('largeGridThumbnailWidth')">
         <a-input-number v-model:value="globalStore.largeGridThumbnailSize" :min="256" :max="1024" /> (px)
       </a-form-item>
+      <a-form-item :label="$t('longPressOpenContextMenu')">
+        <a-switch v-model:checked="globalStore.longPressOpenContextMenu"></a-switch>
+      </a-form-item>
       <a-form-item :label="$t('lang')">
         <div class="lang-select-wrap">
           <a-select v-model:value="globalStore.lang" @change="langChanged = true" >

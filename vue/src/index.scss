@@ -75,6 +75,17 @@ $success-color: #28a745;
     --zp-border: var(--zp-grey96);
 
   }
+  body.dark {    
+    --zp-primary: var(--zp-grey20);
+    --zp-secondary: var(--zp-grey60);
+    --zp-tertiary: var(--zp-grey70);
+    --zp-primary-background: var(--zp-black);
+    --zp-secondary-background: var(--zp-grey96);
+    --zp-secondary-variant-background: var(--zp-grey90);
+    --zp-tertiary-background: var(--zp-grey4);
+    --zp-border: var(--zp-grey96);
+
+  }
 }
 
 .flex-placeholder,

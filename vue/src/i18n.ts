@@ -95,7 +95,8 @@ const messages = {
     openOnTheRight: "在右边打开",
     openInNewTab: '在新标签打开',
     loginPrompt: '这个功能要求你先使用BDUSS登录到百度云盘。',
-    openWithWalkMode: '使用 Walk 模式打开'
+    openWithWalkMode: '使用 Walk 模式打开',
+    longPressOpenContextMenu: '使用支持使用长按打开右键菜单'
   },
   "en": {
     "errorOccurred": "An error occurred",
@@ -190,7 +191,8 @@ const messages = {
     openOnTheRight: "Open on the right",
     openInNewTab: 'Open in a new tab',
     loginPrompt: 'This feature requires you to log in to Baidu Cloud Drive using your BDUSS.',
-    openWithWalkMode: 'Open with Walk Mode'
+    openWithWalkMode: 'Open with Walk Mode',
+    longPressOpenContextMenu: 'Support long press to open right-click menu'
   }
 }
 

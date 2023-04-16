@@ -102,6 +102,8 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
       tabList.value[tabIdx].key = pane.key
     }
   }
+
+  const longPressOpenContextMenu = ref(false)
   return {
     lang,
     user,
@@ -119,10 +121,11 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     largeGridThumbnailSize,
     createTaskRecordPaneIfNotExist,
     openBaiduYunIfNotLogged,
+    longPressOpenContextMenu,
     ...typedEventEmitter<{ createNewTask: Partial<UploadTaskSummary> }>()
   }
 }, {
   persist: {
-    paths: ['lang', 'enableThumbnail', 'lastTabListRecord', 'stackViewSplit', 'autoUploadRecvDir', 'recent', 'gridThumbnailSize', 'largeGridThumbnailSize']
+    paths: ['lang', 'enableThumbnail', 'lastTabListRecord', 'stackViewSplit', 'autoUploadRecvDir', 'recent', 'gridThumbnailSize', 'largeGridThumbnailSize', 'longPressOpenContextMenu']
   }
 })
