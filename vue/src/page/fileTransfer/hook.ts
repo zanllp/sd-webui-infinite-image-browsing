@@ -1,6 +1,6 @@
 import { useGlobalStore, type FileTransferTabPane } from '@/store/useGlobalStore'
 import { useTaskListStore } from '@/store/useTaskListStore'
-import { computedAsync, useElementSize } from '@vueuse/core'
+import { computedAsync, onLongPress, useElementSize } from '@vueuse/core'
 import { ref, computed, watch, onMounted, h, reactive } from 'vue'
 
 import { downloadBaiduyun, genInfoCompleted, getImageGenerationInfo, setImgPath } from '@/api'
@@ -782,5 +782,35 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
     showGenInfo,
     imageGenInfo,
     q
+  }
+}
+
+
+/**
+ * 针对移动端端操作优化，使用长按提到右键
+ */
+export const useMobileOptimization = () => {
+  const { stackViewEl } = useHookShareState().toRefs()
+  const showMenuIdx = ref(-1)
+  onLongPress(
+    stackViewEl,
+    e => {
+      let fileEl = e.target as HTMLDivElement
+      while (fileEl.parentElement) {
+        fileEl = fileEl.parentElement as any
+        if (fileEl.tagName.toLowerCase() === 'li' && fileEl.classList.contains('file-item-trigger')) {
+            const idx = fileEl.dataset?.idx
+            if (idx && Number.isSafeInteger(+idx)) {
+              showMenuIdx.value = +idx
+            }
+          console.log(fileEl)
+          return 
+        }
+      }
+
+    }
+  )
+  return {
+    showMenuIdx
   }
 }

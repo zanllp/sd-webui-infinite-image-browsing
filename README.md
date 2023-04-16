@@ -59,3 +59,10 @@ https://user-images.githubusercontent.com/25872019/230768207-daab786b-d4ab-489f-
 
 
 
+## FAQ
+
+### 在移动端如何打开右键菜单？
+
+你必须先在全局设置中把“支持使用长按打开右键菜单”打开，然后使用长按进行操作，即可代替右键打开右键菜单
+
+<img  alt="image" src="https://user-images.githubusercontent.com/25872019/232274767-cc0ec850-343c-416c-aa80-2c85c76a05d8.jpg">

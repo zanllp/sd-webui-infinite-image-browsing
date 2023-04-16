@@ -43,3 +43,11 @@ https://user-images.githubusercontent.com/25872019/230768207-daab786b-d4ab-489f-
 ### Dark mode
 
 <img width="1916" alt="image" src="https://user-images.githubusercontent.com/25872019/230064879-c95866ac-999d-4d4b-87ea-3e38c8479415.png">
+
+## FAQ
+
+### How to open the right-click menu on mobile devices?
+
+You need to enable "Support long press to open right-click menu" in the global settings first, and then use long press to perform the operation instead of right-clicking to open the right-click menu.
+
+<img  alt="image" src="https://user-images.githubusercontent.com/25872019/232274767-cc0ec850-343c-416c-aa80-2c85c76a05d8.jpg">

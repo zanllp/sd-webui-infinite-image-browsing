@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "dev-host": "vite --host",
     "deliver-dist": "tsx build",
     "preview": "vite preview",
     "build-only": "vite build",
