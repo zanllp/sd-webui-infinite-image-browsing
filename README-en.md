@@ -1,15 +1,17 @@
 # sd-webui-infinite-image-browsing
 
 
-A high-performance image (file) browser 😋 with built-in Baidu Cloud file transfer.
+A high-performance image (file) browser 😋 with built-in BaiduNetdisk file transfer.
 
-It is suitable for use in all places, and has been optimized for cloud computing. You can use thumbnails to quickly preview and use the built-in Baidu Cloud to transfer files.
+It is suitable for use in all places, and has been optimized for cloud computing. You can use thumbnails to quickly preview and use the built-in BaiduNetdisk to transfer files.
 
 There is also a standalone version [baiduyun-web-transfer](https://github.com/zanllp/baiduyun-web-transfer) that does not depend on sd-webui.
 
 If you have any questions or suggestions about this project, please submit an issue on GitHub.
 
 ## Key Features
+
+> The function of searching images using prompt, Lora, and model will be available soon.
 
 - Multi-tab and multi-pane like Chrome and VS Code. Create tabs and preview multiple folders, move files between panes.
 - Supports using 'walk' mode to browse images, automatically loading the next folder `(similar to os.walk)`, allowing you to browse all images without paging. Tested to work properly with over 27,000 files.

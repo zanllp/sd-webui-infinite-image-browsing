@@ -11,9 +11,9 @@ const global = useGlobalStore()
 const props = defineProps<{ tabIdx: number, paneIdx: number }>()
 const compCnMap: Partial<Record<TabPane['type'], string>> = {
   local: t('local'),
-  netdisk: t('baiduCloud'),
-  "task-record":t('taskRecord'),
   'global-setting': t('globalSettings'),
+  netdisk: t('baiduCloud'),
+  "task-record": t('taskRecord'),
   "auto-upload": t('autoUpload'),
 }
 const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false) => {
@@ -51,28 +51,20 @@ const previewInNewWindow = () => window.parent.open('/baidu_netdisk')
   <div class="container">
     <div class="header">
       <h1>{{ $t('welcome') }}</h1>
-      <div flex-placeholder/>
-      <div v-if="canpreviewInNewWindow" class="last-record" @click="previewInNewWindow ">
-        <a >{{ $t('openInNewWindow') }}</a>
+      <div flex-placeholder />
+      <div v-if="canpreviewInNewWindow" class="last-record" @click="previewInNewWindow">
+        <a>{{ $t('openInNewWindow') }}</a>
       </div>
       <div class="last-record">
-        <a v-if="lastRecord?.tabs.length"
-          @click.prevent="global.tabList = lastRecord!.tabs.map(V => ID(V, true))">{{ $t('restoreLastRecord') }}</a>
+        <a v-if="lastRecord?.tabs.length" @click.prevent="global.tabList = lastRecord!.tabs.map(V => ID(V, true))">{{
+          $t('restoreLastRecord') }}</a>
       </div>
     </div>
     <div class="content">
-      <div class="quick-start">
-        <h2>{{ $t('launch') }}</h2>
-        <ul>
-          <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp" class="quick-start__item"
-            @click.prevent="openInCurrentTab(comp)">
-            <span class="quick-start__text line-clamp-1">{{ compCnMap[comp] }}</span>
-          </li>
-        </ul>
-      </div>
+
       <div class="quick-start" v-if="walkModeSupportedDir.length">
         <h2>{{ $t('walkMode') }}</h2>
-        <ul >
+        <ul>
           <li v-for="item in walkModeSupportedDir" :key="item.dir" class="quick-start__item">
             <AButton @click="openInCurrentTab('local', item.dir, true)" ghost type="primary" block>{{ item.zh }}</AButton>
           </li>
@@ -88,7 +80,24 @@ const previewInNewWindow = () => window.parent.open('/baidu_netdisk')
         </ul>
 
       </div>
+      <div class="quick-start">
+        <h2>{{ $t('launch') }}</h2>
+        <ul>
+          <li v-for="comp in Object.keys(compCnMap).slice(0, 2) as TabPane['type'][]" :key="comp"
+            class="quick-start__item" @click.prevent="openInCurrentTab(comp)">
+            <span class="quick-start__text line-clamp-1">{{ compCnMap[comp] }}</span>
+          </li>
+          <a-collapse style="margin-top: 32px; " v-model:activeKey="global.baiduNetdiskPageOpened" :bordered="false">
+            <a-collapse-panel key="true" :header="$t('baiduNetdiskCollapseTitle')" >
+              <li v-for="comp in Object.keys(compCnMap).slice(2) as TabPane['type'][]" :key="comp"
+                class="quick-start__item" @click.prevent="openInCurrentTab(comp)">
+                <span class="quick-start__text line-clamp-1">{{ compCnMap[comp] }}</span>
+              </li>
+            </a-collapse-panel>
+          </a-collapse>
 
+        </ul>
+      </div>
       <div class="quick-start" v-if="global.recent.length">
         <h2>{{ $t('recent') }}</h2>
         <ul>
@@ -185,6 +194,7 @@ const previewInNewWindow = () => window.parent.open('/baidu_netdisk')
   flex: 1;
   font-size: 16px;
 }
+
 .quick-start__icon {
   margin-right: 8px;
 }

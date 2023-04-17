@@ -104,6 +104,7 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
   }
 
   const longPressOpenContextMenu = ref(false)
+  const baiduNetdiskPageOpened = ref('')
   return {
     lang,
     user,
@@ -122,10 +123,16 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     createTaskRecordPaneIfNotExist,
     openBaiduYunIfNotLogged,
     longPressOpenContextMenu,
+    baiduNetdiskPageOpened,
     ...typedEventEmitter<{ createNewTask: Partial<UploadTaskSummary> }>()
   }
 }, {
   persist: {
-    paths: ['lang', 'enableThumbnail', 'lastTabListRecord', 'stackViewSplit', 'autoUploadRecvDir', 'recent', 'gridThumbnailSize', 'largeGridThumbnailSize', 'longPressOpenContextMenu']
+    paths: [
+      'lang', 'enableThumbnail', 'lastTabListRecord', 
+      'stackViewSplit', 'autoUploadRecvDir', 'recent',
+       'gridThumbnailSize', 'largeGridThumbnailSize', 
+       'longPressOpenContextMenu','baiduNetdiskPageOpened'
+      ]
   }
 })

@@ -62,7 +62,7 @@ watch(() => props, () => {
     <div v-if="props.target === 'netdisk' && (!installedBaiduyun || !global.user)" class="uninstalled-hint">
       <template v-if="!installedBaiduyun">
         <div>{{ $t('dependenciesNotInstalled') }}</div>
-        <AButton type="primary" :loading="baiduyunLoading" @click="installBaiduyunBin">点此安装</AButton>
+        <AButton type="primary" :loading="baiduyunLoading" @click="installBaiduyunBin">{{ $t('clickHere2install') }}</AButton>
         <p v-if="failedHint">{{ failedHint }}</p>
       </template>
       <template v-else>
