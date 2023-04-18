@@ -3,11 +3,11 @@
 
 A high-performance image (file) browser 😋 with built-in BaiduNetdisk file transfer.
 
-It is suitable for use in all places, and has been optimized for cloud computing. You can use thumbnails to quickly preview and use the built-in BaiduNetdisk to transfer files.
+It is suitable for use in all places, and has been optimized for cloud computing.
 
 There is also a standalone version [baiduyun-web-transfer](https://github.com/zanllp/baiduyun-web-transfer) that does not depend on sd-webui.
 
-If you have any questions or suggestions about this project, please submit an issue on GitHub.
+If you have any questions or suggestions about this project, please submit an issue on GitHub (Both Chinese and English are acceptable).
 
 ## Key Features
 
@@ -17,9 +17,8 @@ If you have any questions or suggestions about this project, please submit an is
 - Supports using 'walk' mode to browse images, automatically loading the next folder `(similar to os.walk)`, allowing you to browse all images without paging. Tested to work properly with over 27,000 files.
 - View image generation information, send images to other tabs, optional thumbnail preview, full-screen preview, and move.
 - Preview based on the file tree structure, supports basic file operations as well as multi-select deletion/moving.
-- Supports file transfer with Baidu Netdisk, with dependencies downloaded only when necessary. Use drag and drop to upload and download files, and support Shift and Ctrl for multiple selection. Supports multiple tasks simultaneously.
 
-[Video demos can be viewed on Bilibili](https://space.bilibili.com/27227392/channel/series)
+[Video demos can be viewed on Bilibili(chinese only)](https://space.bilibili.com/27227392/channel/series)
 
 Documentation will be updated later.
 
