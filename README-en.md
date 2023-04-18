@@ -3,7 +3,7 @@
 
 A high-performance image (file) browser 😋 with built-in BaiduNetdisk file transfer.
 
-It is suitable for use in all places, and has been optimized for cloud computing.
+It is suitable for use in all places, and has been optimized for cloud computing, You can use thumbnails to quickly preview, so fast that you almost don't feel the loading time.
 
 There is also a standalone version [baiduyun-web-transfer](https://github.com/zanllp/baiduyun-web-transfer) that does not depend on sd-webui.
 
