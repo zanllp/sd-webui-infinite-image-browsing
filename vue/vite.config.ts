@@ -8,7 +8,7 @@ const isProd = env.NODE_ENV === "production"
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: isProd ? '/baidu_netdisk/fe-static' : '/', css: {
+  base: isProd ? '/infinite_image_browsing/fe-static' : '/', css: {
     preprocessorOptions: {
       modules: true,
       less: {
@@ -32,7 +32,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/baidu_netdisk/': {
+      '/infinite_image_browsing/': {
         target: 'http://127.0.0.1:7866/'
       }
     }

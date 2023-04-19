@@ -3,7 +3,7 @@ import axios, { isAxiosError } from 'axios'
 import type { GlobalSettingPart } from './type'
 import { t } from '@/i18n'
 export const axiosInst = axios.create({
-  baseURL: '/baidu_netdisk',
+  baseURL: '/infinite_image_browsing',
 
 })
 axiosInst.interceptors.response.use(resp => resp, err => {

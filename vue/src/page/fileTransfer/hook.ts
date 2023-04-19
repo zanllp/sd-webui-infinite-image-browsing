@@ -25,8 +25,8 @@ import { CloudServerOutlined, DatabaseOutlined } from '@/icon'
 export const stackCache = new Map<string, Page[]>()
 
 const global = useGlobalStore()
-export const toRawFileUrl = (file: FileNodeInfo, download = false) => `/baidu_netdisk/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
-export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) => `/baidu_netdisk/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
+export const toRawFileUrl = (file: FileNodeInfo, download = false) => `/infinite_image_browsing/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
+export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) => `/infinite_image_browsing/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
 
 
 const { eventEmitter: events, useEventListen } = typedEventEmitter<{ removeFiles: [paths: string[], loc: string], addFiles: [paths: string[], loc: string] }>()

@@ -2,7 +2,12 @@ from datetime import datetime, timedelta
 import os
 import shutil
 import time
-from scripts.tool import human_readable_size, is_valid_image_path, temp_path
+from scripts.tool import (
+    human_readable_size,
+    is_valid_image_path,
+    temp_path,
+    read_info_from_image,
+)
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 import re
@@ -17,6 +22,8 @@ from PIL import Image
 from io import BytesIO
 import hashlib
 from urllib.parse import urlencode
+from scripts.db.datamodel import DataBase, Image as DbImg, Tag
+from scripts.db.init_image_data import init_image_data
 
 from scripts.bin import (
     bin_file_name,
@@ -35,11 +42,13 @@ from scripts.tool import get_windows_drives, convert_to_bytes
 import functools
 from scripts.logger import logger
 
+
 class AutoUpload:
     # 已成等待发送图像的队列
     files = []
     task_id: Union[None, str] = None
-    
+
+
 def exec_ops(args: Union[List[str], str]):
     args = [args] if isinstance(args, str) else args
     res = ""
@@ -128,14 +137,16 @@ def singleton_async(fn):
     wrapper.busy = []
     return wrapper
 
-send_img_path = { "value": "" }
 
-def baidu_netdisk_api(_: Any, app: FastAPI):
-    pre = "/baidu_netdisk"
+send_img_path = {"value": ""}
+
+
+def infinite_image_browsing_api(_: Any, app: FastAPI):
+    pre = "/infinite_image_browsing"
     app.mount(
         f"{pre}/fe-static",
         StaticFiles(directory=f"{cwd}/vue/dist"),
-        name="baidu_netdisk-fe-static",
+        name="infinite_image_browsing-fe-static",
     )
 
     @app.get(f"{pre}/user")
@@ -165,6 +176,7 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
         conf = {}
         try:
             from modules.shared import opts
+
             conf = opts.data
         except:
             pass
@@ -237,11 +249,11 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             upload_poll_promise_dict.pop(id)
 
         return res
-    
+
     class DeleteFilesReq(BaseModel):
         file_paths: List[str]
 
-    @app.post(pre+"/delete_files/{target}")
+    @app.post(pre + "/delete_files/{target}")
     async def delete_files(req: DeleteFilesReq, target: Literal["local", "netdisk"]):
         if target == "local":
             for path in req.file_paths:
@@ -254,22 +266,22 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
                     # 处理删除失败的情况
                     raise HTTPException(400, detail=f"删除文件{path}时出错：{e}")
         else:
-            exec_ops(["rm", *req.file_paths]) #没检查是否失败，暂时先这样
+            exec_ops(["rm", *req.file_paths])  # 没检查是否失败，暂时先这样
 
     class MoveFilesReq(BaseModel):
         file_paths: List[str]
         dest: str
 
-    @app.post(pre+"/move_files/{target}")
+    @app.post(pre + "/move_files/{target}")
     async def move_files(req: MoveFilesReq, target: Literal["local", "netdisk"]):
         if target == "local":
-           for path in req.file_paths:
-            try:
-                shutil.move(path, req.dest)
-            except OSError as e:
-                raise HTTPException(400, detail=f"移动文件{path}到{req.dest}时出错：{e}")
+            for path in req.file_paths:
+                try:
+                    shutil.move(path, req.dest)
+                except OSError as e:
+                    raise HTTPException(400, detail=f"移动文件{path}到{req.dest}时出错：{e}")
         else:
-            exec_ops(["mv", *req.file_paths, req.dest]) #没检查是否失败，暂时先这样
+            exec_ops(["mv", *req.file_paths, req.dest])  # 没检查是否失败，暂时先这样
 
     @app.get(pre + "/files/{target}")
     async def get_target_floder_files(
@@ -280,7 +292,9 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             if target == "local":
                 if is_win and folder_path == "/":
                     for item in get_windows_drives():
-                        files.append({"type": "dir", "size": "-", "name": item, "fullpath": item})
+                        files.append(
+                            {"type": "dir", "size": "-", "name": item, "fullpath": item}
+                        )
                 else:
                     for item in os.listdir(folder_path):
                         path = os.path.join(folder_path, item)
@@ -300,12 +314,22 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
                                     "size": size,
                                     "name": item,
                                     "bytes": bytes,
-                                    "fullpath": os.path.normpath(os.path.join(folder_path, item))
+                                    "fullpath": os.path.normpath(
+                                        os.path.join(folder_path, item)
+                                    ),
                                 }
                             )
                         elif os.path.isdir(path):
                             files.append(
-                                {"type": "dir", "date": date, "size": "-", "name": item, "fullpath": os.path.normpath(os.path.join(folder_path, item))}
+                                {
+                                    "type": "dir",
+                                    "date": date,
+                                    "size": "-",
+                                    "name": item,
+                                    "fullpath": os.path.normpath(
+                                        os.path.join(folder_path, item)
+                                    ),
+                                }
                             )
             else:
                 files = list_file(folder_path)
@@ -317,13 +341,13 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
         return {"files": files}
 
     @app.get(pre + "/image-thumbnail")
-    async def thumbnail(path: str, size: str = '256,256'):
+    async def thumbnail(path: str, size: str = "256,256"):
         if not temp_path:
-            encoded_params = urlencode({ "filename": path })
+            encoded_params = urlencode({"filename": path})
             return RedirectResponse(url=f"{pre}/file?{encoded_params}")
         # 生成缓存文件的路径
-        hash = hashlib.md5((path + size).encode('utf-8')).hexdigest()
-        cache_path = os.path.join(temp_path, f'{hash}.webp')
+        hash = hashlib.md5((path + size).encode("utf-8")).hexdigest()
+        cache_path = os.path.join(temp_path, f"{hash}.webp")
 
         # 如果缓存文件存在，则直接返回该文件
         if os.path.exists(cache_path):
@@ -336,13 +360,13 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
         # 如果缓存文件不存在，则生成缩略图并保存
         with open(path, "rb") as f:
             img = Image.open(BytesIO(f.read()))
-        w,h = size.split(',')
-        img.thumbnail((int(w),int(h)))
+        w, h = size.split(",")
+        img.thumbnail((int(w), int(h)))
         buffer = BytesIO()
-        img.save(buffer, 'webp')
+        img.save(buffer, "webp")
 
         # 将二进制数据写入缓存文件中
-        with open(cache_path, 'wb') as f:
+        with open(cache_path, "wb") as f:
             f.write(buffer.getvalue())
 
         # 返回缓存文件
@@ -351,18 +375,28 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             media_type="image/webp",
             headers={"Cache-Control": "max-age=31536000", "ETag": hash},
         )
-    
+
     forever_cache_path = []
     try:
         from modules.shared import opts
+
         conf = opts.data
+
         def get_config_path(conf):
             # 获取配置项
-            keys = ['outdir_txt2img_samples', 'outdir_img2img_samples', 'outdir_save',
-                    'outdir_extras_samples', 'additional_networks_extra_lora_path',
-                    'outdir_grids', 'outdir_img2img_grids', 'outdir_samples', 'outdir_txt2img_grids']
+            keys = [
+                "outdir_txt2img_samples",
+                "outdir_img2img_samples",
+                "outdir_save",
+                "outdir_extras_samples",
+                "additional_networks_extra_lora_path",
+                "outdir_grids",
+                "outdir_img2img_grids",
+                "outdir_samples",
+                "outdir_txt2img_grids",
+            ]
             paths = [conf.get(key) for key in keys]
-            
+
             # 判断路径是否有效并转为绝对路径
             abs_paths = []
             for path in paths:
@@ -372,68 +406,70 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
                     abs_path = os.path.join(os.getcwd(), path)
                 if os.path.exists(abs_path):  # 判断路径是否存在
                     abs_paths.append(abs_path)
-            
+
             return abs_paths
+
         forever_cache_path = get_config_path(conf)
     except:
         pass
 
-    def need_cache(path, parent_paths = forever_cache_path):
+    def need_cache(path, parent_paths=forever_cache_path):
         """
         判断 path 是否是 parent_paths 中某个路径的子路径
         """
-        try:            
+        try:
             for parent_path in parent_paths:
                 if os.path.commonpath([path, parent_path]) == parent_path:
                     return True
         except:
             pass
         return False
-    
-    @app.get(pre+"/file")
+
+    @app.get(pre + "/file")
     async def get_file(filename: str, disposition: Optional[str] = None):
         import mimetypes
+
         if not os.path.exists(filename):
             raise HTTPException(status_code=404)
-
         # 根据文件后缀名获取媒体类型
         media_type, _ = mimetypes.guess_type(filename)
         headers = {}
         if disposition:
             headers["Content-Disposition"] = f'attachment; filename="{disposition}"'
-        if need_cache(filename) and is_valid_image_path(filename): # 认为永远不变,不要协商缓存了试试
+        if need_cache(filename) and is_valid_image_path(filename):  # 认为永远不变,不要协商缓存了试试
             headers["Cache-Control"] = "public, max-age=31536000"
-            headers["Expires"] = (datetime.now() + timedelta(days=365)).strftime("%a, %d %b %Y %H:%M:%S GMT")
+            headers["Expires"] = (datetime.now() + timedelta(days=365)).strftime(
+                "%a, %d %b %Y %H:%M:%S GMT"
+            )
 
         return FileResponse(
             filename,
             media_type=media_type,
             headers=headers,
         )
-    
-    @app.post(pre+"/send_img_path")
+
+    @app.post(pre + "/send_img_path")
     async def api_set_send_img_path(path: str):
         send_img_path["value"] = path
 
     # 等待图片信息生成完成
-    @app.get(pre+"/gen_info_completed")
+    @app.get(pre + "/gen_info_completed")
     async def api_set_send_img_path():
-        for _ in range(600): # 等待60s
-            if send_img_path["value"] == '': # 等待setup里面生成完成
+        for _ in range(600):  # 等待60s
+            if send_img_path["value"] == "":  # 等待setup里面生成完成
                 return True
             await asyncio.sleep(0.1)
-        return send_img_path["value"] == ''
-    
-    
-    @app.get(pre+"/image_geninfo")
+        return send_img_path["value"] == ""
+
+    @app.get(pre + "/image_geninfo")
     async def image_geninfo(path: str):
-        from modules import extras
-        geninfo,_ = extras.images.read_info_from_image(Image.open(path))
-        return geninfo
-    
+        with Image.open(path) as img:
+            return read_info_from_image(img)
+
     class AutoUploadParams(BaseModel):
         recv_dir: str
-    @app.post(pre+"/auto_upload")
+
+    @app.post(pre + "/auto_upload")
     async def auto_upload(req: AutoUploadParams):
         tick_info = None
         if AutoUpload.task_id:
@@ -446,37 +482,55 @@ def baidu_netdisk_api(_: Any, app: FastAPI):
             AutoUpload.files = []
             if len(recived_file):
                 logger.info(f"创建上传任务 {recived_file} ----> {req.recv_dir}")
-                task = await BaiduyunTask.create('upload', recived_file, req.recv_dir)
+                task = await BaiduyunTask.create("upload", recived_file, req.recv_dir)
                 AutoUpload.task_id = task.id
-        return {
-            "tick_info": tick_info,
-            "pending_files": AutoUpload.files
-        }
-    
+        return {"tick_info": tick_info, "pending_files": AutoUpload.files}
+
     class CheckPathExistsReq(BaseModel):
         paths: List[str]
 
-    @app.post(pre + '/check_path_exists')
+    @app.post(pre + "/check_path_exists")
     async def check_path_exists(req: CheckPathExistsReq):
         res = {}
         for path in req.paths:
             res[path] = os.path.exists(path)
         return res
-    
-    not_exists_msg = ()
 
-    @app.get(pre + '/baiduyun_exists')
+    @app.get(pre + "/baiduyun_exists")
     async def baiduyun_exists():
         return check_bin_exists()
-    
+
     @app.get(pre)
     def index_bd():
         return FileResponse(os.path.join(cwd, "vue/dist/index.html"))
 
-    @app.post(pre + '/download_baiduyun')
+    @app.post(pre + "/download_baiduyun")
     async def download_baiduyun():
         if not check_bin_exists():
             try:
                 download_bin_file()
             except:
-                raise HTTPException(500, detail=f"安装失败,找不到{bin_file_name},尝试手动从 {get_matched_summary()[1]} 或者 {get_matched_summary()[2]} 下载,下载后放到 {cwd} 文件夹下,重启界面")
+                raise HTTPException(
+                    500,
+                    detail=f"安装失败,找不到{bin_file_name},尝试手动从 {get_matched_summary()[1]} 或者 {get_matched_summary()[2]} 下载,下载后放到 {cwd} 文件夹下,重启界面",
+                )
+
+    db_pre = pre + "/db"
+
+    @app.get(db_pre + "/basic_info")
+    async def get_db_basic_info():
+        conn = DataBase.get_conn()
+        img_count = DbImg.count(conn)
+        tags = Tag.get_all(conn)
+        return {
+            "img_count": img_count,
+            "tags": tags
+        }
+    
+    @app.post(db_pre + "/init_image_data")
+    async def generate_image_db_data():
+        try:
+            DataBase._initing = True
+            init_image_data()
+        finally:
+            DataBase._initing = False

@@ -8,8 +8,8 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
-    <script type="module" crossorigin src="/baidu_netdisk/fe-static/assets/index-1e01706b.js"></script>
-    <link rel="stylesheet" href="/baidu_netdisk/fe-static/assets/index-5b1109d3.css">
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-92c1f70c.js"></script>
+    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-5b1109d3.css">
   </head>
 
   <body>
@@ -36,7 +36,7 @@
   }
   asyncCheck(
     // eslint-disable-next-line no-undef
-    () => gradioApp().querySelector('#baidu_netdisk_container_wrapper'),
+    () => gradioApp().querySelector('#infinite_image_browsing_container_wrapper'),
     500,
     Infinity
   ).then((el) => {

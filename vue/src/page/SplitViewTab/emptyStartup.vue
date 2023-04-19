@@ -45,7 +45,7 @@ const lastRecord = computed(() => global.lastTabListRecord?.[1])
 
 const walkModeSupportedDir = computed(() => global.autoCompletedDirList.filter(({ key: k }) => k === 'outdir_txt2img_samples' || k === 'outdir_img2img_samples' || k === 'outdir_extras_samples' || k === 'outdir_save' || k === 'outdir_samples'))
 const canpreviewInNewWindow = window.parent !== window
-const previewInNewWindow = () => window.parent.open('/baidu_netdisk')
+const previewInNewWindow = () => window.parent.open('/infinite_image_browsing')
 </script>
 <template>
   <div class="container">
