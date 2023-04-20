@@ -22,7 +22,7 @@ from PIL import Image
 from io import BytesIO
 import hashlib
 from urllib.parse import urlencode
-from scripts.db.datamodel import DataBase, Image as DbImg, Tag, Floder
+from scripts.db.datamodel import DataBase, Image as DbImg, Tag, Floder, ImageTag
 from scripts.db.update_image_data import update_image_data
 
 from scripts.bin import (
@@ -536,6 +536,16 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
     async def update_image_db_data():
         try:
             DataBase._initing = True
-            update_image_data(img_search_dirs)
+            conn = DataBase.get_conn()
+            img_count = DbImg.count(conn)
+            update_image_data(img_search_dirs if img_count == 0 else Floder.get_expired_dirs(conn))
         finally:
             DataBase._initing = False
+
+    @app.get(db_pre + "/match_images_by_tags")
+    async def match_image_by_tags(tag_ids: str):
+        ids = [int(x) for x in tag_ids.split(',')]
+        print(ids)
+        conn = DataBase.get_conn()
+        image_ids = ImageTag.get_images_by_tags(conn, { "and": ids })
+        return DbImg.get_by_ids(conn, image_ids)

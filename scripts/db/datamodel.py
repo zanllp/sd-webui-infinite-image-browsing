@@ -1,5 +1,5 @@
 from sqlite3 import Connection, connect
-from typing import List, Optional
+from typing import Dict, List, Optional
 from scripts.tool import cwd
 from contextlib import closing
 import os
@@ -37,7 +37,7 @@ class Image:
     def save(self, conn):
         with closing(conn.cursor()) as cur:
             cur.execute(
-                "INSERT INTO image (path, exif) VALUES (?, ?)", (self.path, self.exif)
+                "INSERT OR REPLACE  INTO image (path, exif) VALUES (?, ?)", (self.path, self.exif)
             )
             self.id = cur.lastrowid
 
@@ -56,12 +56,36 @@ class Image:
                 return image
 
     @classmethod
+    def get_by_ids(cls, conn: Connection, ids: List[int]) -> List["Image"]:
+        if not ids:
+            return []
+
+        query = """
+            SELECT * FROM image
+            WHERE id IN ({})
+        """.format(
+            ",".join("?" * len(ids))
+        )
+
+        with closing(conn.cursor()) as cur:
+            cur.execute(query, ids)
+            rows = cur.fetchall()
+
+        images = []
+        for row in rows:
+            image = cls(path=row[1], exif=row[2])
+            image.id = row[0]
+            images.append(image)
+
+        return images
+
+    @classmethod
     def create_table(cls, conn):
         with closing(conn.cursor()) as cur:
             cur.execute(
                 """CREATE TABLE IF NOT EXISTS image (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            path TEXT,
+                            path TEXT UNIQUE,
                             exif TEXT
                         )"""
             )
@@ -86,8 +110,8 @@ class Tag:
     def save(self, conn):
         with closing(conn.cursor()) as cur:
             cur.execute(
-                "INSERT INTO tag (name, score, type, count) VALUES (?, ?, ?, ?)",
-                (self.name, self.score, self.type, self.count),
+                "INSERT OR REPLACE INTO tag (id, name, score, type, count) VALUES (?, ?, ?, ?, ?)",
+                (self.id, self.name, self.score, self.type, self.count),
             )
             self.id = cur.lastrowid
 
@@ -135,7 +159,7 @@ class Tag:
             cur.execute(
                 """CREATE TABLE IF NOT EXISTS tag (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
+            name TEXT UNIQUE,
             score INTEGER,
             type TEXT,
             count INTEGER
@@ -200,6 +224,45 @@ class ImageTag:
                             PRIMARY KEY (image_id, tag_id)
                         )"""
             )
+
+    @classmethod
+    def get_images_by_tags(
+        cls, conn: Connection, tag_dict: Dict[str, List[int]]
+    ) -> List[int]:
+        query = """
+            SELECT image_id
+            FROM image_tag
+        """
+
+        where_clauses = []
+        params = []
+
+        for operator, tag_ids in tag_dict.items():
+            if operator == "and":
+                where_clauses.append(
+                    "tag_id IN ({})".format(",".join("?" * len(tag_ids)))
+                )
+                params.extend(tag_ids)
+            elif operator == "not":
+                where_clauses.append(
+                    "tag_id NOT IN ({})".format(",".join("?" * len(tag_ids)))
+                )
+                params.extend(tag_ids)
+
+        if where_clauses:
+            query += " WHERE " + " AND ".join(where_clauses)
+
+        #query += " GROUP BY image_id"
+
+        #if "and" in tag_dict:
+            #query += " HAVING COUNT(DISTINCT tag_id) = ?"
+            #params.append(len(tag_dict["and"]))
+        print(query)
+        with closing(conn.cursor()) as cur:
+            cur.execute(query, params)
+            rows = cur.fetchall()
+            image_ids = [row[0] for row in rows]
+            return image_ids
 
 
 class Floder:
