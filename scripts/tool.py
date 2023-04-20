@@ -129,7 +129,7 @@ def get_locale():
 
 locale = get_locale()
 
-def get_modified_date(folder_path):
+def get_modified_date(folder_path: str):
     return datetime.fromtimestamp(os.path.getmtime(folder_path)).strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -185,6 +185,8 @@ def parse_generation_parameters(x: str):
     prompt = ""
     negative_prompt = ""
     done_with_prompt = False
+    if not x:
+        return {},[],[],[]
     *lines, lastline = x.strip().split("\n")
     if len(re_param.findall(lastline)) < 3:
         lines.append(lastline)
@@ -220,5 +222,5 @@ def parse_generation_parameters(x: str):
             model = res[k_s.replace("Module", "Model")]
             value = res.get(k_s.replace("Module", "Weight A"), "1")
             lora.append({ "name": model, "value": float(value) })
-    return res, unique_by(lora, lambda x:x.name), unique_by(pos_prompt, lambda x:x), unique_by(neg_prompt, lambda x:x)
+    return res, unique_by(lora, lambda x:x['name']), unique_by(pos_prompt, lambda x:x), unique_by(neg_prompt, lambda x:x)
 

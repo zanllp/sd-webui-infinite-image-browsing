@@ -17,7 +17,8 @@ const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> 
   "task-record": defineAsyncComponent(() => import('@/page/taskRecord/taskRecord.vue')),
   empty: defineAsyncComponent(() => import('./emptyStartup.vue')),
   "log-detail": defineAsyncComponent(() => import('@/page/taskRecord/logDetail.vue')),
-  "global-setting": defineAsyncComponent(() => import('@/page/globalSetting.vue'))
+  "global-setting": defineAsyncComponent(() => import('@/page/globalSetting.vue')),
+  "tag-search": defineAsyncComponent(() => import('@/page/TagSearch/TagSearch.vue'))
 }
 const onEdit = (idx: number, targetKey: any, action: string) => {
   const tab = global.tabList[idx]

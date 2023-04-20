@@ -14,7 +14,7 @@ import { typedEventEmitter, type UniqueId, ID } from 'vue3-ts-util'
 
 
 interface OtherTabPane {
-  type: 'auto-upload' | 'task-record' | 'empty' | 'log-detail' | 'global-setting'
+  type: 'auto-upload' | 'task-record' | 'empty' | 'log-detail' | 'global-setting' | 'tag-search'
   name: string
   readonly key: string
 }

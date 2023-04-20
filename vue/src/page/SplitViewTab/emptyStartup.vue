@@ -11,6 +11,7 @@ const global = useGlobalStore()
 const props = defineProps<{ tabIdx: number, paneIdx: number }>()
 const compCnMap: Partial<Record<TabPane['type'], string>> = {
   local: t('local'),
+  "tag-search": 'tag搜索',
   'global-setting': t('globalSettings'),
   netdisk: t('baiduCloud'),
   "task-record": t('taskRecord'),
@@ -26,6 +27,7 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
     case 'task-record':
     case 'log-detail':
     case 'global-setting':
+    case 'tag-search':
     case 'empty':
       pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId() }
       break
@@ -83,13 +85,13 @@ const previewInNewWindow = () => window.parent.open('/infinite_image_browsing')
       <div class="quick-start">
         <h2>{{ $t('launch') }}</h2>
         <ul>
-          <li v-for="comp in Object.keys(compCnMap).slice(0, 2) as TabPane['type'][]" :key="comp"
+          <li v-for="comp in Object.keys(compCnMap).slice(0, 3) as TabPane['type'][]" :key="comp"
             class="quick-start__item" @click.prevent="openInCurrentTab(comp)">
             <span class="quick-start__text line-clamp-1">{{ compCnMap[comp] }}</span>
           </li>
           <a-collapse style="margin-top: 32px; " v-model:activeKey="global.baiduNetdiskPageOpened" :bordered="false">
             <a-collapse-panel key="true" :header="$t('baiduNetdiskCollapseTitle')" >
-              <li v-for="comp in Object.keys(compCnMap).slice(2) as TabPane['type'][]" :key="comp"
+              <li v-for="comp in Object.keys(compCnMap).slice(3) as TabPane['type'][]" :key="comp"
                 class="quick-start__item" @click.prevent="openInCurrentTab(comp)">
                 <span class="quick-start__text line-clamp-1">{{ compCnMap[comp] }}</span>
               </li>

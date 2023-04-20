@@ -8,8 +8,8 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
-    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-92c1f70c.js"></script>
-    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-5b1109d3.css">
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-9978e847.js"></script>
+    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-af635d2c.css">
   </head>
 
   <body>

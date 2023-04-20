@@ -1,3 +1,4 @@
 BaiduPCS-Go*
 *.log
 __pycache__
+iib.db

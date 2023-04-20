@@ -22,8 +22,8 @@ from PIL import Image
 from io import BytesIO
 import hashlib
 from urllib.parse import urlencode
-from scripts.db.datamodel import DataBase, Image as DbImg, Tag
-from scripts.db.init_image_data import init_image_data
+from scripts.db.datamodel import DataBase, Image as DbImg, Tag, Floder
+from scripts.db.update_image_data import update_image_data
 
 from scripts.bin import (
     bin_file_name,
@@ -377,29 +377,31 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
         )
 
     forever_cache_path = []
+    img_search_dirs = []
     try:
         from modules.shared import opts
 
         conf = opts.data
 
-        def get_config_path(conf):
-            # 获取配置项
+        def get_config_path(conf, 
             keys = [
                 "outdir_txt2img_samples",
                 "outdir_img2img_samples",
                 "outdir_save",
                 "outdir_extras_samples",
-                "additional_networks_extra_lora_path",
                 "outdir_grids",
                 "outdir_img2img_grids",
                 "outdir_samples",
                 "outdir_txt2img_grids",
-            ]
+            ]):
+            # 获取配置项
             paths = [conf.get(key) for key in keys]
 
             # 判断路径是否有效并转为绝对路径
             abs_paths = []
             for path in paths:
+                if len(path.strip()) == 0:
+                    continue
                 if os.path.isabs(path):  # 已经是绝对路径
                     abs_path = path
                 else:  # 转为绝对路径
@@ -410,9 +412,9 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
             return abs_paths
 
         forever_cache_path = get_config_path(conf)
+        img_search_dirs = forever_cache_path
     except:
         pass
-
     def need_cache(path, parent_paths=forever_cache_path):
         """
         判断 path 是否是 parent_paths 中某个路径的子路径
@@ -522,15 +524,18 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
         conn = DataBase.get_conn()
         img_count = DbImg.count(conn)
         tags = Tag.get_all(conn)
+        expired_dirs = Floder.get_expired_dirs(conn)
         return {
             "img_count": img_count,
-            "tags": tags
+            "tags": tags,
+            "expired": len(expired_dirs) != 0,
+            "expired_dirs": expired_dirs
         }
     
-    @app.post(db_pre + "/init_image_data")
-    async def generate_image_db_data():
+    @app.post(db_pre + "/update_image_data")
+    async def update_image_db_data():
         try:
             DataBase._initing = True
-            init_image_data()
+            update_image_data(img_search_dirs)
         finally:
             DataBase._initing = False
