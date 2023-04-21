@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { FileOutlined, FolderOpenOutlined, DownOutlined, LeftCircleOutlined, RightCircleOutlined, LoginOutlined } from '@/icon'
+import { DownOutlined, LeftCircleOutlined, RightCircleOutlined, LoginOutlined } from '@/icon'
 import { sortMethodMap } from './fileSort'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { useFileTransfer, useFilesDisplay, useHookShareState, useLocation, usePreview, type ViewMode, useFileItemActions, toImageThumbnailUrl, toRawFileUrl, stackCache, useMobileOptimization } from './hook'
-import { copy2clipboard, SearchSelect, fallbackImage } from 'vue3-ts-util'
+import { useFileTransfer, useFilesDisplay, useHookShareState, useLocation, usePreview, type ViewMode, useFileItemActions, toRawFileUrl, stackCache, useMobileOptimization } from './hook'
+import { copy2clipboard, SearchSelect } from 'vue3-ts-util'
 
 import 'multi-nprogress/nprogress.css'
 import FolderNavigator from './folderNavigator.vue'
-import { isImageFile } from '@/util'
 // @ts-ignore
 import { RecycleScroller } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { watch } from 'vue'
+import FileItem from './FileItem/FileItem.vue'
 
 
 const global = useGlobalStore()
@@ -36,7 +36,7 @@ const { installBaiduyunBin, installedBaiduyun, failedHint, baiduyunLoading,
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to } = useLocation(props)
 const { gridItems, sortMethodConv, moreActionsDropdownShow,
   sortedFiles, sortMethod, viewMode, viewModeMap, itemSize,
-  loadNextDir, loadNextDirLoading, canLoadNext, thumbnailSize,
+  loadNextDir, loadNextDirLoading, canLoadNext,
   onScroll } = useFilesDisplay(props)
 const { onDrop, onFileDragStart } = useFileTransfer(props)
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions(props, { openNext })
@@ -62,7 +62,8 @@ watch(() => props, () => {
     <div v-if="props.target === 'netdisk' && (!installedBaiduyun || !global.user)" class="uninstalled-hint">
       <template v-if="!installedBaiduyun">
         <div>{{ $t('dependenciesNotInstalled') }}</div>
-        <AButton type="primary" :loading="baiduyunLoading" @click="installBaiduyunBin">{{ $t('clickHere2install') }}</AButton>
+        <AButton type="primary" :loading="baiduyunLoading" @click="installBaiduyunBin">{{ $t('clickHere2install') }}
+        </AButton>
         <p v-if="failedHint">{{ failedHint }}</p>
       </template>
       <template v-else>
@@ -101,7 +102,6 @@ watch(() => props, () => {
           </a-breadcrumb>
         </div>
         <div class="actions">
-
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
           <a-dropdown v-if="props.target === 'local'">
             <a class="opt" @click.prevent>
@@ -116,7 +116,6 @@ watch(() => props, () => {
               </a-menu>
             </template>
           </a-dropdown>
-
           <a-dropdown :trigger="['click']" v-model:visible="moreActionsDropdownShow" placement="bottomLeft"
             :getPopupContainer="trigger => trigger.parentNode as HTMLDivElement">
             <a class="opt" @click.prevent>
@@ -135,7 +134,6 @@ watch(() => props, () => {
                       :options="Object.keys(viewModeMap)" />
                   </a-form-item>
                   <a-form-item :label="$t('sortingMethod')">
-
                     <search-select v-model:value="sortMethod" @click.stop :conv="sortMethodConv"
                       :options="Object.keys(sortMethodMap)" />
                   </a-form-item>
@@ -154,78 +152,11 @@ watch(() => props, () => {
           :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems">
           <template v-slot="{ item: file, index: idx }">
             <!-- idx 和file有可能丢失 -->
-            <a-dropdown :trigger="['contextmenu']"
-              :visible="!global.longPressOpenContextMenu ? undefined : ((typeof idx === 'number') && showMenuIdx === idx)"
-              @update:visible="v => ((typeof idx === 'number') && (showMenuIdx = v ? idx : -1))">
-              <li class="file file-item-trigger"
-                :class="{ clickable: file.type === 'dir', selected: multiSelectedIdxs.includes(idx), grid: viewMode === 'grid' || viewMode === 'large-size-grid', 'large-grid': viewMode === 'large-size-grid' }"
-                :data-idx="idx" :key="file.name" draggable="true" @dragstart="onFileDragStart($event, idx)"
-                @click.capture="onFileItemClick($event, file)">
-                <div v-if="viewMode !== 'line'">
-                  <a-image :key="file.fullpath" :class="`idx-${idx}`"
-                    v-if="props.target === 'local' && isImageFile(file.name)"
-                    :src="global.enableThumbnail ? toImageThumbnailUrl(file, thumbnailSize) : toRawFileUrl(file)"
-                    :fallback="fallbackImage"
-                    :preview="{ src: sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : '', onVisibleChange: onPreviewVisibleChange }">
-                  </a-image>
-                  <div v-else class="preview-icon-wrap">
-
-                    <file-outlined class="icon center" v-if="file.type === 'file'" />
-                    <folder-open-outlined class="icon center" v-else />
-                  </div>
-                  <div class="profile">
-                    <div class="name line-clamp-1">
-                      {{ file.name }}
-                    </div>
-                    <div class="basic-info">
-                      <div>
-                        {{ file.size }}
-                      </div>
-                      <div>
-                        {{ file.date }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <template v-else>
-                  <file-outlined class="icon" v-if="file.type === 'file'" />
-                  <folder-open-outlined class="icon" v-else />
-                  <div class="name line-clamp-1">
-                    {{ file.name }}
-                  </div>
-                  <div class="basic-info">
-                    <div>
-                      {{ file.size }}
-                    </div>
-                    <div>
-                      {{ file.date }}
-                    </div>
-                  </div>
-                </template>
-              </li>
-              <template #overlay>
-                <a-menu @click="onContextMenuClick($event, file, idx)">
-                  <a-menu-item key="deleteFiles">{{ $t('deleteSelected') }}</a-menu-item>
-                  <template v-if="file.type === 'dir'">
-                    <a-menu-item key="openInNewTab">{{ $t('openInNewTab') }}</a-menu-item>
-                    <a-menu-item key="openOnTheRight">{{ $t('openOnTheRight') }}</a-menu-item>
-                    <a-menu-item key="openWithWalkMode">{{ $t('openWithWalkMode') }}</a-menu-item>
-                  </template>
-                  <template v-if="file.type === 'file' && props.target === 'local'">
-                    <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
-                    <a-menu-item key="download">{{ $t('downloadDirectly') }}</a-menu-item>
-                    <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
-                    <template v-if="isImageFile(file.name)">
-                      <a-menu-item key="viewGenInfo">{{ $t('viewGenerationInfo') }}</a-menu-item>
-                      <a-menu-item key="send2txt2img">{{ $t('sendToTxt2img') }}</a-menu-item>
-                      <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
-                      <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
-                      <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
-                    </template>
-                  </template>
-                </a-menu>
-              </template>
-            </a-dropdown>
+            <file-item :idx="idx" :file="file"
+              :full-screen-preview-image-url="sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : ''"
+              v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :view-mode="viewMode"
+              :target="target" @file-item-click="onFileItemClick" @dragstart="onFileDragStart"
+              @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick" />
           </template>
           <template v-if="props.walkMode" #after>
             <AButton @click="loadNextDir" :loading="loadNextDirLoading" block type="primary" :disabled="!canLoadNext"
@@ -323,99 +254,6 @@ watch(() => props, () => {
     height: 100%;
     overflow: auto;
 
-    .file {
-      padding: 8px 16px;
-      margin: 8px;
-      display: flex;
-      align-items: center;
-      background: var(--zp-primary-background);
-      border-radius: 8px;
-      box-shadow: 0 0 4px var(--zp-secondary-variant-background);
-      position: relative;
-      overflow: hidden;
-
-      &.grid {
-        padding: 0;
-        display: inline-block;
-        box-sizing: content-box;
-        box-shadow: unset;
-
-
-        background-color: var(--zp-secondary-background);
-
-        :deep() {
-          .icon {
-            font-size: 8em;
-          }
-
-
-          .profile {
-            padding: 0 4px;
-
-            .name {
-              font-weight: 500;
-              padding: 0;
-            }
-
-            .basic-info {
-              display: flex;
-              justify-content: space-between;
-              flex-direction: row;
-              margin: 0;
-              font-size: .7em;
-            }
-          }
-
-          .ant-image,
-          .preview-icon-wrap {
-            border: 1px solid var(--zp-secondary);
-            background-color: var(--zp-secondary-variant-background);
-            border-radius: 8px;
-            overflow: hidden;
-          }
-
-          img,
-          .preview-icon-wrap>[role="img"] {
-            height: 256px;
-            width: 256px;
-            object-fit: contain;
-
-          }
-        }
-      }
-
-
-      &.large-grid {
-        :deep() {
-
-          img,
-          .preview-icon-wrap>[role="img"] {
-            height: 512px;
-            width: 512px;
-          }
-        }
-      }
-
-      &.clickable {
-        cursor: pointer;
-      }
-
-      &.selected {
-        outline: #0084ff solid 2px;
-      }
-
-      .name {
-        flex: 1;
-        padding: 8px;
-        word-break: break-all
-      }
-
-      .basic-info {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-      }
-    }
   }
 }
 

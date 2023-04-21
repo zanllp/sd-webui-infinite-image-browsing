@@ -155,8 +155,8 @@ export interface Page {
 }
 /**
  * 全屏预览
- * @param props 
- * @returns 
+ * @param props
+ * @returns
  */
 export function usePreview (props: Props) {
   const { scroller, sortedFiles, previewIdx, eventEmitter, canLoadNext, } = useHookShareState().toRefs()
@@ -516,7 +516,6 @@ export function useFilesDisplay (props: Props) {
     }
   }, 300)
 
-  const thumbnailSize = computed(() => viewMode.value === 'grid' ? [global.gridThumbnailSize, global.gridThumbnailSize].join() : [global.largeGridThumbnailSize, global.largeGridThumbnailSize].join())
   return {
     gridItems,
     sortedFiles,
@@ -531,8 +530,7 @@ export function useFilesDisplay (props: Props) {
     loadNextDir,
     loadNextDirLoading,
     canLoadNext,
-    itemSize,
-    thumbnailSize
+    itemSize
   }
 }
 
@@ -803,8 +801,7 @@ export const useMobileOptimization = () => {
             if (idx && Number.isSafeInteger(+idx)) {
               showMenuIdx.value = +idx
             }
-          console.log(fileEl)
-          return 
+          return
         }
       }
 
