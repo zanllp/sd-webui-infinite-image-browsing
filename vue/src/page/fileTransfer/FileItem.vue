@@ -11,15 +11,15 @@ import { computed } from 'vue'
 
 
 const global = useGlobalStore()
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   file: FileNodeInfo,
   idx: number,
-  selected: boolean
+  selected?: boolean
   showMenuIdx?: number
-  viewMode: ViewMode
+  viewMode?: ViewMode
   fullScreenPreviewImageUrl?: string,
-  target: 'local' | 'netdisk'
-}>()
+  target?: 'local' | 'netdisk'
+}>(), { target: 'local', selected: false, viewMode: 'grid' })
 
 const emit = defineEmits<{
   (type: 'update:showMenuIdx', v: number): void
@@ -108,6 +108,12 @@ const thumbnailSize = computed(() => props.viewMode === 'grid' ? [global.gridThu
   </a-dropdown>
 </template>
 <style lang="scss" scoped>
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .file {
   padding: 8px 16px;
   margin: 8px;

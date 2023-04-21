@@ -1,3 +1,4 @@
+import type { FileNodeInfo } from './files'
 import { axiosInst } from './index'
 
 export interface Tag {
@@ -6,6 +7,7 @@ export interface Tag {
   type: string
   count: number
 }
+
 
 export type DataBaseBasicInfo = {
   img_count: number,
@@ -25,5 +27,5 @@ export const updateImageData = async () => {
 
 export const getImagesByTags  = async (ids: number[]) => {
   const resp = await axiosInst.get('/db/match_images_by_tags', { params: { tag_ids: ids.join() } })
-  return resp.data
+  return resp.data as FileNodeInfo[]
 }

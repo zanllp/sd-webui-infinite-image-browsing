@@ -1,9 +1,8 @@
 from sqlite3 import Connection, connect
 from typing import Dict, List, Optional
-from scripts.tool import cwd
+from scripts.tool import cwd, get_modified_date, human_readable_size
 from contextlib import closing
 import os
-from scripts.tool import get_modified_date
 
 
 class DataBase:
@@ -29,15 +28,29 @@ class DataBase:
 
 
 class Image:
-    def __init__(self, path, exif=None):
+    def __init__(self, path, exif=None, size=0, date=""):
         self.path = path
         self.exif = exif
         self.id = None
+        self.size = size
+        self.date = date
+
+    def to_file_info(self):
+        return {
+            "type": "file",
+            "id": self.id,
+            "date": self.date,
+            "size": human_readable_size(self.size),
+            "bytes": self.size,
+            "name": os.path.basename(self.path),
+            "fullpath": self.path,
+        }
 
     def save(self, conn):
         with closing(conn.cursor()) as cur:
             cur.execute(
-                "INSERT OR REPLACE  INTO image (path, exif) VALUES (?, ?)", (self.path, self.exif)
+                "INSERT OR REPLACE  INTO image (path, exif, size, date) VALUES (?, ?, ?, ?)",
+                (self.path, self.exif, self.size, self.date),
             )
             self.id = cur.lastrowid
 
@@ -51,9 +64,7 @@ class Image:
             if row is None:
                 return None
             else:
-                image = cls(path=row[1], exif=row[2])
-                image.id = row[0]
-                return image
+                return cls.from_row(row)
 
     @classmethod
     def get_by_ids(cls, conn: Connection, ids: List[int]) -> List["Image"]:
@@ -73,10 +84,7 @@ class Image:
 
         images = []
         for row in rows:
-            image = cls(path=row[1], exif=row[2])
-            image.id = row[0]
-            images.append(image)
-
+            images.append(cls.from_row(row))
         return images
 
     @classmethod
@@ -86,7 +94,9 @@ class Image:
                 """CREATE TABLE IF NOT EXISTS image (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             path TEXT UNIQUE,
-                            exif TEXT
+                            exif TEXT,
+                            size INTEGER,
+                            date TEXT
                         )"""
             )
             cur.execute("CREATE INDEX IF NOT EXISTS image_idx_path ON image(path)")
@@ -97,6 +107,12 @@ class Image:
             cur.execute("SELECT COUNT(*) FROM image")
             count = cur.fetchone()[0]
             return count
+
+    @classmethod
+    def from_row(cls, row: tuple):
+        image = cls(path=row[1], exif=row[2], size=row[3], date=row[4])
+        image.id = row[0]
+        return image
 
 
 class Tag:
@@ -252,12 +268,11 @@ class ImageTag:
         if where_clauses:
             query += " WHERE " + " AND ".join(where_clauses)
 
-        #query += " GROUP BY image_id"
+        query += " GROUP BY image_id"
 
-        #if "and" in tag_dict:
-            #query += " HAVING COUNT(DISTINCT tag_id) = ?"
-            #params.append(len(tag_dict["and"]))
-        print(query)
+        if "and" in tag_dict:
+            query += " HAVING COUNT(DISTINCT tag_id) = ?"
+            params.append(len(tag_dict["and"]))
         with closing(conn.cursor()) as cur:
             cur.execute(query, params)
             rows = cur.fetchall()

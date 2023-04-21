@@ -7,6 +7,7 @@ from scripts.tool import (
     is_valid_image_path,
     temp_path,
     read_info_from_image,
+    get_modified_date
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -176,7 +177,6 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
         conf = {}
         try:
             from modules.shared import opts
-
             conf = opts.data
         except:
             pass
@@ -300,10 +300,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
                         path = os.path.join(folder_path, item)
                         if not os.path.exists(path):
                             continue
-                        mod_time = os.path.getmtime(path)
-                        date = time.strftime(
-                            "%Y-%m-%d %H:%M:%S", time.localtime(mod_time)
-                        )
+                        date = get_modified_date(path)
                         if os.path.isfile(path):
                             bytes = os.path.getsize(path)
                             size = human_readable_size(bytes)
@@ -545,7 +542,9 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
     @app.get(db_pre + "/match_images_by_tags")
     async def match_image_by_tags(tag_ids: str):
         ids = [int(x) for x in tag_ids.split(',')]
-        print(ids)
         conn = DataBase.get_conn()
         image_ids = ImageTag.get_images_by_tags(conn, { "and": ids })
-        return DbImg.get_by_ids(conn, image_ids)
+        files = []
+        for img in DbImg.get_by_ids(conn, image_ids):
+            files.append(img.to_file_info())
+        return files

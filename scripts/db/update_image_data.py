@@ -5,7 +5,8 @@ from PIL import Image
 from scripts.tool import (
     read_info_from_image,
     parse_generation_parameters,
-    is_valid_image_path
+    is_valid_image_path,
+    get_modified_date
 )
 
 # 定义一个函数来获取图片文件的EXIF数据
@@ -13,7 +14,7 @@ def get_exif_data(file_path):
     try:
         with Image.open(file_path) as img:
             info = read_info_from_image(img)
-            return parse_generation_parameters(info)
+            return parse_generation_parameters(info), info
     except Image.DecompressionBombError:
         pass
 
@@ -42,8 +43,8 @@ def update_image_data(search_dirs: List[str]):
                 exif_data = get_exif_data(file_path)
                 if not exif_data:
                     continue
-                exif, lora, pos, _ = exif_data
-                img = DbImg(file_path)
+                exif, lora, pos, _ = exif_data[0]
+                img = DbImg(file_path, exif_data[1], os.path.getsize(file_path), get_modified_date(file_path))
                 img.save(conn)
                 
                 size_tag = Tag.get_or_create(
@@ -77,6 +78,7 @@ def update_image_data(search_dirs: List[str]):
         
     for dir in search_dirs:
         process_folder(dir)
+        conn.commit()
     for tag_id in tag_incr_count_rec:
         tag = Tag.get(conn, tag_id)
         tag.count += tag_incr_count_rec[tag_id]

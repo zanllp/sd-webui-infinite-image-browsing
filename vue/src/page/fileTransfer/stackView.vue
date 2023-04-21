@@ -11,7 +11,7 @@ import FolderNavigator from './folderNavigator.vue'
 import { RecycleScroller } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { watch } from 'vue'
-import FileItem from './FileItem/FileItem.vue'
+import FileItem from './FileItem.vue'
 
 
 const global = useGlobalStore()
@@ -236,12 +236,6 @@ watch(() => props, () => {
   a.opt {
     margin-left: 8px;
   }
-}
-
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .view {
