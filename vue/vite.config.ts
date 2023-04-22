@@ -33,7 +33,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/infinite_image_browsing/': {
-        target: 'http://127.0.0.1:7866/'
+        target: 'http://127.0.0.1:7860/'
       }
     }
   }
