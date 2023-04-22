@@ -1,25 +1,20 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref, computed } from 'vue'
 import { getDbBasicInfo, updateImageData, type DataBaseBasicInfo, getImagesByTags } from '@/api/db'
-import { FetchQueue, copy2clipboard } from 'vue3-ts-util'
+import { FetchQueue, SearchSelect } from 'vue3-ts-util'
 import { CheckOutlined } from '@/icon'
-import fileItemCell from '@/page/fileTransfer/FileItem.vue'
-import type { FileNodeInfo } from '@/api/files'
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
-// @ts-ignore
-import { RecycleScroller } from 'vue-virtual-scroller'
-import { useFilesDisplay, useHookShareState, useMobileOptimization, useFileItemActions } from '@/page/fileTransfer/hook'
-import { identity } from 'lodash-es'
+import { useGlobalStore } from '@/store/useGlobalStore'
+import { uniqueId } from 'lodash-es'
 
+const props = defineProps<{ tabIdx: number, paneIdx: number }>()
+const global = useGlobalStore()
 const queue = reactive(new FetchQueue())
 const info = ref<DataBaseBasicInfo>()
 const selectedId = ref(new Set<number>())
 const tags = computed(() => info.value ? info.value.tags.slice().sort((a, b) => b.count - a.count) : [])
-const images = ref<FileNodeInfo[]>()
-
+const pairid = uniqueId()
 onMounted(async () => {
   info.value = await getDbBasicInfo()
-  console.log(info, tags)
 })
 
 const onUpdateBtnClick = async () => {
@@ -30,32 +25,18 @@ const onUpdateBtnClick = async () => {
   })
 }
 
-const propsMock = { tabIdx: -1, target: 'local', paneIdx: -1 } as const
-const { stackViewEl,  } = useHookShareState().toRefs()
-const { itemSize, gridItems } = useFilesDisplay(propsMock)
-const { showMenuIdx } = useMobileOptimization()
-const {showGenInfo, imageGenInfo, q: genInfoQueue, onContextMenuClick } = useFileItemActions(propsMock, { openNext: identity })
-
-const query = async () => {
-  const { res } = queue.pushAction(() => getImagesByTags(Array.from(selectedId.value)))
-  images.value = (await res)
+const query = () => {
+  global.openTagSearchMatchedImageGridInRight(props.tabIdx, pairid, Array.from(selectedId.value))
 }
 
 </script>
 <template>
-  <div class="container" ref="stackViewEl">      
-    <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
-        <template #cancelText />
-        <ASkeleton active :loading="!genInfoQueue.isIdle">
-          <div style="width: 100%; word-break: break-all;white-space: pre-line;max-height: 70vh;overflow: auto;"
-            @dblclick="copy2clipboard(imageGenInfo, 'copied')">
-            <div class="hint">{{ $t('doubleClickToCopy') }}</div>
-            {{ imageGenInfo }}
-          </div>
-        </ASkeleton>
-      </AModal>
+  <div class="container">
+    <ASelect v-if="false"/>
     <template v-if="info">
-
+      <div>
+        <SearchSelect :conv="{ value: v => v.id, text: v=> v.display_name ? `${v.display_name} : ${v.name}` : v.name, }" mode="multiple" style="width: 100%;" :options="tags" :value="Array.from(selectedId)" @update:value="v => selectedId = new Set(v)" />
+      </div>
       <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">{{
         info.img_count === 0 ? 'gen idx' : 'updat index' }}</AButton>
       <AButton v-else type="primary" @click="query" :loading="!queue.isIdle">search</AButton>
@@ -67,35 +48,17 @@ const query = async () => {
         </li>
       </ul>
     </template>
-    {{gridItems}}
-    <RecycleScroller class="file-list" :items="images || []" :item-size="itemSize.first" key-field="fullpath"
-      :item-secondary-size="itemSize.second" :gridItems="gridItems">
-      <template v-slot="{ item: file, index: idx }">
-        <!-- idx 和file有可能丢失 -->
-        <file-item-cell :idx="idx" :file="file" v-model:show-menu-idx="showMenuIdx" @context-menu-click="onContextMenuClick"/>
-      </template>
-    </RecycleScroller>
   </div>
 </template>
 <style scoped lang="scss">
 .container {
-  height: 100%;
+  height: var(--pane-max-height);
   overflow: auto;
 
-  .file-list {
-    list-style: none;
-    padding: 8px;
-    height: 50vh;
-    overflow: auto;
-    width: 100%;
-
-  }
 
   .tag-list {
     list-style: none;
     padding: 0;
-    max-height: 50vh;
-    overflow: auto;
 
     .tag {
       border: 2px solid var(--zp-secondary);

@@ -4,6 +4,7 @@ import { axiosInst } from './index'
 export interface Tag {
   name: string
   id: number
+  display_name: string | null
   type: string
   count: number
 }

@@ -4,6 +4,7 @@ import platform
 import re
 import tempfile
 import imghdr
+from typing import Dict
 
 
 
@@ -224,3 +225,14 @@ def parse_generation_parameters(x: str):
             lora.append({ "name": model, "value": float(value) })
     return res, unique_by(lora, lambda x:x['name']), unique_by(pos_prompt, lambda x:x), unique_by(neg_prompt, lambda x:x)
 
+
+tags_translate: Dict[str, str] = {}
+try:
+    import codecs
+    with codecs.open(os.path.join(cwd, 'tags-translate.csv'), "r", "utf-8") as tag:
+        tags_translate_str = tag.read()
+        for line in tags_translate_str.splitlines():
+            en,mapping = line.split(',')
+            tags_translate[en.strip()] = mapping.strip()
+except Exception as e:
+    print(f"Error reading tags-translate.csv: {e}")

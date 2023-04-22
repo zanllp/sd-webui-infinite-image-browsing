@@ -1,6 +1,6 @@
 from sqlite3 import Connection, connect
 from typing import Dict, List, Optional
-from scripts.tool import cwd, get_modified_date, human_readable_size
+from scripts.tool import cwd, get_modified_date, human_readable_size, tags_translate
 from contextlib import closing
 import os
 
@@ -122,6 +122,7 @@ class Tag:
         self.type = type
         self.count = count
         self.id = None
+        self.display_name = tags_translate.get(name)
 
     def save(self, conn):
         with closing(conn.cursor()) as cur:
@@ -139,9 +140,7 @@ class Tag:
             if row is None:
                 return None
             else:
-                tag = cls(name=row[1], score=row[2], type=row[3], count=row[4])
-                tag.id = row[0]
-                return tag
+                return cls.from_row(row)
 
     @classmethod
     def get_all(cls, conn):
@@ -150,9 +149,7 @@ class Tag:
             rows = cur.fetchall()
             tags: list[Tag] = []
             for row in rows:
-                tag = cls(name=row[1], score=row[2], type=row[3], count=row[4])
-                tag.id = row[0]
-                tags.append(tag)
+                tags.append(cls.from_row(row))
             return tags
 
     @classmethod
@@ -165,9 +162,13 @@ class Tag:
                 tag.save(conn)
                 return tag
             else:
-                tag = cls(name=row[1], score=row[2], type=row[3], count=row[4])
-                tag.id = row[0]
-                return tag
+                return cls.from_row(row)
+
+    @classmethod
+    def from_row(cls, row: tuple):        
+        tag = cls(name=row[1], score=row[2], type=row[3], count=row[4])
+        tag.id = row[0]
+        return tag
 
     @classmethod
     def create_table(cls, conn):

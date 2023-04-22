@@ -2,7 +2,7 @@
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { uniqueId } from 'lodash-es'
 import { computed } from 'vue'
-import { ID } from 'vue3-ts-util'
+import { ID, ok } from 'vue3-ts-util'
 import { CloudDownloadOutlined, FileDoneOutlined } from '@/icon'
 import { message } from 'ant-design-vue'
 import { t } from '@/i18n'
@@ -23,6 +23,8 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
     return message.error(t('onlyOneTaskRecordAllowed')) // 如果允许多个需要处理一些监听器，懒得改后面再说
   }
   switch (type) {
+    case 'tag-search-matched-image-grid':
+      return
     case 'auto-upload':
     case 'task-record':
     case 'log-detail':
