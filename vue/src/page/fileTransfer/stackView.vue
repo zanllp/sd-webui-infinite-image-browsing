@@ -123,7 +123,7 @@ watch(() => props, () => {
             </a>
             <template #overlay>
               <div
-                style="  width: 512px; background: white; padding: 16px; border-radius: 4px; box-shadow: 0 0 4px #aaa; border: 1px solid #aaa;">
+                style="  width: 512px; background: var(--zp-primary-background); padding: 16px; border-radius: 4px; box-shadow: 0 0 4px var(--zp-secondary-background); border: 1px solid var(--zp-secondary-background);">
                 <a-form v-bind="{
                   labelCol: { span: 6 },
                   wrapperCol: { span: 18 }
