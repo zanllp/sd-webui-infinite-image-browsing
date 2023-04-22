@@ -1,4 +1,4 @@
-from scripts.api import baidu_netdisk_api, send_img_path, AutoUpload
+from scripts.api import infinite_image_browsing_api, send_img_path, AutoUpload
 from modules import script_callbacks, generation_parameters_copypaste as send, extras
 from scripts.tool import locale
 from PIL import Image
@@ -16,7 +16,7 @@ def on_ui_tabs():
         with gr.Row():
             with gr.Column():
                 gr.HTML(
-                    "如果你看到这个那说明此项那说明出现了问题", elem_id="baidu_netdisk_container_wrapper"
+                    "如果你看到这个那说明此项那说明出现了问题", elem_id="infinite_image_browsing_container_wrapper"
                 )
         # 以下是使用2个组件模拟粘贴过程
         img = gr.Image(
@@ -60,5 +60,5 @@ def on_img_saved(params: script_callbacks.ImageSaveParams):
     
 
 script_callbacks.on_ui_tabs(on_ui_tabs)
-script_callbacks.on_app_started(baidu_netdisk_api)
+script_callbacks.on_app_started(infinite_image_browsing_api)
 script_callbacks.on_image_saved(on_img_saved)

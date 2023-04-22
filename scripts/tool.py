@@ -1,8 +1,10 @@
+from datetime import datetime
 import os
 import platform
 import re
 import tempfile
 import imghdr
+from typing import Dict
 
 
 
@@ -127,3 +129,110 @@ def get_locale():
     return 'zh' if lang and lang.startswith('zh') else 'en'
 
 locale = get_locale()
+
+def get_modified_date(folder_path: str):
+    return datetime.fromtimestamp(os.path.getmtime(folder_path)).strftime('%Y-%m-%d %H:%M:%S')
+
+
+def unique_by(seq, key_func):
+    seen = set()
+    return [x for x in seq if not (key := key_func(x)) in seen and not seen.add(key)]
+
+def read_info_from_image(image) -> str:    
+    import piexif
+    import piexif.helper
+    items = image.info or {}
+    geninfo = items.pop('parameters', None)
+    if "exif" in items:
+        exif = piexif.load(items["exif"])
+        exif_comment = (exif or {}).get("Exif", {}).get(piexif.ExifIFD.UserComment, b'')
+        try:
+            exif_comment = piexif.helper.UserComment.load(exif_comment)
+        except ValueError:
+            exif_comment = exif_comment.decode('utf8', errors="ignore")
+
+        if exif_comment:
+            items['exif comment'] = exif_comment
+            geninfo = exif_comment
+    return geninfo
+
+re_param_code = r'\s*([\w ]+):\s*("(?:\\"[^,]|\\"|\\|[^\"])+"|[^,]*)(?:,|$)'
+re_param = re.compile(re_param_code)
+re_imagesize = re.compile(r"^(\d+)x(\d+)$")
+re_lora_prompt = re.compile("<lora:([\w_]+):([\d.]+)>")
+re_parens = re.compile(r'[\\/\[\](){}]+')
+
+def parse_prompt(x:str):
+    x = re.sub(re_parens, '', x.lower().replace('，',',').replace('-',' ').replace('_', ' '))
+    tag_list = [x.strip() for x in x.split(',')]
+    res = []
+    lora_list = []
+    for tag in tag_list:
+        if len(tag) == 0:
+            continue
+        idx_colon = tag.find(':')
+        if idx_colon != -1:
+            lora_res = re.match(re_lora_prompt, tag)
+            if lora_res:
+                lora_list.append({ "name": lora_res.group(1), "value": float(lora_res.group(2))})
+            else:
+              res.append(tag[0:idx_colon])
+        else:
+            res.append(tag)
+    return res, lora_list
+
+def parse_generation_parameters(x: str):
+    res = {}
+    prompt = ""
+    negative_prompt = ""
+    done_with_prompt = False
+    if not x:
+        return {},[],[],[]
+    *lines, lastline = x.strip().split("\n")
+    if len(re_param.findall(lastline)) < 3:
+        lines.append(lastline)
+        lastline = ''
+
+    for i, line in enumerate(lines):
+        line = line.strip()
+        if line.startswith("Negative prompt:"):
+            done_with_prompt = True
+            line = line[16:].strip()
+
+        if done_with_prompt:
+            negative_prompt += ("" if negative_prompt == "" else "\n") + line
+        else:
+            prompt += ("" if prompt == "" else "\n") + line
+
+    #res["pos_prompt"] = prompt
+    #res["neg_prompt"] = negative_prompt
+
+    for k, v in re_param.findall(lastline):
+        v = v[1:-1] if v[0] == '"' and v[-1] == '"' else v
+        m = re_imagesize.match(v)
+        if m is not None:
+            res[k+"-1"] = m.group(1)
+            res[k+"-2"] = m.group(2)
+        else:
+            res[k] = v
+    pos_prompt, lora = parse_prompt(prompt)
+    neg_prompt = [] # parse_prompt(negative_prompt)[0]
+    for k in res:
+        k_s = str(k)
+        if k_s.startswith("AddNet Module") and str(res[k]).lower() == "lora":
+            model = res[k_s.replace("Module", "Model")]
+            value = res.get(k_s.replace("Module", "Weight A"), "1")
+            lora.append({ "name": model, "value": float(value) })
+    return res, unique_by(lora, lambda x:x['name']), unique_by(pos_prompt, lambda x:x), unique_by(neg_prompt, lambda x:x)
+
+
+tags_translate: Dict[str, str] = {}
+try:
+    import codecs
+    with codecs.open(os.path.join(cwd, 'tags-translate.csv'), "r", "utf-8") as tag:
+        tags_translate_str = tag.read()
+        for line in tags_translate_str.splitlines():
+            en,mapping = line.split(',')
+            tags_translate[en.strip()] = mapping.strip()
+except Exception as e:
+    print(f"Error reading tags-translate.csv: {e}")

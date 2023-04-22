@@ -25,8 +25,8 @@ import { CloudServerOutlined, DatabaseOutlined } from '@/icon'
 export const stackCache = new Map<string, Page[]>()
 
 const global = useGlobalStore()
-export const toRawFileUrl = (file: FileNodeInfo, download = false) => `/baidu_netdisk/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
-export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) => `/baidu_netdisk/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
+export const toRawFileUrl = (file: FileNodeInfo, download = false) => `/infinite_image_browsing/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
+export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) => `/infinite_image_browsing/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
 
 
 const { eventEmitter: events, useEventListen } = typedEventEmitter<{ removeFiles: [paths: string[], loc: string], addFiles: [paths: string[], loc: string] }>()
@@ -155,8 +155,8 @@ export interface Page {
 }
 /**
  * 全屏预览
- * @param props 
- * @returns 
+ * @param props
+ * @returns
  */
 export function usePreview (props: Props) {
   const { scroller, sortedFiles, previewIdx, eventEmitter, canLoadNext, } = useHookShareState().toRefs()
@@ -516,7 +516,6 @@ export function useFilesDisplay (props: Props) {
     }
   }, 300)
 
-  const thumbnailSize = computed(() => viewMode.value === 'grid' ? [global.gridThumbnailSize, global.gridThumbnailSize].join() : [global.largeGridThumbnailSize, global.largeGridThumbnailSize].join())
   return {
     gridItems,
     sortedFiles,
@@ -531,8 +530,7 @@ export function useFilesDisplay (props: Props) {
     loadNextDir,
     loadNextDirLoading,
     canLoadNext,
-    itemSize,
-    thumbnailSize
+    itemSize
   }
 }
 
@@ -803,8 +801,7 @@ export const useMobileOptimization = () => {
             if (idx && Number.isSafeInteger(+idx)) {
               showMenuIdx.value = +idx
             }
-          console.log(fileEl)
-          return 
+          return
         }
       }
 

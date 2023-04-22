@@ -14,11 +14,20 @@ import { typedEventEmitter, type UniqueId, ID } from 'vue3-ts-util'
 
 
 interface OtherTabPane {
-  type: 'auto-upload' | 'task-record' | 'empty' | 'log-detail' | 'global-setting'
+  type: 'auto-upload' | 'task-record' | 'empty' | 'log-detail' | 'global-setting' | 'tag-search'
   name: string
   readonly key: string
 }
 // logDetailId
+
+
+interface TagSearchMatchedImageGridTabPane {
+  type: 'tag-search-matched-image-grid'
+  name: string
+  readonly key: string
+  selectedTagIds: number[]
+  id: string
+}
 
 interface LogDetailTabPane {
   type: 'log-detail'
@@ -37,7 +46,7 @@ export interface FileTransferTabPane {
   stackKey?: string
 }
 
-export type TabPane = FileTransferTabPane | OtherTabPane | LogDetailTabPane
+export type TabPane = FileTransferTabPane | OtherTabPane | LogDetailTabPane | TagSearchMatchedImageGridTabPane
 
 export interface Tab extends UniqueId {
   panes: TabPane[]
@@ -70,6 +79,8 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     lastTabListRecord.value = lastTabListRecord.value.slice(0, 2) as any
   }
 
+
+
   const createTaskRecordPaneIfNotExist = async (tabIdx = 0) => {
     if (!tabList.value.map(v => v.panes).flat().find(v => v.type === 'task-record')) {
       tabList.value[tabIdx].panes.push({ type: 'task-record', key: uniqueId(), name: '任务记录' })
@@ -84,6 +95,31 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     } else {
       tab.key = log.key
       tab.panes.push(log)
+    }
+  }
+
+  const openTagSearchMatchedImageGridInRight = async (tabIdx: number, id: string, tagIds: number[]) => {
+    let pane = tabList.value.map(v => v.panes).flat()
+      .find(v => v.type === 'tag-search-matched-image-grid' && v.id === id) as TagSearchMatchedImageGridTabPane
+    if (pane) {
+      pane.selectedTagIds = tagIds.slice()
+      return
+    } else {
+      pane = {
+        type: 'tag-search-matched-image-grid',
+        id: id,
+        selectedTagIds: tagIds.slice(),
+        key: uniqueId(),
+        name: t('searchResults')
+      }
+    }
+
+    const tab = tabList.value[tabIdx + 1]
+    if (!tab) {
+      tabList.value.push(ID({ panes: [pane], key: pane.key }))
+    } else {
+      tab.key = pane.key
+      tab.panes.push(pane)
     }
 
   }
@@ -124,15 +160,16 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     openBaiduYunIfNotLogged,
     longPressOpenContextMenu,
     baiduNetdiskPageOpened,
+    openTagSearchMatchedImageGridInRight,
     ...typedEventEmitter<{ createNewTask: Partial<UploadTaskSummary> }>()
   }
 }, {
   persist: {
     paths: [
-      'lang', 'enableThumbnail', 'lastTabListRecord', 
+      'lang', 'enableThumbnail', 'lastTabListRecord',
       'stackViewSplit', 'autoUploadRecvDir', 'recent',
-       'gridThumbnailSize', 'largeGridThumbnailSize', 
-       'longPressOpenContextMenu','baiduNetdiskPageOpened'
-      ]
+      'gridThumbnailSize', 'largeGridThumbnailSize',
+      'longPressOpenContextMenu', 'baiduNetdiskPageOpened'
+    ]
   }
 })

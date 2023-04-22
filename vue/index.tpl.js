@@ -18,7 +18,7 @@
   }
   asyncCheck(
     // eslint-disable-next-line no-undef
-    () => gradioApp().querySelector('#baidu_netdisk_container_wrapper'),
+    () => gradioApp().querySelector('#infinite_image_browsing_container_wrapper'),
     500,
     Infinity
   ).then((el) => {

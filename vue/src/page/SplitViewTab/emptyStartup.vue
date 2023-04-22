@@ -2,7 +2,7 @@
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { uniqueId } from 'lodash-es'
 import { computed } from 'vue'
-import { ID } from 'vue3-ts-util'
+import { ID, ok } from 'vue3-ts-util'
 import { CloudDownloadOutlined, FileDoneOutlined } from '@/icon'
 import { message } from 'ant-design-vue'
 import { t } from '@/i18n'
@@ -11,6 +11,7 @@ const global = useGlobalStore()
 const props = defineProps<{ tabIdx: number, paneIdx: number }>()
 const compCnMap: Partial<Record<TabPane['type'], string>> = {
   local: t('local'),
+  "tag-search": t('imgSearch'),
   'global-setting': t('globalSettings'),
   netdisk: t('baiduCloud'),
   "task-record": t('taskRecord'),
@@ -22,10 +23,13 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
     return message.error(t('onlyOneTaskRecordAllowed')) // 如果允许多个需要处理一些监听器，懒得改后面再说
   }
   switch (type) {
+    case 'tag-search-matched-image-grid':
+      return
     case 'auto-upload':
     case 'task-record':
     case 'log-detail':
     case 'global-setting':
+    case 'tag-search':
     case 'empty':
       pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId() }
       break
@@ -45,7 +49,7 @@ const lastRecord = computed(() => global.lastTabListRecord?.[1])
 
 const walkModeSupportedDir = computed(() => global.autoCompletedDirList.filter(({ key: k }) => k === 'outdir_txt2img_samples' || k === 'outdir_img2img_samples' || k === 'outdir_extras_samples' || k === 'outdir_save' || k === 'outdir_samples'))
 const canpreviewInNewWindow = window.parent !== window
-const previewInNewWindow = () => window.parent.open('/baidu_netdisk')
+const previewInNewWindow = () => window.parent.open('/infinite_image_browsing')
 </script>
 <template>
   <div class="container">
@@ -83,13 +87,13 @@ const previewInNewWindow = () => window.parent.open('/baidu_netdisk')
       <div class="quick-start">
         <h2>{{ $t('launch') }}</h2>
         <ul>
-          <li v-for="comp in Object.keys(compCnMap).slice(0, 2) as TabPane['type'][]" :key="comp"
+          <li v-for="comp in Object.keys(compCnMap).slice(0, 3) as TabPane['type'][]" :key="comp"
             class="quick-start__item" @click.prevent="openInCurrentTab(comp)">
             <span class="quick-start__text line-clamp-1">{{ compCnMap[comp] }}</span>
           </li>
           <a-collapse style="margin-top: 32px; " v-model:activeKey="global.baiduNetdiskPageOpened" :bordered="false">
             <a-collapse-panel key="true" :header="$t('baiduNetdiskCollapseTitle')" >
-              <li v-for="comp in Object.keys(compCnMap).slice(2) as TabPane['type'][]" :key="comp"
+              <li v-for="comp in Object.keys(compCnMap).slice(3) as TabPane['type'][]" :key="comp"
                 class="quick-start__item" @click.prevent="openInCurrentTab(comp)">
                 <span class="quick-start__text line-clamp-1">{{ compCnMap[comp] }}</span>
               </li>
