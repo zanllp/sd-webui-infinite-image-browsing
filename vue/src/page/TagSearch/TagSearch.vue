@@ -37,15 +37,16 @@ const toTagDisplayName = (v: Tag) => v.display_name ? `${v.display_name} : ${v.n
     <ASelect v-if="false" />
     <template v-if="info">
       <div>
-        <div>
+        <div class="search-bar">
           <SearchSelect :conv="{ value: v => v.id, text: toTagDisplayName, }" mode="multiple" style="width: 100%;"
-            :options="tags" :value="Array.from(selectedId)" placeholder="Select tags to match images"
-            @update:value="v => selectedId = new Set(v)" />
+              :options="tags" :value="Array.from(selectedId)" placeholder="Select tags to match images"
+              @update:value="v => selectedId = new Set(v)" />
+          <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary"
+            v-if="info.expired || !info.img_count">
+            {{
+              info.img_count === 0 ? 'Generate index for search image' : 'Update index' }}</AButton>
+          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle">Search</AButton>
         </div>
-        <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
-          {{
-            info.img_count === 0 ? 'Generate index for search image' : 'Update index' }}</AButton>
-        <AButton v-else type="primary" @click="query" :loading="!queue.isIdle">Search</AButton>
       </div>
       <ul class="tag-list">
         <li v-for="tag in tags" :key="tag.id" class="tag " :class="{ selected: selectedId.has(tag.id) }"
@@ -65,6 +66,16 @@ const toTagDisplayName = (v: Tag) => v.display_name ? `${v.display_name} : ${v.n
   flex-direction: column;
   align-items: stretch;
 
+
+  .select {
+    padding: 8px;
+  }
+
+  .search-bar {
+    padding: 8px;
+    display: flex;
+  }
+
   .tag-list {
     list-style: none;
     padding: 0;
@@ -72,9 +83,9 @@ const toTagDisplayName = (v: Tag) => v.display_name ? `${v.display_name} : ${v.n
 
     .tag {
       border: 2px solid var(--zp-secondary);
-      color: var(--zp-secondary);
+      color: var(--zp-primary);
       border-radius: 999px;
-      padding: 2px 8px;
+      padding: 4px 16px;
       margin: 4px;
       display: inline-block;
       cursor: pointer;
