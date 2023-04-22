@@ -385,13 +385,16 @@ export function useLocation (props: Props) {
         return refresh()
       }
       for (const frag of frags) {
+        if (frag === '') { // 这种情况 D:\Desktop\sd.webui\webui\outputs\
+          break
+        }
         const target = currPage.value?.files.find((v) => v.name === frag)
         ok(target)
         await openNext(target)
       }
     } catch (error) {
-      console.error(dir)
       message.error(t('moveFailedCheckPath'))
+      console.error(dir, dir.split(/\\|\//), currPage.value)
       stack.value = backup
       throw error
     }
