@@ -8,7 +8,7 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { RecycleScroller } from 'vue-virtual-scroller'
 import {
   useFilesDisplay, type Scroller, useHookShareState,
-  useMobileOptimization, useFileItemActions, toRawFileUrl, usePreview
+  useMobileOptimization, useFileItemActions, toRawFileUrl
 } from '@/page/fileTransfer/hook'
 import { identity } from 'lodash-es'
 import { getImagesByTags } from '@/api/db'
@@ -33,7 +33,6 @@ const { stackViewEl } = useHookShareState().toRefs()
 const { itemSize, gridItems } = useFilesDisplay(propsMock)
 const { showMenuIdx } = useMobileOptimization()
 const { showGenInfo, imageGenInfo, q: genInfoQueue, onContextMenuClick } = useFileItemActions(propsMock, { openNext: identity })
-const { previewIdx } = usePreview(propsMock)
 
 </script>
 <template>
@@ -62,6 +61,8 @@ const { previewIdx } = usePreview(propsMock)
 </template>
 <style scoped lang="scss">
 .container {
+  
+  background: var(--zp-secondary-background);
   .file-list {
     list-style: none;
     padding: 8px;
@@ -69,10 +70,6 @@ const { previewIdx } = usePreview(propsMock)
     overflow: auto;
     height: var(--pane-max-height);
     width: 100%;
-
   }
-
-
-
 }
 </style>

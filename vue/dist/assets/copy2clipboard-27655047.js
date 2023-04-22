@@ -1,1 +1,0 @@
-import{b as s}from"./index-dd56a761.js";import{cq as t,at as a}from"./index-935c2795.js";function r(e,o){return e&&e.length?t(e,s(o)):[]}const i=(e,o)=>(a.success({content:o??`已复制内容 "${e}" 到粘贴板`}),navigator.clipboard.writeText(e));export{i as c,r as u};

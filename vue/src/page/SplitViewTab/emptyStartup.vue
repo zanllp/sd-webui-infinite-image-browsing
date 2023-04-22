@@ -11,7 +11,7 @@ const global = useGlobalStore()
 const props = defineProps<{ tabIdx: number, paneIdx: number }>()
 const compCnMap: Partial<Record<TabPane['type'], string>> = {
   local: t('local'),
-  "tag-search": 'tag搜索',
+  "tag-search": t('imgSearch'),
   'global-setting': t('globalSettings'),
   netdisk: t('baiduCloud'),
   "task-record": t('taskRecord'),
