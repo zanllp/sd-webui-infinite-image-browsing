@@ -1,10 +1,8 @@
 import { useGlobalStore, type FileTransferTabPane } from '@/store/useGlobalStore'
-import { useTaskListStore } from '@/store/useTaskListStore'
-import { computedAsync, onLongPress, useElementSize } from '@vueuse/core'
+import { onLongPress, useElementSize } from '@vueuse/core'
 import { ref, computed, watch, onMounted, h, reactive } from 'vue'
 
-import { downloadBaiduyun, genInfoCompleted, getImageGenerationInfo, setImgPath } from '@/api'
-import { isAxiosError } from 'axios'
+import { genInfoCompleted, getImageGenerationInfo, setImgPath } from '@/api'
 import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook, copy2clipboard, delay, FetchQueue, typedEventEmitter, ID } from 'vue3-ts-util'
 import { gradioApp, isImageFile } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
@@ -17,9 +15,7 @@ import NProgress from 'multi-nprogress'
 import { Modal, message } from 'ant-design-vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { nextTick } from 'vue'
-import { loginByBduss } from '@/api/user'
 import { t } from '@/i18n'
-import { locale } from '@/i18n'
 import { CloudServerOutlined, DatabaseOutlined } from '@/icon'
 
 export const stackCache = new Map<string, Page[]>()
@@ -85,13 +81,12 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     stackViewEl: ref<HTMLDivElement>(),
     walkModePath,
     props,
-    ...useBaiduyun(),
     ...typedEventEmitter<{ loadNextDir: undefined, refresh: void }>()
   }
 })
 
 export interface Props {
-  target: 'local' | 'netdisk',
+  target: 'local',
   tabIdx: number,
   paneIdx: number,
   path?: string,
@@ -99,54 +94,6 @@ export interface Props {
 }
 
 export type ViewMode = 'line' | 'grid' | 'large-size-grid'
-const taskListStore = useTaskListStore()
-
-export const useBaiduyun = () => {
-
-  const bduss = ref('')
-  const installedBaiduyun = computedAsync(taskListStore.checkBaiduyunInstalled, false)
-  const baiduyunLoading = ref(false)
-  const failedHint = ref('')
-  const installBaiduyunBin = async () => {
-    try {
-      failedHint.value = ''
-      baiduyunLoading.value = true
-      await downloadBaiduyun()
-      taskListStore.baiduyunInstalled = null
-      await taskListStore.checkBaiduyunInstalled()
-    } catch (e) {
-      if (isAxiosError(e)) {
-        failedHint.value = e.response?.data.detail ?? 'error'
-      }
-    } finally {
-      baiduyunLoading.value = false
-    }
-  }
-
-  const onLoginBtnClick = async () => {
-    if (baiduyunLoading.value) {
-      return
-    }
-    try {
-      baiduyunLoading.value = true
-      global.user = await loginByBduss(bduss.value)
-    } catch (error) {
-      console.error(error)
-      message.error(isAxiosError(error) ? error.response?.data?.detail ?? t('unknownError') : t('unknownError'))
-    } finally {
-      baiduyunLoading.value = false
-    }
-  }
-
-  return {
-    installBaiduyunBin,
-    installedBaiduyun,
-    failedHint,
-    baiduyunLoading,
-    bduss,
-    onLoginBtnClick
-  }
-}
 
 export interface Page {
   files: FileNodeInfo[]
@@ -254,7 +201,7 @@ export function usePreview (props: Props) {
 
 export function useLocation (props: Props) {
   const np = ref<Progress.NProgress>()
-  const { installedBaiduyun, scroller, stackViewEl, stack, currPage, currLocation, basePath
+  const { scroller, stackViewEl, stack, currPage, currLocation, basePath
     , sortMethod, useEventListen, walkModePath
   } = useHookShareState().toRefs()
 
@@ -265,9 +212,6 @@ export function useLocation (props: Props) {
   }, 300))
 
   onMounted(async () => {
-    if (props.target === 'netdisk' && installedBaiduyun.value) {
-      return
-    }
     if (!stack.value.length) { // 有传入stack时直接使用传入的
       const resp = await getTargetFolderFiles(props.target, '/')
       stack.value.push({
@@ -292,20 +236,6 @@ export function useLocation (props: Props) {
     }
   })
 
-  /**
-   * 登录后重新获取
-   */
-  watch(() => props.target === 'netdisk' && installedBaiduyun.value && global.user, async (v, last) => {
-    if (v && !last) {
-      const resp = await getTargetFolderFiles(props.target, '/')
-      stack.value = [{
-        files: resp.files,
-        curr: '/'
-      }]
-    }
-  })
-
-
   watch(currLocation, debounce((loc) => {
     const pane = global.tabList[props.tabIdx].panes[props.paneIdx] as FileTransferTabPane
     pane.path = loc
@@ -314,7 +244,7 @@ export function useLocation (props: Props) {
       if (!props.walkMode) {
         return filename
       }
-      return 'Walk: ' +  (global.autoCompletedDirList.find(v => v.dir === walkModePath.value)?.zh ?? filename)
+      return 'Walk: ' + (global.autoCompletedDirList.find(v => v.dir === walkModePath.value)?.zh ?? filename)
     }
     pane.name = h('div', { style: 'display:flex;align-items:center' }, [
       h(props.target === 'local' ? DatabaseOutlined : CloudServerOutlined),
@@ -600,23 +530,7 @@ export function useFileTransfer (props: Props) {
           }
         })
       } else {
-        const type = data.from === 'local' ? 'upload' : 'download'
-        const typeT = type === 'upload' ? t('upload') : t('download')
-        const content = h('div', [
-          h('div', `${locale.value === 'en' ? 'from' : '从'} ${props.target !== 'local' ? t('local') : t('cloud')} `),
-          h('ol', data.path.map(v => v.split(/[/\\]/).pop()).map(v => h('li', v))),
-          h('div', `${typeT} ${props.target === 'local' ? t('local') : t('cloud')} ${toPath}`)
-        ])
-        Modal.confirm({
-          title: t('confirmCreateTask', { type: typeT, more: locale.value === 'zh' ? ', 这是文件夹或者包含文件夹!' : ',which contains folders!' }),
-          content,
-          maskClosable: true,
-          async onOk () {
-            await global.createTaskRecordPaneIfNotExist(props.tabIdx)
-            console.log('request createNewTask', { send_dirs: data.path, recv_dir: toPath, type })
-            taskListStore.pendingBaiduyunTaskQueue.push({ send_dirs: data.path, recv_dir: toPath, type })
-          }
-        })
+        // 原有的百度云
       }
 
     }
@@ -680,10 +594,10 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
       try {
         spinning.value = true
         await setImgPath(file.fullpath) // 设置图像路径
-        const btn = gradioApp().querySelector('#bd_hidden_img_update_trigger')! as HTMLButtonElement
+        const btn = gradioApp().querySelector('#iib_hidden_img_update_trigger')! as HTMLButtonElement
         btn.click() // 触发图像组件更新
         ok(await genInfoCompleted(), 'genInfoCompleted timeout') // 等待消息生成完成
-        const tabBtn = gradioApp().querySelector(`#bd_hidden_tab_${tab}`) as HTMLButtonElement
+        const tabBtn = gradioApp().querySelector(`#iib_hidden_tab_${tab}`) as HTMLButtonElement
         tabBtn.click() // 触发粘贴
       } catch (error) {
         console.error(error)
@@ -800,10 +714,10 @@ export const useMobileOptimization = () => {
       while (fileEl.parentElement) {
         fileEl = fileEl.parentElement as any
         if (fileEl.tagName.toLowerCase() === 'li' && fileEl.classList.contains('file-item-trigger')) {
-            const idx = fileEl.dataset?.idx
-            if (idx && Number.isSafeInteger(+idx)) {
-              showMenuIdx.value = +idx
-            }
+          const idx = fileEl.dataset?.idx
+          if (idx && Number.isSafeInteger(+idx)) {
+            showMenuIdx.value = +idx
+          }
           return
         }
       }

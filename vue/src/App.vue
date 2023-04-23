@@ -2,7 +2,6 @@
 <script setup lang="ts">
 import { onMounted, reactive } from 'vue'
 import { FetchQueue } from 'vue3-ts-util'
-import { getUserInfo } from './api/user'
 import { getGlobalSetting } from './api'
 import { useGlobalStore } from './store/useGlobalStore'
 import { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
@@ -16,7 +15,6 @@ onMounted(async () => {
     const r = await getAutoCompletedTagList(resp)
     globalStore.autoCompletedDirList = r.filter(v => v?.dir?.trim?.())
   })
-  globalStore.user = await queue.pushAction(getUserInfo).res
 })
 
 </script>

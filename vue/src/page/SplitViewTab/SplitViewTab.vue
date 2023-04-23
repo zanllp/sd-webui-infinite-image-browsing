@@ -11,12 +11,8 @@ import { message } from 'ant-design-vue'
 import { t } from '@/i18n'
 const global = useGlobalStore()
 const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> = {
-  'auto-upload': defineAsyncComponent(() => import('@/page/autoUpload/autoUpload.vue')),
   local: defineAsyncComponent(() => import('@/page/fileTransfer/stackView.vue')),
-  netdisk: defineAsyncComponent(() => import('@/page/fileTransfer/stackView.vue')),
-  "task-record": defineAsyncComponent(() => import('@/page/taskRecord/taskRecord.vue')),
   empty: defineAsyncComponent(() => import('./emptyStartup.vue')),
-  "log-detail": defineAsyncComponent(() => import('@/page/taskRecord/logDetail.vue')),
   "global-setting": defineAsyncComponent(() => import('@/page/globalSetting.vue')),
   "tag-search-matched-image-grid": defineAsyncComponent(() => import('@/page/TagSearch/MatchedImageGrid.vue')),
   "tag-search": defineAsyncComponent(() => import('@/page/TagSearch/TagSearch.vue'))
@@ -74,8 +70,7 @@ watch(() => global.tabList, async () => {
       <pane v-for="tab, tabIdx in global.tabList" :key="key(tab)">
         <edge-trigger :tabIdx="tabIdx">
           <a-tabs type="editable-card" v-model:activeKey="tab.key" @edit="(key, act) => onEdit(tabIdx, key, act)">
-            <a-tab-pane v-for="pane, paneIdx in tab.panes" :key="pane.key" :tab="pane.name" class="pane"
-              :force-render="pane.type === 'task-record'">
+            <a-tab-pane v-for="pane, paneIdx in tab.panes" :key="pane.key" :tab="pane.name" class="pane">
               <component :is="compMap[pane.type]" :tabIdx="tabIdx" :paneIdx="paneIdx" v-bind="pane" />
             </a-tab-pane>
           </a-tabs>
