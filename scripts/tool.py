@@ -235,4 +235,4 @@ try:
             en,mapping = line.split(',')
             tags_translate[en.strip()] = mapping.strip()
 except Exception as e:
-    print(f"Error reading tags-translate.csv: {e}")
+    pass
