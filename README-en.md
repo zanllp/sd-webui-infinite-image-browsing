@@ -8,7 +8,7 @@ If you have any questions or suggestions about this project, please submit an is
 ## Key Features
 - Multi-tab and multi-pane like Chrome and VS Code. Create tabs and preview multiple folders, move files between panes.
 - Supports using 'walk' mode to browse images, automatically loading the next folder `(similar to os.walk)`, allowing you to browse all images without paging. Tested to work properly with over 27,000 files.
-- It supports searching images using prompt, model, lora, etc. The used tags will be listed and tag pairs input prompt and tag translation are supported. Moreover, image search can be completed instantly.
+- It supports searching images using prompt, model, lora, etc. The used tags will be listed. Supports auto completion and translation of tags. Moreover, image search can be completed instantly.
 - View image generation information, send images to other tabs, optional thumbnail preview, full-screen preview, and move.
 - Preview based on the file tree structure, supports basic file operations as well as multi-select deletion/moving.
 
