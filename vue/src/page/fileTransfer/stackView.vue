@@ -16,7 +16,7 @@ import FileItem from './FileItem.vue'
 
 const global = useGlobalStore()
 const props = defineProps<{
-  target: 'local' | 'netdisk',
+  target: 'local',
   tabIdx: number,
   paneIdx: number,
   /**
@@ -29,8 +29,8 @@ const props = defineProps<{
    */
   stackKey?: string
 }>()
-const { installBaiduyunBin, installedBaiduyun, failedHint, baiduyunLoading,
-  scroller, walkModePath, stackViewEl, props: _props, bduss, onLoginBtnClick, multiSelectedIdxs,
+const { 
+  scroller, walkModePath, stackViewEl, props: _props,  multiSelectedIdxs,
   spinning
 } = useHookShareState().toRefs()
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to } = useLocation(props)
@@ -59,30 +59,8 @@ watch(() => props, () => {
 <template>
   <ASpin :spinning="spinning" size="large">
     <ASelect style="display: none;"></ASelect>
-    <div v-if="props.target === 'netdisk' && (!installedBaiduyun || !global.user)" class="uninstalled-hint">
-      <template v-if="!installedBaiduyun">
-        <div>{{ $t('dependenciesNotInstalled') }}</div>
-        <AButton type="primary" :loading="baiduyunLoading" @click="installBaiduyunBin">{{ $t('clickHere2install') }}
-        </AButton>
-        <p v-if="failedHint">{{ failedHint }}</p>
-      </template>
-      <template v-else>
-        <a-form layout="inline">
-          <a-form-item label="bduss">
-            <a-input v-model:value="bduss" style="width:300px"></a-input>
-          </a-form-item>
-          <a-form-item>
-            <a-button @click="onLoginBtnClick" type="primary" :loading="baiduyunLoading">
-              <template #icon>
-                <login-outlined />
-              </template>
-              {{ $t('login') }}
-            </a-button>
-          </a-form-item>
-        </a-form>
-      </template>
-    </div>
-    <div ref="stackViewEl" @dragover.prevent @drop.prevent="onDrop($event)" class="container" v-else>
+
+    <div ref="stackViewEl" @dragover.prevent @drop.prevent="onDrop($event)" class="container" >
       <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
         <template #cancelText />
         <ASkeleton active :loading="!q.isIdle">
