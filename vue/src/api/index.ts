@@ -10,6 +10,7 @@ axiosInst.interceptors.response.use(resp => resp, err => {
   if (isAxiosError(err)) {
     const errmsg = err.response?.data?.detail ?? t('errorOccurred')
     message.error(errmsg)
+    throw new Error(errmsg)
   }
   return err
 })

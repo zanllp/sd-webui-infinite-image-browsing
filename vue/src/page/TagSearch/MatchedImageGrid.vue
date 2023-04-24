@@ -29,10 +29,18 @@ watch(() => props.selectedTagIds, async () => {
 const scroller = ref<Scroller>()
 
 const propsMock = { tabIdx: -1, target: 'local', paneIdx: -1 } as const
-const { stackViewEl } = useHookShareState().toRefs()
+const { stackViewEl, multiSelectedIdxs } = useHookShareState().toRefs()
 const { itemSize, gridItems } = useFilesDisplay(propsMock)
 const { showMenuIdx } = useMobileOptimization()
 const { showGenInfo, imageGenInfo, q: genInfoQueue, onContextMenuClick } = useFileItemActions(propsMock, { openNext: identity })
+
+const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
+  await onContextMenuClick(e, file, idx)
+  if (e.key === "deleteFiles") {
+    const idxs = multiSelectedIdxs.value.includes(idx) ? multiSelectedIdxs.value : [idx]
+    images.value = images.value!.filter((_, idx) => !idxs.includes(idx))
+  }
+}
 
 </script>
 <template>
@@ -48,12 +56,12 @@ const { showGenInfo, imageGenInfo, q: genInfoQueue, onContextMenuClick } = useFi
           </div>
         </ASkeleton>
       </AModal>
-      <RecycleScroller ref="scroller" class="file-list" :items="images || []" :item-size="itemSize.first" key-field="fullpath"
-        :item-secondary-size="itemSize.second" :gridItems="gridItems">
+      <RecycleScroller ref="scroller" class="file-list" :items="images || []" :item-size="itemSize.first"
+        key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems">
         <template v-slot="{ item: file, index: idx }">
           <!-- idx 和file有可能丢失 -->
           <file-item-cell :idx="idx" :file="file" v-model:show-menu-idx="showMenuIdx"
-            :full-screen-preview-image-url="toRawFileUrl(file)" @context-menu-click="onContextMenuClick" />
+            :full-screen-preview-image-url="toRawFileUrl(file)" @context-menu-click="onContextMenuClickU" />
         </template>
       </RecycleScroller>
     </ASpin>
@@ -61,8 +69,9 @@ const { showGenInfo, imageGenInfo, q: genInfoQueue, onContextMenuClick } = useFi
 </template>
 <style scoped lang="scss">
 .container {
-  
+
   background: var(--zp-secondary-background);
+
   .file-list {
     list-style: none;
     padding: 8px;

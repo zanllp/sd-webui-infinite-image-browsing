@@ -8,7 +8,8 @@ from scripts.tool import (
     read_info_from_image,
     get_modified_date,
     is_win,
-    cwd
+    cwd,
+    locale
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -70,15 +71,26 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
     @app.post(pre + "/delete_files/{target}")
     async def delete_files(req: DeleteFilesReq, target: Literal["local", "netdisk"]):
         if target == "local":
+            conn = DataBase.get_conn()
             for path in req.file_paths:
                 try:
                     if os.path.isdir(path):
+                        if len(os.listdir(path)):
+                            error_msg = "When a folder is not empty, it is not allowed to be deleted." if locale == "en" else "文件夹不为空时不允许删除。"
+                            raise HTTPException(400, detail=error_msg)
                         shutil.rmtree(path)
                     else:
                         os.remove(path)
+                        img = DbImg.get(conn, os.path.normpath(path))
+                        if img:
+                            logger.info("delete file: %s", path)
+                            ImageTag.remove_by_image(conn, img.id)
+                            DbImg.remove(conn, img.id)
                 except OSError as e:
                     # 处理删除失败的情况
-                    raise HTTPException(400, detail=f"删除文件{path}时出错：{e}")
+                    logger.error("delete failed")
+                    error_msg = f"Error deleting file {path}: {e}" if locale == "en" else f"删除文件 {path} 时出错：{e}"
+                    raise HTTPException(400, detail=error_msg)
         else:
             pass
 
@@ -93,7 +105,8 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
                 try:
                     shutil.move(path, req.dest)
                 except OSError as e:
-                    raise HTTPException(400, detail=f"移动文件{path}到{req.dest}时出错：{e}")
+                    error_msg = f"Error moving file {path} to {req.dest}: {e}" if locale == "en" else f"移动文件 {path} 到 {req.dest} 时出错：{e}"
+                    raise HTTPException(400, detail=error_msg)
         else:
             pass
 

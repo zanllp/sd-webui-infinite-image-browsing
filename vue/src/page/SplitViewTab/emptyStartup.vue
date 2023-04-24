@@ -2,7 +2,7 @@
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { uniqueId } from 'lodash-es'
 import { computed } from 'vue'
-import { ID, ok } from 'vue3-ts-util'
+import { ID, idKey, ok } from 'vue3-ts-util'
 import { CloudDownloadOutlined, FileDoneOutlined } from '@/icon'
 import { message } from 'ant-design-vue'
 import { t } from '@/i18n'
@@ -35,11 +35,23 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
 const lastRecord = computed(() => global.lastTabListRecord?.[1])
 
 
-
+console.log(lastRecord.value)
 
 const walkModeSupportedDir = computed(() => global.autoCompletedDirList.filter(({ key: k }) => k === 'outdir_txt2img_samples' || k === 'outdir_img2img_samples' || k === 'outdir_extras_samples' || k === 'outdir_save' || k === 'outdir_samples'))
 const canpreviewInNewWindow = window.parent !== window
 const previewInNewWindow = () => window.parent.open('/infinite_image_browsing')
+
+const restoreRecord = () => {
+  ok(lastRecord.value)
+  global.tabList = lastRecord.value.tabs.map(v => ID(v, true))
+  global.tabList.forEach(tab => {
+    tab.panes.forEach(pane => {
+      if (typeof pane.name !== 'string') {
+        pane.name = ''
+      }
+    })
+  })
+}
 </script>
 <template>
   <div class="container">
@@ -50,7 +62,7 @@ const previewInNewWindow = () => window.parent.open('/infinite_image_browsing')
         <a>{{ $t('openInNewWindow') }}</a>
       </div>
       <div class="last-record">
-        <a v-if="lastRecord?.tabs.length" @click.prevent="global.tabList = lastRecord!.tabs.map(V => ID(V, true))">{{
+        <a v-if="lastRecord?.tabs.length" @click.prevent="restoreRecord">{{
           $t('restoreLastRecord') }}</a>
       </div>
     </div>

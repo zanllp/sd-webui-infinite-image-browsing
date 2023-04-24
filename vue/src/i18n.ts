@@ -99,7 +99,8 @@ const zh = {
   baiduNetdiskCollapseTitle: '百度云盘相关功能(仅预览图片无需打开)',
   clickHere2install: '点此安装',
   searchResults: "搜索结果",
-  imgSearch: '图像搜索'
+  imgSearch: '图像搜索',
+  "onlyFoldersAndImages": "只显示文件夹和图像"
 }
 const en: Record<keyof typeof zh, string> = {
   errorOccurred: 'An error occurred',
@@ -204,7 +205,8 @@ const en: Record<keyof typeof zh, string> = {
     "Baidu Netdisk functions (only previewing images don't require opening)",
   clickHere2install: 'Click here to install',
   searchResults: "Search Results",
-  imgSearch: 'Image Search'
+  imgSearch: 'Image Search',
+  "onlyFoldersAndImages": "Only show folders and images"
 }
 declare module 'vue' {
   export interface ComponentCustomProperties {
@@ -224,7 +226,7 @@ export const i18n = createI18n({
   locale: getPreferredLang(),
   fallbackLocale: 'en',
   messages: {
-    zh ,
+    zh,
     en
   },
   legacy: false

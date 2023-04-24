@@ -113,6 +113,15 @@ class Image:
         image = cls(path=row[1], exif=row[2], size=row[3], date=row[4])
         image.id = row[0]
         return image
+    
+    @classmethod
+    def remove(cls, conn: Connection, image_id: int) -> None:
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                "DELETE FROM image WHERE id = ?",
+                (image_id,)
+            )
+            conn.commit()
 
 
 class Tag:
@@ -279,6 +288,15 @@ class ImageTag:
             rows = cur.fetchall()
             image_ids = [row[0] for row in rows]
             return image_ids
+        
+    @classmethod
+    def remove_by_image(cls, conn: Connection, image_id: int) -> None:
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                "DELETE FROM image_tag WHERE image_id = ?",
+                (image_id,)
+            )
+            conn.commit()
 
 
 class Floder:
@@ -333,6 +351,6 @@ class Floder:
             result_set = cur.fetchall()
             for row in result_set:
                 folder_path = row[1]
-                if get_modified_date(folder_path) != row[2]:
+                if os.path.exists(folder_path) and get_modified_date(folder_path) != row[2]:
                     dirs.append(folder_path)
             return dirs
