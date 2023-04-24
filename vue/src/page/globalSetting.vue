@@ -22,7 +22,10 @@ const w = window
         <a-input-number v-model:value="globalStore.largeGridThumbnailSize" :min="256" :max="1024" /> (px)
       </a-form-item>
       <a-form-item :label="$t('longPressOpenContextMenu')">
-        <a-switch v-model:checked="globalStore.longPressOpenContextMenu"></a-switch>
+        <a-switch v-model:checked="globalStore.longPressOpenContextMenu"/>
+      </a-form-item>
+      <a-form-item :label="$t('onlyFoldersAndImages')">
+        <a-switch v-model:checked="globalStore.onlyFoldersAndImages" />
       </a-form-item>
       <a-form-item :label="$t('lang')">
         <div class="lang-select-wrap">

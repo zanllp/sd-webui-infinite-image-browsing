@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DownOutlined, LeftCircleOutlined, RightCircleOutlined, LoginOutlined } from '@/icon'
+import { DownOutlined, LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 import { sortMethodMap } from './fileSort'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { useFileTransfer, useFilesDisplay, useHookShareState, useLocation, usePreview, type ViewMode, useFileItemActions, toRawFileUrl, stackCache, useMobileOptimization } from './hook'

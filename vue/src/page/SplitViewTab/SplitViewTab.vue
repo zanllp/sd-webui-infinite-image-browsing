@@ -40,7 +40,7 @@ const onEdit = (idx: number, targetKey: any, action: string) => {
 const container = ref<HTMLDivElement>()
 watch(() => global.tabList, async () => {
   await nextTick()
-  global.saveRecord(global.tabList)
+  global.saveRecord()
   Array.from(container.value?.querySelectorAll('.splitpanes__pane') ?? []).forEach((tabEl, tabIdx) => {
     Array.from(tabEl.querySelectorAll('.ant-tabs-tab') ?? []).forEach((paneEl, paneIdx) => {
       const el = paneEl as HTMLDivElement

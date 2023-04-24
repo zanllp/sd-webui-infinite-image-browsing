@@ -1,0 +1,1 @@
+import{bC as a}from"./index-591714e7.js";const n=async()=>(await a.get("/db/basic_info")).data,i=async()=>{await a.post("/db/update_image_data",{},{timeout:1/0})},o=async t=>(await a.get("/db/match_images_by_tags",{params:{tag_ids:t.join()}})).data;export{n as a,o as g,i as u};

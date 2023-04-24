@@ -47,15 +47,16 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     const files = currPage.value?.files ?? []
     const method = sortMethod.value
     const { walkFiles } = currPage.value!
+    const filter = (files: FileNodeInfo[]) => global.onlyFoldersAndImages ? files.filter(file => file.type === 'dir' || isImageFile(file.name)) : files
     if (props.value.walkMode) {
       /**
        * @see Page
        */
       return walkFiles
-        ? walkFiles.map(dir => sortFiles(dir, method)).flat()
-        : sortFiles(files, method)
+        ? walkFiles.map(dir => sortFiles(filter(dir), method)).flat()
+        : sortFiles(filter(files), method)
     }
-    return sortFiles(files, method)
+    return sortFiles(filter(files), method)
   })
   const multiSelectedIdxs = ref([] as number[])
   const previewIdx = ref(-1)
@@ -345,6 +346,7 @@ export function useLocation (props: Props) {
         const { files } = await getTargetFolderFiles(props.target, stack.value.length === 1 ? '/' : currLocation.value)
         last(stack.value)!.files = files
       }
+      scroller.value?.scrollToItem(0)
     } finally {
       np.value?.done()
     }
@@ -553,7 +555,10 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
     if (loc !== currLocation.value) {
       return
     }
-    const top = last(stack.value)!
+    const top = last(stack.value)
+    if (!top) {
+      return
+    }
     top.files = top.files.filter(v => !paths.includes(v.fullpath))
     if (top.walkFiles) {
       top.walkFiles = top.walkFiles.map(files => files.filter(file => !paths.includes(file.fullpath)))
@@ -676,16 +681,19 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
         } else {
           selectedFiles.push(file)
         }
-        Modal.confirm({
-          title: t('confirmDelete'),
-          maskClosable: true,
-          content: h('ol', { style: 'max-height:50vh;overflow:auto;' }, selectedFiles.map(v => v.fullpath.split(/[/\\]/).pop()).map(v => h('li', v))),
-          async onOk () {
-            const paths = selectedFiles.map(v => v.fullpath)
-            await deleteFiles(props.target, paths)
-            message.success(t('deleteSuccess'))
-            events.emit('removeFiles', [paths, currLocation.value])
-          },
+        await new Promise<void>(resolve => {
+          Modal.confirm({
+            title: t('confirmDelete'),
+            maskClosable: true,
+            content: h('ol', { style: 'max-height:50vh;overflow:auto;' }, selectedFiles.map(v => v.fullpath.split(/[/\\]/).pop()).map(v => h('li', v))),
+            async onOk () {
+              const paths = selectedFiles.map(v => v.fullpath)
+              await deleteFiles(props.target, paths)
+              message.success(t('deleteSuccess'))
+              events.emit('removeFiles', [paths, currLocation.value])
+              resolve()
+            },
+          })
         })
       }
 

@@ -4,7 +4,7 @@ import { i18n, t } from '@/i18n'
 import { getPreferredLang } from '@/i18n'
 import type { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
 import type { ReturnTypeAsync } from '@/util'
-import { uniqueId } from 'lodash-es'
+import { cloneDeep, uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { watch } from 'vue'
 import { ref } from 'vue'
@@ -57,7 +57,9 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
   const recent = ref(new Array<{ path: string, key: string, target: string }>())
   const time = Date.now()
   const lastTabListRecord = ref<[{ time: number, tabs: Tab[] }, { time: number, tabs: Tab[] }]>() // [curr,last]
-  const saveRecord = (tabs: Tab[]) => {
+  const saveRecord = () => {
+    const tabs = tabList.value.slice()
+    console.log(tabs)
     if (lastTabListRecord.value?.length !== 2) {
       lastTabListRecord.value = [{ tabs, time }, { tabs, time }]
     }
@@ -119,7 +121,7 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
     largeGridThumbnailSize,
     longPressOpenContextMenu,
     openTagSearchMatchedImageGridInRight,
-    baiduNetdiskPageOpened : ref('')
+    onlyFoldersAndImages : ref(true)
   }
 }, {
   persist: {
@@ -127,7 +129,7 @@ export const useGlobalStore = defineStore('useGlobalStore', () => {
       'lang', 'enableThumbnail', 'lastTabListRecord',
       'stackViewSplit', 'autoUploadRecvDir', 'recent',
       'gridThumbnailSize', 'largeGridThumbnailSize',
-      'longPressOpenContextMenu', 'baiduNetdiskPageOpened'
+      'longPressOpenContextMenu', 'onlyFoldersAndImages'
     ]
   }
 })
