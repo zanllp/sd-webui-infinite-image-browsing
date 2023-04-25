@@ -8,9 +8,10 @@ If you have any questions or suggestions about this project, please submit an is
 ## Key Features
 - Multi-tab and multi-pane like Chrome and VS Code. Create tabs and preview multiple folders, move files between panes.
 - Supports using 'walk' mode to browse images, automatically loading the next folder `(similar to os.walk)`, allowing you to browse all images without paging. Tested to work properly with over 27,000 files.
-- It supports searching images using prompt, model, lora, etc. The used tags will be listed. Supports auto completion and translation of tags. Moreover, image search can be completed instantly.
-- View image generation information, send images to other tabs, optional thumbnail preview, full-screen preview, and move.
-- Preview based on the file tree structure, supports basic file operations as well as multi-select deletion/moving.
+- Supports searching images using prompt, model, lora, etc. The used tags will be listed. Supports auto completion and translation of tags. Extremely fast search speed.
+- Supports view image generation information, send images to other tabs, optional thumbnail preview, full-screen preview, and move.
+- Supports standalone operation without sd-webui and almost all functions can be used normally. [Click here for details](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47).
+- Supports preview based on the file tree structure. Supports basic file operations as well as multi-select deletion/moving.
 
 
 It is strongly recommended to use "Open in new tab" (in the upper right corner of the plugin startup page), which is much more comfortable than being embedded in Gradio. However, the "send image to other tab" function cannot be used in this mode.
