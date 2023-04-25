@@ -69,8 +69,3 @@ More
 Recommend using the right-click menu of the folder, click 'Open in new tab' or 'Open on the right'.
 
 <img width="878" alt="image" src="https://user-images.githubusercontent.com/25872019/233801373-8d21f237-b6e4-4b0a-81d0-fee2b8e370f4.png">
-
-
-### Does it need to run independently of stable-diffusion-webui?
-
-Refer to this [baiduyun-web-transfer](https://github.com/zanllp/baiduyun-web-transfer).
