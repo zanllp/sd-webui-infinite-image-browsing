@@ -15,6 +15,9 @@ const tags = computed(() => info.value ? info.value.tags.slice().sort((a, b) => 
 const pairid = uniqueId()
 onMounted(async () => {
   info.value = await getDbBasicInfo()
+  if (info.value.img_count && info.value.expired) {
+    onUpdateBtnClick()
+  }
 })
 
 const onUpdateBtnClick = async () => {

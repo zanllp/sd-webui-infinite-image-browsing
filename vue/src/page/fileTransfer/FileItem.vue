@@ -101,6 +101,7 @@ const thumbnailSize = computed(() => props.viewMode === 'grid' ? [global.gridThu
             <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
             <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
             <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
+            <a-menu-item key="send2savedDir" >{{ $t('send2savedDir') }}</a-menu-item>
           </template>
         </template>
       </a-menu>

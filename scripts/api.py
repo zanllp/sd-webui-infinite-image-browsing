@@ -109,10 +109,15 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
 
     @app.post(pre + "/move_files/{target}")
     async def move_files(req: MoveFilesReq, target: Literal["local", "netdisk"]):
+        conn = DataBase.get_conn()
         if target == "local":
             for path in req.file_paths:
                 try:
                     shutil.move(path, req.dest)
+                    img = DbImg.get(conn, os.path.normpath(path))
+                    if img:
+                        ImageTag.remove_by_image(conn, img.id)
+                        DbImg.remove(conn, img.id)
                 except OSError as e:
                     error_msg = f"Error moving file {path} to {req.dest}: {e}" if locale == "en" else f"移动文件 {path} 到 {req.dest} 时出错：{e}"
                     raise HTTPException(400, detail=error_msg)
