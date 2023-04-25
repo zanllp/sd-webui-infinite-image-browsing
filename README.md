@@ -13,7 +13,7 @@
 - 支持查看图像生成信息，发送图像到其他tab，可选的缩略图预览使用，全屏预览以及移动。
 - 支持使用prompt, model, lora等进行搜索图像。会列出使用过的tag，支持tag对的输入提示，tag的翻译。并且能够瞬间完成图像搜索。
 - 支持脱离sd-webui独立运行，几乎所有功能都能正常使用，[详情点这](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47)。
-- 你也可以基于文件树的结构进行预览，同时支持基本的文件操作及多选删除/移动。
+- 支持基于文件树的结构进行预览，同时支持基本的文件操作及多选删除/移动。
 
 
 
@@ -72,7 +72,3 @@ https://user-images.githubusercontent.com/25872019/230768207-daab786b-d4ab-489f-
 推荐使用文件夹的右键菜单，点击在新标签页打开或者在右边打开
 
 <img width="1024" alt="image" src="https://user-images.githubusercontent.com/25872019/233800975-93258edf-5325-436a-b9c8-3574de2edfcb.png">
-
-### 需要独立于stable-diifusion-webui运行？
-
-参考这个[baiduyun-web-transfer](https://github.com/zanllp/baiduyun-web-transfer)
