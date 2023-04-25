@@ -32,7 +32,7 @@ from scripts.logger import logger
 send_img_path = {"value": ""}
 
 
-def infinite_image_browsing_api(_: Any, app: FastAPI):
+def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     pre = "/infinite_image_browsing"
     app.mount(
         f"{pre}/fe-static",
@@ -40,20 +40,29 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
         name="infinite_image_browsing-fe-static",
     )
 
+    def get_sd_webui_conf():
+        try:
+            from modules.shared import opts
+            return opts.data
+        except:
+            pass
+        try:
+            with open(kwargs.get('sd_webui_config'), 'r') as f:
+                import json
+                return json.loads(f.read())
+        except:
+            pass
+        return {}
+
+
     @app.get(f"{pre}/hello")
     async def greeting():
         return "hello"
 
     @app.get(f"{pre}/global_setting")
     async def global_setting():
-        conf = {}
-        try:
-            from modules.shared import opts
-            conf = opts.data
-        except:
-            pass
         return {
-            "global_setting": conf,
+            "global_setting": get_sd_webui_conf(),
             "cwd": cwd,
             "is_win": is_win,
             "home": os.environ.get("USERPROFILE") if is_win else os.environ.get("HOME"),
@@ -203,11 +212,8 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
     forever_cache_path = []
     img_search_dirs = []
     try:
-        from modules.shared import opts
 
-        conf = opts.data
-
-        def get_config_path(conf, 
+        def get_config_path(conf,
             keys = [
                 "outdir_txt2img_samples",
                 "outdir_img2img_samples",
@@ -224,7 +230,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
             # 判断路径是否有效并转为绝对路径
             abs_paths = []
             for path in paths:
-                if len(path.strip()) == 0:
+                if not path or len(path.strip()) == 0:
                     continue
                 if os.path.isabs(path):  # 已经是绝对路径
                     abs_path = path
@@ -235,7 +241,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
 
             return abs_paths
 
-        forever_cache_path = get_config_path(conf)
+        forever_cache_path = get_config_path(get_sd_webui_conf())
         img_search_dirs = forever_cache_path
     except:
         pass
@@ -323,7 +329,6 @@ def infinite_image_browsing_api(_: Any, app: FastAPI):
             "expired": len(expired_dirs) != 0,
             "expired_dirs": expired_dirs
         }
-    
     @app.post(db_pre + "/update_image_data")
     async def update_image_db_data():
         try:
