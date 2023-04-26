@@ -4,7 +4,8 @@ import { getDbBasicInfo, updateImageData, type DataBaseBasicInfo, type Tag } fro
 import { FetchQueue, SearchSelect } from 'vue3-ts-util'
 import { CheckOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { uniqueId } from 'lodash-es'
+import { groupBy, uniqueId } from 'lodash-es'
+import type { Dict } from '@/util'
 
 const props = defineProps<{ tabIdx: number, paneIdx: number }>()
 const global = useGlobalStore()
@@ -12,6 +13,13 @@ const queue = reactive(new FetchQueue(-1, 0, -1, 'throw'))
 const info = ref<DataBaseBasicInfo>()
 const selectedId = ref(new Set<number>())
 const tags = computed(() => info.value ? info.value.tags.slice().sort((a, b) => b.count - a.count) : [])
+const classSort = (["Model", "Sampler", "lora", "pos", "size"]).reduce((p, c, i) => {
+  p[c] = i
+  return p
+}, {} as Dict<number>)
+const classifyTags = computed(() => {
+  return Object.entries(groupBy(tags.value, v => v.type)).sort((a, b) => classSort[a[0]] - classSort[b[0]])
+})
 const pairid = uniqueId()
 onMounted(async () => {
   info.value = await getDbBasicInfo()
@@ -32,7 +40,7 @@ const query = () => {
   global.openTagSearchMatchedImageGridInRight(props.tabIdx, pairid, Array.from(selectedId.value))
 }
 
-const toTagDisplayName = (v: Tag) => v.display_name ? `${v.display_name} : ${v.name}` : v.name
+const toTagDisplayName = (v: Tag, withType = false) => (withType ? `[${v.type}] ` : '') + (v.display_name ? `${v.display_name} : ${v.name}` : v.name)
 
 </script>
 <template>
@@ -41,9 +49,9 @@ const toTagDisplayName = (v: Tag) => v.display_name ? `${v.display_name} : ${v.n
     <template v-if="info">
       <div>
         <div class="search-bar">
-          <SearchSelect :conv="{ value: v => v.id, text: toTagDisplayName, }" mode="multiple" style="width: 100%;"
-            :options="tags" :value="Array.from(selectedId)" placeholder="Select tags to match images"
-            @update:value="v => selectedId = new Set(v)" />
+          <SearchSelect :conv="{ value: v => v.id, text: toTagDisplayName, optionText: v => toTagDisplayName(v, true) }"
+            mode="multiple" style="width: 100%;" :options="tags" :value="Array.from(selectedId)"
+            placeholder="Select tags to match images" @update:value="v => selectedId = new Set(v)" />
           <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary"
             v-if="info.expired || !info.img_count">
             {{
@@ -52,13 +60,17 @@ const toTagDisplayName = (v: Tag) => v.display_name ? `${v.display_name} : ${v.n
           </AButton>
         </div>
       </div>
-      <ul class="tag-list">
-        <li v-for="tag in tags" :key="tag.id" class="tag " :class="{ selected: selectedId.has(tag.id) }"
-          @click="selectedId.has(tag.id) ? selectedId.delete(tag.id) : selectedId.add(tag.id)">
-          <CheckOutlined v-if="selectedId.has(tag.id)" />
-          {{ toTagDisplayName(tag) }}
-        </li>
-      </ul>
+      <div class="list-container">
+
+        <ul class="tag-list" v-for="([name, list]) in classifyTags" :key="name">
+          <h3 class="cat-name">{{ name }}</h3>
+          <li v-for="tag in list" :key="tag.id" class="tag " :class="{ selected: selectedId.has(tag.id) }"
+            @click="selectedId.has(tag.id) ? selectedId.delete(tag.id) : selectedId.add(tag.id)">
+            <CheckOutlined v-if="selectedId.has(tag.id)" />
+            {{ toTagDisplayName(tag) }}
+          </li>
+        </ul>
+      </div>
     </template>
   </div>
 </template>
@@ -80,10 +92,27 @@ const toTagDisplayName = (v: Tag) => v.display_name ? `${v.display_name} : ${v.n
     display: flex;
   }
 
+  .list-container {
+    background: var(--zp-secondary-variant-background);
+    overflow: scroll;
+  }
+
   .tag-list {
     list-style: none;
     padding: 0;
-    overflow: scroll;
+    margin: 16px;
+    border-radius: 16px;
+    background-color: var(--zp-tertiary-background);
+    padding: 8px;
+
+    .cat-name {
+      position: sticky;
+      top: 0;
+      padding: 4px 16px;
+      background: white;
+      border-left: 4px solid var(--primary-color);
+      margin: 4px;
+    }
 
     .tag {
       border: 2px solid var(--zp-secondary);
