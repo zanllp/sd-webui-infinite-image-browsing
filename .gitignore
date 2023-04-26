@@ -3,3 +3,5 @@ BaiduPCS-Go*
 __pycache__
 iib.db
 tags-translate.csv
+launch.sh
+conf.json

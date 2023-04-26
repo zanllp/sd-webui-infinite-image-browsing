@@ -16,7 +16,7 @@ import { watch } from 'vue'
 
 const images = ref<FileNodeInfo[]>()
 
-const queue = reactive(new FetchQueue())
+const queue = reactive(new FetchQueue(-1, 0, -1, 'throw'))
 
 const props = defineProps<{ tabIdx: number, paneIdx: number, selectedTagIds: number[], id: string }>()
 

@@ -100,9 +100,12 @@ const zh = {
   clickHere2install: '点此安装',
   searchResults: "搜索结果",
   imgSearch: '图像搜索',
-  "onlyFoldersAndImages": "只显示文件夹和图像"
+  "onlyFoldersAndImages": "只显示文件夹和图像",
+  "send2savedDir": "发送到保存的文件夹",
+  unknownSavedDir: "找不到保存的文件夹（配置文件中的outdir_save字段）"
 }
 const en: Record<keyof typeof zh, string> = {
+  unknownSavedDir: `Cannot find the saved folder (outdir_save field in the config)`,
   errorOccurred: 'An error occurred',
   logoutSuccess: 'Logged out successfully',
   useThumbnailPreview: 'Use thumbnail preview',
@@ -206,7 +209,8 @@ const en: Record<keyof typeof zh, string> = {
   clickHere2install: 'Click here to install',
   searchResults: "Search Results",
   imgSearch: 'Image Search',
-  "onlyFoldersAndImages": "Only show folders and images"
+  "onlyFoldersAndImages": "Only show folders and images",
+  "send2savedDir": "Send to saved folder"
 }
 declare module 'vue' {
   export interface ComponentCustomProperties {

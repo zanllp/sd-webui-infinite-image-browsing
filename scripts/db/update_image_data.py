@@ -6,8 +6,11 @@ from scripts.tool import (
     read_info_from_image,
     parse_generation_parameters,
     is_valid_image_path,
-    get_modified_date
+    get_modified_date,
+    is_dev
 )
+
+from scripts.logger import logger
 
 # 定义一个函数来获取图片文件的EXIF数据
 def get_exif_data(file_path):
@@ -15,8 +18,9 @@ def get_exif_data(file_path):
         with Image.open(file_path) as img:
             info = read_info_from_image(img)
             return parse_generation_parameters(info), info
-    except Image.DecompressionBombError:
-        pass
+    except Exception as e:
+        if is_dev:
+            logger.error("get_exif_data %s", e)
 
 def update_image_data(search_dirs: List[str]):
     conn = DataBase.get_conn()
