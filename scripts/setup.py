@@ -43,7 +43,7 @@ def on_ui_tabs():
                         info = read_info_from_image(img)
                         return img, info
                     except Exception as e:
-                        logger.error("img_update_func % c",e)
+                        logger.error("img_update_func %s",e)
 
                 img_file_info = gr.Textbox(elem_id="iib_hidden_img_file_info")
                 img_update_trigger.click(img_update_func, outputs=[img, img_file_info])
