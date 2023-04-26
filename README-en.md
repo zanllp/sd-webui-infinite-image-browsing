@@ -27,7 +27,8 @@ During the first use, you need to click and wait for the index generation. For m
 
 Image search supports translation, and you need to place a "tags-translate.csv" file in the plugin folder. You can find this file in the issue . Feel free to share files for other languages to facilitate everyone's use.
 
-<img width="1024" alt="image" src="https://user-images.githubusercontent.com/25872019/233799746-1fad5cbd-7172-4fb5-898c-cd59e739e1f7.png">
+<img width="1024" alt="image" src="https://user-images.githubusercontent.com/25872019/234639132-0240dad0-86aa-499b-8e00-20bf2d7f06c3.png">
+<img width="620" alt="image" src="https://user-images.githubusercontent.com/25872019/234639759-2d270fe5-b24b-4542-b75a-a025ba78ec89.png">
 
 ## Full Screen Preview
 
