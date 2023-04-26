@@ -8,7 +8,7 @@ import { uniqueId } from 'lodash-es'
 
 const props = defineProps<{ tabIdx: number, paneIdx: number }>()
 const global = useGlobalStore()
-const queue = reactive(new FetchQueue())
+const queue = reactive(new FetchQueue(-1, 0, -1, 'throw'))
 const info = ref<DataBaseBasicInfo>()
 const selectedId = ref(new Set<number>())
 const tags = computed(() => info.value ? info.value.tags.slice().sort((a, b) => b.count - a.count) : [])
@@ -42,13 +42,14 @@ const toTagDisplayName = (v: Tag) => v.display_name ? `${v.display_name} : ${v.n
       <div>
         <div class="search-bar">
           <SearchSelect :conv="{ value: v => v.id, text: toTagDisplayName, }" mode="multiple" style="width: 100%;"
-              :options="tags" :value="Array.from(selectedId)" placeholder="Select tags to match images"
-              @update:value="v => selectedId = new Set(v)" />
+            :options="tags" :value="Array.from(selectedId)" placeholder="Select tags to match images"
+            @update:value="v => selectedId = new Set(v)" />
           <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary"
             v-if="info.expired || !info.img_count">
             {{
               info.img_count === 0 ? 'Generate index for search image' : 'Update index' }}</AButton>
-          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle">Search</AButton>
+          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!selectedId.size">Search
+          </AButton>
         </div>
       </div>
       <ul class="tag-list">
