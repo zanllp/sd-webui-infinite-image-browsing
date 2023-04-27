@@ -28,10 +28,10 @@ class DataBase:
 
 
 class Image:
-    def __init__(self, path, exif=None, size=0, date=""):
+    def __init__(self, path, exif=None, size=0, date="", id = None):
         self.path = path
         self.exif = exif
-        self.id = None
+        self.id = id
         self.size = size
         self.date = date
 
@@ -253,11 +253,12 @@ class ImageTag:
 
     @classmethod
     def get_images_by_tags(
-        cls, conn: Connection, tag_dict: Dict[str, List[int]]
-    ) -> List[int]:
+        cls, conn: Connection, tag_dict: Dict[str, List[int]], limit: int = 500
+    ) -> List[Image]:
         query = """
-            SELECT image_id
-            FROM image_tag
+            SELECT image.id, image.path, image.size,image.date
+            FROM image
+            INNER JOIN image_tag ON image.id = image_tag.image_id
         """
 
         where_clauses = []
@@ -278,16 +279,18 @@ class ImageTag:
         if where_clauses:
             query += " WHERE " + " AND ".join(where_clauses)
 
-        query += " GROUP BY image_id"
+        query += " GROUP BY image.id"
 
         if "and" in tag_dict:
             query += " HAVING COUNT(DISTINCT tag_id) = ?"
             params.append(len(tag_dict["and"]))
+
+        query += " ORDER BY date DESC LIMIT ?"
+        params.append(limit)
         with closing(conn.cursor()) as cur:
             cur.execute(query, params)
             rows = cur.fetchall()
-            image_ids = [row[0] for row in rows]
-            return image_ids
+            return [Image(id=row[0], path=row[1], size=row[2], date=row[3]) for row in rows]
         
     @classmethod
     def remove_by_image(cls, conn: Connection, image_id: int) -> None:
