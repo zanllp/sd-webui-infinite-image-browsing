@@ -51,15 +51,18 @@ const toTagDisplayName = (v: Tag, withType = false) => (withType ? `[${v.type}] 
         <div class="search-bar">
           <SearchSelect :conv="{ value: v => v.id, text: toTagDisplayName, optionText: v => toTagDisplayName(v, true) }"
             mode="multiple" style="width: 100%;" :options="tags" :value="Array.from(selectedId)"
+            :disabled="!tags.length"
             placeholder="Select tags to match images" @update:value="v => selectedId = new Set(v)" />
           <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary"
             v-if="info.expired || !info.img_count">
             {{
-              info.img_count === 0 ? 'Generate index for search image' : 'Update index' }}</AButton>
-          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!selectedId.size">Search
+              info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
+          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!selectedId.size">{{ $t('search') }}
           </AButton>
         </div>
       </div>
+
+      <p class="generate-idx-hint" v-if="!tags.length">{{ $t('needGenerateIdx') }}</p>
       <div class="list-container">
 
         <ul class="tag-list" v-for="([name, list]) in classifyTags" :key="name">
@@ -82,6 +85,17 @@ const toTagDisplayName = (v: Tag, withType = false) => (withType ? `[${v.type}] 
   flex-direction: column;
   align-items: stretch;
 
+
+  .generate-idx-hint {
+    margin: 64px;
+    padding: 64px;
+    font-size: 2em;
+    text-align: center;
+    background-color: var(--zp-secondary-background);
+    white-space: pre-line;
+    line-height: 2.5em;
+    border-radius: 16px;
+  }
 
   .select {
     padding: 8px;
@@ -122,6 +136,10 @@ const toTagDisplayName = (v: Tag, withType = false) => (withType ? `[${v.type}] 
       margin: 4px;
       display: inline-block;
       cursor: pointer;
+      max-width: 256px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
 
       &.selected {
         color: var(--primary-color);
