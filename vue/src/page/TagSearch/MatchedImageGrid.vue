@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue'
-import { FetchQueue, copy2clipboard } from 'vue3-ts-util'
+import { FetchQueue, copy2clipboard, delay } from 'vue3-ts-util'
 import fileItemCell from '@/page/fileTransfer/FileItem.vue'
 import type { FileNodeInfo } from '@/api/files'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
@@ -22,7 +22,7 @@ const props = defineProps<{ tabIdx: number, paneIdx: number, selectedTagIds: num
 
 watch(() => props.selectedTagIds, async () => {
   const { res } = queue.pushAction(() => getImagesByTags(props.selectedTagIds))
-  images.value = (await res).sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+  images.value = await res
   scroller.value?.scrollToItem(0)
 }, { immediate: true })
 

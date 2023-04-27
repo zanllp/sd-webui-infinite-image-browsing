@@ -63,7 +63,7 @@ const toTagDisplayName = (v: Tag, withType = false) => (withType ? `[${v.type}] 
       <div class="list-container">
 
         <ul class="tag-list" v-for="([name, list]) in classifyTags" :key="name">
-          <h3 class="cat-name">{{ name }}</h3>
+          <h3 class="cat-name">{{ $t(name) }}</h3>
           <li v-for="tag in list" :key="tag.id" class="tag " :class="{ selected: selectedId.has(tag.id) }"
             @click="selectedId.has(tag.id) ? selectedId.delete(tag.id) : selectedId.add(tag.id)">
             <CheckOutlined v-if="selectedId.has(tag.id)" />
@@ -93,7 +93,7 @@ const toTagDisplayName = (v: Tag, withType = false) => (withType ? `[${v.type}] 
   }
 
   .list-container {
-    background: var(--zp-secondary-variant-background);
+    background-color: var(--zp-secondary-background);
     overflow: scroll;
   }
 
@@ -102,14 +102,14 @@ const toTagDisplayName = (v: Tag, withType = false) => (withType ? `[${v.type}] 
     padding: 0;
     margin: 16px;
     border-radius: 16px;
-    background-color: var(--zp-tertiary-background);
+    background: var(--zp-primary-background);
     padding: 8px;
 
     .cat-name {
       position: sticky;
       top: 0;
       padding: 4px 16px;
-      background: white;
+      background: var(--zp-primary-background);
       border-left: 4px solid var(--primary-color);
       margin: 4px;
     }

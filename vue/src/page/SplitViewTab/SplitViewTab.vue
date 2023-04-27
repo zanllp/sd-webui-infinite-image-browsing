@@ -24,7 +24,7 @@ const onEdit = (idx: number, targetKey: any, action: string) => {
     tab.panes.push(empty)
     tab.key = empty.key
   } else {
-    if (global.tabList.reduce((p, c) => p + c.panes.length, 0) === 1) {
+    if (global.tabList.reduce((p, c) => p + c.panes.length, 0) === 1) { 
       return message.error(t('deleteNotAllowedWithOnePaneLeft'))
     }
     const paneIdx = tab.panes.findIndex(v => v.key === targetKey)

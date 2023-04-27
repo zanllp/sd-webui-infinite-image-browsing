@@ -102,9 +102,19 @@ const zh = {
   imgSearch: '图像搜索',
   "onlyFoldersAndImages": "只显示文件夹和图像",
   "send2savedDir": "发送到保存的文件夹",
-  unknownSavedDir: "找不到保存的文件夹（配置文件中的outdir_save字段）"
+  unknownSavedDir: "找不到保存的文件夹（配置文件中的outdir_save字段）",
+  "Model": "模型",
+  "Sampler": "采样器",
+  "lora": "LoRA",
+  "size": "尺寸",
+  "pos": "正面提示"
 }
 const en: Record<keyof typeof zh, string> = {
+  "Model": "Model",
+  "Sampler": "Sampler",
+  "lora": "LoRA",
+  "size": "Size",
+  "pos": "Positive Prompt",
   unknownSavedDir: `Cannot find the saved folder (outdir_save field in the config)`,
   errorOccurred: 'An error occurred',
   logoutSuccess: 'Logged out successfully',

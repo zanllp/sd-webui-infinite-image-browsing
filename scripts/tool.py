@@ -5,7 +5,8 @@ import re
 import tempfile
 import imghdr
 from typing import Dict
-
+import piexif
+import piexif.helper
 
 
 def human_readable_size(size_bytes):
@@ -139,8 +140,6 @@ def unique_by(seq, key_func):
     return [x for x in seq if not (key := key_func(x)) in seen and not seen.add(key)]
 
 def read_info_from_image(image) -> str:    
-    import piexif
-    import piexif.helper
     items = image.info or {}
     geninfo = items.pop('parameters', None)
     if "exif" in items:

@@ -348,8 +348,4 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     async def match_image_by_tags(tag_ids: str):
         ids = [int(x) for x in tag_ids.split(',')]
         conn = DataBase.get_conn()
-        image_ids = ImageTag.get_images_by_tags(conn, { "and": ids })
-        files = []
-        for img in DbImg.get_by_ids(conn, image_ids):
-            files.append(img.to_file_info())
-        return files
+        return [x.to_file_info() for x in ImageTag.get_images_by_tags(conn, { "and": ids })]
