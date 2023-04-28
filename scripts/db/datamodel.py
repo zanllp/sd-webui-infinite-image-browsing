@@ -175,12 +175,15 @@ class Tag:
             return tags
 
     @classmethod
-    def get_or_create(cls, conn: Connection, name, score=None, type=None):
+    def get_or_create(cls, conn: Connection, name: str, type: str):
+        assert name and type
         with closing(conn.cursor()) as cur:
-            cur.execute("SELECT tag.* FROM tag WHERE name = ?", (name,))
+            cur.execute(
+                "SELECT tag.* FROM tag WHERE name = ? and type = ?", (name, type)
+            )
             row = cur.fetchone()
             if row is None:
-                tag = cls(name=name, score=score, type=type)
+                tag = cls(name=name, score=0, type=type)
                 tag.save(conn)
                 return tag
             else:
@@ -198,10 +201,11 @@ class Tag:
             cur.execute(
                 """CREATE TABLE IF NOT EXISTS tag (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE,
+            name TEXT,
             score INTEGER,
             type TEXT,
-            count INTEGER
+            count INTEGER,
+            UNIQUE(name, type) ON CONFLICT REPLACE
             );
             """
             )
