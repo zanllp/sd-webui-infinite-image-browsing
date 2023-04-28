@@ -93,7 +93,7 @@ const onTagRemoveClick = (tagId: number) => {
         </div>
       </div>
 
-      <p class="generate-idx-hint" v-if="!tags.length">{{ $t('needGenerateIdx') }}</p>
+      <p class="generate-idx-hint" v-if="!tags.filter(v => v.type !== 'custom').length">{{ $t('needGenerateIdx') }}</p>
       <div class="list-container">
 
         <ul class="tag-list" v-for="[name, list] in classifyTags" :key="name">

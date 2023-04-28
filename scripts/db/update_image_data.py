@@ -71,17 +71,14 @@ def update_image_data(search_dirs: List[str]):
                     v = exif.get(k)
                     if not v:
                         continue
-                    tag = Tag.get_or_create(conn, str(v), None, k)
-                    img_tag = ImageTag(img.id, tag.id)
-                    safe_save_img_tag(img_tag)
+                    tag = Tag.get_or_create(conn, str(v),  k)
+                    safe_save_img_tag(ImageTag(img.id, tag.id))
                 for i in lora:
-                    tag = Tag.get_or_create(conn, i["name"], None, "lora")
-                    img_tag = ImageTag(img.id, tag.id)
-                    safe_save_img_tag(img_tag)
+                    tag = Tag.get_or_create(conn, i["name"], "lora")
+                    safe_save_img_tag(ImageTag(img.id, tag.id))
                 for k in pos:
-                    tag = Tag.get_or_create(conn, k, None, "pos")
-                    img_tag = ImageTag(img.id, tag.id)
-                    safe_save_img_tag(img_tag)
+                    tag = Tag.get_or_create(conn, k, "pos")
+                    safe_save_img_tag(ImageTag(img.id, tag.id))
                 # neg暂时跳过感觉个没人会搜索这个
 
         # 提交对数据库的更改
