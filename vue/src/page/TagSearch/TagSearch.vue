@@ -1,19 +1,22 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref, computed } from 'vue'
-import { getDbBasicInfo, updateImageData, type DataBaseBasicInfo, type Tag } from '@/api/db'
+import { getDbBasicInfo, updateImageData, type DataBaseBasicInfo, type Tag, addCustomTag, removeCustomTag } from '@/api/db'
 import { FetchQueue, SearchSelect } from 'vue3-ts-util'
-import { CheckOutlined } from '@/icon'
+import { CheckOutlined, PlusOutlined, CloseOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { groupBy, uniqueId } from 'lodash-es'
 import type { Dict } from '@/util'
+import { Modal, message } from 'ant-design-vue'
+import { t } from '@/i18n'
 
 const props = defineProps<{ tabIdx: number, paneIdx: number }>()
 const global = useGlobalStore()
 const queue = reactive(new FetchQueue(-1, 0, -1, 'throw'))
+const loading = computed(() => !queue.isIdle)
 const info = ref<DataBaseBasicInfo>()
 const selectedId = ref(new Set<number>())
 const tags = computed(() => info.value ? info.value.tags.slice().sort((a, b) => b.count - a.count) : [])
-const classSort = (["Model", "Sampler", "lora", "pos", "size"]).reduce((p, c, i) => {
+const classSort = (["custom", "Model", "lora", "pos", "size", "Sampler"]).reduce((p, c, i) => {
   p[c] = i
   return p
 }, {} as Dict<number>)
@@ -41,7 +44,35 @@ const query = () => {
 }
 
 const toTagDisplayName = (v: Tag, withType = false) => (withType ? `[${v.type}] ` : '') + (v.display_name ? `${v.display_name} : ${v.name}` : v.name)
-
+const addInputing = ref(false)
+const addTagName = ref('')
+const onAddTagBtnSubmit = async () => {
+  if (!addTagName.value) {
+    addInputing.value = false
+    return
+  }
+  const tag = await queue.pushAction(() => addCustomTag({ tag_name: addTagName.value })).res
+  if (tag.type !== 'custom') {
+    message.error(t('existInOtherType'))
+  }
+  if (info.value?.tags.find(v => v.id === tag.id)) {
+    message.error(t('alreadyExists'))
+  } else {
+    info.value?.tags.push(tag)
+  }
+  addTagName.value = ''
+  addInputing.value = false
+}
+const onTagRemoveClick = (tagId: number) => {
+  Modal.confirm({
+    title: t('confirmDelete'),
+    async onOk() {
+      await removeCustomTag({ tag_id: tagId })
+      const idx = info.value?.tags.findIndex(v => v.id === tagId) ?? -1
+      info.value?.tags.splice(idx, 1)
+    }
+  })
+}
 </script>
 <template>
   <div class="container">
@@ -50,14 +81,14 @@ const toTagDisplayName = (v: Tag, withType = false) => (withType ? `[${v.type}] 
       <div>
         <div class="search-bar">
           <SearchSelect :conv="{ value: v => v.id, text: toTagDisplayName, optionText: v => toTagDisplayName(v, true) }"
-            mode="multiple" style="width: 100%;" :options="tags" :value="Array.from(selectedId)"
-            :disabled="!tags.length"
+            mode="multiple" style="width: 100%;" :options="tags" :value="Array.from(selectedId)" :disabled="!tags.length"
             placeholder="Select tags to match images" @update:value="v => selectedId = new Set(v)" />
           <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary"
             v-if="info.expired || !info.img_count">
             {{
               info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
-          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!selectedId.size">{{ $t('search') }}
+          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!selectedId.size">{{
+            $t('search') }}
           </AButton>
         </div>
       </div>
@@ -65,12 +96,28 @@ const toTagDisplayName = (v: Tag, withType = false) => (withType ? `[${v.type}] 
       <p class="generate-idx-hint" v-if="!tags.length">{{ $t('needGenerateIdx') }}</p>
       <div class="list-container">
 
-        <ul class="tag-list" v-for="([name, list]) in classifyTags" :key="name">
+        <ul class="tag-list" v-for="[name, list] in classifyTags" :key="name">
           <h3 class="cat-name">{{ $t(name) }}</h3>
-          <li v-for="tag in list" :key="tag.id" class="tag " :class="{ selected: selectedId.has(tag.id) }"
+          <li v-for="tag,idx in list" :key="tag.id" class="tag " :class="{ selected: selectedId.has(tag.id) }"
             @click="selectedId.has(tag.id) ? selectedId.delete(tag.id) : selectedId.add(tag.id)">
             <CheckOutlined v-if="selectedId.has(tag.id)" />
             {{ toTagDisplayName(tag) }}
+            <span v-if="(name === 'custom') && (idx !== 0)" class="remove" @click.capture.stop="onTagRemoveClick(tag.id)"> 
+              <CloseOutlined/>
+            </span>
+          </li>
+          <li v-if="name === 'custom'" class="tag " @click="addInputing = true">
+            <template v-if="addInputing">
+              <a-input-group compact>
+                <a-input v-model:value="addTagName" style="width: 128px" :loading="loading" allow-clear size="small" />
+                <a-button size="small" type="primary" @click.capture.stop="onAddTagBtnSubmit" :loading="loading">{{ addTagName ?
+                  $t('submit') :
+                  $t('cancel') }}</a-button>
+              </a-input-group>
+            </template>
+            <template v-else>
+              <PlusOutlined /> {{ $t('add') }}
+            </template>
           </li>
         </ul>
       </div>
@@ -95,6 +142,15 @@ const toTagDisplayName = (v: Tag, withType = false) => (withType ? `[${v.type}] 
     white-space: pre-line;
     line-height: 2.5em;
     border-radius: 16px;
+  }
+
+  .remove {
+    padding: 4px;
+    position: cursor;
+    border-radius: 2px;
+    &:hover {
+      background-color:var(--zp-secondary-background);
+    }
   }
 
   .select {

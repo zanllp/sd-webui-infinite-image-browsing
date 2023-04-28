@@ -4,7 +4,7 @@ import { ref, computed, watch, onMounted, h, reactive } from 'vue'
 
 import { genInfoCompleted, getImageGenerationInfo, setImgPath } from '@/api'
 import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook, copy2clipboard, delay, FetchQueue, typedEventEmitter, ID } from 'vue3-ts-util'
-import { gradioApp, isImageFile } from '@/util'
+import { gradioApp, isImageFile, key } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
 import { cloneDeep, debounce, last, range, uniqBy, uniqueId } from 'lodash-es'
@@ -17,6 +17,7 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { nextTick } from 'vue'
 import { t } from '@/i18n'
 import { CloudServerOutlined, DatabaseOutlined } from '@/icon'
+import { addCustomTagToImg } from '@/api/db'
 
 export const stackCache = new Map<string, Page[]>()
 
@@ -615,6 +616,8 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
 
   const pathModule = path
   const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfo, idx: number) => {
+  
+    console.log(e, file)
     const url = toRawFileUrl(file)
     const path = currLocation.value
     const copyImgTo = async (tab: ["txt2img", "img2img", "inpaint", "extras"][number]) => {
@@ -732,8 +735,14 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
             },
           })
         })
+        break
       }
 
+    }
+    if (e.keyPath?.[0] === 'add-custom-tag') {
+      console.log(e.key,e)
+      await addCustomTagToImg({ tag_id:e.key as number, img_path: file.fullpath })
+      message.success(t('addComplete'))
     }
   }
   return {

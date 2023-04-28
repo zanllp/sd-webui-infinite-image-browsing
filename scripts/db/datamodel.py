@@ -28,7 +28,7 @@ class DataBase:
 
 
 class Image:
-    def __init__(self, path, exif=None, size=0, date="", id = None):
+    def __init__(self, path, exif=None, size=0, date="", id=None):
         self.path = path
         self.exif = exif
         self.id = id
@@ -113,14 +113,11 @@ class Image:
         image = cls(path=row[1], exif=row[2], size=row[3], date=row[4])
         image.id = row[0]
         return image
-    
+
     @classmethod
     def remove(cls, conn: Connection, image_id: int) -> None:
         with closing(conn.cursor()) as cur:
-            cur.execute(
-                "DELETE FROM image WHERE id = ?",
-                (image_id,)
-            )
+            cur.execute("DELETE FROM image WHERE id = ?", (image_id,))
             conn.commit()
 
 
@@ -142,6 +139,12 @@ class Tag:
             self.id = cur.lastrowid
 
     @classmethod
+    def remove(cls, conn, tag_id):
+        with closing(conn.cursor()) as cur:
+            cur.execute("DELETE FROM tag WHERE id = ?", (tag_id,))
+            conn.commit()
+
+    @classmethod
     def get(cls, conn: Connection, id):
         with closing(conn.cursor()) as cur:
             cur.execute("SELECT * FROM tag WHERE id = ?", (id,))
@@ -150,6 +153,16 @@ class Tag:
                 return None
             else:
                 return cls.from_row(row)
+
+    @classmethod
+    def get_all_custom_tag(cls, conn):
+        with closing(conn.cursor()) as cur:
+            cur.execute("SELECT * FROM tag where type = 'custom'")
+            rows = cur.fetchall()
+            tags: list[Tag] = []
+            for row in rows:
+                tags.append(cls.from_row(row))
+            return tags
 
     @classmethod
     def get_all(cls, conn):
@@ -174,7 +187,7 @@ class Tag:
                 return cls.from_row(row)
 
     @classmethod
-    def from_row(cls, row: tuple):        
+    def from_row(cls, row: tuple):
         tag = cls(name=row[1], score=row[2], type=row[3], count=row[4])
         tag.id = row[0]
         return tag
@@ -193,6 +206,11 @@ class Tag:
             """
             )
             cur.execute("CREATE INDEX IF NOT EXISTS tag_idx_name ON tag(name)")
+            cur.execute(
+                """INSERT OR IGNORE INTO tag(name, score, type, count)
+                VALUES ("like", 0, "custom", 0);
+                """
+            )
 
 
 class ImageTag:
@@ -290,15 +308,28 @@ class ImageTag:
         with closing(conn.cursor()) as cur:
             cur.execute(query, params)
             rows = cur.fetchall()
-            return [Image(id=row[0], path=row[1], size=row[2], date=row[3]) for row in rows]
-        
+            return [
+                Image(id=row[0], path=row[1], size=row[2], date=row[3]) for row in rows
+            ]
+
     @classmethod
-    def remove_by_image(cls, conn: Connection, image_id: int) -> None:
+    def remove(
+        cls,
+        conn: Connection,
+        image_id: Optional[int] = None,
+        tag_id: Optional[int] = None,
+    ) -> None:
+        assert image_id or tag_id
         with closing(conn.cursor()) as cur:
-            cur.execute(
-                "DELETE FROM image_tag WHERE image_id = ?",
-                (image_id,)
-            )
+            if tag_id and image_id:
+                cur.execute(
+                    "DELETE FROM image_tag WHERE image_id = ? and tag_id = ?",
+                    (image_id, tag_id),
+                )
+            elif tag_id:
+                cur.execute("DELETE FROM image_tag WHERE tag_id = ?", (tag_id,))
+            else:
+                cur.execute("DELETE FROM image_tag WHERE image_id = ?", (image_id,))
             conn.commit()
 
 
@@ -354,6 +385,9 @@ class Floder:
             result_set = cur.fetchall()
             for row in result_set:
                 folder_path = row[1]
-                if os.path.exists(folder_path) and get_modified_date(folder_path) != row[2]:
+                if (
+                    os.path.exists(folder_path)
+                    and get_modified_date(folder_path) != row[2]
+                ):
                     dirs.append(folder_path)
             return dirs

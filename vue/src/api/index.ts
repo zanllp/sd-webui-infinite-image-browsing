@@ -2,6 +2,7 @@ import { message } from 'ant-design-vue'
 import axios, { isAxiosError } from 'axios'
 import type { GlobalSettingPart } from './type'
 import { t } from '@/i18n'
+import type { Tag } from './db'
 export const axiosInst = axios.create({
   baseURL: '/infinite_image_browsing',
 
@@ -20,6 +21,7 @@ export const greeting = async () => {
 }
 
 export interface GlobalConf {
+  all_custom_tags: Tag[]
   global_setting: GlobalSettingPart,
   is_win: boolean,
   cwd: string,
