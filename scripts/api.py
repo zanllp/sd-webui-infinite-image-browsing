@@ -9,7 +9,7 @@ from scripts.tool import (
     get_modified_date,
     is_win,
     cwd,
-    locale
+    locale,
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -27,8 +27,6 @@ from scripts.tool import get_windows_drives
 from scripts.logger import logger
 
 
-
-
 send_img_path = {"value": ""}
 
 
@@ -43,17 +41,18 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     def get_sd_webui_conf():
         try:
             from modules.shared import opts
+
             return opts.data
         except:
             pass
         try:
-            with open(kwargs.get('sd_webui_config'), 'r') as f:
+            with open(kwargs.get("sd_webui_config"), "r") as f:
                 import json
+
                 return json.loads(f.read())
         except:
             pass
         return {}
-
 
     @app.get(f"{pre}/hello")
     async def greeting():
@@ -61,18 +60,19 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
 
     @app.get(f"{pre}/global_setting")
     async def global_setting():
+        all_custom_tags = []
+        try:
+            all_custom_tags = Tag.get_all_custom_tag(DataBase.get_conn())
+        except Exception as e:
+            print(e)
         return {
             "global_setting": get_sd_webui_conf(),
             "cwd": cwd,
             "is_win": is_win,
             "home": os.environ.get("USERPROFILE") if is_win else os.environ.get("HOME"),
             "sd_cwd": os.getcwd(),
+            "all_custom_tags": all_custom_tags,
         }
-
-    class BaiduyunUploadDownloadReq(BaseModel):
-        type: Literal["upload", "download"]
-        send_dirs: List[str]
-        recv_dir: str
 
     class DeleteFilesReq(BaseModel):
         file_paths: List[str]
@@ -85,7 +85,11 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                 try:
                     if os.path.isdir(path):
                         if len(os.listdir(path)):
-                            error_msg = "When a folder is not empty, it is not allowed to be deleted." if locale == "en" else "文件夹不为空时不允许删除。"
+                            error_msg = (
+                                "When a folder is not empty, it is not allowed to be deleted."
+                                if locale == "en"
+                                else "文件夹不为空时不允许删除。"
+                            )
                             raise HTTPException(400, detail=error_msg)
                         shutil.rmtree(path)
                     else:
@@ -93,12 +97,16 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                         img = DbImg.get(conn, os.path.normpath(path))
                         if img:
                             logger.info("delete file: %s", path)
-                            ImageTag.remove_by_image(conn, img.id)
+                            ImageTag.remove(conn, img.id)
                             DbImg.remove(conn, img.id)
                 except OSError as e:
                     # 处理删除失败的情况
                     logger.error("delete failed")
-                    error_msg = f"Error deleting file {path}: {e}" if locale == "en" else f"删除文件 {path} 时出错：{e}"
+                    error_msg = (
+                        f"Error deleting file {path}: {e}"
+                        if locale == "en"
+                        else f"删除文件 {path} 时出错：{e}"
+                    )
                     raise HTTPException(400, detail=error_msg)
         else:
             pass
@@ -116,10 +124,14 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                     shutil.move(path, req.dest)
                     img = DbImg.get(conn, os.path.normpath(path))
                     if img:
-                        ImageTag.remove_by_image(conn, img.id)
+                        ImageTag.remove(conn, img.id)
                         DbImg.remove(conn, img.id)
                 except OSError as e:
-                    error_msg = f"Error moving file {path} to {req.dest}: {e}" if locale == "en" else f"移动文件 {path} 到 {req.dest} 时出错：{e}"
+                    error_msg = (
+                        f"Error moving file {path} to {req.dest}: {e}"
+                        if locale == "en"
+                        else f"移动文件 {path} 到 {req.dest} 时出错：{e}"
+                    )
                     raise HTTPException(400, detail=error_msg)
         else:
             pass
@@ -170,7 +182,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                                 }
                             )
             else:
-               pass
+                pass
 
         except Exception as e:
             logger.error(e)
@@ -212,8 +224,9 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     img_search_dirs = []
     try:
 
-        def get_config_path(conf,
-            keys = [
+        def get_config_path(
+            conf,
+            keys=[
                 "outdir_txt2img_samples",
                 "outdir_img2img_samples",
                 "outdir_save",
@@ -222,7 +235,8 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                 "outdir_img2img_grids",
                 "outdir_samples",
                 "outdir_txt2img_grids",
-            ]):
+            ],
+        ):
             # 获取配置项
             paths = [conf.get(key) for key in keys]
 
@@ -244,6 +258,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         img_search_dirs = forever_cache_path
     except:
         pass
+
     def need_cache(path, parent_paths=forever_cache_path):
         """
         判断 path 是否是 parent_paths 中某个路径的子路径
@@ -290,7 +305,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             if send_img_path["value"] == "":  # 等待setup里面生成完成
                 return True
             v = send_img_path["value"]
-            logger.info("gen_info_completed %s %s",_,v )
+            logger.info("gen_info_completed %s %s", _, v)
             await asyncio.sleep(0.1)
         return send_img_path["value"] == ""
 
@@ -313,7 +328,6 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     def index_bd():
         return FileResponse(os.path.join(cwd, "vue/dist/index.html"))
 
-
     db_pre = pre + "/db"
 
     @app.get(db_pre + "/basic_info")
@@ -326,20 +340,69 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             "img_count": img_count,
             "tags": tags,
             "expired": len(expired_dirs) != 0,
-            "expired_dirs": expired_dirs
+            "expired_dirs": expired_dirs,
         }
+
     @app.post(db_pre + "/update_image_data")
     async def update_image_db_data():
         try:
             DataBase._initing = True
             conn = DataBase.get_conn()
             img_count = DbImg.count(conn)
-            update_image_data(img_search_dirs if img_count == 0 else Floder.get_expired_dirs(conn))
+            update_image_data(
+                img_search_dirs if img_count == 0 else Floder.get_expired_dirs(conn)
+            )
         finally:
             DataBase._initing = False
 
     @app.get(db_pre + "/match_images_by_tags")
     async def match_image_by_tags(tag_ids: str):
-        ids = [int(x) for x in tag_ids.split(',')]
+        ids = [int(x) for x in tag_ids.split(",")]
         conn = DataBase.get_conn()
-        return [x.to_file_info() for x in ImageTag.get_images_by_tags(conn, { "and": ids })]
+        return [
+            x.to_file_info() for x in ImageTag.get_images_by_tags(conn, {"and": ids})
+        ]
+
+    class AddCustomTagToImgReq(BaseModel):
+        img_path: str
+        tag_id: int
+
+    @app.post(db_pre + "/add_custom_tag_to_img")
+    async def add_custom_tag_to_img(req: AddCustomTagToImgReq):
+        conn = DataBase.get_conn()
+        path = os.path.normpath(req.img_path)
+        img = DbImg.get(conn, path)
+        if not img:
+            update_image_data([os.path.dirname(path)])
+            img = DbImg.get(conn, path)
+        assert(img)
+        ImageTag(img.id, req.tag_id).save(conn)
+        conn.commit()
+
+    class AddCustomTagReq(BaseModel):
+        tag_name: str
+
+    @app.post(db_pre + "/add_custom_tag")
+    async def add_custom_tag(req: AddCustomTagReq):
+        conn = DataBase.get_conn()
+        tag = Tag.get_or_create(conn, name=req.tag_name, type="custom")
+        conn.commit()
+        return tag
+
+    class RemoveCustomTagReq(BaseModel):
+        tag_id: str
+
+    @app.post(db_pre + "/remove_custom_tag")
+    async def remove_custom_tag(req: RemoveCustomTagReq):
+        conn = DataBase.get_conn()
+        ImageTag.remove(conn, tag_id=req.tag_id)
+        Tag.remove(conn, req.tag_id)
+
+    class RemoveCustomTagFromReq(BaseModel):
+        img_id: int
+        tag_id: str
+
+    @app.post(db_pre + "/remove_custom_tag_from_img")
+    async def remove_custom_tag_from_img(req: RemoveCustomTagFromReq):
+        conn = DataBase.get_conn()
+        ImageTag.remove(conn, image_id=req.img_id, tag_id=req.tag_id)

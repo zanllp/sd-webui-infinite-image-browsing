@@ -37,17 +37,17 @@ const thumbnailSize = computed(() => props.viewMode === 'grid' ? [global.gridThu
     :visible="!global.longPressOpenContextMenu ? undefined : ((typeof idx === 'number') && showMenuIdx === idx)"
     @update:visible="v => ((typeof idx === 'number') && emit('update:showMenuIdx', v ? idx : -1))">
     <li class="file file-item-trigger" :class="{
-      clickable: file.type === 'dir', selected,
-      grid: viewMode === 'grid' || viewMode === 'large-size-grid', 'large-grid': viewMode === 'large-size-grid'
-    }" :data-idx="idx" :key="file.name" draggable="true" @dragstart="emit('dragstart', $event, idx)"
+        clickable: file.type === 'dir', selected,
+        grid: viewMode === 'grid' || viewMode === 'large-size-grid', 'large-grid': viewMode === 'large-size-grid'
+      }" :data-idx="idx" :key="file.name" draggable="true" @dragstart="emit('dragstart', $event, idx)"
       @click.capture="emit('fileItemClick', $event, file)">
       <div v-if="viewMode !== 'line'">
         <a-image :key="file.fullpath" :class="`idx-${idx}`" v-if="props.target === 'local' && isImageFile(file.name)"
           :src="global.enableThumbnail ? toImageThumbnailUrl(file, thumbnailSize) : toRawFileUrl(file)"
           :fallback="fallbackImage" :preview="{
-            src: fullScreenPreviewImageUrl,
-            onVisibleChange: (v, lv) => emit('previewVisibleChange', v, lv)
-          }">
+              src: fullScreenPreviewImageUrl,
+              onVisibleChange: (v, lv) => emit('previewVisibleChange', v, lv)
+            }">
         </a-image>
         <div v-else class="preview-icon-wrap">
           <file-outlined class="icon center" v-if="file.type === 'file'" />
@@ -101,7 +101,10 @@ const thumbnailSize = computed(() => props.viewMode === 'grid' ? [global.gridThu
             <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
             <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
             <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
-            <a-menu-item key="send2savedDir" >{{ $t('send2savedDir') }}</a-menu-item>
+            <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
+            <a-sub-menu key="add-custom-tag" :title="$t('addCustomTag')">
+              <a-menu-item v-for="tag in global.conf?.all_custom_tags ?? []" :key="tag.id">{{ tag.name }}</a-menu-item>
+            </a-sub-menu>
           </template>
         </template>
       </a-menu>

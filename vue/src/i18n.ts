@@ -108,13 +108,31 @@ const zh = {
   "lora": "LoRA",
   "size": "尺寸",
   "pos": "正面提示",
-  
+
   "generateIndexHint": "生成索引用于搜索图像",
   'UpdateIndex': '更新索引',
   needGenerateIdx: '你需要先点击按钮生成索引用于搜索图像\n这个过程可能需要消耗几分钟',
-  search: '搜索'
+  search: '搜索',
+  "custom": "自定义",
+  'add': '新增',
+  cancel: "取消",
+  submit: "提交",
+  embedding: '1',
+  "existInOtherType": "已存在于其他类型",
+  "alreadyExists": "已存在",
+  "addCustomTag": "添加自定义tag",
+  "addComplete": "添加完成"
 }
 const en: Record<keyof typeof zh, string> = {
+  "addCustomTag": "Add custom tag",
+  "addComplete": "Add complete",
+  "existInOtherType": "Already exists in other type",
+  "alreadyExists": "Already exists",
+  embedding: '1',
+  cancel: "Cancel",
+  submit: "Submit",
+  add: 'Add',
+  custom: "Custom",
   needGenerateIdx: 'You need to click the button to generate an index for searching images. \n This process may take a few minutes to complete.',
   search: 'Search',
   'UpdateIndex': 'Update index',
