@@ -196,16 +196,10 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             )
 
         # 如果缓存文件不存在，则生成缩略图并保存
-        with open(path, "rb") as f:
-            img = Image.open(BytesIO(f.read()))
-        w, h = size.split(",")
-        img.thumbnail((int(w), int(h)))
-        buffer = BytesIO()
-        img.save(buffer, "webp")
-
-        # 将二进制数据写入缓存文件中
-        with open(cache_path, "wb") as f:
-            f.write(buffer.getvalue())
+        with Image.open(path) as img:
+            w, h = size.split(",")
+            img.thumbnail((int(w), int(h)))
+            img.save(cache_path, "webp")
 
         # 返回缓存文件
         return FileResponse(
