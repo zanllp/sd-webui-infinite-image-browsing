@@ -128,6 +128,10 @@ body {
   .ant-tabs > div.ant-tabs-nav {
     margin: 0;
   }
+
+  .ant-message {
+    z-index: 10000;
+  }
 }
 
 @mixin line-clamp($n: 1) {

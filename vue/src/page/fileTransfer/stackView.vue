@@ -12,6 +12,7 @@ import { RecycleScroller } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { watch } from 'vue'
 import FileItem from './FileItem.vue'
+import fullScreenContextMenu from './fullScreenContextMenu.vue'
 
 
 const global = useGlobalStore()
@@ -54,7 +55,6 @@ watch(() => props, () => {
   }
 }, { immediate: true })
 
-
 </script>
 <template>
   <ASpin :spinning="spinning" size="large">
@@ -64,7 +64,7 @@ watch(() => props, () => {
       <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
         <template #cancelText />
         <ASkeleton active :loading="!q.isIdle">
-          <div style="width: 100%; word-break: break-all;white-space: pre-line;max-height: 70vh;overflow: auto;"
+          <div style="width: 100%; word-break: break-all;white-space: pre-line;max-height: 70vh;overflow: auto;z-index: 9999;"
             @dblclick="copy2clipboard(imageGenInfo, 'copied')">
             <div class="hint">{{ $t('doubleClickToCopy') }}</div>
             {{ imageGenInfo }}
@@ -148,6 +148,7 @@ watch(() => props, () => {
         </div>
       </div>
     </div>
+    <fullScreenContextMenu v-if="previewing" :file="sortedFiles[previewIdx]" :idx="previewIdx" @context-menu-click="onContextMenuClick"/>
   </ASpin>
 </template>
 <style lang="scss" scoped>
