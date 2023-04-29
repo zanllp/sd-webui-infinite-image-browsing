@@ -6,7 +6,7 @@ A high-performance image (file) browser 😋.It is suitable for use in all place
 If you have any questions or suggestions about this project, please submit an issue on GitHub (Both Chinese and English are acceptable), or check the FAQ section at the bottom first.
 
 ## Key Features
-- Multi-tab and multi-pane like Chrome and VS Code. Create tabs and preview multiple folders, move files between panes.
+- Excellent performance: After caching is generated, images can be displayed in just a few milliseconds.
 - Supports using 'walk' mode to browse images, automatically loading the next folder `(similar to os.walk)`, allowing you to browse all images without paging. Tested to work properly with over 27,000 files.
 - Supports searching images using prompt, model, lora, etc. The used tags will be listed. Supports auto completion and translation of tags. Extremely fast search speed.
 - Supports view image generation information, send images to other tabs, optional thumbnail preview, full-screen preview, and move.
