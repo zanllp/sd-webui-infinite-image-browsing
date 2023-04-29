@@ -121,9 +121,13 @@ const zh = {
   "existInOtherType": "已存在于其他类型",
   "alreadyExists": "已存在",
   "addCustomTag": "添加自定义tag",
-  "addComplete": "添加完成"
+  "addComplete": "添加完成",
+  "openContextMenu": "打开上下文菜单",
+  "copyPrompt": "复制提示"
 }
 const en: Record<keyof typeof zh, string> = {
+  "openContextMenu": "Open context menu",
+  "copyPrompt": "Copy prompt",
   "addCustomTag": "Add custom tag",
   "addComplete": "Add complete",
   "existInOtherType": "Already exists in other type",
