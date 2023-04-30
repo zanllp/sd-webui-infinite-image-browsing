@@ -16,7 +16,7 @@ const loading = computed(() => !queue.isIdle)
 const info = ref<DataBaseBasicInfo>()
 const selectedId = ref(new Set<number>())
 const tags = computed(() => info.value ? info.value.tags.slice().sort((a, b) => b.count - a.count) : [])
-const classSort = (["custom", "Model", "lora", "pos", "size", "Sampler"]).reduce((p, c, i) => {
+const classSort = (["custom", "Model", "lora", "pos", "size", "Postprocess upscaler", "Postprocess upscale by", "Sampler", ]).reduce((p, c, i) => {
   p[c] = i
   return p
 }, {} as Dict<number>)

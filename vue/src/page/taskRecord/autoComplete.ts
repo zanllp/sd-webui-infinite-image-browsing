@@ -9,7 +9,7 @@ export const getAutoCompletedTagList = async ({
 }: ReturnTypeAsync<typeof getGlobalSetting>) => {
   const picked = pick(
     global_setting,
-    'additional_networks_extra_lora_path',
+    // 'additional_networks_extra_lora_path',
     'outdir_grids',
     'outdir_extras_samples',
     'outdir_img2img_grids',
@@ -35,7 +35,7 @@ export const getAutoCompletedTagList = async ({
     outdir_img2img_samples: t('i2i'),
     outdir_save: t('saveButtonSavesTo'),
     outdir_extras_samples: t('extra'),
-    additional_networks_extra_lora_path: 'LoRA',
+    // additional_networks_extra_lora_path: 'LoRA',
     outdir_grids: t('gridImage'),
     outdir_img2img_grids: t('i2i-grid'),
     outdir_samples: t('image'),
