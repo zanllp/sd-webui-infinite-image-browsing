@@ -51,44 +51,46 @@ useResizeAndDrag(el, resizeHandle, dragHandle, {
 </script>
 
 <template>
-  <div ref="el" class="full-screen-menu" @wheel.capture.stop  :class="{ 'unset-size': !state.expanded }">
+  <div ref="el" class="full-screen-menu" @wheel.capture.stop :class="{ 'unset-size': !state.expanded }">
     <div class="container">
       <div class="actoion-bar">
-      <template v-if="state.expanded">
-        <a-dropdown :trigger="['hover']" style="z-index: 99999;" :get-popup-container="p => p.parentNode as HTMLDivElement">
-          <a-button>{{ t('openContextMenu') }}</a-button>
-          <template #overlay>
-            <a-menu @click="emit('contextMenuClick', $event, file, idx)" style="z-index: 99999;">
-              <a-menu-item key="send2txt2img">{{ $t('sendToTxt2img') }}</a-menu-item>
-              <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
-              <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
-              <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
-              <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
-              <a-sub-menu key="add-custom-tag" :title="$t('addCustomTag')">
-                <a-menu-item v-for="tag in global.conf?.all_custom_tags ?? []" :key="tag.id">{{
-                  tag.name
-                }}</a-menu-item>
-              </a-sub-menu>
-            </a-menu>
-          </template>
-        </a-dropdown>
-        <a-button @click="copy2clipboard(imageGenInfo, 'copied')">{{ $t('copyPrompt') }}</a-button>
-        <div flex-placeholder></div>
-      </template>
-        <div class="icon" style="cursor: pointer; "  @click="state.expanded = !state.expanded">
-          <FullscreenExitOutlined v-if="state.expanded"/>
-          <FullscreenOutlined v-else/>
-        </div>
-        <div ref="dragHandle" class="icon" style="cursor: grab;"  >
+        <div ref="dragHandle" class="icon" style="cursor: grab;">
           <DragOutlined />
         </div>
+        <div class="icon" style="cursor: pointer; " @click="state.expanded = !state.expanded">
+          <FullscreenExitOutlined v-if="state.expanded" />
+          <FullscreenOutlined v-else />
+        </div>
+        <template v-if="state.expanded">
+          <div flex-placeholder></div>
+          <a-dropdown :trigger="['hover']" style="z-index: 99999;"
+            :get-popup-container="p => p.parentNode as HTMLDivElement">
+            <a-button>{{ t('openContextMenu') }}</a-button>
+            <template #overlay>
+              <a-menu @click="emit('contextMenuClick', $event, file, idx)" style="z-index: 99999;">
+                <a-menu-item key="send2txt2img">{{ $t('sendToTxt2img') }}</a-menu-item>
+                <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
+                <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
+                <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
+                <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
+                <a-sub-menu key="add-custom-tag" :title="$t('addCustomTag')">
+                  <a-menu-item v-for="tag in global.conf?.all_custom_tags ?? []" :key="tag.id">{{
+                    tag.name
+                  }}</a-menu-item>
+                </a-sub-menu>
+              </a-menu>
+            </template>
+          </a-dropdown>
+          <a-button @click="copy2clipboard(imageGenInfo, 'copied')">{{ $t('copyPrompt') }}</a-button>
+        </template>
+
       </div>
       <div class="gen-info" v-if="state.expanded">
         {{ imageGenInfo }}
       </div>
     </div>
 
-    <div class="mouse-sensor"  ref="resizeHandle" v-if="state.expanded"/>
+    <div class="mouse-sensor" ref="resizeHandle" v-if="state.expanded" />
   </div>
 </template>
 

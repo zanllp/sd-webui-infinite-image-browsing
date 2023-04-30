@@ -15,13 +15,16 @@ from scripts.logger import logger
 
 # 定义一个函数来获取图片文件的EXIF数据
 def get_exif_data(file_path):
+    info = ''
+    params = None
     try:
         with Image.open(file_path) as img:
             info = read_info_from_image(img)
-            return parse_generation_parameters(info), info
+            params = parse_generation_parameters(info)
     except Exception as e:
         if is_dev:
             logger.error("get_exif_data %s", e)
+    return params, info
 
 
 def update_image_data(search_dirs: List[str]):
@@ -48,18 +51,18 @@ def update_image_data(search_dirs: List[str]):
             elif is_valid_image_path(file_path):
                 if DbImg.get(conn, file_path):  # 已存在的跳过
                     continue
-                exif_data = get_exif_data(file_path)
-                if not exif_data:
-                    continue
-                exif, lora, pos, _ = exif_data[0]
+                parsed_params, info = get_exif_data(file_path)
                 img = DbImg(
                     file_path,
-                    exif_data[1],
+                    info,
                     os.path.getsize(file_path),
                     get_modified_date(file_path),
                 )
                 img.save(conn)
 
+                if not parsed_params:
+                    continue
+                exif, lora, pos, _ = parsed_params
                 size_tag = Tag.get_or_create(
                     conn,
                     str(exif.get("Size-1", 0)) + " * " + str(exif.get("Size-2", 0)),
@@ -67,11 +70,16 @@ def update_image_data(search_dirs: List[str]):
                 )
                 safe_save_img_tag(ImageTag(img.id, size_tag.id))
 
-                for k in ["Model", "Sampler"]:
+                for k in [
+                    "Model",
+                    "Sampler",
+                    "Postprocess upscale by",
+                    "Postprocess upscaler",
+                ]:
                     v = exif.get(k)
                     if not v:
                         continue
-                    tag = Tag.get_or_create(conn, str(v),  k)
+                    tag = Tag.get_or_create(conn, str(v), k)
                     safe_save_img_tag(ImageTag(img.id, tag.id))
                 for i in lora:
                     tag = Tag.get_or_create(conn, i["name"], "lora")

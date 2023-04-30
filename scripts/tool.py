@@ -14,27 +14,31 @@ def human_readable_size(size_bytes):
     Converts bytes to a human-readable format.
     """
     # define the size units
-    units = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
+    units = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
     # calculate the logarithm of the input value with base 1024
     size = int(size_bytes)
     if size == 0:
-        return '0B'
+        return "0B"
     i = 0
     while size >= 1024 and i < len(units) - 1:
         size /= 1024
         i += 1
     # round the result to two decimal points and return as a string
-    return '{:.2f} {}'.format(size, units[i])
+    return "{:.2f} {}".format(size, units[i])
+
 
 def get_windows_drives():
     drives = []
-    for drive in range(ord('A'), ord('Z')+1):
-        drive_name = chr(drive) + ':/'
+    for drive in range(ord("A"), ord("Z") + 1):
+        drive_name = chr(drive) + ":/"
         if os.path.exists(drive_name):
             drives.append(drive_name)
     return drives
 
-pattern = re.compile(r'(\d+\.?\d*)([KMGT]?B)', re.IGNORECASE)
+
+pattern = re.compile(r"(\d+\.?\d*)([KMGT]?B)", re.IGNORECASE)
+
+
 def convert_to_bytes(file_size_str):
     match = re.match(pattern, file_size_str)
     if match:
@@ -52,16 +56,17 @@ def convert_to_bytes(file_size_str):
         return int(size)
     else:
         raise ValueError(f"Invalid file size string '{file_size_str}'")
-    
+
 
 import asyncio
 
 
 def debounce(delay):
     """用于优化高频事件的装饰器"""
-    
+
     def decorator(func):
         from typing import Union
+
         task: Union[None, asyncio.Task] = None
 
         async def debounced(*args, **kwargs):
@@ -101,7 +106,9 @@ def get_temp_path():
     temp_path = None
     try:
         # 尝试获取系统环境变量中的临时文件目录路径
-        temp_path = os.environ.get('TMPDIR') or os.environ.get('TMP') or os.environ.get('TEMP')
+        temp_path = (
+            os.environ.get("TMPDIR") or os.environ.get("TMP") or os.environ.get("TEMP")
+        )
     except Exception as e:
         print("获取系统环境变量临时文件目录路径失败，错误信息：", e)
 
@@ -121,74 +128,89 @@ def get_temp_path():
 
     return temp_path
 
+
 temp_path = get_temp_path()
 
 
 def get_locale():
     import locale
+
     lang, _ = locale.getdefaultlocale()
-    return 'zh' if lang and lang.startswith('zh') else 'en'
+    return "zh" if lang and lang.startswith("zh") else "en"
+
 
 locale = get_locale()
 
+
 def get_modified_date(folder_path: str):
-    return datetime.fromtimestamp(os.path.getmtime(folder_path)).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.fromtimestamp(os.path.getmtime(folder_path)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
 
 
 def unique_by(seq, key_func):
     seen = set()
     return [x for x in seq if not (key := key_func(x)) in seen and not seen.add(key)]
 
-def read_info_from_image(image) -> str:    
+
+def read_info_from_image(image) -> str:
     items = image.info or {}
-    geninfo = items.pop('parameters', None)
+    geninfo = items.pop("parameters", None)
     if "exif" in items:
         exif = piexif.load(items["exif"])
-        exif_comment = (exif or {}).get("Exif", {}).get(piexif.ExifIFD.UserComment, b'')
+        exif_comment = (exif or {}).get("Exif", {}).get(piexif.ExifIFD.UserComment, b"")
         try:
             exif_comment = piexif.helper.UserComment.load(exif_comment)
         except ValueError:
-            exif_comment = exif_comment.decode('utf8', errors="ignore")
+            exif_comment = exif_comment.decode("utf8", errors="ignore")
 
         if exif_comment:
-            items['exif comment'] = exif_comment
+            items["exif comment"] = exif_comment
             geninfo = exif_comment
     return geninfo
+
 
 re_param_code = r'\s*([\w ]+):\s*("(?:\\"[^,]|\\"|\\|[^\"])+"|[^,]*)(?:,|$)'
 re_param = re.compile(re_param_code)
 re_imagesize = re.compile(r"^(\d+)x(\d+)$")
 re_lora_prompt = re.compile("<lora:([\w_\s]+):([\d.]+)>")
-re_parens = re.compile(r'[\\/\[\](){}]+')
+re_parens = re.compile(r"[\\/\[\](){}]+")
 re_lora_extract = re.compile(r"([\w_\s]+)(?:\d+)?")
 
-def lora_extract(lora:str):
+
+def lora_extract(lora: str):
     """
     提取yoshino yoshino(2a79aa5adc4a)
     """
     res = re_lora_extract.match(lora)
-    return res.group(1) if res else lora 
+    return res.group(1) if res else lora
 
-def parse_prompt(x:str):
-    x = re.sub(re_parens, '', x.lower().replace('，',',').replace('-',' ').replace('_', ' '))
-    tag_list = [x.strip() for x in x.split(',')]
+
+def parse_prompt(x: str):
+    x = re.sub(
+        re_parens, "", x.lower().replace("，", ",").replace("-", " ").replace("_", " ")
+    )
+    tag_list = [x.strip() for x in x.split(",")]
     res = []
     lora_list = []
     for tag in tag_list:
         if len(tag) == 0:
             continue
-        idx_colon = tag.find(':')
+        idx_colon = tag.find(":")
         if idx_colon != -1:
             lora_res = re.match(re_lora_prompt, tag)
             if lora_res:
-                lora_list.append({ "name": lora_res.group(1), "value": float(lora_res.group(2))})
+                lora_list.append(
+                    {"name": lora_res.group(1), "value": float(lora_res.group(2))}
+                )
             else:
-              tag = tag[0:idx_colon]
-              if len(tag):  
-                res.append(tag)
+                tag = tag[0:idx_colon]
+                if len(tag):
+                    res.append(tag)
         else:
             res.append(tag)
     return res, lora_list
+
 
 def parse_generation_parameters(x: str):
     res = {}
@@ -196,12 +218,16 @@ def parse_generation_parameters(x: str):
     negative_prompt = ""
     done_with_prompt = False
     if not x:
-        return {},[],[],[]
+        return {}, [], [], []
     *lines, lastline = x.strip().split("\n")
     if len(re_param.findall(lastline)) < 3:
         lines.append(lastline)
-        lastline = ''
-
+        lastline = ""
+    if len(lines) == 1 and lines[0].startswith("Postprocess"):  # 把上面改成<2应该也可以，当时不敢动
+        lastline = lines[
+            0
+        ]  # 把Postprocess upscale by: 4, Postprocess upscaler: R-ESRGAN 4x+ Anime6B 推到res解析
+        lines = []
     for i, line in enumerate(lines):
         line = line.strip()
         if line.startswith("Negative prompt:"):
@@ -213,35 +239,38 @@ def parse_generation_parameters(x: str):
         else:
             prompt += ("" if prompt == "" else "\n") + line
 
-    #res["pos_prompt"] = prompt
-    #res["neg_prompt"] = negative_prompt
-
     for k, v in re_param.findall(lastline):
         v = v[1:-1] if v[0] == '"' and v[-1] == '"' else v
         m = re_imagesize.match(v)
         if m is not None:
-            res[k+"-1"] = m.group(1)
-            res[k+"-2"] = m.group(2)
+            res[k + "-1"] = m.group(1)
+            res[k + "-2"] = m.group(2)
         else:
             res[k] = v
     pos_prompt, lora = parse_prompt(prompt)
-    neg_prompt = [] # parse_prompt(negative_prompt)[0]
     for k in res:
         k_s = str(k)
         if k_s.startswith("AddNet Module") and str(res[k]).lower() == "lora":
             model = res[k_s.replace("Module", "Model")]
             value = res.get(k_s.replace("Module", "Weight A"), "1")
-            lora.append({ "name": lora_extract(model), "value": float(value) })
-    return res, unique_by(lora, lambda x:x['name']), unique_by(pos_prompt, lambda x:x), unique_by(neg_prompt, lambda x:x)
+            lora.append({"name": lora_extract(model), "value": float(value)})
+
+    return (
+        res,
+        unique_by(lora, lambda x: x["name"]),
+        unique_by(pos_prompt, lambda x: x),
+        [],
+    )
 
 
 tags_translate: Dict[str, str] = {}
 try:
     import codecs
-    with codecs.open(os.path.join(cwd, 'tags-translate.csv'), "r", "utf-8") as tag:
+
+    with codecs.open(os.path.join(cwd, "tags-translate.csv"), "r", "utf-8") as tag:
         tags_translate_str = tag.read()
         for line in tags_translate_str.splitlines():
-            en,mapping = line.split(',')
+            en, mapping = line.split(",")
             tags_translate[en.strip()] = mapping.strip()
 except Exception as e:
     pass
