@@ -11,7 +11,7 @@ If you have any questions or suggestions about this project, please submit an is
 - Supports searching images using prompt, model, lora, etc. The used tags will be listed. Supports auto completion and translation of tags. Extremely fast search speed.
 - Supports view image generation information, send images to other tabs, optional thumbnail preview, full-screen preview, and move.
 - Supports standalone operation without sd-webui and almost all functions can be used normally. [Click here for details](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47).
-- Supports preview based on the file tree structure. Supports basic file operations as well as multi-select deletion/moving.
+- Supports preview based on the file tree structure. Supports basic file operations as well as multi-select deletion/moving. Press and hold Ctrl, Shift, or Cmd to select multiple items.
 
 
 It is strongly recommended to use "Open in new tab" (in the upper right corner of the plugin startup page), which is much more comfortable than being embedded in Gradio. However, the "send image to other tab" function cannot be used in this mode.
