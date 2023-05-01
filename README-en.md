@@ -1,17 +1,36 @@
 # sd-webui-infinite-image-browsing
-
-
-A high-performance image (file) browser 😋.It is suitable for use in all places, and has been optimized for cloud computing, You can use thumbnails to quickly preview, so fast that you almost don't feel the loading time.
-
-If you have any questions or suggestions about this project, please submit an issue on GitHub (Both Chinese and English are acceptable), or check the FAQ section at the bottom first.
-
 ## Key Features
-- Excellent performance: After caching is generated, images can be displayed in just a few milliseconds.
-- Supports using 'walk' mode to browse images, automatically loading the next folder `(similar to os.walk)`, allowing you to browse all images without paging. Tested to work properly with over 27,000 files.
-- Supports searching images using prompt, model, lora, etc. The used tags will be listed. Supports auto completion and translation of tags. Extremely fast search speed.
-- Supports view image generation information, send images to other tabs, optional thumbnail preview, full-screen preview, and move.
-- Supports standalone operation without sd-webui and almost all functions can be used normally. [Click here for details](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47).
-- Supports preview based on the file tree structure. Supports basic file operations as well as multi-select deletion/moving. Press and hold Ctrl, Shift, or Cmd to select multiple items.
+
+### Excellent Performance
+- Once caching is generated, images can be displayed in just a few milliseconds.
+- By default, images are displayed with thumbnails, and the size of the thumbnails can be adjusted.
+
+### 'Walk' Mode
+- Browse images automatically by loading the next folder `(similar to os.walk)`, allowing you to browse all images without paging.
+- Tested to work properly with over 27,000 files.
+
+### Image Search
+- Supports image search using Prompt, Model, Lora, etc.
+- Tags will be listed based on their frequency of use.
+- Supports tag autocomplete, translation, and customization.
+- Image bookmarking can be achieved by toggling custom tags for images.
+
+### View Image & `Send To`
+- Supports viewing image generation information.
+- Supports sending images to other tabs.
+- Optional thumbnail preview and full-screen preview.
+- Supports moving images in full-screen preview mode.
+
+### Standalone Operation
+- Supports standalone operation without sd-webui.
+- Almost all functions can be used normally.
+- [Click here for details](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47).
+
+### Preview based on File Tree Structure & file operations
+- Supports preview based on the file tree structure.
+- Supports basic file operations as well as multi-select deletion/moving.
+- Press and hold Ctrl, Shift, or Cmd to select multiple items.
+- Supports sending files directly to other folders via context menu.
 
 
 It is strongly recommended to use "Open in new tab" (in the upper right corner of the plugin startup page), which is much more comfortable than being embedded in Gradio. However, the "send image to other tab" function cannot be used in this mode.
