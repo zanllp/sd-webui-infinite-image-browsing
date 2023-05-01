@@ -13,12 +13,12 @@
 - Supports image search using Prompt, Model, Lora, etc.
 - Tags will be listed based on their frequency of use.
 - Supports tag autocomplete, translation, and customization.
-- Image favorite can be achieved by toggling custom tags for images.
+- Image favorite can be achieved by toggling custom tags for images in the right-click menu.
 
 ### View Image & `Send To`
 - Supports viewing image generation information.
 - Supports sending images to other tabs.
-- Optional thumbnail preview and full-screen preview.
+- Supports full-screen preview.
 - Supports moving images in full-screen preview mode.
 
 ### Standalone Operation
