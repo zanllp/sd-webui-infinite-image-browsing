@@ -363,21 +363,38 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             x.to_file_info() for x in ImageTag.get_images_by_tags(conn, {"and": ids})
         ]
 
-    class AddCustomTagToImgReq(BaseModel):
+    @app.get(db_pre+ "/img_selected_custom_tag")
+    async def get_img_selected_custom_tag(path: str):
+        path = os.path.normpath(path)
+        conn = DataBase.get_conn()
+        img = DbImg.get(conn, path)
+        if not img:
+            if DbImg.count() == 0:
+                raise HTTPException(400, "你需要先通过图像搜索页生成索引" if locale == "zh" else "You need to generate an index through the image search page first.")
+            update_image_data([os.path.dirname(path)])
+            img = DbImg.get(conn, path)
+        assert img
+        # tags = Tag.get_all_custom_tag()
+        return ImageTag.get_tags_for_image(conn, img.id, type='custom')
+    
+    class ToggleCustomTagToImgReq(BaseModel):
         img_path: str
         tag_id: int
 
-    @app.post(db_pre + "/add_custom_tag_to_img")
-    async def add_custom_tag_to_img(req: AddCustomTagToImgReq):
+    @app.post(db_pre + "/toggle_custom_tag_to_img")
+    async def toggle_custom_tag_to_img(req: ToggleCustomTagToImgReq):
         conn = DataBase.get_conn()
         path = os.path.normpath(req.img_path)
         img = DbImg.get(conn, path)
-        if not img:
-            update_image_data([os.path.dirname(path)])
-            img = DbImg.get(conn, path)
-        assert(img)
-        ImageTag(img.id, req.tag_id).save(conn)
+        print(img.id)
+        tags = ImageTag.get_tags_for_image(conn=conn, image_id=img.id, type='custom', tag_id=req.tag_id)
+        is_remove = len(tags)
+        if is_remove:
+            ImageTag.remove(conn, img.id, tags[0].id)
+        else:
+            ImageTag(img.id, req.tag_id).save(conn)
         conn.commit()
+        return {"is_remove": is_remove}
 
     class AddCustomTagReq(BaseModel):
         tag_name: str

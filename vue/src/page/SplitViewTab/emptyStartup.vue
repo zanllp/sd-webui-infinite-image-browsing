@@ -8,11 +8,11 @@ import { message } from 'ant-design-vue'
 import { t } from '@/i18n'
 
 const global = useGlobalStore()
-const props = defineProps<{ tabIdx: number, paneIdx: number }>()
+const props = defineProps<{ tabIdx: number; paneIdx: number }>()
 const compCnMap: Partial<Record<TabPane['type'], string>> = {
   local: t('local'),
-  "tag-search": t('imgSearch'),
-  'global-setting': t('globalSettings'),
+  'tag-search': t('imgSearch'),
+  'global-setting': t('globalSettings')
 }
 const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false) => {
   let pane: TabPane
@@ -25,7 +25,14 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
       pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId() }
       break
     case 'local':
-      pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId(), target: type, path, walkMode }
+      pane = {
+        type,
+        name: compCnMap[type]!,
+        key: Date.now() + uniqueId(),
+        target: type,
+        path,
+        walkMode
+      }
   }
   const tab = global.tabList[props.tabIdx]
   tab.panes.splice(props.paneIdx, 1, pane)
@@ -34,18 +41,26 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
 
 const lastRecord = computed(() => global.lastTabListRecord?.[1])
 
-
 console.log(lastRecord.value)
 
-const walkModeSupportedDir = computed(() => global.autoCompletedDirList.filter(({ key: k }) => k === 'outdir_txt2img_samples' || k === 'outdir_img2img_samples' || k === 'outdir_extras_samples' || k === 'outdir_save' || k === 'outdir_samples'))
+const walkModeSupportedDir = computed(() =>
+  global.autoCompletedDirList.filter(
+    ({ key: k }) =>
+      k === 'outdir_txt2img_samples' ||
+      k === 'outdir_img2img_samples' ||
+      k === 'outdir_extras_samples' ||
+      k === 'outdir_save' ||
+      k === 'outdir_samples'
+  )
+)
 const canpreviewInNewWindow = window.parent !== window
 const previewInNewWindow = () => window.parent.open('/infinite_image_browsing')
 
 const restoreRecord = () => {
   ok(lastRecord.value)
-  global.tabList = lastRecord.value.tabs.map(v => ID(v, true))
-  global.tabList.forEach(tab => {
-    tab.panes.forEach(pane => {
+  global.tabList = lastRecord.value.tabs.map((v) => ID(v, true))
+  global.tabList.forEach((tab) => {
+    tab.panes.forEach((pane) => {
       if (typeof pane.name !== 'string') {
         pane.name = ''
       }
@@ -63,34 +78,47 @@ const restoreRecord = () => {
       </div>
       <div class="last-record">
         <a v-if="lastRecord?.tabs.length" @click.prevent="restoreRecord">{{
-          $t('restoreLastRecord') }}</a>
+          $t('restoreLastRecord')
+        }}</a>
       </div>
     </div>
     <div class="content">
-
       <div class="quick-start" v-if="walkModeSupportedDir.length">
         <h2>{{ $t('walkMode') }}</h2>
         <ul>
           <li v-for="item in walkModeSupportedDir" :key="item.dir" class="quick-start__item">
-            <AButton @click="openInCurrentTab('local', item.dir, true)" ghost type="primary" block>{{ item.zh }}</AButton>
+            <AButton
+              @click="openInCurrentTab('local', item.dir, true)"
+              ghost
+              type="primary"
+              block
+              >{{ item.zh }}</AButton
+            >
           </li>
         </ul>
       </div>
       <div class="quick-start" v-if="global.autoCompletedDirList.length">
         <h2>{{ $t('launchFromQuickMove') }}</h2>
         <ul>
-          <li v-for="dir in global.autoCompletedDirList" :key="dir.key" class="quick-start__item"
-            @click.prevent="openInCurrentTab('local', dir.dir)">
+          <li
+            v-for="dir in global.autoCompletedDirList"
+            :key="dir.key"
+            class="quick-start__item"
+            @click.prevent="openInCurrentTab('local', dir.dir)"
+          >
             <span class="quick-start__text line-clamp-1">{{ dir.zh }}</span>
           </li>
         </ul>
-
       </div>
       <div class="quick-start">
         <h2>{{ $t('launch') }}</h2>
         <ul>
-          <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp"
-            class="quick-start__item" @click.prevent="openInCurrentTab(comp)">
+          <li
+            v-for="comp in Object.keys(compCnMap) as TabPane['type'][]"
+            :key="comp"
+            class="quick-start__item"
+            @click.prevent="openInCurrentTab(comp)"
+          >
             <span class="quick-start__text line-clamp-1">{{ compCnMap[comp] }}</span>
           </li>
         </ul>
@@ -98,12 +126,15 @@ const restoreRecord = () => {
       <div class="quick-start" v-if="global.recent.length">
         <h2>{{ $t('recent') }}</h2>
         <ul>
-          <li v-for="item in global.recent" :key="item.key" class="quick-start__item"
-            @click.prevent="openInCurrentTab(item.target as any, item.path)">
+          <li
+            v-for="item in global.recent"
+            :key="item.key"
+            class="quick-start__item"
+            @click.prevent="openInCurrentTab(item.target as any, item.path)"
+          >
             <CloudDownloadOutlined class="quick-start__icon" v-if="item.target !== 'local'" />
             <FileDoneOutlined class="quick-start__icon" v-else />
-            <span class="quick-start__text line-clamp-1">{{ item.path
-            }}</span>
+            <span class="quick-start__text line-clamp-1">{{ item.path }}</span>
           </li>
         </ul>
       </div>

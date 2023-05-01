@@ -13,9 +13,11 @@ const global = useGlobalStore()
 const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> = {
   local: defineAsyncComponent(() => import('@/page/fileTransfer/stackView.vue')),
   empty: defineAsyncComponent(() => import('./emptyStartup.vue')),
-  "global-setting": defineAsyncComponent(() => import('@/page/globalSetting.vue')),
-  "tag-search-matched-image-grid": defineAsyncComponent(() => import('@/page/TagSearch/MatchedImageGrid.vue')),
-  "tag-search": defineAsyncComponent(() => import('@/page/TagSearch/TagSearch.vue'))
+  'global-setting': defineAsyncComponent(() => import('@/page/globalSetting.vue')),
+  'tag-search-matched-image-grid': defineAsyncComponent(
+    () => import('@/page/TagSearch/MatchedImageGrid.vue')
+  ),
+  'tag-search': defineAsyncComponent(() => import('@/page/TagSearch/TagSearch.vue'))
 }
 const onEdit = (idx: number, targetKey: any, action: string) => {
   const tab = global.tabList[idx]
@@ -24,11 +26,12 @@ const onEdit = (idx: number, targetKey: any, action: string) => {
     tab.panes.push(empty)
     tab.key = empty.key
   } else {
-    if (global.tabList.reduce((p, c) => p + c.panes.length, 0) === 1) { 
+    if (global.tabList.reduce((p, c) => p + c.panes.length, 0) === 1) {
       return message.error(t('deleteNotAllowedWithOnePaneLeft'))
     }
-    const paneIdx = tab.panes.findIndex(v => v.key === targetKey)
-    if (tab.key === targetKey) { // 只有在前台时才跳过去
+    const paneIdx = tab.panes.findIndex((v) => v.key === targetKey)
+    if (tab.key === targetKey) {
+      // 只有在前台时才跳过去
       tab.key = tab.panes[paneIdx - 1]?.key ?? tab.panes[0]?.key
     }
     tab.panes.splice(paneIdx, 1)
@@ -38,40 +41,57 @@ const onEdit = (idx: number, targetKey: any, action: string) => {
   }
 }
 const container = ref<HTMLDivElement>()
-watch(() => global.tabList, async () => {
-  await nextTick()
-  global.saveRecord()
-  Array.from(container.value?.querySelectorAll('.splitpanes__pane') ?? []).forEach((tabEl, tabIdx) => {
-    Array.from(tabEl.querySelectorAll('.ant-tabs-tab') ?? []).forEach((paneEl, paneIdx) => {
-      const el = paneEl as HTMLDivElement
-      el.setAttribute('draggable', 'true')
-      el.setAttribute('tabIdx', tabIdx.toString())
-      el.setAttribute('paneIdx', paneIdx.toString())
-      el.ondragend = () => {
-        global.dragingTab = undefined
+watch(
+  () => global.tabList,
+  async () => {
+    await nextTick()
+    global.saveRecord()
+    Array.from(container.value?.querySelectorAll('.splitpanes__pane') ?? []).forEach(
+      (tabEl, tabIdx) => {
+        Array.from(tabEl.querySelectorAll('.ant-tabs-tab') ?? []).forEach((paneEl, paneIdx) => {
+          const el = paneEl as HTMLDivElement
+          el.setAttribute('draggable', 'true')
+          el.setAttribute('tabIdx', tabIdx.toString())
+          el.setAttribute('paneIdx', paneIdx.toString())
+          el.ondragend = () => {
+            global.dragingTab = undefined
+          }
+          el.ondragstart = (e) => {
+            global.dragingTab = { tabIdx, paneIdx }
+            e.dataTransfer!.setData(
+              'text/plain',
+              JSON.stringify({ tabIdx, paneIdx, from: 'tab-drag' })
+            )
+          }
+        })
       }
-      el.ondragstart = (e) => {
-        global.dragingTab = { tabIdx, paneIdx }
-        e.dataTransfer!.setData(
-          'text/plain',
-          JSON.stringify({ tabIdx, paneIdx, from: 'tab-drag' })
-        )
-      }
-    })
-  })
-}, { immediate: true, deep: true })
-
-
+    )
+  },
+  { immediate: true, deep: true }
+)
 </script>
 <template>
   <div ref="container">
-
     <splitpanes class="default-theme">
-      <pane v-for="tab, tabIdx in global.tabList" :key="key(tab)">
+      <pane v-for="(tab, tabIdx) in global.tabList" :key="key(tab)">
         <edge-trigger :tabIdx="tabIdx">
-          <a-tabs type="editable-card" v-model:activeKey="tab.key" @edit="(key, act) => onEdit(tabIdx, key, act)">
-            <a-tab-pane v-for="pane, paneIdx in tab.panes" :key="pane.key" :tab="pane.name" class="pane">
-              <component :is="compMap[pane.type]" :tabIdx="tabIdx" :paneIdx="paneIdx" v-bind="pane" />
+          <a-tabs
+            type="editable-card"
+            v-model:activeKey="tab.key"
+            @edit="(key, act) => onEdit(tabIdx, key, act)"
+          >
+            <a-tab-pane
+              v-for="(pane, paneIdx) in tab.panes"
+              :key="pane.key"
+              :tab="pane.name"
+              class="pane"
+            >
+              <component
+                :is="compMap[pane.type]"
+                :tabIdx="tabIdx"
+                :paneIdx="paneIdx"
+                v-bind="pane"
+              />
             </a-tab-pane>
           </a-tabs>
         </edge-trigger>

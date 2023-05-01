@@ -4,17 +4,19 @@ import type { GlobalSettingPart } from './type'
 import { t } from '@/i18n'
 import type { Tag } from './db'
 export const axiosInst = axios.create({
-  baseURL: '/infinite_image_browsing',
-
+  baseURL: '/infinite_image_browsing'
 })
-axiosInst.interceptors.response.use(resp => resp, err => {
-  if (isAxiosError(err)) {
-    const errmsg = err.response?.data?.detail ?? t('errorOccurred')
-    message.error(errmsg)
-    throw new Error(errmsg)
+axiosInst.interceptors.response.use(
+  (resp) => resp,
+  (err) => {
+    if (isAxiosError(err)) {
+      const errmsg = err.response?.data?.detail ?? t('errorOccurred')
+      message.error(errmsg)
+      throw new Error(errmsg)
+    }
+    return err
   }
-  return err
-})
+)
 export const greeting = async () => {
   const resp = await axiosInst.get('hello')
   return resp.data as string
@@ -22,9 +24,9 @@ export const greeting = async () => {
 
 export interface GlobalConf {
   all_custom_tags: Tag[]
-  global_setting: GlobalSettingPart,
-  is_win: boolean,
-  cwd: string,
+  global_setting: GlobalSettingPart
+  is_win: boolean
+  cwd: string
   home: string
   sd_cwd: string
 }
@@ -35,11 +37,9 @@ export const getGlobalSetting = async () => {
 }
 
 export const checkPathExists = async (paths: string[]) => {
-  const resp = await axiosInst.post('/check_path_exists',{ paths })
+  const resp = await axiosInst.post('/check_path_exists', { paths })
   return resp.data as Record<string, boolean>
 }
-
-
 
 export const setImgPath = async (path: string) => {
   return axiosInst.post(`/send_img_path?path=${encodeURIComponent(path)}`)

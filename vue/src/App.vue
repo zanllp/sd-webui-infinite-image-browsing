@@ -13,10 +13,9 @@ onMounted(async () => {
   getGlobalSetting().then(async (resp) => {
     globalStore.conf = resp
     const r = await getAutoCompletedTagList(resp)
-    globalStore.autoCompletedDirList = r.filter(v => v?.dir?.trim?.())
+    globalStore.autoCompletedDirList = r.filter((v) => v?.dir?.trim?.())
   })
 })
-
 </script>
 
 <template>
@@ -24,7 +23,4 @@ onMounted(async () => {
     <split-view-tab />
   </a-skeleton>
 </template>
-<style scoped lang="scss"> 
-
-
-</style>
+<style scoped lang="scss"></style>
