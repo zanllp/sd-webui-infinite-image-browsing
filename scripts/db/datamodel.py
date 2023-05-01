@@ -231,19 +231,25 @@ class ImageTag:
             )
 
     @classmethod
-    def get_tags_for_image(cls, conn: Connection, image_id):
+    def get_tags_for_image(
+        cls,
+        conn: Connection,
+        image_id: int,
+        tag_id: Optional[int] = None,
+        type: Optional[str] = None,
+    ):
         with closing(conn.cursor()) as cur:
-            cur.execute(
-                "SELECT tag.* FROM tag INNER JOIN image_tag ON tag.id = image_tag.tag_id WHERE image_tag.image_id = ?",
-                (image_id,),
-            )
+            query = "SELECT tag.* FROM tag INNER JOIN image_tag ON tag.id = image_tag.tag_id WHERE image_tag.image_id = ?"
+            params = [image_id]
+            if tag_id:
+                query += " AND image_tag.tag_id = ?"
+                params.append(tag_id)
+            if type:
+                query += " AND tag.type = ?"
+                params.append(type)
+            cur.execute(query, tuple(params))
             rows = cur.fetchall()
-            tags: list[Tag] = []
-            for row in rows:
-                tag = Tag(name=row[1], score=row[2], type=row[3])
-                tag.id = row[0]
-                tags.append(tag)
-            return tags
+            return [Tag.from_row(x) for x in rows]
 
     @classmethod
     def get_images_for_tag(cls, conn: Connection, tag_id):
@@ -255,9 +261,7 @@ class ImageTag:
             rows = cur.fetchall()
             images = []
             for row in rows:
-                image = Image(path=row[1], exif=row[2])
-                image.id = row[0]
-                images.append(image)
+                images.append(Image.from_row(row))
             return images
 
     @classmethod

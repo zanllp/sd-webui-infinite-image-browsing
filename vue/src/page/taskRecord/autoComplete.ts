@@ -28,7 +28,7 @@ export const getAutoCompletedTagList = async ({
     cwd: sd_cwd,
     home
   }
-  const exists = await checkPathExists(Object.values(pathMap).filter(v => v))
+  const exists = await checkPathExists(Object.values(pathMap).filter((v) => v))
   type Keys = keyof typeof pathMap
   const cnMap: Record<Keys, string> = {
     outdir_txt2img_samples: t('t2i'),

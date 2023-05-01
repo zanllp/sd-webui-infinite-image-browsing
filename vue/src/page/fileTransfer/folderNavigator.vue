@@ -9,11 +9,10 @@ const onOK = () => {
   visible.value = false
   emit('to', loc.value)
 }
-
 </script>
 <template>
   <a-modal v-model:visible="visible" :title="$t('inputAddressAndPressEnter')" @ok="onOK">
-    <a-input @press-enter="onOK" v-model:value="loc" style="width: 100%;" allow-clear></a-input>
+    <a-input @press-enter="onOK" v-model:value="loc" style="width: 100%" allow-clear></a-input>
   </a-modal>
-  <a style="margin-left: 8px;" @click="visible = true">{{ $t('go') }}</a>
+  <a style="margin-left: 8px" @click="visible = true">{{ $t('go') }}</a>
 </template>

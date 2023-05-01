@@ -1,25 +1,29 @@
 <script setup lang="ts">
-import { FileOutlined, FolderOpenOutlined } from '@/icon'
-import { } from './fileSort'
+import { FileOutlined, FolderOpenOutlined, StarFilled, StarOutlined } from '@/icon'
+import {} from './fileSort'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { fallbackImage } from 'vue3-ts-util'
+import { FetchQueue, fallbackImage } from 'vue3-ts-util'
 import type { FileNodeInfo } from '@/api/files'
-import { isImageFile } from '@/util'
+import { isImageFile, type Dict } from '@/util'
 import { toImageThumbnailUrl, toRawFileUrl, type ViewMode } from './hook'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
-import { computed } from 'vue'
-
+import { computed, ref } from 'vue'
+import { getImageSelectedCustomTag, type Tag } from '@/api/db'
+import { reactive } from 'vue'
 
 const global = useGlobalStore()
-const props = withDefaults(defineProps<{
-  file: FileNodeInfo,
-  idx: number,
-  selected?: boolean
-  showMenuIdx?: number
-  viewMode?: ViewMode
-  fullScreenPreviewImageUrl?: string,
-  target?: 'local' | 'netdisk'
-}>(), { target: 'local', selected: false, viewMode: 'grid' })
+const props = withDefaults(
+  defineProps<{
+    file: FileNodeInfo
+    idx: number
+    selected?: boolean
+    showMenuIdx?: number
+    viewMode?: ViewMode
+    fullScreenPreviewImageUrl?: string
+    target?: 'local' | 'netdisk'
+  }>(),
+  { target: 'local', selected: false, viewMode: 'grid' }
+)
 
 const emit = defineEmits<{
   (type: 'update:showMenuIdx', v: number): void
@@ -29,25 +33,62 @@ const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
 }>()
 
-const thumbnailSize = computed(() => props.viewMode === 'grid' ? [global.gridThumbnailSize, global.gridThumbnailSize].join() : [global.largeGridThumbnailSize, global.largeGridThumbnailSize].join())
+const selectedTag = ref([] as Tag[])
+const tags = computed(() => {
+  return (global.conf?.all_custom_tags ?? []).reduce((p, c) => {
+    return [...p, { ...c, selected: !!selectedTag.value.find((v) => v.id === c.id) }]
+  }, [] as (Tag & { selected: boolean })[])
+})
+const onRightClick = () => {
+  q.pushAction(() => getImageSelectedCustomTag(props.file.fullpath)).res.then((res) => {
+    selectedTag.value = res
+  })
+}
 
+const q = reactive(new FetchQueue())
+const thumbnailSize = computed(() =>
+  props.viewMode === 'grid'
+    ? [global.gridThumbnailSize, global.gridThumbnailSize].join()
+    : [global.largeGridThumbnailSize, global.largeGridThumbnailSize].join()
+)
 </script>
 <template>
-  <a-dropdown :trigger="['contextmenu']"
-    :visible="!global.longPressOpenContextMenu ? undefined : ((typeof idx === 'number') && showMenuIdx === idx)"
-    @update:visible="v => ((typeof idx === 'number') && emit('update:showMenuIdx', v ? idx : -1))">
-    <li class="file file-item-trigger" :class="{
-        clickable: file.type === 'dir', selected,
-        grid: viewMode === 'grid' || viewMode === 'large-size-grid', 'large-grid': viewMode === 'large-size-grid'
-      }" :data-idx="idx" :key="file.name" draggable="true" @dragstart="emit('dragstart', $event, idx)"
-      @click.capture="emit('fileItemClick', $event, file)">
+  <a-dropdown
+    :trigger="['contextmenu']"
+    :visible="
+      !global.longPressOpenContextMenu ? undefined : typeof idx === 'number' && showMenuIdx === idx
+    "
+    @update:visible="(v) => typeof idx === 'number' && emit('update:showMenuIdx', v ? idx : -1)"
+  >
+    <li
+      class="file file-item-trigger"
+      :class="{
+        clickable: file.type === 'dir',
+        selected,
+        grid: viewMode === 'grid' || viewMode === 'large-size-grid',
+        'large-grid': viewMode === 'large-size-grid'
+      }"
+      :data-idx="idx"
+      :key="file.name"
+      draggable="true"
+      @dragstart="emit('dragstart', $event, idx)"
+      @contextmenu="onRightClick"
+      @click.capture="emit('fileItemClick', $event, file)"
+    >
       <div v-if="viewMode !== 'line'">
-        <a-image :key="file.fullpath" :class="`idx-${idx}`" v-if="props.target === 'local' && isImageFile(file.name)"
-          :src="global.enableThumbnail ? toImageThumbnailUrl(file, thumbnailSize) : toRawFileUrl(file)"
-          :fallback="fallbackImage" :preview="{
-              src: fullScreenPreviewImageUrl,
-              onVisibleChange: (v, lv) => emit('previewVisibleChange', v, lv)
-            }">
+        <a-image
+          :key="file.fullpath"
+          :class="`idx-${idx}`"
+          v-if="props.target === 'local' && isImageFile(file.name)"
+          :src="
+            global.enableThumbnail ? toImageThumbnailUrl(file, thumbnailSize) : toRawFileUrl(file)
+          "
+          :fallback="fallbackImage"
+          :preview="{
+            src: fullScreenPreviewImageUrl,
+            onVisibleChange: (v, lv) => emit('previewVisibleChange', v, lv)
+          }"
+        >
         </a-image>
         <div v-else class="preview-icon-wrap">
           <file-outlined class="icon center" v-if="file.type === 'file'" />
@@ -102,8 +143,10 @@ const thumbnailSize = computed(() => props.viewMode === 'grid' ? [global.gridThu
             <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
             <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
             <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
-            <a-sub-menu key="add-custom-tag" :title="$t('addCustomTag')">
-              <a-menu-item v-for="tag in global.conf?.all_custom_tags ?? []" :key="tag.id">{{ tag.name }}</a-menu-item>
+            <a-sub-menu key="toggle-tag" :title="$t('toggleTag')">
+              <a-menu-item v-for="tag in tags" :key="tag.id"
+                >{{ tag.name }} <star-filled v-if="tag.selected" /><star-outlined v-else />
+              </a-menu-item>
             </a-sub-menu>
           </template>
         </template>
@@ -135,14 +178,12 @@ const thumbnailSize = computed(() => props.viewMode === 'grid' ? [global.gridThu
     box-sizing: content-box;
     box-shadow: unset;
 
-
     background-color: var(--zp-secondary-background);
 
     :deep() {
       .icon {
         font-size: 8em;
       }
-
 
       .profile {
         padding: 0 4px;
@@ -157,7 +198,7 @@ const thumbnailSize = computed(() => props.viewMode === 'grid' ? [global.gridThu
           justify-content: space-between;
           flex-direction: row;
           margin: 0;
-          font-size: .7em;
+          font-size: 0.7em;
         }
       }
 
@@ -170,21 +211,18 @@ const thumbnailSize = computed(() => props.viewMode === 'grid' ? [global.gridThu
       }
 
       img,
-      .preview-icon-wrap>[role="img"] {
+      .preview-icon-wrap > [role='img'] {
         height: 256px;
         width: 256px;
         object-fit: contain;
-
       }
     }
   }
 
-
   &.large-grid {
     :deep() {
-
       img,
-      .preview-icon-wrap>[role="img"] {
+      .preview-icon-wrap > [role='img'] {
         height: 512px;
         width: 512px;
       }
@@ -202,7 +240,7 @@ const thumbnailSize = computed(() => props.viewMode === 'grid' ? [global.gridThu
   .name {
     flex: 1;
     padding: 8px;
-    word-break: break-all
+    word-break: break-all;
   }
 
   .basic-info {

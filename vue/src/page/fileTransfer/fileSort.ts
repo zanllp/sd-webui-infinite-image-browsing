@@ -15,7 +15,7 @@ export enum SortMethod {
   NAME_ASC = 'name-asc',
   NAME_DESC = 'name-desc',
   SIZE_ASC = 'size-asc',
-  SIZE_DESC = 'size-desc',
+  SIZE_DESC = 'size-desc'
 }
 
 type FileList = FileNodeInfo[]
@@ -63,4 +63,3 @@ export const sortFiles = (files: FileList, method: SortMethod) => {
   }
   return files.slice().sort((a, b) => compareByType(a, b) || compare(a, b))
 }
-

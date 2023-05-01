@@ -3,8 +3,18 @@ import { onLongPress, useElementSize } from '@vueuse/core'
 import { ref, computed, watch, onMounted, h, reactive } from 'vue'
 
 import { genInfoCompleted, getImageGenerationInfo, setImgPath } from '@/api'
-import { useWatchDocument, type SearchSelectConv, ok, createTypedShareStateHook, copy2clipboard, delay, FetchQueue, typedEventEmitter, ID } from 'vue3-ts-util'
-import { gradioApp, isImageFile, key } from '@/util'
+import {
+  useWatchDocument,
+  type SearchSelectConv,
+  ok,
+  createTypedShareStateHook,
+  copy2clipboard,
+  delay,
+  FetchQueue,
+  typedEventEmitter,
+  ID
+} from 'vue3-ts-util'
+import { gradioApp, isImageFile } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
 import { cloneDeep, debounce, last, range, uniqBy, uniqueId } from 'lodash-es'
@@ -17,31 +27,38 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { nextTick } from 'vue'
 import { t } from '@/i18n'
 import { CloudServerOutlined, DatabaseOutlined } from '@/icon'
-import { addCustomTagToImg } from '@/api/db'
+import { toggleCustomTagToImg } from '@/api/db'
 
 export const stackCache = new Map<string, Page[]>()
 
 const global = useGlobalStore()
-export const toRawFileUrl = (file: FileNodeInfo, download = false) => `/infinite_image_browsing/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''}`
-export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) => `/infinite_image_browsing/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
+export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
+  `/infinite_image_browsing/file?filename=${encodeURIComponent(file.fullpath)}${
+    download ? `&disposition=${encodeURIComponent(file.name)}` : ''
+  }`
+export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) =>
+  `/infinite_image_browsing/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
 
-
-const { eventEmitter: events, useEventListen } = typedEventEmitter<{ 
-  removeFiles: {paths: string[], loc: string}, 
-  addFiles: { files: FileNodeInfo[], loc: string} 
+const { eventEmitter: events, useEventListen } = typedEventEmitter<{
+  removeFiles: { paths: string[]; loc: string }
+  addFiles: { files: FileNodeInfo[]; loc: string }
 }>()
 
 export interface Scroller {
   $_startIndex: number
   $_endIndex: number
-  scrollToItem (idx: number): void
+  scrollToItem(idx: number): void
 }
 
 export const { useHookShareState } = createTypedShareStateHook(() => {
   const props = ref<Props>({ tabIdx: -1, paneIdx: -1, target: 'local' })
   const currPage = computed(() => last(stack.value))
   const stack = ref<Page[]>([])
-  const basePath = computed(() => stack.value.map((v) => v.curr).slice(global.conf?.is_win && props.value.target === 'local' ? 1 : 0))
+  const basePath = computed(() =>
+    stack.value
+      .map((v) => v.curr)
+      .slice(global.conf?.is_win && props.value.target === 'local' ? 1 : 0)
+  )
   const currLocation = computed(() => path.join(...basePath.value))
   const sortMethod = ref(SortMethod.DATE_DESC)
   const sortedFiles = computed(() => {
@@ -51,13 +68,16 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     const files = currPage.value?.files ?? []
     const method = sortMethod.value
     const { walkFiles } = currPage.value!
-    const filter = (files: FileNodeInfo[]) => global.onlyFoldersAndImages ? files.filter(file => file.type === 'dir' || isImageFile(file.name)) : files
+    const filter = (files: FileNodeInfo[]) =>
+      global.onlyFoldersAndImages
+        ? files.filter((file) => file.type === 'dir' || isImageFile(file.name))
+        : files
     if (props.value.walkMode) {
       /**
        * @see Page
        */
       return walkFiles
-        ? walkFiles.map(dir => sortFiles(filter(dir), method)).flat()
+        ? walkFiles.map((dir) => sortFiles(filter(dir), method)).flat()
         : sortFiles(filter(files), method)
     }
     return sortFiles(filter(files), method)
@@ -86,15 +106,15 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     stackViewEl: ref<HTMLDivElement>(),
     walkModePath,
     props,
-    ...typedEventEmitter<{ loadNextDir: undefined, refresh: void }>()
+    ...typedEventEmitter<{ loadNextDir: undefined; refresh: void }>()
   }
 })
 
 export interface Props {
-  target: 'local',
-  tabIdx: number,
-  paneIdx: number,
-  path?: string,
+  target: 'local'
+  tabIdx: number
+  paneIdx: number
+  path?: string
   walkMode?: boolean
 }
 
@@ -110,8 +130,9 @@ export interface Page {
  * @param props
  * @returns
  */
-export function usePreview (props: Props) {
-  const { scroller, sortedFiles, previewIdx, eventEmitter, canLoadNext, } = useHookShareState().toRefs()
+export function usePreview(props: Props) {
+  const { scroller, sortedFiles, previewIdx, eventEmitter, canLoadNext } =
+    useHookShareState().toRefs()
   const previewing = ref(false)
   let waitScrollTo = null as number | null
   const onPreviewVisibleChange = (v: boolean, lv: boolean) => {
@@ -203,21 +224,32 @@ export function usePreview (props: Props) {
   }
 }
 
-
-export function useLocation (props: Props) {
+export function useLocation(props: Props) {
   const np = ref<Progress.NProgress>()
-  const { scroller, stackViewEl, stack, currPage, currLocation, basePath
-    , sortMethod, useEventListen, walkModePath
+  const {
+    scroller,
+    stackViewEl,
+    stack,
+    currPage,
+    currLocation,
+    basePath,
+    sortMethod,
+    useEventListen,
+    walkModePath
   } = useHookShareState().toRefs()
 
-  watch(() => stack.value.length, debounce((v, lv) => {
-    if (v !== lv) {
-      scroller.value?.scrollToItem(0)
-    }
-  }, 300))
+  watch(
+    () => stack.value.length,
+    debounce((v, lv) => {
+      if (v !== lv) {
+        scroller.value?.scrollToItem(0)
+      }
+    }, 300)
+  )
 
   onMounted(async () => {
-    if (!stack.value.length) { // 有传入stack时直接使用传入的
+    if (!stack.value.length) {
+      // 有传入stack时直接使用传入的
       const resp = await getTargetFolderFiles(props.target, '/')
       stack.value.push({
         files: resp.files,
@@ -230,37 +262,44 @@ export function useLocation (props: Props) {
       await to(props.path)
       if (props.walkMode) {
         await nextTick()
-        const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(v => v.type === 'dir')
+        const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
+          (v) => v.type === 'dir'
+        )
         if (firstDir) {
           to(firstDir.fullpath)
         }
       }
     } else if (props.target == 'local') {
       global.conf?.home && to(global.conf.home)
-
     }
   })
 
-  watch(currLocation, debounce((loc) => {
-    const pane = global.tabList[props.tabIdx].panes[props.paneIdx] as FileTransferTabPane
-    pane.path = loc
-    const filename = pane.path!.split('/').pop()
-    const getTitle = () => {
-      if (!props.walkMode) {
-        return filename
+  watch(
+    currLocation,
+    debounce((loc) => {
+      const pane = global.tabList[props.tabIdx].panes[props.paneIdx] as FileTransferTabPane
+      pane.path = loc
+      const filename = pane.path!.split('/').pop()
+      const getTitle = () => {
+        if (!props.walkMode) {
+          return filename
+        }
+        return (
+          'Walk: ' +
+          (global.autoCompletedDirList.find((v) => v.dir === walkModePath.value)?.zh ?? filename)
+        )
       }
-      return 'Walk: ' + (global.autoCompletedDirList.find(v => v.dir === walkModePath.value)?.zh ?? filename)
-    }
-    pane.name = h('div', { style: 'display:flex;align-items:center' }, [
-      h(props.target === 'local' ? DatabaseOutlined : CloudServerOutlined),
-      h('span', { class: 'line-clamp-1', style: 'max-width: 256px' }, getTitle())
-    ]) as any as string
-    global.recent = global.recent.filter(v => v.key !== pane.key)
-    global.recent.unshift({ path: loc, target: pane.target, key: pane.key })
-    if (global.recent.length > 20) {
-      global.recent = global.recent.slice(0, 20)
-    }
-  }, 300))
+      pane.name = h('div', { style: 'display:flex;align-items:center' }, [
+        h(props.target === 'local' ? DatabaseOutlined : CloudServerOutlined),
+        h('span', { class: 'line-clamp-1', style: 'max-width: 256px' }, getTitle())
+      ]) as any as string
+      global.recent = global.recent.filter((v) => v.key !== pane.key)
+      global.recent.unshift({ path: loc, target: pane.target, key: pane.key })
+      if (global.recent.length > 20) {
+        global.recent = global.recent.slice(0, 20)
+      }
+    }, 300)
+  )
 
   const copyLocation = () => copy2clipboard(currLocation.value)
 
@@ -303,7 +342,7 @@ export function useLocation (props: Props) {
       } else {
         frags.shift() // /开头的一个是空
       }
-      const currPaths = stack.value.map(v => v.curr)
+      const currPaths = stack.value.map((v) => v.curr)
       currPaths.shift() // 是 /
       while (currPaths[0] && frags[0]) {
         if (currPaths[0] !== frags[0]) {
@@ -320,7 +359,8 @@ export function useLocation (props: Props) {
         return refresh()
       }
       for (const frag of frags) {
-        if (frag === '') { // 这种情况 D:\Desktop\sd.webui\webui\outputs\
+        if (frag === '') {
+          // 这种情况 D:\Desktop\sd.webui\webui\outputs\
           break
         }
         const target = currPage.value?.files.find((v) => v.name === frag)
@@ -335,31 +375,32 @@ export function useLocation (props: Props) {
     }
   }
 
-
   const refresh = async () => {
     try {
       np.value?.start()
       if (walkModePath.value && walkModePath.value !== currLocation.value) {
         await to(walkModePath.value, false)
         await delay()
-        const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(v => v.type === 'dir')
+        const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
+          (v) => v.type === 'dir'
+        )
         if (firstDir) {
           await to(firstDir.fullpath, false)
         }
       } else {
-        
-        const { files } = await getTargetFolderFiles(props.target, stack.value.length === 1 ? '/' : currLocation.value)
+        const { files } = await getTargetFolderFiles(
+          props.target,
+          stack.value.length === 1 ? '/' : currLocation.value
+        )
         last(stack.value)!.files = files
       }
       scroller.value?.scrollToItem(0)
     } finally {
       np.value?.done()
     }
-
   }
 
   useEventListen.value('refresh', refresh)
-
 
   return {
     refresh,
@@ -374,14 +415,25 @@ export function useLocation (props: Props) {
   }
 }
 
-
-export function useFilesDisplay (props: Props) {
-  const { scroller, sortedFiles, stack, sortMethod, currLocation, currPage, stackViewEl,
-    canLoadNext } = useHookShareState().toRefs()
+export function useFilesDisplay(props: Props) {
+  const {
+    scroller,
+    sortedFiles,
+    stack,
+    sortMethod,
+    currLocation,
+    currPage,
+    stackViewEl,
+    canLoadNext
+  } = useHookShareState().toRefs()
   const { state } = useHookShareState()
   const moreActionsDropdownShow = ref(false)
   const viewMode = ref<ViewMode>('grid')
-  const viewModeMap: Record<ViewMode, string> = { line: t('detailList'), 'grid': t('previewGrid'), 'large-size-grid': t('largePreviewGrid') }
+  const viewModeMap: Record<ViewMode, string> = {
+    line: t('detailList'),
+    grid: t('previewGrid'),
+    'large-size-grid': t('largePreviewGrid')
+  }
   const sortMethodConv: SearchSelectConv<SortMethod> = {
     value: (v) => v,
     text: (v) => t('sortBy') + ' ' + sortMethodMap[v].toLocaleLowerCase()
@@ -403,7 +455,7 @@ export function useFilesDisplay (props: Props) {
     if (mode === 'line') {
       return { first: 80, second: undefined }
     }
-    const second = (mode === 'grid' ? gridSize : largeGridSize)
+    const second = mode === 'grid' ? gridSize : largeGridSize
     const first = second + profileHeight
     return {
       first,
@@ -413,7 +465,6 @@ export function useFilesDisplay (props: Props) {
 
   const loadNextDirLoading = ref(false)
 
-
   const loadNextDir = async () => {
     if (loadNextDirLoading.value || !props.walkMode || !canLoadNext.value) {
       return
@@ -422,7 +473,7 @@ export function useFilesDisplay (props: Props) {
       loadNextDirLoading.value = true
       const par = stack.value[stack.value.length - 2]
       const parFilesSorted = sortFiles(par.files, sortMethod.value)
-      const currIdx = parFilesSorted.findIndex(v => v.name === currPage.value?.curr)
+      const currIdx = parFilesSorted.findIndex((v) => v.name === currPage.value?.curr)
       if (currIdx !== -1) {
         const next = parFilesSorted[currIdx + 1]
         const p = path.normalize(path.join(currLocation.value, '../', next.name))
@@ -433,7 +484,7 @@ export function useFilesDisplay (props: Props) {
           page.walkFiles = [page.files]
         }
         page.walkFiles.push(r.files)
-        console.log("curr page files length", currPage.value?.files.length)
+        console.log('curr page files length', currPage.value?.files.length)
       }
     } catch (e) {
       canLoadNext.value = false
@@ -451,7 +502,7 @@ export function useFilesDisplay (props: Props) {
 
   const onScroll = debounce(async () => {
     const s = scroller.value
-    if (s && (s.$_endIndex > sortedFiles.value.length - 10) && props.walkMode) {
+    if (s && s.$_endIndex > sortedFiles.value.length - 10 && props.walkMode) {
       loadNextDir()
     }
   }, 300)
@@ -474,10 +525,9 @@ export function useFilesDisplay (props: Props) {
   }
 }
 
-
-
-export function useFileTransfer (props: Props) {
-  const { currLocation, sortedFiles, currPage, multiSelectedIdxs, eventEmitter } = useHookShareState().toRefs()
+export function useFileTransfer(props: Props) {
+  const { currLocation, sortedFiles, currPage, multiSelectedIdxs, eventEmitter } =
+    useHookShareState().toRefs()
   const recover = () => {
     multiSelectedIdxs.value = []
   }
@@ -491,10 +541,9 @@ export function useFileTransfer (props: Props) {
     const files = [file]
     let includeDir = file.type === 'dir'
     if (multiSelectedIdxs.value.includes(idx)) {
-      const selectedFiles = multiSelectedIdxs.value.map(idx => sortedFiles.value[idx])
+      const selectedFiles = multiSelectedIdxs.value.map((idx) => sortedFiles.value[idx])
       files.push(...selectedFiles)
-      includeDir = selectedFiles.some(v => v.type === 'dir')
-
+      includeDir = selectedFiles.some((v) => v.type === 'dir')
     }
     e.dataTransfer!.setData(
       'text/plain',
@@ -502,7 +551,7 @@ export function useFileTransfer (props: Props) {
         from: props.target,
         includeDir,
         loc: currLocation.value,
-        path: uniqBy(files, 'fullpath').map(f => f.fullpath)
+        path: uniqBy(files, 'fullpath').map((f) => f.fullpath)
       })
     )
   }
@@ -510,7 +559,7 @@ export function useFileTransfer (props: Props) {
   const onDrop = async (e: DragEvent) => {
     type Data = {
       from: typeof props.target
-      path: string[],
+      path: string[]
       loc: string
       includeDir: boolean
     }
@@ -524,13 +573,16 @@ export function useFileTransfer (props: Props) {
       if (props.target == data.from) {
         const content = h('div', [
           h('div', `${t('moveSelectedFilesTo')}${toPath}`),
-          h('ol', data.path.map(v => v.split(/[/\\]/).pop()).map(v => h('li', v))),
+          h(
+            'ol',
+            data.path.map((v) => v.split(/[/\\]/).pop()).map((v) => h('li', v))
+          )
         ])
         Modal.confirm({
           title: t('confirm'),
           content,
           maskClosable: true,
-          async onOk () {
+          async onOk() {
             await moveFiles(props.target, data.path, toPath)
             events.emit('removeFiles', { paths: data.path, loc: data.loc })
             await eventEmitter.value.emit('refresh')
@@ -539,7 +591,6 @@ export function useFileTransfer (props: Props) {
       } else {
         // 原有的百度云
       }
-
     }
   }
   return {
@@ -549,12 +600,14 @@ export function useFileTransfer (props: Props) {
   }
 }
 
-
-
-export function useFileItemActions (props: Props, { openNext }: { openNext: (file: FileNodeInfo) => Promise<void> }) {
+export function useFileItemActions(
+  props: Props,
+  { openNext }: { openNext: (file: FileNodeInfo) => Promise<void> }
+) {
   const showGenInfo = ref(false)
   const imageGenInfo = ref('')
-  const { sortedFiles, previewIdx, multiSelectedIdxs, stack, currLocation, spinning } = useHookShareState().toRefs()
+  const { sortedFiles, previewIdx, multiSelectedIdxs, stack, currLocation, spinning } =
+    useHookShareState().toRefs()
 
   useEventListen('removeFiles', ({ paths, loc }) => {
     if (loc !== currLocation.value) {
@@ -565,9 +618,11 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
     if (!top) {
       return
     }
-    top.files = top.files.filter(v => !paths.includes(v.fullpath))
+    top.files = top.files.filter((v) => !paths.includes(v.fullpath))
     if (top.walkFiles) {
-      top.walkFiles = top.walkFiles.map(files => files.filter(file => !paths.includes(file.fullpath)))
+      top.walkFiles = top.walkFiles.map((files) =>
+        files.filter((file) => !paths.includes(file.fullpath))
+      )
     }
   })
 
@@ -580,15 +635,14 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
     if (!top) {
       return
     }
-    
+
     top.files.unshift(...files)
   })
-
 
   const q = reactive(new FetchQueue())
   const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo) => {
     const files = sortedFiles.value
-    const idx = files.findIndex(v => v.name === file.name)
+    const idx = files.findIndex((v) => v.name === file.name)
     previewIdx.value = idx
     const idxInSelected = multiSelectedIdxs.value.indexOf(idx)
     if (e.shiftKey) {
@@ -615,19 +669,21 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
   }
 
   const pathModule = path
+
   const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfo, idx: number) => {
-  
     console.log(e, file)
     const url = toRawFileUrl(file)
     const path = currLocation.value
-    const copyImgTo = async (tab: ["txt2img", "img2img", "inpaint", "extras"][number]) => {
+    const copyImgTo = async (tab: ['txt2img', 'img2img', 'inpaint', 'extras'][number]) => {
       if (spinning.value) {
         return
       }
       try {
         spinning.value = true
         await setImgPath(file.fullpath) // 设置图像路径
-        const btn = gradioApp().querySelector('#iib_hidden_img_update_trigger')! as HTMLButtonElement
+        const btn = gradioApp().querySelector(
+          '#iib_hidden_img_update_trigger'
+        )! as HTMLButtonElement
         btn.click() // 触发图像组件更新
         ok(await genInfoCompleted(), 'genInfoCompleted timeout') // 等待消息生成完成
         const tabBtn = gradioApp().querySelector(`#iib_hidden_tab_${tab}`) as HTMLButtonElement
@@ -640,24 +696,33 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
       }
     }
     switch (e.key) {
-      case 'previewInNewWindow': return window.open(url)
-      case 'download': return window.open(toRawFileUrl(file, true))
-      case 'copyPreviewUrl': return copy2clipboard(location.host + url)
-      case 'send2txt2img': return copyImgTo('txt2img')
-      case 'send2img2img': return copyImgTo('img2img')
-      case 'send2inpaint': return copyImgTo('inpaint')
-      case 'send2extras': return copyImgTo('extras')
+      case 'previewInNewWindow':
+        return window.open(url)
+      case 'download':
+        return window.open(toRawFileUrl(file, true))
+      case 'copyPreviewUrl':
+        return copy2clipboard(location.host + url)
+      case 'send2txt2img':
+        return copyImgTo('txt2img')
+      case 'send2img2img':
+        return copyImgTo('img2img')
+      case 'send2inpaint':
+        return copyImgTo('inpaint')
+      case 'send2extras':
+        return copyImgTo('extras')
       case 'send2savedDir': {
-        const dir = global.autoCompletedDirList.find(v => v.key === 'outdir_save')
+        const dir = global.autoCompletedDirList.find((v) => v.key === 'outdir_save')
         if (!dir) {
           return message.error(t('unknownSavedDir'))
         }
-        const absolutePath = pathModule.isAbsolute(dir.dir) ? dir.dir : pathModule.normalize(pathModule.join(global.conf!.sd_cwd, dir.dir)).replace(/\\/g, '/')
+        const absolutePath = pathModule.isAbsolute(dir.dir)
+          ? dir.dir
+          : pathModule.normalize(pathModule.join(global.conf!.sd_cwd, dir.dir)).replace(/\\/g, '/')
         await moveFiles('local', [file.fullpath], absolutePath)
-        
+
         events.emit('removeFiles', { paths: [file.fullpath], loc: currLocation.value })
         events.emit('addFiles', { files: [file], loc: absolutePath })
-        break;
+        break
       }
       case 'openWithWalkMode': {
         stackCache.set(path, stack.value)
@@ -717,32 +782,37 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
       case 'deleteFiles': {
         let selectedFiles: FileNodeInfo[] = []
         if (multiSelectedIdxs.value.includes(idx)) {
-          selectedFiles = multiSelectedIdxs.value.map(idx => sortedFiles.value[idx])
+          selectedFiles = multiSelectedIdxs.value.map((idx) => sortedFiles.value[idx])
         } else {
           selectedFiles.push(file)
         }
-        await new Promise<void>(resolve => {
+        await new Promise<void>((resolve) => {
           Modal.confirm({
             title: t('confirmDelete'),
             maskClosable: true,
-            content: h('ol', { style: 'max-height:50vh;overflow:auto;' }, selectedFiles.map(v => v.fullpath.split(/[/\\]/).pop()).map(v => h('li', v))),
-            async onOk () {
-              const paths = selectedFiles.map(v => v.fullpath)
+            content: h(
+              'ol',
+              { style: 'max-height:50vh;overflow:auto;' },
+              selectedFiles.map((v) => v.fullpath.split(/[/\\]/).pop()).map((v) => h('li', v))
+            ),
+            async onOk() {
+              const paths = selectedFiles.map((v) => v.fullpath)
               await deleteFiles(props.target, paths)
               message.success(t('deleteSuccess'))
               events.emit('removeFiles', { paths: paths, loc: currLocation.value })
               resolve()
-            },
+            }
           })
         })
         break
       }
-
     }
-    if (e.keyPath?.[0] === 'add-custom-tag') {
-      console.log(e.key,e)
-      await addCustomTagToImg({ tag_id:e.key as number, img_path: file.fullpath })
-      message.success(t('addComplete'))
+    if (e.keyPath?.[0] === 'toggle-tag') {
+      const { is_remove } = await toggleCustomTagToImg({
+        tag_id: e.key as number,
+        img_path: file.fullpath
+      })
+      message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
     }
   }
   return {
@@ -754,30 +824,25 @@ export function useFileItemActions (props: Props, { openNext }: { openNext: (fil
   }
 }
 
-
 /**
  * 针对移动端端操作优化，使用长按提到右键
  */
 export const useMobileOptimization = () => {
   const { stackViewEl } = useHookShareState().toRefs()
   const showMenuIdx = ref(-1)
-  onLongPress(
-    stackViewEl,
-    e => {
-      let fileEl = e.target as HTMLDivElement
-      while (fileEl.parentElement) {
-        fileEl = fileEl.parentElement as any
-        if (fileEl.tagName.toLowerCase() === 'li' && fileEl.classList.contains('file-item-trigger')) {
-          const idx = fileEl.dataset?.idx
-          if (idx && Number.isSafeInteger(+idx)) {
-            showMenuIdx.value = +idx
-          }
-          return
+  onLongPress(stackViewEl, (e) => {
+    let fileEl = e.target as HTMLDivElement
+    while (fileEl.parentElement) {
+      fileEl = fileEl.parentElement as any
+      if (fileEl.tagName.toLowerCase() === 'li' && fileEl.classList.contains('file-item-trigger')) {
+        const idx = fileEl.dataset?.idx
+        if (idx && Number.isSafeInteger(+idx)) {
+          showMenuIdx.value = +idx
         }
+        return
       }
-
     }
-  )
+  })
   return {
     showMenuIdx
   }

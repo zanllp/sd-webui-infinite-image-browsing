@@ -13,7 +13,11 @@ const { isOutside: triggerOutside } = useMouseInElement(trigger)
 const edgeAccpet = computed(() => !edgeTriggerOutside.value && !!global.dragingTab)
 const accept = computed(() => !triggerOutside.value && !!global.dragingTab && !edgeAccpet.value)
 const onDrop = (payload: DragEvent, type: 'add-right' | 'insert') => {
-  const from = JSON.parse(payload.dataTransfer?.getData('text') ?? '{}') as { from: 'tab-drag', tabIdx: number, paneIdx: number }
+  const from = JSON.parse(payload.dataTransfer?.getData('text') ?? '{}') as {
+    from: 'tab-drag'
+    tabIdx: number
+    paneIdx: number
+  }
   console.log('on-drop', type, from)
   if (from?.from === 'tab-drag') {
     payload.stopPropagation()
@@ -26,13 +30,11 @@ const onDrop = (payload: DragEvent, type: 'add-right' | 'insert') => {
     tabs[from.tabIdx].panes.splice(from.paneIdx, 1)
     if (type === 'add-right') {
       tabs[props.tabIdx].key =
-        tabs[props.tabIdx].panes[from.paneIdx - 1]?.key ??
-        tabs[props.tabIdx].panes[0].key
+        tabs[props.tabIdx].panes[from.paneIdx - 1]?.key ?? tabs[props.tabIdx].panes[0].key
       tabs.splice(props.tabIdx + 1, 0, ID({ panes: [pane], key: pane.key }))
     } else {
       tabs[from.tabIdx].key =
-        tabs[from.tabIdx].panes[from.paneIdx - 1]?.key ??
-        tabs[from.tabIdx].panes[0]?.key
+        tabs[from.tabIdx].panes[from.paneIdx - 1]?.key ?? tabs[from.tabIdx].panes[0]?.key
       tabs[props.tabIdx].panes.push(pane)
       tabs[props.tabIdx].key = pane.key
     }
@@ -44,14 +46,21 @@ const onDrop = (payload: DragEvent, type: 'add-right' | 'insert') => {
 </script>
 
 <template>
-  <div class="wrap" ref="trigger" :class="{ accept }" @dragover.prevent @drop.prevent="onDrop($event, 'insert')">
-
-    <div class="trigger" ref="edgeTrigger" :class="{ accept: edgeAccpet }" @dragover.prevent
-      @drop.prevent="onDrop($event, 'add-right')">
-
-    </div>
-    <div style="position: relative;">
-
+  <div
+    class="wrap"
+    ref="trigger"
+    :class="{ accept }"
+    @dragover.prevent
+    @drop.prevent="onDrop($event, 'insert')"
+  >
+    <div
+      class="trigger"
+      ref="edgeTrigger"
+      :class="{ accept: edgeAccpet }"
+      @dragover.prevent
+      @drop.prevent="onDrop($event, 'add-right')"
+    ></div>
+    <div style="position: relative">
       <slot />
     </div>
   </div>
@@ -61,7 +70,7 @@ const onDrop = (payload: DragEvent, type: 'add-right' | 'insert') => {
   position: relative;
   height: 100%;
   background: #188fff00;
-  transition: all .3s ease;
+  transition: all 0.3s ease;
 
   .trigger {
     position: absolute;
@@ -69,11 +78,9 @@ const onDrop = (payload: DragEvent, type: 'add-right' | 'insert') => {
     bottom: 0;
     right: 0;
     width: 10%;
-    transition: all .3s ease;
+    transition: all 0.3s ease;
     background: #188fff00;
-
   }
-
 
   .accept,
   &.accept {
