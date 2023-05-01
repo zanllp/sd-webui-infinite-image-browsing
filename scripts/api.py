@@ -386,7 +386,6 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         conn = DataBase.get_conn()
         path = os.path.normpath(req.img_path)
         img = DbImg.get(conn, path)
-        print(img.id)
         tags = ImageTag.get_tags_for_image(conn=conn, image_id=img.id, type='custom', tag_id=req.tag_id)
         is_remove = len(tags)
         if is_remove:
