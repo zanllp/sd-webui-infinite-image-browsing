@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, reactive, ref, computed } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import {
   getDbBasicInfo,
   updateImageData,
@@ -8,17 +8,17 @@ import {
   addCustomTag,
   removeCustomTag
 } from '@/api/db'
-import { FetchQueue, SearchSelect } from 'vue3-ts-util'
+import { SearchSelect } from 'vue3-ts-util'
 import { CheckOutlined, PlusOutlined, CloseOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { groupBy, uniqueId } from 'lodash-es'
-import type { Dict } from '@/util'
+import { createReactiveQueue, type Dict } from '@/util'
 import { Modal, message } from 'ant-design-vue'
 import { t } from '@/i18n'
 
 const props = defineProps<{ tabIdx: number; paneIdx: number }>()
 const global = useGlobalStore()
-const queue = reactive(new FetchQueue(-1, 0, -1, 'throw'))
+const queue = createReactiveQueue()
 const loading = computed(() => !queue.isIdle)
 const info = ref<DataBaseBasicInfo>()
 const selectedId = ref(new Set<number>())

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue'
-import { FetchQueue, copy2clipboard, delay } from 'vue3-ts-util'
+import { ref } from 'vue'
+import { copy2clipboard } from 'vue3-ts-util'
 import fileItemCell from '@/page/fileTransfer/FileItem.vue'
 import type { FileNodeInfo } from '@/api/files'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
@@ -17,10 +17,11 @@ import {
 import { identity } from 'lodash-es'
 import { getImagesByTags } from '@/api/db'
 import { watch } from 'vue'
+import { createReactiveQueue } from '@/util'
 
 const images = ref<FileNodeInfo[]>()
 
-const queue = reactive(new FetchQueue(-1, 0, -1, 'throw'))
+const queue = createReactiveQueue()
 
 const props = defineProps<{
   tabIdx: number

@@ -27,7 +27,6 @@ import fullScreenContextMenu from './fullScreenContextMenu.vue'
 
 const global = useGlobalStore()
 const props = defineProps<{
-  target: 'local'
   tabIdx: number
   paneIdx: number
   /**
@@ -64,7 +63,7 @@ const {
   canLoadNext,
   onScroll
 } = useFilesDisplay(props)
-const { onDrop, onFileDragStart } = useFileTransfer(props)
+const { onDrop, onFileDragStart } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions(
   props,
   { openNext }
@@ -124,7 +123,7 @@ watch(
         </div>
         <div class="actions">
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
-          <a-dropdown v-if="props.target === 'local'">
+          <a-dropdown>
             <a class="opt" @click.prevent>
               {{ $t('quickMove') }}
               <down-outlined />
@@ -211,7 +210,6 @@ watch(
               v-model:show-menu-idx="showMenuIdx"
               :selected="multiSelectedIdxs.includes(idx)"
               :view-mode="viewMode"
-              :target="target"
               @file-item-click="onFileItemClick"
               @dragstart="onFileDragStart"
               @preview-visible-change="onPreviewVisibleChange"

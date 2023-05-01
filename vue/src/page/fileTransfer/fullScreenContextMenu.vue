@@ -5,9 +5,9 @@ import { useGlobalStore } from '@/store/useGlobalStore'
 import { useLocalStorage } from '@vueuse/core'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { debounce } from 'lodash-es'
-import { computed, reactive, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { ref } from 'vue'
-import { FetchQueue, copy2clipboard } from 'vue3-ts-util'
+import { copy2clipboard } from 'vue3-ts-util'
 import { useResizeAndDrag } from './useResize'
 import {
   DragOutlined,
@@ -18,6 +18,7 @@ import {
 } from '@/icon'
 import { t } from '@/i18n'
 import { getImageSelectedCustomTag, type Tag } from '@/api/db'
+import { createReactiveQueue } from '@/util'
 
 const global = useGlobalStore()
 const el = ref<HTMLElement>()
@@ -31,7 +32,7 @@ const tags = computed(() => {
     return [...p, { ...c, selected: !!selectedTag.value.find((v) => v.id === c.id) }]
   }, [] as (Tag & { selected: boolean })[])
 })
-const q = reactive(new FetchQueue())
+const q = createReactiveQueue()
 const imageGenInfo = ref('')
 const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void

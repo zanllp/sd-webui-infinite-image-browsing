@@ -1,14 +1,14 @@
 <!-- eslint-disable no-empty -->
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue'
-import { FetchQueue } from 'vue3-ts-util'
+import { onMounted } from 'vue'
 import { getGlobalSetting } from './api'
 import { useGlobalStore } from './store/useGlobalStore'
 import { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
 import SplitViewTab from '@/page/SplitViewTab/SplitViewTab.vue'
+import { createReactiveQueue } from './util'
 
 const globalStore = useGlobalStore()
-const queue = reactive(new FetchQueue(-1, 0, 0, 'throw'))
+const queue = createReactiveQueue()
 onMounted(async () => {
   getGlobalSetting().then(async (resp) => {
     globalStore.conf = resp

@@ -369,7 +369,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         conn = DataBase.get_conn()
         img = DbImg.get(conn, path)
         if not img:
-            if DbImg.count() == 0:
+            if DbImg.count(conn) == 0:
                 raise HTTPException(400, "你需要先通过图像搜索页生成索引" if locale == "zh" else "You need to generate an index through the image search page first.")
             update_image_data([os.path.dirname(path)])
             img = DbImg.get(conn, path)

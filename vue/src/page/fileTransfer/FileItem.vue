@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { FileOutlined, FolderOpenOutlined, StarFilled, StarOutlined } from '@/icon'
-import {} from './fileSort'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { FetchQueue, fallbackImage } from 'vue3-ts-util'
+import { fallbackImage } from 'vue3-ts-util'
 import type { FileNodeInfo } from '@/api/files'
-import { isImageFile, type Dict } from '@/util'
+import { createReactiveQueue, isImageFile } from '@/util'
 import { toImageThumbnailUrl, toRawFileUrl, type ViewMode } from './hook'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { computed, ref } from 'vue'
 import { getImageSelectedCustomTag, type Tag } from '@/api/db'
-import { reactive } from 'vue'
 
 const global = useGlobalStore()
 const props = withDefaults(
@@ -20,9 +18,8 @@ const props = withDefaults(
     showMenuIdx?: number
     viewMode?: ViewMode
     fullScreenPreviewImageUrl?: string
-    target?: 'local' | 'netdisk'
   }>(),
-  { target: 'local', selected: false, viewMode: 'grid' }
+  {  selected: false, viewMode: 'grid' }
 )
 
 const emit = defineEmits<{
@@ -45,7 +42,7 @@ const onRightClick = () => {
   })
 }
 
-const q = reactive(new FetchQueue())
+const q = createReactiveQueue()
 const thumbnailSize = computed(() =>
   props.viewMode === 'grid'
     ? [global.gridThumbnailSize, global.gridThumbnailSize].join()
@@ -79,14 +76,14 @@ const thumbnailSize = computed(() =>
         <a-image
           :key="file.fullpath"
           :class="`idx-${idx}`"
-          v-if="props.target === 'local' && isImageFile(file.name)"
+          v-if="isImageFile(file.name)"
           :src="
             global.enableThumbnail ? toImageThumbnailUrl(file, thumbnailSize) : toRawFileUrl(file)
           "
           :fallback="fallbackImage"
           :preview="{
             src: fullScreenPreviewImageUrl,
-            onVisibleChange: (v, lv) => emit('previewVisibleChange', v, lv)
+            onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
           }"
         >
         </a-image>
@@ -132,7 +129,7 @@ const thumbnailSize = computed(() =>
           <a-menu-item key="openOnTheRight">{{ $t('openOnTheRight') }}</a-menu-item>
           <a-menu-item key="openWithWalkMode">{{ $t('openWithWalkMode') }}</a-menu-item>
         </template>
-        <template v-if="file.type === 'file' && props.target === 'local'">
+        <template v-if="file.type === 'file'">
           <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
           <a-menu-item key="download">{{ $t('downloadDirectly') }}</a-menu-item>
           <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
