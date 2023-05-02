@@ -276,6 +276,8 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
 
         if not os.path.exists(filename):
             raise HTTPException(status_code=404)
+        if not os.path.isfile(filename):
+            raise HTTPException(status_code=400, detail=f"{filename} is not a file")
         # 根据文件后缀名获取媒体类型
         media_type, _ = mimetypes.guess_type(filename)
         headers = {}

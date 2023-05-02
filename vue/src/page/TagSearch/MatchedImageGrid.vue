@@ -3,9 +3,9 @@ import { ref } from 'vue'
 import { copy2clipboard } from 'vue3-ts-util'
 import fileItemCell from '@/page/fileTransfer/FileItem.vue'
 import type { FileNodeInfo } from '@/api/files'
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 // @ts-ignore
-import { RecycleScroller } from 'vue-virtual-scroller'
+import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
 import {
   useFilesDisplay,
   type Scroller,
