@@ -127,10 +127,12 @@ const zh = {
   removedTagFromImage: '已从本图片上移除该标签',
   openContextMenu: '打开上下文菜单',
   copyPrompt: '复制提示',
-   "refreshCompleted": "刷新完成"
+  "refreshCompleted": "刷新完成",
+  "walk-mode-move-message": "在walk模式下仅允许使用“快速移动”移动位置"
 }
 const en: Record<keyof typeof zh, string> = {
-   "refreshCompleted": "Refresh completed",
+  "walk-mode-move-message": "Moving position is only allowed using 'Quick Move' in walk mode",
+  "refreshCompleted": "Refresh completed",
   addedTagToImage: 'Tag has been added to this image',
   removedTagFromImage: 'Tag has been removed from this image',
   openContextMenu: 'Open context menu',
@@ -264,7 +266,7 @@ const en: Record<keyof typeof zh, string> = {
 }
 declare module 'vue' {
   export interface ComponentCustomProperties {
-    $t(key: keyof typeof zh, ...args: []): string
+    $t (key: keyof typeof zh, ...args: []): string
   }
 }
 

@@ -23,7 +23,6 @@ import type Progress from 'nprogress'
 import NProgress from 'multi-nprogress'
 import { Modal, message } from 'ant-design-vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
-import { nextTick } from 'vue'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
 import { toggleCustomTagToImg } from '@/api/db'
@@ -104,7 +103,10 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     stackViewEl: ref<HTMLDivElement>(),
     walkModePath,
     props,
-    ...typedEventEmitter<{ loadNextDir: undefined; refresh: void }>()
+    ...typedEventEmitter<{
+      loadNextDir: void
+      refresh: void,
+    }>()
   }
 })
 
@@ -232,7 +234,8 @@ export function useLocation (props: Props) {
     basePath,
     sortMethod,
     useEventListen,
-    walkModePath
+    walkModePath,
+    eventEmitter
   } = useHookShareState().toRefs()
 
   watch(
@@ -243,6 +246,21 @@ export function useLocation (props: Props) {
       }
     }, 300)
   )
+
+    
+  const handleWalkModeTo = async (path: string) => {
+    await to(path)
+    if (props.walkMode) {
+      await delay()
+      const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
+        (v) => v.type === 'dir'
+      )
+      if (firstDir) {
+        await to(firstDir.fullpath)
+      }
+      await eventEmitter.value.emit('loadNextDir')
+    }
+  }
 
   onMounted(async () => {
     if (!stack.value.length) {
@@ -256,16 +274,7 @@ export function useLocation (props: Props) {
     np.value = new NProgress()
     np.value!.configure({ parent: stackViewEl.value as any })
     if (props.path && props.path !== '/') {
-      await to(props.path)
-      if (props.walkMode) {
-        await nextTick()
-        const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
-          (v) => v.type === 'dir'
-        )
-        if (firstDir) {
-          to(firstDir.fullpath)
-        }
-      }
+      await handleWalkModeTo(props.path)
     } else {
       global.conf?.home && to(global.conf.home)
     }
@@ -370,15 +379,8 @@ export function useLocation (props: Props) {
     try {
       np.value?.start()
       if (walkModePath.value) {
-        stack.value.splice(1, Infinity)
-        await to(walkModePath.value)
-        await delay()
-        const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
-          (v) => v.type === 'dir'
-        )
-        if (firstDir) {
-          await to(firstDir.fullpath)
-        }
+        back(0)
+        await handleWalkModeTo(walkModePath.value)
       } else {
         const { files } = await getTargetFolderFiles(
           'local',
@@ -393,7 +395,16 @@ export function useLocation (props: Props) {
     }
   }
 
+
+
   useEventListen.value('refresh', refresh)
+
+  const quickMoveTo = (path: string) => {
+    if (props.walkMode) {
+      walkModePath.value = path
+    }
+    handleWalkModeTo(path)
+  }
 
   return {
     refresh,
@@ -404,7 +415,8 @@ export function useLocation (props: Props) {
     currLocation,
     to,
     stack,
-    scroller
+    scroller,
+    quickMoveTo
   }
 }
 
@@ -484,21 +496,21 @@ export function useFilesDisplay (props: Props) {
     } finally {
       loadNextDirLoading.value = false
     }
+  }
+
+  const fill = async () => {
     const s = scroller.value
     // 填充够一页，直到不行为止
-    while (s && s.$_endIndex > sortedFiles.value.length - 10 && canLoadNext.value) {
+    while (!sortedFiles.value.length || s && (s.$_endIndex > (sortedFiles.value.length - 20)) && canLoadNext.value) {
+      await delay(100)
       await loadNextDir()
     }
   }
 
-  state.useEventListen('loadNextDir', loadNextDir)
 
-  const onScroll = debounce(async () => {
-    const s = scroller.value
-    if (s && s.$_endIndex > sortedFiles.value.length - 10 && props.walkMode) {
-      loadNextDir()
-    }
-  }, 300)
+  state.useEventListen('loadNextDir', fill)
+
+  const onScroll = debounce(fill, 300)
 
   return {
     gridItems,
