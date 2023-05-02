@@ -28,10 +28,9 @@ export function normalize (path: string): string {
   // 重新组合路径
   const result = newParts.join('/')
 
-  // 如果原始路径以斜杠结尾，则结果也以斜杠结尾
-  const endsWithSlash = path.endsWith('/')
-  if (endsWithSlash && !result.endsWith('/')) {
-    return result + '/'
+  const startWithSlash = path.startsWith('/')
+  if (startWithSlash) {
+    return '/' + result
   } else {
     return result
   }
@@ -46,7 +45,6 @@ export function join (...paths: string[]): string {
 
   // 规范化路径
   result = normalize(result)
-
   // 如果原始路径以斜杠结尾，则结果也以斜杠结尾
   const endsWithSlash = paths[paths.length - 1].endsWith('/')
   if (endsWithSlash && !result.endsWith('/')) {
