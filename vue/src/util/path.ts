@@ -64,3 +64,11 @@ export const normalizeRelativePathToAbsolute = (relativePath: string, cwd: strin
   return normalize(absolutePath)
 }
 
+export const splitPath = (path: string) => {
+  path = normalize(path)
+  const frags = path.split('/').filter(v => v)
+  if (frags[0].endsWith(':')) {
+   frags[0] = frags[0] + '/'// 分割完是c: -> c:/
+  }
+  return frags
+}

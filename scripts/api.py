@@ -18,7 +18,6 @@ from typing import Any, List, Literal, Optional
 from pydantic import BaseModel
 from fastapi.responses import FileResponse, RedirectResponse
 from PIL import Image
-from io import BytesIO
 import hashlib
 from urllib.parse import urlencode
 from scripts.db.datamodel import DataBase, Image as DbImg, Tag, Floder, ImageTag

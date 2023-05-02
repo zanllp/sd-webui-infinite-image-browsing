@@ -1,30 +1,46 @@
 from sqlite3 import Connection, connect
 from typing import Dict, List, Optional
-from scripts.tool import cwd, get_modified_date, human_readable_size, tags_translate
+from scripts.tool import (
+    cwd,
+    get_modified_date,
+    human_readable_size,
+    tags_translate,
+    is_dev,
+)
 from contextlib import closing
 import os
+import threading
 
 
 class DataBase:
-    _conn: Optional[Connection] = None
+    local = threading.local()
 
     _initing = False
 
+    num = 0
+
     @classmethod
     def get_conn(clz) -> Connection:
-        if not clz._conn:
-            clz.init()
-        return clz._conn
+        # for : sqlite3.ProgrammingError: SQLite objects created in a thread can only be used in that same thread
+        if hasattr(clz.local, "conn"):
+            return clz.local.conn
+        else:
+            conn = clz.init()
+            clz.local.conn = conn
+            return conn
 
     @classmethod
     def init(clz):
         # 创建连接并打开数据库
         conn = connect(os.path.join(cwd, "iib.db"))
-        clz._conn = conn
         Floder.create_table(conn)
         ImageTag.create_table(conn)
         Tag.create_table(conn)
         Image.create_table(conn)
+        clz.num += 1
+        if is_dev:
+            print(f"当前连接数{clz.num}")
+        return conn
 
 
 class Image:

@@ -326,19 +326,14 @@ export function useLocation (props: Props) {
     }
   }
 
-  const to = async (dir: string, refreshIfCurrPage = true) => {
+  const to = async (dir: string) => {
     const backup = stack.value.slice()
     try {
       if (!Path.isAbsolute(dir)) {
         // 相对路径
         dir = Path.join(global.conf?.sd_cwd ?? '/', dir)
       }
-      const frags = dir.split(/\\|\//)
-      if (global.conf?.is_win) {
-        frags[0] = frags[0] + '/' // 分割完是c:
-      } else {
-        frags.shift() // /开头的一个是空
-      }
+      const frags = Path.splitPath(dir)
       const currPaths = stack.value.map((v) => v.curr)
       currPaths.shift() // 是 /
       while (currPaths[0] && frags[0]) {
@@ -352,21 +347,20 @@ export function useLocation (props: Props) {
       for (let index = 0; index < currPaths.length; index++) {
         stack.value.pop()
       }
-      if (!frags.length && refreshIfCurrPage) {
+      if (!frags.length) {
         return refresh()
       }
       for (const frag of frags) {
-        if (frag === '') {
-          // 这种情况 D:\Desktop\sd.webui\webui\outputs\
-          break
-        }
         const target = currPage.value?.files.find((v) => v.name === frag)
-        ok(target)
+        if (!target) {
+          console.error({ frags, frag, stack: cloneDeep(stack.value) })
+          throw new Error(`${frag} not found`)
+        }
         await openNext(target)
       }
     } catch (error) {
       message.error(t('moveFailedCheckPath'))
-      console.error(dir, dir.split(/\\|\//), currPage.value)
+      console.error(dir, Path.splitPath(dir), currPage.value)
       stack.value = backup
       throw error
     }
@@ -375,14 +369,15 @@ export function useLocation (props: Props) {
   const refresh = async () => {
     try {
       np.value?.start()
-      if (walkModePath.value && walkModePath.value !== currLocation.value) {
-        await to(walkModePath.value, false)
+      if (walkModePath.value) {
+        stack.value.splice(1, Infinity)
+        await to(walkModePath.value)
         await delay()
         const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
           (v) => v.type === 'dir'
         )
         if (firstDir) {
-          await to(firstDir.fullpath, false)
+          await to(firstDir.fullpath)
         }
       } else {
         const { files } = await getTargetFolderFiles(
@@ -392,6 +387,7 @@ export function useLocation (props: Props) {
         last(stack.value)!.files = files
       }
       scroller.value?.scrollToItem(0)
+      message.success(t('refreshCompleted'))
     } finally {
       np.value?.done()
     }
