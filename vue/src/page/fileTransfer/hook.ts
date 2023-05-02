@@ -1,6 +1,6 @@
 import { useGlobalStore, type FileTransferTabPane } from '@/store/useGlobalStore'
 import { onLongPress, useElementSize } from '@vueuse/core'
-import { ref, computed, watch, onMounted, h } from 'vue'
+import { ref, computed, watch, onMounted, h, type Ref } from 'vue'
 
 import { genInfoCompleted, getImageGenerationInfo, setImgPath } from '@/api'
 import {
@@ -129,9 +129,11 @@ export interface Page {
  * @param props
  * @returns
  */
-export function usePreview (props: Props) {
-  const { scroller, sortedFiles, previewIdx, eventEmitter, canLoadNext } =
-    useHookShareState().toRefs()
+export function usePreview (props: Props, custom?: { files: Ref<FileNodeInfo[] | undefined>, scroller: Ref<Scroller | undefined> }) {
+  const { previewIdx, eventEmitter, canLoadNext } = useHookShareState().toRefs()
+  const { state } = useHookShareState()
+  const files = computed(() => custom?.files.value ?? state.sortedFiles)
+  const scroller = computed(() => custom?.scroller.value ?? state.scroller)
   const previewing = ref(false)
   let waitScrollTo = null as number | null
   const onPreviewVisibleChange = (v: boolean, lv: boolean) => {
@@ -157,16 +159,16 @@ export function usePreview (props: Props) {
       let next = previewIdx.value
       if (['ArrowDown', 'ArrowRight'].includes(e.key)) {
         next++
-        while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+        while (files.value[next] && !isImageFile(files.value[next].name)) {
           next++
         }
       } else if (['ArrowUp', 'ArrowLeft'].includes(e.key)) {
         next--
-        while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+        while (files.value[next] && !isImageFile(files.value[next].name)) {
           next--
         }
       }
-      if (isImageFile(sortedFiles.value[next]?.name) ?? '') {
+      if (isImageFile(files.value[next]?.name) ?? '') {
         previewIdx.value = next
         const s = scroller.value
         if (s && !(next >= s.$_startIndex && next <= s.$_endIndex)) {
@@ -180,16 +182,16 @@ export function usePreview (props: Props) {
     let next = previewIdx.value
     if (type === 'next') {
       next++
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+      while (files.value[next] && !isImageFile(files.value[next].name)) {
         next++
       }
     } else if (type === 'prev') {
       next--
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+      while (files.value[next] && !isImageFile(files.value[next].name)) {
         next--
       }
     }
-    if (isImageFile(sortedFiles.value[next]?.name) ?? '') {
+    if (isImageFile(files.value[next]?.name) ?? '') {
       previewIdx.value = next
       const s = scroller.value
       if (s && !(next >= s.$_startIndex && next <= s.$_endIndex)) {
@@ -202,16 +204,16 @@ export function usePreview (props: Props) {
     let next = previewIdx.value
     if (type === 'next') {
       next++
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+      while (files.value[next] && !isImageFile(files.value[next].name)) {
         next++
       }
     } else if (type === 'prev') {
       next--
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+      while (files.value[next] && !isImageFile(files.value[next].name)) {
         next--
       }
     }
-    return isImageFile(sortedFiles.value[next]?.name) ?? ''
+    return isImageFile(files.value[next]?.name) ?? ''
   }
 
   return {
@@ -637,9 +639,7 @@ export function useFileItemActions (
   })
 
   const q = createReactiveQueue()
-  const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo) => {
-    const files = sortedFiles.value
-    const idx = files.findIndex((v) => v.name === file.name)
+  const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo, idx: number) => {
     previewIdx.value = idx
     const idxInSelected = multiSelectedIdxs.value.indexOf(idx)
     if (e.shiftKey) {
@@ -817,6 +817,9 @@ export function useFileItemActions (
         img_path: file.fullpath
       })
       message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
+    }
+    return {
+      
     }
   }
   return {

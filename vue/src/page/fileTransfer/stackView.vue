@@ -204,19 +204,6 @@ watch(
   </ASpin>
 </template>
 <style lang="scss" scoped>
-.uninstalled-hint {
-  margin: 256px auto;
-  display: flex;
-  flex-flow: column;
-  justify-content: center;
-  align-items: center;
-
-  &>* {
-    margin: 16px;
-    text-align: center;
-  }
-}
-
 .preview-switch {
   position: fixed;
   top: 0;

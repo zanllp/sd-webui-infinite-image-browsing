@@ -24,7 +24,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (type: 'update:showMenuIdx', v: number): void
-  (type: 'fileItemClick', event: MouseEvent, file: FileNodeInfo): void
+  (type: 'fileItemClick', event: MouseEvent, file: FileNodeInfo, idx: number): void
   (type: 'dragstart', event: DragEvent, idx: number): void
   (type: 'previewVisibleChange', value: boolean, last: boolean): void
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
@@ -70,7 +70,7 @@ const thumbnailSize = computed(() =>
       draggable="true"
       @dragstart="emit('dragstart', $event, idx)"
       @contextmenu="onRightClick"
-      @click.capture="emit('fileItemClick', $event, file)"
+      @click.capture="emit('fileItemClick', $event, file, idx)"
     >
       <div v-if="viewMode !== 'line'">
         <a-image
