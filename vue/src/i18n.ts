@@ -117,7 +117,7 @@ const zh = {
   add: '新增',
   cancel: '取消',
   submit: '提交',
-  embedding: '1',
+  embedding: 'embedding',
   existInOtherType: '已存在于其他类型',
   alreadyExists: '已存在',
   toggleTag: '切换标签选中 (收藏)',
@@ -126,9 +126,13 @@ const zh = {
   addedTagToImage: '已添加标签到本图片',
   removedTagFromImage: '已从本图片上移除该标签',
   openContextMenu: '打开上下文菜单',
-  copyPrompt: '复制提示'
+  copyPrompt: '复制提示',
+  "refreshCompleted": "刷新完成",
+  "walk-mode-move-message": "在walk模式下仅允许使用“快速移动”移动位置"
 }
 const en: Record<keyof typeof zh, string> = {
+  "walk-mode-move-message": "Moving position is only allowed using 'Quick Move' in walk mode",
+  "refreshCompleted": "Refresh completed",
   addedTagToImage: 'Tag has been added to this image',
   removedTagFromImage: 'Tag has been removed from this image',
   openContextMenu: 'Open context menu',
@@ -138,7 +142,7 @@ const en: Record<keyof typeof zh, string> = {
   removeComplete: 'Remove Complete',
   existInOtherType: 'Already exists in other type',
   alreadyExists: 'Already exists',
-  embedding: '1',
+  embedding: 'embedding',
   cancel: 'Cancel',
   submit: 'Submit',
   add: 'Add',
@@ -262,7 +266,7 @@ const en: Record<keyof typeof zh, string> = {
 }
 declare module 'vue' {
   export interface ComponentCustomProperties {
-    $t(key: keyof typeof zh, ...args: []): string
+    $t (key: keyof typeof zh, ...args: []): string
   }
 }
 

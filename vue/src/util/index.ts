@@ -1,6 +1,7 @@
-import { idKey, type UniqueId } from 'vue3-ts-util'
+import { reactive } from 'vue'
+import { FetchQueue, idKey, type UniqueId } from 'vue3-ts-util'
 
-export function gradioApp() {
+export function gradioApp () {
   try {
     return (parent.window as any).gradioApp()
   } catch (error) {
@@ -11,7 +12,7 @@ export function gradioApp() {
   return gradioShadowRoot ? gradioShadowRoot : document
 }
 
-export const asyncCheck = async <T>(getter: () => T, checkSize = 100, timeout = 1000) => {
+export const asyncCheck = async <T> (getter: () => T, checkSize = 100, timeout = 1000) => {
   return new Promise<T>((x) => {
     const check = (num = 0) => {
       const target = getter()
@@ -35,7 +36,7 @@ export type Dict<T = any> = Record<string, T>
  * @param v
  * @param keys
  */
-export const pick = <T extends Dict, keys extends Array<keyof T>>(v: T, ...keys: keys) => {
+export const pick = <T extends Dict, keys extends Array<keyof T>> (v: T, ...keys: keys) => {
   return keys.reduce((p, c) => {
     p[c] = v?.[c]
     return p
@@ -48,7 +49,7 @@ export const pick = <T extends Dict, keys extends Array<keyof T>>(v: T, ...keys:
  */
 export type ReturnTypeAsync<T extends (...arg: any) => Promise<any>> = Awaited<ReturnType<T>>
 
-export function isImageFile(filename: string): boolean {
+export function isImageFile (filename: string): boolean {
   if (typeof filename !== 'string') {
     return false
   }
@@ -56,3 +57,6 @@ export function isImageFile(filename: string): boolean {
   const extension = filename.split('.').pop()?.toLowerCase()
   return extension !== undefined && imageExtensions.includes(`.${extension}`)
 }
+
+
+export const createReactiveQueue = () => reactive(new FetchQueue(-1, 0, -1, 'throw'))

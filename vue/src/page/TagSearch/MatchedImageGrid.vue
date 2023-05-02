@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue'
-import { FetchQueue, copy2clipboard, delay } from 'vue3-ts-util'
+import { ref } from 'vue'
+import { copy2clipboard } from 'vue3-ts-util'
 import fileItemCell from '@/page/fileTransfer/FileItem.vue'
 import type { FileNodeInfo } from '@/api/files'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
@@ -12,15 +12,20 @@ import {
   useHookShareState,
   useMobileOptimization,
   useFileItemActions,
-  toRawFileUrl
+  toRawFileUrl,
+  usePreview,
+  useFileTransfer
 } from '@/page/fileTransfer/hook'
 import { identity } from 'lodash-es'
 import { getImagesByTags } from '@/api/db'
 import { watch } from 'vue'
+import { createReactiveQueue } from '@/util'
+import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
+import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 
 const images = ref<FileNodeInfo[]>()
 
-const queue = reactive(new FetchQueue(-1, 0, -1, 'throw'))
+const queue = createReactiveQueue()
 
 const props = defineProps<{
   tabIdx: number
@@ -41,24 +46,29 @@ watch(
 
 const scroller = ref<Scroller>()
 
-const propsMock = { tabIdx: -1, target: 'local', paneIdx: -1 } as const
-const { stackViewEl, multiSelectedIdxs } = useHookShareState().toRefs()
+const propsMock = { tabIdx: -1, target: 'local', paneIdx: -1, walkMode: false } as const
+const { stackViewEl, multiSelectedIdxs, stack } = useHookShareState().toRefs()
 const { itemSize, gridItems } = useFilesDisplay(propsMock)
 const { showMenuIdx } = useMobileOptimization()
+useFileTransfer() // for reset selected
 const {
   showGenInfo,
   imageGenInfo,
   q: genInfoQueue,
-  onContextMenuClick
+  onContextMenuClick,
+  onFileItemClick
 } = useFileItemActions(propsMock, { openNext: identity })
+const { previewIdx, previewing, onPreviewVisibleChange, previewImgMove, canPreview } = usePreview(props, { scroller, files: images })
 
 const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
+  stack.value = [{ curr: '', files: images.value! }] // hack，for delete multi files
+  const idxs = multiSelectedIdxs.value // when click confirm ok button, idxs will be reset
   await onContextMenuClick(e, file, idx)
   if (e.key === 'deleteFiles') {
-    const idxs = multiSelectedIdxs.value.includes(idx) ? multiSelectedIdxs.value : [idx]
     images.value = images.value!.filter((_, idx) => !idxs.includes(idx))
   }
 }
+
 </script>
 <template>
   <div class="container" ref="stackViewEl">
@@ -66,45 +76,65 @@ const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
       <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
         <template #cancelText />
         <ASkeleton active :loading="!genInfoQueue.isIdle">
-          <div
-            style="
-              width: 100%;
-              word-break: break-all;
-              white-space: pre-line;
-              max-height: 70vh;
-              overflow: auto;
-            "
-            @dblclick="copy2clipboard(imageGenInfo, 'copied')"
-          >
+          <div style="
+                            width: 100%;
+                              word-break: break-all;
+                              white-space: pre-line;
+                              max-height: 70vh;
+                              overflow: auto;
+                            " @dblclick="copy2clipboard(imageGenInfo, 'copied')">
             <div class="hint">{{ $t('doubleClickToCopy') }}</div>
             {{ imageGenInfo }}
           </div>
         </ASkeleton>
       </AModal>
-      <RecycleScroller
-        ref="scroller"
-        class="file-list"
-        :items="images || []"
-        :item-size="itemSize.first"
-        key-field="fullpath"
-        :item-secondary-size="itemSize.second"
-        :gridItems="gridItems"
-      >
+      <RecycleScroller ref="scroller" class="file-list" v-if="images" :items="images" :item-size="itemSize.first"
+        key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems">
         <template v-slot="{ item: file, index: idx }">
           <!-- idx 和file有可能丢失 -->
-          <file-item-cell
-            :idx="idx"
-            :file="file"
-            v-model:show-menu-idx="showMenuIdx"
-            :full-screen-preview-image-url="toRawFileUrl(file)"
-            @context-menu-click="onContextMenuClickU"
-          />
+          <file-item-cell :idx="idx" :file="file" v-model:show-menu-idx="showMenuIdx" @file-item-click="onFileItemClick"
+            :full-screen-preview-image-url="images[previewIdx] ? toRawFileUrl(images[previewIdx]) : ''"
+            :selected="multiSelectedIdxs.includes(idx)" @context-menu-click="onContextMenuClickU"
+            @preview-visible-change="onPreviewVisibleChange" />
         </template>
       </RecycleScroller>
+      <div v-if="previewing" class="preview-switch">
+        <LeftCircleOutlined @click="previewImgMove('prev')" :class="{ disable: !canPreview('prev') }" />
+        <RightCircleOutlined @click="previewImgMove('next')" :class="{ disable: !canPreview('next') }" />
+      </div>
     </ASpin>
+    <fullScreenContextMenu v-if="previewing && images && images[previewIdx]" :file="images[previewIdx]" :idx="previewIdx"
+      @context-menu-click="onContextMenuClickU" />
   </div>
 </template>
 <style scoped lang="scss">
+.preview-switch {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 11111;
+  pointer-events: none;
+
+  &>* {
+    color: white;
+    margin: 16px;
+    font-size: 4em;
+    pointer-events: all;
+    cursor: pointer;
+
+    &.disable {
+      opacity: 0;
+      pointer-events: none;
+      cursor: none;
+    }
+  }
+}
+
 .container {
   background: var(--zp-secondary-background);
 

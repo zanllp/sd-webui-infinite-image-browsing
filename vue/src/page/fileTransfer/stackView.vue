@@ -24,10 +24,10 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { watch } from 'vue'
 import FileItem from './FileItem.vue'
 import fullScreenContextMenu from './fullScreenContextMenu.vue'
+import 'antd-vue-volar'
 
 const global = useGlobalStore()
 const props = defineProps<{
-  target: 'local'
   tabIdx: number
   paneIdx: number
   /**
@@ -48,7 +48,7 @@ const {
   multiSelectedIdxs,
   spinning
 } = useHookShareState().toRefs()
-const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to } =
+const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to, quickMoveTo } =
   useLocation(props)
 const {
   gridItems,
@@ -64,7 +64,7 @@ const {
   canLoadNext,
   onScroll
 } = useFilesDisplay(props)
-const { onDrop, onFileDragStart } = useFileTransfer(props)
+const { onDrop, onFileDragStart } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions(
   props,
   { openNext }
@@ -96,17 +96,14 @@ watch(
       <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
         <template #cancelText />
         <ASkeleton active :loading="!q.isIdle">
-          <div
-            style="
-              width: 100%;
-              word-break: break-all;
-              white-space: pre-line;
-              max-height: 70vh;
-              overflow: auto;
-              z-index: 9999;
-            "
-            @dblclick="copy2clipboard(imageGenInfo, 'copied')"
-          >
+          <div style="
+                width: 100%;
+                word-break: break-all;
+                white-space: pre-line;
+                max-height: 70vh;
+                overflow: auto;
+                z-index: 9999;
+              " @dblclick="copy2clipboard(imageGenInfo, 'copied')">
             <div class="hint">{{ $t('doubleClickToCopy') }}</div>
             {{ imageGenInfo }}
           </div>
@@ -114,17 +111,23 @@ watch(
       </AModal>
       <div class="location-bar">
         <div class="breadcrumb">
-          <a-breadcrumb style="flex: 1">
-            <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx"
-              ><a @click.prevent="back(idx)">{{
-                item.curr === '/' ? $t('root') : item.curr.replace(/:\/$/, $t('drive'))
-              }}</a></a-breadcrumb-item
-            >
+          <a-tooltip v-if="props.walkMode">
+            <template #title>{{ $t('walk-mode-move-message') }}</template><a-breadcrumb style="flex: 1">
+              <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx">
+                <span>{{ item.curr === '/' ? $t('root') : item.curr.replace(/:\/$/, $t('drive')) }}</span>
+              </a-breadcrumb-item>
+            </a-breadcrumb>
+          </a-tooltip>
+          <a-breadcrumb style="flex: 1" v-else>
+            <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx">
+              <a @click.prevent="back(idx)">{{ item.curr === '/' ? $t('root') : item.curr.replace(/:\/$/, $t('drive'))
+              }}</a>
+            </a-breadcrumb-item>
           </a-breadcrumb>
         </div>
         <div class="actions">
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
-          <a-dropdown v-if="props.target === 'local'">
+          <a-dropdown>
             <a class="opt" @click.prevent>
               {{ $t('quickMove') }}
               <down-outlined />
@@ -132,52 +135,37 @@ watch(
             <template #overlay>
               <a-menu>
                 <a-menu-item v-for="item in global.autoCompletedDirList" :key="item.dir">
-                  <a @click.prevent="to(item.dir)">{{ item.zh }}</a>
+                  <a @click.prevent="quickMoveTo(item.dir)">{{ item.zh }}</a>
                 </a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
-          <a-dropdown
-            :trigger="['click']"
-            v-model:visible="moreActionsDropdownShow"
-            placement="bottomLeft"
-            :getPopupContainer="trigger => trigger.parentNode as HTMLDivElement"
-          >
+          <a-dropdown :trigger="['click']" v-model:visible="moreActionsDropdownShow" placement="bottomLeft"
+            :getPopupContainer="trigger => trigger.parentNode as HTMLDivElement">
             <a class="opt" @click.prevent>
               {{ $t('more') }}
             </a>
             <template #overlay>
-              <div
-                style="
-                  width: 512px;
-                  background: var(--zp-primary-background);
-                  padding: 16px;
-                  border-radius: 4px;
-                  box-shadow: 0 0 4px var(--zp-secondary-background);
-                  border: 1px solid var(--zp-secondary-background);
-                "
-              >
-                <a-form
-                  v-bind="{
-                    labelCol: { span: 6 },
-                    wrapperCol: { span: 18 }
-                  }"
-                >
+              <div style="
+                    width: 512px;
+                    background: var(--zp-primary-background);
+                    padding: 16px;
+                    border-radius: 4px;
+                    box-shadow: 0 0 4px var(--zp-secondary-background);
+                    border: 1px solid var(--zp-secondary-background);
+                  ">
+                <a-form v-bind="{
+                  labelCol: { span: 6 },
+                  wrapperCol: { span: 18 }
+                }">
                   <a-form-item :label="$t('viewMode')">
-                    <search-select
-                      v-model:value="viewMode"
-                      @click.stop
+                    <search-select v-model:value="viewMode" @click.stop
                       :conv="{ value: v => v, text: v => viewModeMap[v as ViewMode] }"
-                      :options="Object.keys(viewModeMap)"
-                    />
+                      :options="Object.keys(viewModeMap)" />
                   </a-form-item>
                   <a-form-item :label="$t('sortingMethod')">
-                    <search-select
-                      v-model:value="sortMethod"
-                      @click.stop
-                      :conv="sortMethodConv"
-                      :options="Object.keys(sortMethodMap)"
-                    />
+                    <search-select v-model:value="sortMethod" @click.stop :conv="sortMethodConv"
+                      :options="Object.keys(sortMethodMap)" />
                   </a-form-item>
                   <a-form-item>
                     <a @click.prevent="copyLocation">{{ $t('copyPath') }}</a>
@@ -190,81 +178,32 @@ watch(
         </div>
       </div>
       <div v-if="currPage" class="view">
-        <RecycleScroller
-          class="file-list"
-          :items="sortedFiles"
-          ref="scroller"
-          @scroll="onScroll"
-          :item-size="itemSize.first"
-          key-field="fullpath"
-          :item-secondary-size="itemSize.second"
-          :gridItems="gridItems"
-        >
+        <RecycleScroller class="file-list" :items="sortedFiles" ref="scroller" @scroll="onScroll"
+          :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems">
           <template v-slot="{ item: file, index: idx }">
             <!-- idx 和file有可能丢失 -->
-            <file-item
-              :idx="idx"
-              :file="file"
-              :full-screen-preview-image-url="
-                sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : ''
-              "
-              v-model:show-menu-idx="showMenuIdx"
-              :selected="multiSelectedIdxs.includes(idx)"
-              :view-mode="viewMode"
-              :target="target"
-              @file-item-click="onFileItemClick"
-              @dragstart="onFileDragStart"
-              @preview-visible-change="onPreviewVisibleChange"
-              @context-menu-click="onContextMenuClick"
-            />
+            <file-item :idx="idx" :file="file" :full-screen-preview-image-url="sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : ''
+            " v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :view-mode="viewMode"
+              @file-item-click="onFileItemClick" @dragstart="onFileDragStart"
+              @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick" />
           </template>
           <template v-if="props.walkMode" #after>
-            <AButton
-              @click="loadNextDir"
-              :loading="loadNextDirLoading"
-              block
-              type="primary"
-              :disabled="!canLoadNext"
-              ghost
-            >
-              {{ $t('loadNextPage') }}</AButton
-            >
+            <AButton @click="loadNextDir" :loading="loadNextDirLoading" block type="primary" :disabled="!canLoadNext"
+              ghost>
+              {{ $t('loadNextPage') }}</AButton>
           </template>
         </RecycleScroller>
         <div v-if="previewing" class="preview-switch">
-          <LeftCircleOutlined
-            @click="previewImgMove('prev')"
-            :class="{ disable: !canPreview('prev') }"
-          />
-          <RightCircleOutlined
-            @click="previewImgMove('next')"
-            :class="{ disable: !canPreview('next') }"
-          />
+          <LeftCircleOutlined @click="previewImgMove('prev')" :class="{ disable: !canPreview('prev') }" />
+          <RightCircleOutlined @click="previewImgMove('next')" :class="{ disable: !canPreview('next') }" />
         </div>
       </div>
     </div>
-    <fullScreenContextMenu
-      v-if="previewing"
-      :file="sortedFiles[previewIdx]"
-      :idx="previewIdx"
-      @context-menu-click="onContextMenuClick"
-    />
+    <fullScreenContextMenu v-if="previewing" :file="sortedFiles[previewIdx]" :idx="previewIdx"
+      @context-menu-click="onContextMenuClick" />
   </ASpin>
 </template>
 <style lang="scss" scoped>
-.uninstalled-hint {
-  margin: 256px auto;
-  display: flex;
-  flex-flow: column;
-  justify-content: center;
-  align-items: center;
-
-  & > * {
-    margin: 16px;
-    text-align: center;
-  }
-}
-
 .preview-switch {
   position: fixed;
   top: 0;
@@ -277,7 +216,7 @@ watch(
   z-index: 11111;
   pointer-events: none;
 
-  & > * {
+  &>* {
     color: white;
     margin: 16px;
     font-size: 4em;

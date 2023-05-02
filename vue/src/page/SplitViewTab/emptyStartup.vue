@@ -2,9 +2,8 @@
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { uniqueId } from 'lodash-es'
 import { computed } from 'vue'
-import { ID, idKey, ok } from 'vue3-ts-util'
-import { CloudDownloadOutlined, FileDoneOutlined } from '@/icon'
-import { message } from 'ant-design-vue'
+import { ID, ok } from 'vue3-ts-util'
+import { FileDoneOutlined } from '@/icon'
 import { t } from '@/i18n'
 
 const global = useGlobalStore()
@@ -29,7 +28,6 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
         type,
         name: compCnMap[type]!,
         key: Date.now() + uniqueId(),
-        target: type,
         path,
         walkMode
       }
@@ -130,10 +128,9 @@ const restoreRecord = () => {
             v-for="item in global.recent"
             :key="item.key"
             class="quick-start__item"
-            @click.prevent="openInCurrentTab(item.target as any, item.path)"
+            @click.prevent="openInCurrentTab('local', item.path)"
           >
-            <CloudDownloadOutlined class="quick-start__icon" v-if="item.target !== 'local'" />
-            <FileDoneOutlined class="quick-start__icon" v-else />
+            <FileDoneOutlined class="quick-start__icon" />
             <span class="quick-start__text line-clamp-1">{{ item.path }}</span>
           </li>
         </ul>

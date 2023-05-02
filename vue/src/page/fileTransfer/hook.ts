@@ -1,6 +1,6 @@
 import { useGlobalStore, type FileTransferTabPane } from '@/store/useGlobalStore'
 import { onLongPress, useElementSize } from '@vueuse/core'
-import { ref, computed, watch, onMounted, h, reactive } from 'vue'
+import { ref, computed, watch, onMounted, h, type Ref } from 'vue'
 
 import { genInfoCompleted, getImageGenerationInfo, setImgPath } from '@/api'
 import {
@@ -10,31 +10,28 @@ import {
   createTypedShareStateHook,
   copy2clipboard,
   delay,
-  FetchQueue,
   typedEventEmitter,
   ID
 } from 'vue3-ts-util'
-import { gradioApp, isImageFile } from '@/util'
+import { createReactiveQueue, gradioApp, isImageFile } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
 import { cloneDeep, debounce, last, range, uniqBy, uniqueId } from 'lodash-es'
-import path from 'path-browserify'
+import * as Path from '@/util/path'
 import type Progress from 'nprogress'
 // @ts-ignore
 import NProgress from 'multi-nprogress'
 import { Modal, message } from 'ant-design-vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
-import { nextTick } from 'vue'
 import { t } from '@/i18n'
-import { CloudServerOutlined, DatabaseOutlined } from '@/icon'
+import { DatabaseOutlined } from '@/icon'
 import { toggleCustomTagToImg } from '@/api/db'
 
 export const stackCache = new Map<string, Page[]>()
 
 const global = useGlobalStore()
 export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
-  `/infinite_image_browsing/file?filename=${encodeURIComponent(file.fullpath)}${
-    download ? `&disposition=${encodeURIComponent(file.name)}` : ''
+  `/infinite_image_browsing/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''
   }`
 export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) =>
   `/infinite_image_browsing/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
@@ -47,19 +44,19 @@ const { eventEmitter: events, useEventListen } = typedEventEmitter<{
 export interface Scroller {
   $_startIndex: number
   $_endIndex: number
-  scrollToItem(idx: number): void
+  scrollToItem (idx: number): void
 }
 
 export const { useHookShareState } = createTypedShareStateHook(() => {
-  const props = ref<Props>({ tabIdx: -1, paneIdx: -1, target: 'local' })
+  const props = ref<Props>({ tabIdx: -1, paneIdx: -1 })
   const currPage = computed(() => last(stack.value))
   const stack = ref<Page[]>([])
   const basePath = computed(() =>
     stack.value
       .map((v) => v.curr)
-      .slice(global.conf?.is_win && props.value.target === 'local' ? 1 : 0)
+      .slice(global.conf?.is_win ? 1 : 0)
   )
-  const currLocation = computed(() => path.join(...basePath.value))
+  const currLocation = computed(() => Path.join(...basePath.value))
   const sortMethod = ref(SortMethod.DATE_DESC)
   const sortedFiles = computed(() => {
     if (!currPage.value) {
@@ -106,12 +103,14 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     stackViewEl: ref<HTMLDivElement>(),
     walkModePath,
     props,
-    ...typedEventEmitter<{ loadNextDir: undefined; refresh: void }>()
+    ...typedEventEmitter<{
+      loadNextDir: void
+      refresh: void,
+    }>()
   }
 })
 
 export interface Props {
-  target: 'local'
   tabIdx: number
   paneIdx: number
   path?: string
@@ -130,9 +129,11 @@ export interface Page {
  * @param props
  * @returns
  */
-export function usePreview(props: Props) {
-  const { scroller, sortedFiles, previewIdx, eventEmitter, canLoadNext } =
-    useHookShareState().toRefs()
+export function usePreview (props: Props, custom?: { files: Ref<FileNodeInfo[] | undefined>, scroller: Ref<Scroller | undefined> }) {
+  const { previewIdx, eventEmitter, canLoadNext } = useHookShareState().toRefs()
+  const { state } = useHookShareState()
+  const files = computed(() => custom?.files.value ?? state.sortedFiles)
+  const scroller = computed(() => custom?.scroller.value ?? state.scroller)
   const previewing = ref(false)
   let waitScrollTo = null as number | null
   const onPreviewVisibleChange = (v: boolean, lv: boolean) => {
@@ -145,7 +146,7 @@ export function usePreview(props: Props) {
   }
 
   const loadNextIfNeeded = () => {
-    if (props.walkMode && props.target === 'local') {
+    if (props.walkMode) {
       if (!canPreview('next') && canLoadNext) {
         message.info(t('loadingNextFolder'))
         eventEmitter.value.emit('loadNextDir')
@@ -158,16 +159,16 @@ export function usePreview(props: Props) {
       let next = previewIdx.value
       if (['ArrowDown', 'ArrowRight'].includes(e.key)) {
         next++
-        while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+        while (files.value[next] && !isImageFile(files.value[next].name)) {
           next++
         }
       } else if (['ArrowUp', 'ArrowLeft'].includes(e.key)) {
         next--
-        while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+        while (files.value[next] && !isImageFile(files.value[next].name)) {
           next--
         }
       }
-      if (isImageFile(sortedFiles.value[next]?.name) ?? '') {
+      if (isImageFile(files.value[next]?.name) ?? '') {
         previewIdx.value = next
         const s = scroller.value
         if (s && !(next >= s.$_startIndex && next <= s.$_endIndex)) {
@@ -181,16 +182,16 @@ export function usePreview(props: Props) {
     let next = previewIdx.value
     if (type === 'next') {
       next++
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+      while (files.value[next] && !isImageFile(files.value[next].name)) {
         next++
       }
     } else if (type === 'prev') {
       next--
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+      while (files.value[next] && !isImageFile(files.value[next].name)) {
         next--
       }
     }
-    if (isImageFile(sortedFiles.value[next]?.name) ?? '') {
+    if (isImageFile(files.value[next]?.name) ?? '') {
       previewIdx.value = next
       const s = scroller.value
       if (s && !(next >= s.$_startIndex && next <= s.$_endIndex)) {
@@ -203,16 +204,16 @@ export function usePreview(props: Props) {
     let next = previewIdx.value
     if (type === 'next') {
       next++
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+      while (files.value[next] && !isImageFile(files.value[next].name)) {
         next++
       }
     } else if (type === 'prev') {
       next--
-      while (sortedFiles.value[next] && !isImageFile(sortedFiles.value[next].name)) {
+      while (files.value[next] && !isImageFile(files.value[next].name)) {
         next--
       }
     }
-    return isImageFile(sortedFiles.value[next]?.name) ?? ''
+    return isImageFile(files.value[next]?.name) ?? ''
   }
 
   return {
@@ -224,7 +225,7 @@ export function usePreview(props: Props) {
   }
 }
 
-export function useLocation(props: Props) {
+export function useLocation (props: Props) {
   const np = ref<Progress.NProgress>()
   const {
     scroller,
@@ -235,7 +236,8 @@ export function useLocation(props: Props) {
     basePath,
     sortMethod,
     useEventListen,
-    walkModePath
+    walkModePath,
+    eventEmitter
   } = useHookShareState().toRefs()
 
   watch(
@@ -247,10 +249,25 @@ export function useLocation(props: Props) {
     }, 300)
   )
 
+    
+  const handleWalkModeTo = async (path: string) => {
+    await to(path)
+    if (props.walkMode) {
+      await delay()
+      const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
+        (v) => v.type === 'dir'
+      )
+      if (firstDir) {
+        await to(firstDir.fullpath)
+      }
+      await eventEmitter.value.emit('loadNextDir')
+    }
+  }
+
   onMounted(async () => {
     if (!stack.value.length) {
       // 有传入stack时直接使用传入的
-      const resp = await getTargetFolderFiles(props.target, '/')
+      const resp = await getTargetFolderFiles('local', '/')
       stack.value.push({
         files: resp.files,
         curr: '/'
@@ -259,17 +276,8 @@ export function useLocation(props: Props) {
     np.value = new NProgress()
     np.value!.configure({ parent: stackViewEl.value as any })
     if (props.path && props.path !== '/') {
-      await to(props.path)
-      if (props.walkMode) {
-        await nextTick()
-        const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
-          (v) => v.type === 'dir'
-        )
-        if (firstDir) {
-          to(firstDir.fullpath)
-        }
-      }
-    } else if (props.target == 'local') {
+      await handleWalkModeTo(props.path)
+    } else {
       global.conf?.home && to(global.conf.home)
     }
   })
@@ -290,11 +298,11 @@ export function useLocation(props: Props) {
         )
       }
       pane.name = h('div', { style: 'display:flex;align-items:center' }, [
-        h(props.target === 'local' ? DatabaseOutlined : CloudServerOutlined),
+        h(DatabaseOutlined),
         h('span', { class: 'line-clamp-1', style: 'max-width: 256px' }, getTitle())
       ]) as any as string
       global.recent = global.recent.filter((v) => v.key !== pane.key)
-      global.recent.unshift({ path: loc, target: pane.target, key: pane.key })
+      global.recent.unshift({ path: loc, key: pane.key })
       if (global.recent.length > 20) {
         global.recent = global.recent.slice(0, 20)
       }
@@ -311,8 +319,8 @@ export function useLocation(props: Props) {
       np.value?.start()
       const prev = basePath.value
       const { files } = await getTargetFolderFiles(
-        props.target,
-        path.normalize(path.join(...prev, file.name))
+        'local',
+        Path.join(...prev, file.name)
       )
       stack.value.push({
         files,
@@ -329,19 +337,14 @@ export function useLocation(props: Props) {
     }
   }
 
-  const to = async (dir: string, refreshIfCurrPage = true) => {
+  const to = async (dir: string) => {
     const backup = stack.value.slice()
     try {
-      if (!/^((\w:)|\/)/.test(dir)) {
+      if (!Path.isAbsolute(dir)) {
         // 相对路径
-        dir = path.join(global.conf?.sd_cwd ?? '/', dir)
+        dir = Path.join(global.conf?.sd_cwd ?? '/', dir)
       }
-      const frags = dir.split(/\\|\//)
-      if (global.conf?.is_win && props.target === 'local') {
-        frags[0] = frags[0] + '/' // 分割完是c:
-      } else {
-        frags.shift() // /开头的一个是空
-      }
+      const frags = Path.splitPath(dir)
       const currPaths = stack.value.map((v) => v.curr)
       currPaths.shift() // 是 /
       while (currPaths[0] && frags[0]) {
@@ -355,21 +358,20 @@ export function useLocation(props: Props) {
       for (let index = 0; index < currPaths.length; index++) {
         stack.value.pop()
       }
-      if (!frags.length && refreshIfCurrPage) {
+      if (!frags.length) {
         return refresh()
       }
       for (const frag of frags) {
-        if (frag === '') {
-          // 这种情况 D:\Desktop\sd.webui\webui\outputs\
-          break
-        }
         const target = currPage.value?.files.find((v) => v.name === frag)
-        ok(target)
+        if (!target) {
+          console.error({ frags, frag, stack: cloneDeep(stack.value) })
+          throw new Error(`${frag} not found`)
+        }
         await openNext(target)
       }
     } catch (error) {
       message.error(t('moveFailedCheckPath'))
-      console.error(dir, dir.split(/\\|\//), currPage.value)
+      console.error(dir, Path.splitPath(dir), currPage.value)
       stack.value = backup
       throw error
     }
@@ -378,29 +380,33 @@ export function useLocation(props: Props) {
   const refresh = async () => {
     try {
       np.value?.start()
-      if (walkModePath.value && walkModePath.value !== currLocation.value) {
-        await to(walkModePath.value, false)
-        await delay()
-        const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
-          (v) => v.type === 'dir'
-        )
-        if (firstDir) {
-          await to(firstDir.fullpath, false)
-        }
+      if (walkModePath.value) {
+        back(0)
+        await handleWalkModeTo(walkModePath.value)
       } else {
         const { files } = await getTargetFolderFiles(
-          props.target,
+          'local',
           stack.value.length === 1 ? '/' : currLocation.value
         )
         last(stack.value)!.files = files
       }
       scroller.value?.scrollToItem(0)
+      message.success(t('refreshCompleted'))
     } finally {
       np.value?.done()
     }
   }
 
+
+
   useEventListen.value('refresh', refresh)
+
+  const quickMoveTo = (path: string) => {
+    if (props.walkMode) {
+      walkModePath.value = path
+    }
+    handleWalkModeTo(path)
+  }
 
   return {
     refresh,
@@ -411,11 +417,12 @@ export function useLocation(props: Props) {
     currLocation,
     to,
     stack,
-    scroller
+    scroller,
+    quickMoveTo
   }
 }
 
-export function useFilesDisplay(props: Props) {
+export function useFilesDisplay (props: Props) {
   const {
     scroller,
     sortedFiles,
@@ -476,8 +483,8 @@ export function useFilesDisplay(props: Props) {
       const currIdx = parFilesSorted.findIndex((v) => v.name === currPage.value?.curr)
       if (currIdx !== -1) {
         const next = parFilesSorted[currIdx + 1]
-        const p = path.normalize(path.join(currLocation.value, '../', next.name))
-        const r = await getTargetFolderFiles(props.target, p)
+        const p = Path.join(currLocation.value, '../', next.name)
+        const r = await getTargetFolderFiles('local', p)
         const page = currPage.value!
         page.curr = next.name
         if (!page.walkFiles) {
@@ -491,21 +498,21 @@ export function useFilesDisplay(props: Props) {
     } finally {
       loadNextDirLoading.value = false
     }
+  }
+
+  const fill = async () => {
     const s = scroller.value
     // 填充够一页，直到不行为止
-    while (s && s.$_endIndex > sortedFiles.value.length - 10 && canLoadNext.value) {
+    while (!sortedFiles.value.length || s && (s.$_endIndex > (sortedFiles.value.length - 20)) && canLoadNext.value) {
+      await delay(100)
       await loadNextDir()
     }
   }
 
-  state.useEventListen('loadNextDir', loadNextDir)
 
-  const onScroll = debounce(async () => {
-    const s = scroller.value
-    if (s && s.$_endIndex > sortedFiles.value.length - 10 && props.walkMode) {
-      loadNextDir()
-    }
-  }, 300)
+  state.useEventListen('loadNextDir', fill)
+
+  const onScroll = debounce(fill, 300)
 
   return {
     gridItems,
@@ -525,7 +532,7 @@ export function useFilesDisplay(props: Props) {
   }
 }
 
-export function useFileTransfer(props: Props) {
+export function useFileTransfer () {
   const { currLocation, sortedFiles, currPage, multiSelectedIdxs, eventEmitter } =
     useHookShareState().toRefs()
   const recover = () => {
@@ -548,7 +555,6 @@ export function useFileTransfer(props: Props) {
     e.dataTransfer!.setData(
       'text/plain',
       JSON.stringify({
-        from: props.target,
         includeDir,
         loc: currLocation.value,
         path: uniqBy(files, 'fullpath').map((f) => f.fullpath)
@@ -558,39 +564,34 @@ export function useFileTransfer(props: Props) {
 
   const onDrop = async (e: DragEvent) => {
     type Data = {
-      from: typeof props.target
       path: string[]
       loc: string
       includeDir: boolean
     }
     const data = JSON.parse(e.dataTransfer?.getData('text') || '{}') as Data
     console.log(data)
-    if (data.from && data.path && typeof data.includeDir !== 'undefined' && data.loc) {
+    if (data.path && typeof data.includeDir !== 'undefined' && data.loc) {
       const toPath = currLocation.value
-      if (data.from === props.target && data.loc === toPath) {
+      if (data.loc === toPath) {
         return
       }
-      if (props.target == data.from) {
-        const content = h('div', [
-          h('div', `${t('moveSelectedFilesTo')}${toPath}`),
-          h(
-            'ol',
-            data.path.map((v) => v.split(/[/\\]/).pop()).map((v) => h('li', v))
-          )
-        ])
-        Modal.confirm({
-          title: t('confirm'),
-          content,
-          maskClosable: true,
-          async onOk() {
-            await moveFiles(props.target, data.path, toPath)
-            events.emit('removeFiles', { paths: data.path, loc: data.loc })
-            await eventEmitter.value.emit('refresh')
-          }
-        })
-      } else {
-        // 原有的百度云
-      }
+      const content = h('div', [
+        h('div', `${t('moveSelectedFilesTo')}${toPath}`),
+        h(
+          'ol',
+          data.path.map((v) => v.split(/[/\\]/).pop()).map((v) => h('li', v))
+        )
+      ])
+      Modal.confirm({
+        title: t('confirm'),
+        content,
+        maskClosable: true,
+        async onOk () {
+          await moveFiles('local', data.path, toPath)
+          events.emit('removeFiles', { paths: data.path, loc: data.loc })
+          await eventEmitter.value.emit('refresh')
+        }
+      })
     }
   }
   return {
@@ -600,7 +601,7 @@ export function useFileTransfer(props: Props) {
   }
 }
 
-export function useFileItemActions(
+export function useFileItemActions (
   props: Props,
   { openNext }: { openNext: (file: FileNodeInfo) => Promise<void> }
 ) {
@@ -608,12 +609,11 @@ export function useFileItemActions(
   const imageGenInfo = ref('')
   const { sortedFiles, previewIdx, multiSelectedIdxs, stack, currLocation, spinning } =
     useHookShareState().toRefs()
-
+  const nor = Path.normalize
   useEventListen('removeFiles', ({ paths, loc }) => {
-    if (loc !== currLocation.value) {
+    if (nor(loc) !== nor(currLocation.value)) {
       return
     }
-    console.log('removeFiles', { paths, loc })
     const top = last(stack.value)
     if (!top) {
       return
@@ -627,10 +627,9 @@ export function useFileItemActions(
   })
 
   useEventListen('addFiles', ({ files, loc }) => {
-    if (loc !== currLocation.value) {
+    if (nor(loc) !== nor(currLocation.value)) {
       return
     }
-    console.log('addFiles', { files, loc })
     const top = last(stack.value)
     if (!top) {
       return
@@ -639,10 +638,8 @@ export function useFileItemActions(
     top.files.unshift(...files)
   })
 
-  const q = reactive(new FetchQueue())
-  const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo) => {
-    const files = sortedFiles.value
-    const idx = files.findIndex((v) => v.name === file.name)
+  const q = createReactiveQueue()
+  const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo, idx: number) => {
     previewIdx.value = idx
     const idxInSelected = multiSelectedIdxs.value.indexOf(idx)
     if (e.shiftKey) {
@@ -668,12 +665,29 @@ export function useFileItemActions(
     }
   }
 
-  const pathModule = path
+
+
 
   const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfo, idx: number) => {
     console.log(e, file)
     const url = toRawFileUrl(file)
     const path = currLocation.value
+
+    /**
+     * 获取选中的图片信息
+     *  选中的图片信息数组
+     */
+    const getSelectedImg = () => {
+      let selectedFiles: FileNodeInfo[] = []
+      if (multiSelectedIdxs.value.includes(idx)) {
+        // 如果索引已被选中，则获取所有已选中的图片信息
+        selectedFiles = multiSelectedIdxs.value.map((idx) => sortedFiles.value[idx])
+      } else {
+        // 否则，只获取当前图片信息
+        selectedFiles.push(file)
+      }
+      return selectedFiles
+    }
     const copyImgTo = async (tab: ['txt2img', 'img2img', 'inpaint', 'extras'][number]) => {
       if (spinning.value) {
         return
@@ -715,24 +729,21 @@ export function useFileItemActions(
         if (!dir) {
           return message.error(t('unknownSavedDir'))
         }
-        const absolutePath = pathModule.isAbsolute(dir.dir)
-          ? dir.dir
-          : pathModule.normalize(pathModule.join(global.conf!.sd_cwd, dir.dir)).replace(/\\/g, '/')
-        await moveFiles('local', [file.fullpath], absolutePath)
-
-        events.emit('removeFiles', { paths: [file.fullpath], loc: currLocation.value })
-        events.emit('addFiles', { files: [file], loc: absolutePath })
+        const absolutePath = Path.normalizeRelativePathToAbsolute(dir.dir, global.conf?.cwd!)
+        const selectedImg = getSelectedImg()
+        await moveFiles('local', selectedImg.map(v => v.fullpath), absolutePath)
+        events.emit('removeFiles', { paths: selectedImg.map(v => v.fullpath), loc: currLocation.value })
+        events.emit('addFiles', { files: selectedImg, loc: absolutePath })
         break
       }
       case 'openWithWalkMode': {
         stackCache.set(path, stack.value)
         const tab = global.tabList[props.tabIdx]
         const pane: FileTransferTabPane = {
-          type: props.target,
-          target: props.target,
+          type: 'local',
           key: uniqueId(),
           path: file.fullpath,
-          name: props.target === 'local' ? t('local') : t('cloud'),
+          name: t('local'),
           stackKey: path,
           walkMode: true
         }
@@ -744,11 +755,10 @@ export function useFileItemActions(
         stackCache.set(path, stack.value)
         const tab = global.tabList[props.tabIdx]
         const pane: FileTransferTabPane = {
-          type: props.target,
-          target: props.target,
+          type: 'local',
           key: uniqueId(),
           path: file.fullpath,
-          name: props.target === 'local' ? t('local') : t('cloud'),
+          name: t('local'),
           stackKey: path
         }
         tab.panes.push(pane)
@@ -763,11 +773,10 @@ export function useFileItemActions(
           global.tabList[props.tabIdx + 1] = tab
         }
         const pane: FileTransferTabPane = {
-          type: props.target,
-          target: props.target,
+          type: 'local',
           key: uniqueId(),
           path: file.fullpath,
-          name: props.target === 'local' ? t('local') : t('cloud'),
+          name: t('local'),
           stackKey: path
         }
         tab.panes.push(pane)
@@ -780,12 +789,7 @@ export function useFileItemActions(
         break
       }
       case 'deleteFiles': {
-        let selectedFiles: FileNodeInfo[] = []
-        if (multiSelectedIdxs.value.includes(idx)) {
-          selectedFiles = multiSelectedIdxs.value.map((idx) => sortedFiles.value[idx])
-        } else {
-          selectedFiles.push(file)
-        }
+        const selectedFiles = getSelectedImg()
         await new Promise<void>((resolve) => {
           Modal.confirm({
             title: t('confirmDelete'),
@@ -795,9 +799,9 @@ export function useFileItemActions(
               { style: 'max-height:50vh;overflow:auto;' },
               selectedFiles.map((v) => v.fullpath.split(/[/\\]/).pop()).map((v) => h('li', v))
             ),
-            async onOk() {
+            async onOk () {
               const paths = selectedFiles.map((v) => v.fullpath)
-              await deleteFiles(props.target, paths)
+              await deleteFiles('local', paths)
               message.success(t('deleteSuccess'))
               events.emit('removeFiles', { paths: paths, loc: currLocation.value })
               resolve()
@@ -813,6 +817,9 @@ export function useFileItemActions(
         img_path: file.fullpath
       })
       message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
+    }
+    return {
+      
     }
   }
   return {

@@ -2,7 +2,7 @@ import { execSync } from 'child_process'
 import { readFile, rm, writeFile } from 'fs/promises'
 
 const main = async () => {
-  console.log(execSync("yarn build").toString())
+  console.log(execSync("yarn build-only").toString('utf8'))
   try {
     await rm("../javascript/index.js")
   // eslint-disable-next-line no-empty

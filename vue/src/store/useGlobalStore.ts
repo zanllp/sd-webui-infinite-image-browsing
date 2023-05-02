@@ -1,14 +1,13 @@
 import type { GlobalConf } from '@/api'
-import type { UserInfo } from '@/api/user'
 import { i18n, t } from '@/i18n'
 import { getPreferredLang } from '@/i18n'
 import type { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
 import type { ReturnTypeAsync } from '@/util'
-import { cloneDeep, uniqueId } from 'lodash-es'
+import { uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { watch } from 'vue'
 import { ref } from 'vue'
-import { typedEventEmitter, type UniqueId, ID } from 'vue3-ts-util'
+import { type UniqueId, ID } from 'vue3-ts-util'
 
 interface OtherTabPane {
   type: 'empty' | 'global-setting' | 'tag-search'
@@ -26,8 +25,7 @@ interface TagSearchMatchedImageGridTabPane {
 }
 
 export interface FileTransferTabPane {
-  type: 'local' // | 'netdisk'
-  target: 'local' // | 'netdisk' // type 和target一致
+  type: 'local'
   name: string
   readonly key: string
   path?: string
@@ -53,7 +51,7 @@ export const useGlobalStore = defineStore(
     const emptyPane: TabPane = { type: 'empty', name: t('emptyStartPage'), key: uniqueId() }
     const tabList = ref<Tab[]>([ID({ panes: [emptyPane], key: emptyPane.key })])
     const dragingTab = ref<{ tabIdx: number; paneIdx: number }>()
-    const recent = ref(new Array<{ path: string; key: string; target: string }>())
+    const recent = ref(new Array<{ path: string; key: string; }>())
     const time = Date.now()
     const lastTabListRecord = ref<[{ time: number; tabs: Tab[] }, { time: number; tabs: Tab[] }]>() // [curr,last]
     const saveRecord = () => {
