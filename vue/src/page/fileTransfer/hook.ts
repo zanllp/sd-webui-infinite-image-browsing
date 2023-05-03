@@ -490,6 +490,7 @@ export function useFilesDisplay (props: Props) {
         console.log('curr page files length', currPage.value?.files.length)
       }
     } catch (e) {
+      console.error("loadNextDir",e)
       canLoadNext.value = false
     } finally {
       loadNextDirLoading.value = false
