@@ -317,11 +317,7 @@ export function useLocation (props: Props) {
     }
     try {
       np.value?.start()
-      const prev = basePath.value
-      const { files } = await getTargetFolderFiles(
-        'local',
-        Path.join(...prev, file.name)
-      )
+      const { files } = await getTargetFolderFiles('local',file.fullpath)
       stack.value.push({
         files,
         curr: file.name

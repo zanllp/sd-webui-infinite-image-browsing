@@ -275,7 +275,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         import mimetypes
 
         if not os.path.exists(filename):
-            raise HTTPException(status_code=404) 
+            raise HTTPException(status_code=404)
         if not os.path.isfile(filename):
             raise HTTPException(status_code=400, detail=f"{filename} is not a file")
         # 根据文件后缀名获取媒体类型
@@ -364,20 +364,27 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             x.to_file_info() for x in ImageTag.get_images_by_tags(conn, {"and": ids})
         ]
 
-    @app.get(db_pre+ "/img_selected_custom_tag")
+    @app.get(db_pre + "/img_selected_custom_tag")
     async def get_img_selected_custom_tag(path: str):
         path = os.path.normpath(path)
+        if not need_cache(path):
+            return []
         conn = DataBase.get_conn()
         img = DbImg.get(conn, path)
         if not img:
             if DbImg.count(conn) == 0:
-                raise HTTPException(400, "你需要先通过图像搜索页生成索引" if locale == "zh" else "You need to generate an index through the image search page first.")
+                raise HTTPException(
+                    400,
+                    "你需要先通过图像搜索页生成索引"
+                    if locale == "zh"
+                    else "You need to generate an index through the image search page first.",
+                )
             update_image_data([os.path.dirname(path)])
             img = DbImg.get(conn, path)
         assert img
         # tags = Tag.get_all_custom_tag()
-        return ImageTag.get_tags_for_image(conn, img.id, type='custom')
-    
+        return ImageTag.get_tags_for_image(conn, img.id, type="custom")
+
     class ToggleCustomTagToImgReq(BaseModel):
         img_path: str
         tag_id: int
@@ -386,8 +393,17 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     async def toggle_custom_tag_to_img(req: ToggleCustomTagToImgReq):
         conn = DataBase.get_conn()
         path = os.path.normpath(req.img_path)
+        if not need_cache(path):
+            raise HTTPException(
+                400,
+                "非 Stable Diffusion webui 文件夹下不支持切换 tag，如果有需要请提 Issue"
+                if locale == "zh"
+                else "Tag toggleing is not supported outside the Stable Diffusion webui folder. Please open an issue if you have any questions.",
+            )
         img = DbImg.get(conn, path)
-        tags = ImageTag.get_tags_for_image(conn=conn, image_id=img.id, type='custom', tag_id=req.tag_id)
+        tags = ImageTag.get_tags_for_image(
+            conn=conn, image_id=img.id, type="custom", tag_id=req.tag_id
+        )
         is_remove = len(tags)
         if is_remove:
             ImageTag.remove(conn, img.id, tags[0].id)
