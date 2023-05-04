@@ -3,7 +3,7 @@
 
 ### Excellent Performance
 - Once caching is generated, images can be displayed in just a few milliseconds.
-- Images are displayed by default using thumbnails with a default size of 256 pixels. You can adjust the size of the thumbnails on the extended global settings page.
+- Images are displayed by default using thumbnails with a default size of 256 pixels. You can adjust the size of the thumbnails in the global settings page.
 - Extensive optimizations have been made for image preview, but you need to ensure that the file paths are different for different files. It is recommended to use a format with the generating time as the file name.
 
 ### 'Walk' Mode
