@@ -8,6 +8,54 @@ from typing import Dict
 import piexif
 import piexif.helper
 
+sd_img_dirs = [
+    "outdir_txt2img_samples",
+    "outdir_img2img_samples",
+    "outdir_save",
+    "outdir_extras_samples",
+    "outdir_grids",
+    "outdir_img2img_grids",
+    "outdir_samples",
+    "outdir_txt2img_grids",
+]
+
+
+def get_sd_webui_conf(**kwargs):
+    try:
+        from modules.shared import opts
+        return opts.data
+    except:
+        pass
+    try:
+        with open(kwargs.get("sd_webui_config"), "r") as f:
+            import json
+            return json.loads(f.read())
+    except:
+        pass
+    return {}
+
+
+def get_valid_img_dirs(
+    conf,
+    keys=sd_img_dirs,
+):
+    # 获取配置项
+    paths = [conf.get(key) for key in keys]
+
+    # 判断路径是否有效并转为绝对路径
+    abs_paths = []
+    for path in paths:
+        if not path or len(path.strip()) == 0:
+            continue
+        if os.path.isabs(path):  # 已经是绝对路径
+            abs_path = path
+        else:  # 转为绝对路径
+            abs_path = os.path.join(os.getcwd(), path)
+        if os.path.exists(abs_path):  # 判断路径是否存在
+            abs_paths.append(abs_path)
+
+    return abs_paths
+
 
 def human_readable_size(size_bytes):
     """

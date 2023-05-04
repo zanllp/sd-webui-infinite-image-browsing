@@ -10,6 +10,9 @@ from scripts.tool import (
     is_win,
     cwd,
     locale,
+    get_windows_drives,
+    get_sd_webui_conf,
+    get_valid_img_dirs,
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -22,7 +25,6 @@ import hashlib
 from urllib.parse import urlencode
 from scripts.db.datamodel import DataBase, Image as DbImg, Tag, Floder, ImageTag
 from scripts.db.update_image_data import update_image_data
-from scripts.tool import get_windows_drives
 from scripts.logger import logger
 
 
@@ -37,22 +39,6 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         name="infinite_image_browsing-fe-static",
     )
 
-    def get_sd_webui_conf():
-        try:
-            from modules.shared import opts
-
-            return opts.data
-        except:
-            pass
-        try:
-            with open(kwargs.get("sd_webui_config"), "r") as f:
-                import json
-
-                return json.loads(f.read())
-        except:
-            pass
-        return {}
-
     @app.get(f"{pre}/hello")
     async def greeting():
         return "hello"
@@ -65,7 +51,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         except Exception as e:
             print(e)
         return {
-            "global_setting": get_sd_webui_conf(),
+            "global_setting": get_sd_webui_conf(**kwargs),
             "cwd": cwd,
             "is_win": is_win,
             "home": os.environ.get("USERPROFILE") if is_win else os.environ.get("HOME"),
@@ -222,38 +208,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     forever_cache_path = []
     img_search_dirs = []
     try:
-
-        def get_config_path(
-            conf,
-            keys=[
-                "outdir_txt2img_samples",
-                "outdir_img2img_samples",
-                "outdir_save",
-                "outdir_extras_samples",
-                "outdir_grids",
-                "outdir_img2img_grids",
-                "outdir_samples",
-                "outdir_txt2img_grids",
-            ],
-        ):
-            # 获取配置项
-            paths = [conf.get(key) for key in keys]
-
-            # 判断路径是否有效并转为绝对路径
-            abs_paths = []
-            for path in paths:
-                if not path or len(path.strip()) == 0:
-                    continue
-                if os.path.isabs(path):  # 已经是绝对路径
-                    abs_path = path
-                else:  # 转为绝对路径
-                    abs_path = os.path.join(os.getcwd(), path)
-                if os.path.exists(abs_path):  # 判断路径是否存在
-                    abs_paths.append(abs_path)
-
-            return abs_paths
-
-        forever_cache_path = get_config_path(get_sd_webui_conf())
+        forever_cache_path = get_valid_img_dirs(get_sd_webui_conf(**kwargs))
         img_search_dirs = forever_cache_path
     except:
         pass

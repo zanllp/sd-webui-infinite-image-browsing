@@ -21,7 +21,7 @@ import * as Path from '@/util/path'
 import type Progress from 'nprogress'
 // @ts-ignore
 import NProgress from 'multi-nprogress'
-import { Modal, message } from 'ant-design-vue'
+import { Modal, message, notification } from 'ant-design-vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
@@ -249,7 +249,7 @@ export function useLocation (props: Props) {
     }, 300)
   )
 
-    
+
   const handleWalkModeTo = async (path: string) => {
     await to(path)
     if (props.walkMode) {
@@ -317,7 +317,7 @@ export function useLocation (props: Props) {
     }
     try {
       np.value?.start()
-      const { files } = await getTargetFolderFiles('local',file.fullpath)
+      const { files } = await getTargetFolderFiles('local', file.fullpath)
       stack.value.push({
         files,
         curr: file.name
@@ -490,7 +490,7 @@ export function useFilesDisplay (props: Props) {
         console.log('curr page files length', currPage.value?.files.length)
       }
     } catch (e) {
-      console.error("loadNextDir",e)
+      console.error("loadNextDir", e)
       canLoadNext.value = false
     } finally {
       loadNextDirLoading.value = false
@@ -696,7 +696,9 @@ export function useFileItemActions (
           '#iib_hidden_img_update_trigger'
         )! as HTMLButtonElement
         btn.click() // 触发图像组件更新
+        const warnId = setTimeout(() => notification.warn({ message: t('long_loading'), duration: 20 }), 5000)
         ok(await genInfoCompleted(), 'genInfoCompleted timeout') // 等待消息生成完成
+        clearTimeout(warnId)
         const tabBtn = gradioApp().querySelector(`#iib_hidden_tab_${tab}`) as HTMLButtonElement
         tabBtn.click() // 触发粘贴
       } catch (error) {
@@ -816,7 +818,7 @@ export function useFileItemActions (
       message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
     }
     return {
-      
+
     }
   }
   return {
