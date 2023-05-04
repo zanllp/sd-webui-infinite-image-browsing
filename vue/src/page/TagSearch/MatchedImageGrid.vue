@@ -62,7 +62,7 @@ const { previewIdx, previewing, onPreviewVisibleChange, previewImgMove, canPrevi
 
 const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
   stack.value = [{ curr: '', files: images.value! }] // hack，for delete multi files
-  const idxs = multiSelectedIdxs.value // when click confirm ok button, idxs will be reset
+  const idxs = multiSelectedIdxs.value.includes(idx) ? multiSelectedIdxs.value : [idx] // when click confirm ok button, idxs will be reset
   await onContextMenuClick(e, file, idx)
   if (e.key === 'deleteFiles') {
     images.value = images.value!.filter((_, idx) => !idxs.includes(idx))
