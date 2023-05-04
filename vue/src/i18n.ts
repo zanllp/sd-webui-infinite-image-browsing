@@ -128,9 +128,11 @@ const zh = {
   openContextMenu: '打开上下文菜单',
   copyPrompt: '复制提示',
   "refreshCompleted": "刷新完成",
-  "walk-mode-move-message": "在walk模式下仅允许使用“快速移动”移动位置"
+  "walk-mode-move-message": "在walk模式下仅允许使用“快速移动”移动位置",
+  "long_loading": "已经连续加载超过5秒，如果你认为不是网络问题的话，请尝试关掉VPN或者添加启动参数 --no-gradio-queue。如果还是不行，请提Issue。"
 }
 const en: Record<keyof typeof zh, string> = {
+  "long_loading": "Loading has been continuing for more than 5 seconds. If you don't think it's a network issue, please try turning off your VPN or adding the startup parameter --no-gradio-queue. If it still doesn't work, please submit an issue.",
   "walk-mode-move-message": "Moving position is only allowed using 'Quick Move' in walk mode",
   "refreshCompleted": "Refresh completed",
   addedTagToImage: 'Tag has been added to this image',
