@@ -219,7 +219,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         """
         try:
             for parent_path in parent_paths:
-                if os.path.commonpath([path, parent_path]) == parent_path:
+                if os.path.commonpath([os.path.normpath(path), parent_path]) == parent_path:
                     return True
         except:
             pass

@@ -52,7 +52,7 @@ def get_valid_img_dirs(
         else:  # 转为绝对路径
             abs_path = os.path.join(os.getcwd(), path)
         if os.path.exists(abs_path):  # 判断路径是否存在
-            abs_paths.append(abs_path)
+            abs_paths.append(os.path.normpath(abs_path))
 
     return abs_paths
 
