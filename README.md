@@ -8,11 +8,12 @@
 - Extensive optimizations have been made for image preview. However, it is important to make sure that each file has a unique file path. It is recommended to use a format with the created time as the file name.[See FAQ](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90)
 
 ### 'Walk' Mode
-- Browse images automatically by loading the next folder `(similar to os.walk)`, allowing you to browse all images without paging.
+- Automatically load the next folder `(similar to os.walk)`, allowing you to browse all images without paging.
 - Tested to work properly with over 27,000 files.
 
 ### Image Search & Favorite
-- Supports image search using Prompt, Model, Lora, etc.
+- Supports image search using Prompt, Model, Lora, etc. 
+- Will automatically convert the parameters of the image into tags.
 - Tags will be listed based on their frequency of use.
 - Supports tag autocomplete, translation, and customization.
 - Image favorite can be achieved by toggling custom tags for images in the right-click menu.
