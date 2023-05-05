@@ -79,6 +79,7 @@ const restoreRecord = () => {
           $t('restoreLastRecord')
         }}</a>
       </div>
+      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank" class="last-record" style="color: unset;">FAQ / 常见问题</a>
     </div>
     <div class="content">
       <div class="quick-start" v-if="walkModeSupportedDir.length">

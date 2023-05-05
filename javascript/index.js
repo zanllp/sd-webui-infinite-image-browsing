@@ -8,12 +8,14 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
-    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-3dcbb3d9.js"></script>
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-7887b034.js"></script>
     <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-19e73083.css">
   </head>
 
   <body>
-    <div id="zanllp_dev_gradio_fe"></div>
+    <div id="zanllp_dev_gradio_fe">
+      It seems to have failed to load, click on <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank" >FAQ</a> for help</div>
+    </div>
     
   </body>
 </html>
