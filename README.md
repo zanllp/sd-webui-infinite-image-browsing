@@ -73,13 +73,3 @@ https://user-images.githubusercontent.com/25872019/230768207-daab786b-d4ab-489f-
 ### Dark mode
 
 <img width="768" alt="image" src="https://user-images.githubusercontent.com/25872019/230064879-c95866ac-999d-4d4b-87ea-3e38c8479415.png">
-
-## FAQ
-
-
-
-## How to reduce mental burden when opening a large number of sub-folders within a large folder for viewing?
-
-Recommend using the right-click menu of the folder, click 'Open in new tab' or 'Open on the right'.
-
-<img width="878" alt="image" src="https://user-images.githubusercontent.com/25872019/233801373-8d21f237-b6e4-4b0a-81d0-fee2b8e370f4.png">
