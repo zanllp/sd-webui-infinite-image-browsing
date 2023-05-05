@@ -728,7 +728,7 @@ export function useFileItemActions (
         if (!dir) {
           return message.error(t('unknownSavedDir'))
         }
-        const absolutePath = Path.normalizeRelativePathToAbsolute(dir.dir, global.conf?.cwd!)
+        const absolutePath = Path.normalizeRelativePathToAbsolute(dir.dir, global.conf?.sd_cwd!)
         const selectedImg = getSelectedImg()
         await moveFiles('local', selectedImg.map(v => v.fullpath), absolutePath)
         events.emit('removeFiles', { paths: selectedImg.map(v => v.fullpath), loc: currLocation.value })
