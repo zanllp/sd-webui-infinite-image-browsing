@@ -23,8 +23,8 @@ export const getAutoCompletedTagList = async ({
   )
   const pathMap = {
     ...picked,
-    embeddings: 'embeddings',
-    hypernetworks: 'models/hypernetworks',
+    // embeddings: 'embeddings',
+    // hypernetworks: 'models/hypernetworks',
     cwd: sd_cwd,
     home
   }
@@ -40,8 +40,8 @@ export const getAutoCompletedTagList = async ({
     outdir_img2img_grids: t('i2i-grid'),
     outdir_samples: t('image'),
     outdir_txt2img_grids: t('t2i-grid'),
-    hypernetworks: t('hypernetworks'),
-    embeddings: 'Embedding',
+    // hypernetworks: t('hypernetworks'),
+    // embeddings: 'Embedding',
     cwd: t('workingFolder'),
     home: 'home'
   }
