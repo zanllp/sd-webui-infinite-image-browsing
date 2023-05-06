@@ -344,7 +344,7 @@ export function useLocation (props: Props) {
       const currPaths = stack.value.map((v) => v.curr)
       currPaths.shift() // 是 /
       while (currPaths[0] && frags[0]) {
-        if (currPaths[0] !== frags[0]) {
+        if (currPaths[0].toLowerCase() !== frags[0].toLowerCase()) {
           break
         } else {
           currPaths.shift()
@@ -358,7 +358,7 @@ export function useLocation (props: Props) {
         return refresh()
       }
       for (const frag of frags) {
-        const target = currPage.value?.files.find((v) => v.name === frag)
+        const target = currPage.value?.files.find((v) => v.name.toLowerCase() === frag.toLowerCase())
         if (!target) {
           console.error({ frags, frag, stack: cloneDeep(stack.value) })
           throw new Error(`${frag} not found`)
