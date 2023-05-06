@@ -333,6 +333,14 @@ export function useLocation (props: Props) {
     }
   }
 
+  const isDirNameEqual = (a: string, b: string) => {
+    ok(global.conf, "global.conf load failed")
+    if (global.conf.is_win) { // window下忽略
+      return a.toLowerCase() == b.toLowerCase()
+    }
+    return a == b
+  }
+
   const to = async (dir: string) => {
     const backup = stack.value.slice()
     try {
@@ -344,7 +352,7 @@ export function useLocation (props: Props) {
       const currPaths = stack.value.map((v) => v.curr)
       currPaths.shift() // 是 /
       while (currPaths[0] && frags[0]) {
-        if (currPaths[0].toLowerCase() !== frags[0].toLowerCase()) {
+        if (!isDirNameEqual(currPaths[0], frags[0])) {
           break
         } else {
           currPaths.shift()
@@ -358,7 +366,7 @@ export function useLocation (props: Props) {
         return refresh()
       }
       for (const frag of frags) {
-        const target = currPage.value?.files.find((v) => v.name.toLowerCase() === frag.toLowerCase())
+        const target = currPage.value?.files.find((v) => isDirNameEqual(v.name, frag))
         if (!target) {
           console.error({ frags, frag, stack: cloneDeep(stack.value) })
           throw new Error(`${frag} not found`)
@@ -366,7 +374,7 @@ export function useLocation (props: Props) {
         await openNext(target)
       }
     } catch (error) {
-      message.error(t('moveFailedCheckPath'))
+      message.error(t('moveFailedCheckPath') + (error instanceof Error ? error.message : ''))
       console.error(dir, Path.splitPath(dir), currPage.value)
       stack.value = backup
       throw error
