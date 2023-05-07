@@ -19,10 +19,10 @@
 - Image favorite can be achieved by toggling custom tags for images in the right-click menu.
 
 ### View Image & `Send To`
-- Supports viewing image generation information.
+- Supports viewing image generation information. Also supported in full-screen preview mode.
 - Supports sending images to other tabs.
 - Supports full-screen preview.
-- Supports moving images in full-screen preview mode.
+- Support navigating to the previous or next image in full-screen preview mode by pressing arrow keys or clicking buttons.
 
 ### Standalone Operation
 - Supports standalone operation without sd-webui.
