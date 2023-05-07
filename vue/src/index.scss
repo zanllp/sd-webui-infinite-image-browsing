@@ -126,6 +126,9 @@ body {
   .ant-tabs > div.ant-tabs-nav {
     margin: 0;
   }
+  .ant-modal-wrap {
+    z-index: 10000;
+  }
 
   .ant-message {
     z-index: 10000;

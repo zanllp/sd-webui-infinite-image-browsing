@@ -25,7 +25,7 @@
     "splitpanes": "^3.1.5",
     "vue": "^3.2.47",
     "vue-i18n": "^9.2.2",
-    "vue3-ts-util": "^0.8.2"
+    "vue3-ts-util": "^1.0.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.2.0",
