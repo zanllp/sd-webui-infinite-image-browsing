@@ -57,7 +57,7 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
       .slice(global.conf?.is_win ? 1 : 0)
   )
   const currLocation = computed(() => Path.join(...basePath.value))
-  const sortMethod = ref(SortMethod.DATE_DESC)
+  const sortMethod = ref(SortMethod.CREATED_TIME_DESC)
   const sortedFiles = computed(() => {
     if (!currPage.value) {
       return []

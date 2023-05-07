@@ -56,6 +56,7 @@ class Image:
             "type": "file",
             "id": self.id,
             "date": self.date,
+            "created_date": self.date,
             "size": human_readable_size(self.size),
             "bytes": self.size,
             "name": os.path.basename(self.path),

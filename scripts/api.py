@@ -13,6 +13,7 @@ from scripts.tool import (
     get_windows_drives,
     get_sd_webui_conf,
     get_valid_img_dirs,
+    get_created_date
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -139,6 +140,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                         if not os.path.exists(path):
                             continue
                         date = get_modified_date(path)
+                        created_time = get_created_date(path)
                         if os.path.isfile(path):
                             bytes = os.path.getsize(path)
                             size = human_readable_size(bytes)
@@ -149,6 +151,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                                     "size": size,
                                     "name": item,
                                     "bytes": bytes,
+                                    "created_time": created_time,
                                     "fullpath": os.path.normpath(
                                         os.path.join(folder_path, item)
                                     ),
@@ -159,6 +162,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                                 {
                                     "type": "dir",
                                     "date": date,
+                                    "created_time": created_time,
                                     "size": "-",
                                     "name": item,
                                     "fullpath": os.path.normpath(

@@ -196,6 +196,11 @@ def get_modified_date(folder_path: str):
     )
 
 
+def get_created_date(folder_path: str):
+    return datetime.fromtimestamp(os.path.getctime(folder_path)).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
 def unique_by(seq, key_func):
     seen = set()
     return [x for x in seq if not (key := key_func(x)) in seen and not seen.add(key)]

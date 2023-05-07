@@ -3,6 +3,7 @@ import { axiosInst } from '.'
 export interface FileNodeInfo {
   size: string
   type: 'file' | 'dir'
+  created_time: string
   name: string
   date: string
   bytes: number
