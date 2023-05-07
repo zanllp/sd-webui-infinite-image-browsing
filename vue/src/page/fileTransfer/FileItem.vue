@@ -37,6 +37,9 @@ const tags = computed(() => {
   }, [] as (Tag & { selected: boolean })[])
 })
 const onRightClick = () => {
+  if (props?.file?.type !== 'file') {
+    return
+  }
   q.pushAction(() => getImageSelectedCustomTag(props.file.fullpath)).res.then((res) => {
     selectedTag.value = res
   })

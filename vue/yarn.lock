@@ -2846,10 +2846,10 @@ vue-types@^3.0.0:
   dependencies:
     is-plain-object "3.0.1"
 
-vue3-ts-util@^0.8.2:
-  version "0.8.2"
-  resolved "https://registry.yarnpkg.com/vue3-ts-util/-/vue3-ts-util-0.8.2.tgz#d0d9dfa6077c65bd124ba5fcf0e4ed32906be3ab"
-  integrity sha512-u3NCzJSt9eICW9KmODr9kJB8W9YQd2p/LCFPvBAfLS77MzNUTa6IwmgXY/YCKXWP+2y8eNLkPUzwBl+5Xze2LA==
+vue3-ts-util@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/vue3-ts-util/-/vue3-ts-util-1.0.0.tgz#9d1e0feb1962cca60021d4460c277bd4fd8c9fec"
+  integrity sha512-G3lRTBon2R6vFthFK0r0ZGDcLmOE4jA6ryrx0PoVC3/oPSETi//YVC8HhM3praqKA/QFYGou4tbXUcHbHHtvtA==
   dependencies:
     dayjs "^1.11.7"
     eventemitter3 "^5.0.0"

@@ -37,8 +37,8 @@ export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) =>
   `/infinite_image_browsing/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
 
 const { eventEmitter: events, useEventListen } = typedEventEmitter<{
-  removeFiles: { paths: string[]; loc: string }
-  addFiles: { files: FileNodeInfo[]; loc: string }
+  removeFiles(_:{ paths: string[]; loc: string }): void
+  addFiles(_:{ files: FileNodeInfo[]; loc: string }): void
 }>()
 
 export interface Scroller {
@@ -104,8 +104,8 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     walkModePath,
     props,
     ...typedEventEmitter<{
-      loadNextDir: void
-      refresh: void,
+      loadNextDir(): Promise<void>
+      refresh(): Promise<void>,
     }>()
   }
 })
@@ -215,6 +215,15 @@ export function usePreview (props: Props, custom?: { files: Ref<FileNodeInfo[] |
     }
     return isImageFile(files.value[next]?.name) ?? ''
   }
+  
+  useEventListen('removeFiles', async () => {
+    if (previewing.value && !state.sortedFiles[previewIdx.value]) { 
+      message.info(t('manualExitFullScreen'), 5)
+      await delay(500);
+      (document.querySelector('.ant-image-preview-operations-operation .anticon-close') as HTMLDivElement)?.click()
+      previewIdx.value = -1
+    }
+  })
 
   return {
     previewIdx,
@@ -233,7 +242,6 @@ export function useLocation (props: Props) {
     stack,
     currPage,
     currLocation,
-    basePath,
     sortMethod,
     useEventListen,
     walkModePath,
