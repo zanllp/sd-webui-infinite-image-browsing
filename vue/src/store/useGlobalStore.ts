@@ -48,7 +48,8 @@ export const useGlobalStore = defineStore(
     const enableThumbnail = ref(true)
     const stackViewSplit = ref(50)
     const autoUploadRecvDir = ref('/')
-    const emptyPane: TabPane = { type: 'empty', name: t('emptyStartPage'), key: uniqueId() }
+    const createEmptyPane = (): TabPane =>  ({ type: 'empty', name: t('emptyStartPage'), key: uniqueId() })
+    const emptyPane = createEmptyPane()
     const tabList = ref<Tab[]>([ID({ panes: [emptyPane], key: emptyPane.key })])
     const dragingTab = ref<{ tabIdx: number; paneIdx: number }>()
     const recent = ref(new Array<{ path: string; key: string; }>())
@@ -112,6 +113,7 @@ export const useGlobalStore = defineStore(
 
     const longPressOpenContextMenu = ref(false)
     return {
+      createEmptyPane,
       lang,
       tabList,
       conf,

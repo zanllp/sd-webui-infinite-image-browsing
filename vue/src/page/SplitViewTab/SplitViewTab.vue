@@ -7,8 +7,8 @@ import { defineAsyncComponent, watch, ref, nextTick } from 'vue'
 import { key } from '@/util'
 import { uniqueId } from 'lodash-es'
 import edgeTrigger from './edgeTrigger.vue'
-import { message } from 'ant-design-vue'
 import { t } from '@/i18n'
+import { ID } from 'vue3-ts-util'
 const global = useGlobalStore()
 const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> = {
   local: defineAsyncComponent(() => import('@/page/fileTransfer/stackView.vue')),
@@ -26,9 +26,6 @@ const onEdit = (idx: number, targetKey: any, action: string) => {
     tab.panes.push(empty)
     tab.key = empty.key
   } else {
-    if (global.tabList.reduce((p, c) => p + c.panes.length, 0) === 1) {
-      return message.error(t('deleteNotAllowedWithOnePaneLeft'))
-    }
     const paneIdx = tab.panes.findIndex((v) => v.key === targetKey)
     if (tab.key === targetKey) {
       // 只有在前台时才跳过去
@@ -37,6 +34,10 @@ const onEdit = (idx: number, targetKey: any, action: string) => {
     tab.panes.splice(paneIdx, 1)
     if (tab.panes.length === 0) {
       global.tabList.splice(idx, 1)
+    }
+    if (global.tabList.length === 0) {
+      const pane = global.createEmptyPane()
+      global.tabList.push(ID({ panes: [pane], key: pane.key }))
     }
   }
 }
