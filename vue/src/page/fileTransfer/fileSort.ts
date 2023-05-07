@@ -7,7 +7,9 @@ export const sortMethodMap: Record<SortMethod, string> = {
   'name-asc': t('sortByNameAscending'),
   'name-desc': t('sortByNameDescending'),
   'size-asc': t('sortBySizeAscending'),
-  'size-desc': t('sortBySizeDescending')
+  'size-desc': t('sortBySizeDescending'),
+  'created-time-asc': t('sortByCreatedDateAscending'),
+  'created-time-desc': t('sortByCreatedDateDescending')
 }
 export enum SortMethod {
   DATE_ASC = 'date-asc',
@@ -15,7 +17,9 @@ export enum SortMethod {
   NAME_ASC = 'name-asc',
   NAME_DESC = 'name-desc',
   SIZE_ASC = 'size-asc',
-  SIZE_DESC = 'size-desc'
+  SIZE_DESC = 'size-desc',
+  CREATED_TIME_ASC = 'created-time-asc',
+  CREATED_TIME_DESC = 'created-time-desc'
 }
 
 type FileList = FileNodeInfo[]
@@ -29,6 +33,12 @@ const compareByType = (a: FileNodeInfo, b: FileNodeInfo) => {
 const compareByDate = (a: FileNodeInfo, b: FileNodeInfo) => {
   const da = Date.parse(a.date)
   const db = Date.parse(b.date)
+  return da - db
+}
+
+const compareByCreatedDate = (a: FileNodeInfo, b: FileNodeInfo) => {
+  const da = Date.parse(a.created_time)
+  const db = Date.parse(b.created_time)
   return da - db
 }
 
@@ -49,6 +59,10 @@ export const sortFiles = (files: FileList, method: SortMethod) => {
         return compareByDate(a, b)
       case SortMethod.DATE_DESC:
         return compareByDate(b, a)
+      case SortMethod.CREATED_TIME_ASC:
+        return compareByCreatedDate(a, b)
+      case SortMethod.CREATED_TIME_DESC:
+        return compareByCreatedDate(b, a)
       case SortMethod.NAME_ASC:
         return compareByName(a, b)
       case SortMethod.NAME_DESC:
