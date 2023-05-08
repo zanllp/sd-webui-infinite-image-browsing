@@ -728,8 +728,10 @@ export function useFileItemActions (
         return window.open(url)
       case 'download':
         return window.open(toRawFileUrl(file, true))
-      case 'copyPreviewUrl':
-        return copy2clipboardI18n(location.host + url)
+      case 'copyPreviewUrl':{
+        const origin = Array.from(location.ancestorOrigins)[0]
+        return copy2clipboardI18n(origin ? (origin + url) : (location.origin + url))
+      }
       case 'send2txt2img':
         return copyImgTo('txt2img')
       case 'send2img2img':
