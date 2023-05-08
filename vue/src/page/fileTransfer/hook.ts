@@ -8,12 +8,11 @@ import {
   type SearchSelectConv,
   ok,
   createTypedShareStateHook,
-  copy2clipboard,
   delay,
   typedEventEmitter,
   ID
 } from 'vue3-ts-util'
-import { createReactiveQueue, gradioApp, isImageFile } from '@/util'
+import { createReactiveQueue, gradioApp, isImageFile, copy2clipboardI18n } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
 import { cloneDeep, debounce, last, range, uniqBy, uniqueId } from 'lodash-es'
@@ -317,7 +316,7 @@ export function useLocation (props: Props) {
     }, 300)
   )
 
-  const copyLocation = () => copy2clipboard(currLocation.value)
+  const copyLocation = () => copy2clipboardI18n(currLocation.value)
 
   const openNext = async (file: FileNodeInfo) => {
     if (file.type !== 'dir') {
@@ -729,8 +728,10 @@ export function useFileItemActions (
         return window.open(url)
       case 'download':
         return window.open(toRawFileUrl(file, true))
-      case 'copyPreviewUrl':
-        return copy2clipboard(location.host + url)
+      case 'copyPreviewUrl':{
+        const origin = Array.from(location.ancestorOrigins)[0]
+        return copy2clipboardI18n(origin ? (origin + url) : (location.origin + url))
+      }
       case 'send2txt2img':
         return copyImgTo('txt2img')
       case 'send2img2img':

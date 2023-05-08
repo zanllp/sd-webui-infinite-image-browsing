@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { copy2clipboard } from 'vue3-ts-util'
 import fileItemCell from '@/page/fileTransfer/FileItem.vue'
 import type { FileNodeInfo } from '@/api/files'
 import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
@@ -19,7 +18,7 @@ import {
 import { identity } from 'lodash-es'
 import { getImagesByTags } from '@/api/db'
 import { watch } from 'vue'
-import { createReactiveQueue } from '@/util'
+import { copy2clipboardI18n, createReactiveQueue } from '@/util'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
 import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 
@@ -82,7 +81,7 @@ const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
                               white-space: pre-line;
                               max-height: 70vh;
                               overflow: auto;
-                            " @dblclick="copy2clipboard(imageGenInfo, 'copied')">
+                            " @dblclick="copy2clipboardI18n(imageGenInfo)">
             <div class="hint">{{ $t('doubleClickToCopy') }}</div>
             {{ imageGenInfo }}
           </div>

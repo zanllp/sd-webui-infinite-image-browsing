@@ -7,7 +7,7 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { debounce } from 'lodash-es'
 import { computed, watch } from 'vue'
 import { ref } from 'vue'
-import { copy2clipboard } from 'vue3-ts-util'
+import { copy2clipboardI18n } from '@/util'
 import { useResizeAndDrag } from './useResize'
 import {
   DragOutlined,
@@ -133,7 +133,7 @@ function todiv(p: any) {
               </a-menu>
             </template>
           </a-dropdown>
-          <a-button @click="copy2clipboard(imageGenInfo, 'copied')">{{
+          <a-button @click="copy2clipboardI18n(imageGenInfo)">{{
             $t('copyPrompt')
           }}</a-button>
         </template>
