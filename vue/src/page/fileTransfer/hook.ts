@@ -712,7 +712,8 @@ export function useFileItemActions (
         )! as HTMLButtonElement
         btn.click() // 触发图像组件更新
         const warnId = setTimeout(() => notification.warn({ message: t('long_loading'), duration: 20 }), 5000)
-        ok(await genInfoCompleted(), 'genInfoCompleted timeout') // 等待消息生成完成
+        // ok(await genInfoCompleted(), 'genInfoCompleted timeout') // 等待消息生成完成
+        await genInfoCompleted() // 等待消息生成完成
         clearTimeout(warnId)
         const tabBtn = gradioApp().querySelector(`#iib_hidden_tab_${tab}`) as HTMLButtonElement
         tabBtn.click() // 触发粘贴
