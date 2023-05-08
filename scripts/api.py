@@ -261,7 +261,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     # 等待图片信息生成完成
     @app.get(pre + "/gen_info_completed")
     async def api_set_send_img_path():
-        for _ in range(200):  # 等待60s
+        for _ in range(120):  # 等待12s
             if send_img_path["value"] == "":  # 等待setup里面生成完成
                 return True
             v = send_img_path["value"]
