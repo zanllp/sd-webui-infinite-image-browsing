@@ -14,7 +14,7 @@ import {
   stackCache,
   useMobileOptimization
 } from './hook'
-import { copy2clipboard, SearchSelect } from 'vue3-ts-util'
+import { SearchSelect } from 'vue3-ts-util'
 
 import 'multi-nprogress/nprogress.css'
 import FolderNavigator from './folderNavigator.vue'
@@ -25,6 +25,7 @@ import { watch } from 'vue'
 import FileItem from './FileItem.vue'
 import fullScreenContextMenu from './fullScreenContextMenu.vue'
 import 'antd-vue-volar'
+import { copy2clipboardI18n } from '@/util'
 
 const global = useGlobalStore()
 const props = defineProps<{
@@ -103,7 +104,7 @@ watch(
                 max-height: 70vh;
                 overflow: auto;
                 z-index: 9999;
-              " @dblclick="copy2clipboard(imageGenInfo, 'copied')">
+              " @dblclick="copy2clipboardI18n(imageGenInfo)">
             <div class="hint">{{ $t('doubleClickToCopy') }}</div>
             {{ imageGenInfo }}
           </div>

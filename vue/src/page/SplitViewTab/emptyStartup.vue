@@ -45,10 +45,7 @@ const walkModeSupportedDir = computed(() =>
   global.autoCompletedDirList.filter(
     ({ key: k }) =>
       k === 'outdir_txt2img_samples' ||
-      k === 'outdir_img2img_samples' ||
-      k === 'outdir_extras_samples' ||
-      k === 'outdir_save' ||
-      k === 'outdir_samples'
+      k === 'outdir_img2img_samples'
   )
 )
 const canpreviewInNewWindow = window.parent !== window
