@@ -35,6 +35,7 @@
 - Press and hold Ctrl, Shift, or Cmd to select multiple items.
 - Supports sending files directly to other folders via context menu.
 
+If you like this project and find it helpful, please consider giving it a ⭐️. This would be very important for me to continue developing and maintaining this project. If you have any suggestions or ideas, please feel free to raise them in the issue section, and I will respond as soon as possible. Thank you again for your support!
 
 It is strongly recommended to use "Open in new tab" (in the upper right corner of the plugin startup page), which is much more comfortable than being embedded in Gradio. However, the "send image to other tab" function cannot be used in this mode.
 
