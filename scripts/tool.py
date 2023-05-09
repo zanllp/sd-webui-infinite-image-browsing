@@ -226,9 +226,9 @@ def read_info_from_image(image) -> str:
 re_param_code = r'\s*([\w ]+):\s*("(?:\\"[^,]|\\"|\\|[^\"])+"|[^,]*)(?:,|$)'
 re_param = re.compile(re_param_code)
 re_imagesize = re.compile(r"^(\d+)x(\d+)$")
-re_lora_prompt = re.compile("<lora:([\w_\s]+):([\d.]+)>")
+re_lora_prompt = re.compile("<lora:([\w_\s.]+):([\d.]+)>")
 re_parens = re.compile(r"[\\/\[\](){}]+")
-re_lora_extract = re.compile(r"([\w_\s]+)(?:\d+)?")
+re_lora_extract = re.compile(r"([\w_\s.]+)(?:\d+)?")
 
 
 def lora_extract(lora: str):
@@ -251,7 +251,7 @@ def parse_prompt(x: str):
             continue
         idx_colon = tag.find(":")
         if idx_colon != -1:
-            lora_res = re.match(re_lora_prompt, tag)
+            lora_res = re.search(re_lora_prompt, tag)
             if lora_res:
                 lora_list.append(
                     {"name": lora_res.group(1), "value": float(lora_res.group(2))}
