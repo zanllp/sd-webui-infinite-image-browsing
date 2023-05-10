@@ -1,6 +1,7 @@
 import { t } from '@/i18n'
+import { message } from 'ant-design-vue'
 import { reactive } from 'vue'
-import { copy2clipboard, FetchQueue, idKey, type UniqueId } from 'vue3-ts-util'
+import { FetchQueue, idKey, type UniqueId } from 'vue3-ts-util'
 
 export function gradioApp () {
   try {
@@ -62,4 +63,11 @@ export function isImageFile (filename: string): boolean {
 
 export const createReactiveQueue = () => reactive(new FetchQueue(-1, 0, -1, 'throw'))
 
-export const copy2clipboardI18n = (text: string) => copy2clipboard(text, t('copied')) 
+export const copy2clipboardI18n = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    message.success(t('copied'))
+  } catch (error) {
+    message.error("copy failed. maybe it's non-secure environment")
+  }
+}
