@@ -1,9 +1,9 @@
 import { t } from '@/i18n'
 import { message } from 'ant-design-vue'
 import { reactive } from 'vue'
-import { FetchQueue, idKey, type UniqueId } from 'vue3-ts-util'
+import { FetchQueue, idKey, typedEventEmitter, type UniqueId } from 'vue3-ts-util'
 
-export function gradioApp () {
+export function gradioApp (): Window & Document  {
   try {
     return (parent.window as any).gradioApp()
   } catch (error) {
@@ -11,7 +11,7 @@ export function gradioApp () {
   }
   const elems = parent.document.getElementsByTagName('gradio-app')
   const gradioShadowRoot = elems.length == 0 ? null : elems[0].shadowRoot
-  return gradioShadowRoot ? gradioShadowRoot : document
+  return (gradioShadowRoot ? gradioShadowRoot : document) as any
 }
 
 export const asyncCheck = async <T> (getter: () => T, checkSize = 100, timeout = 1000) => {
@@ -70,4 +70,33 @@ export const copy2clipboardI18n = async (text: string) => {
   } catch (error) {
     message.error("copy failed. maybe it's non-secure environment")
   }
+}
+
+export const { useEventListen: useGlobalEventListen, eventEmitter: globalEvents } = typedEventEmitter<{
+  'return-to-iib'(): void
+}>()
+
+type AsyncFunction<T> = (...args: any[]) => Promise<T>;
+
+export function makeAsyncFunctionSingle<T>(fn: AsyncFunction<T>): AsyncFunction<T> {
+  let promise: Promise<T> | null = null;
+  let isExecuting = false;
+
+  return async function (this: any, ...args: any[]): Promise<T> {
+    if (isExecuting) {
+      // 如果当前有其他调用正在执行，直接返回上一个 Promise 对象
+      return promise as Promise<T>;
+    }
+
+    isExecuting = true;
+
+    try {
+      // 执行异步函数并等待结果
+      promise = fn.apply(this, args);
+      const result = await promise;
+      return result;
+    } finally {
+      isExecuting = false;
+    }
+  };
 }

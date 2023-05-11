@@ -12,7 +12,7 @@ import {
   typedEventEmitter,
   ID
 } from 'vue3-ts-util'
-import { createReactiveQueue, gradioApp, isImageFile, copy2clipboardI18n } from '@/util'
+import { createReactiveQueue, gradioApp, isImageFile, copy2clipboardI18n, useGlobalEventListen, makeAsyncFunctionSingle } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
 import { cloneDeep, debounce, last, range, uniqBy, uniqueId } from 'lodash-es'
@@ -388,7 +388,7 @@ export function useLocation (props: Props) {
     }
   }
 
-  const refresh = async () => {
+  const refresh = makeAsyncFunctionSingle(async () => {
     try {
       np.value?.start()
       if (walkModePath.value) {
@@ -406,9 +406,23 @@ export function useLocation (props: Props) {
     } finally {
       np.value?.done()
     }
-  }
+  })
 
-
+  useGlobalEventListen('return-to-iib',makeAsyncFunctionSingle(async () => {
+    if (!props.walkMode) {
+      try {
+        np.value?.start()
+        const { files } = await getTargetFolderFiles(
+          'local',
+          stack.value.length === 1 ? '/' : currLocation.value
+        )
+        last(stack.value)!.files = files
+        message.success(t('auto.refreshed'))
+      } finally {
+        np.value?.done()
+      }
+    }
+  }))
 
   useEventListen.value('refresh', refresh)
 
