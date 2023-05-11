@@ -37,6 +37,7 @@ class DataBase:
         ImageTag.create_table(conn)
         Tag.create_table(conn)
         Image.create_table(conn)
+        conn.commit()
         clz.num += 1
         if is_dev:
             print(f"当前连接数{clz.num}")
