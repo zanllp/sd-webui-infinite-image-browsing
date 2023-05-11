@@ -303,6 +303,15 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             "expired_dirs": expired_dirs,
         }
 
+    @app.get(db_pre+"/expired_dirs")
+    async def get_db_expired():
+        conn = DataBase.get_conn()
+        expired_dirs = Floder.get_expired_dirs(conn)
+        return {
+            "expired": len(expired_dirs) != 0,
+            "expired_dirs": expired_dirs,
+        }
+
     @app.post(db_pre + "/update_image_data")
     async def update_image_db_data():
         try:

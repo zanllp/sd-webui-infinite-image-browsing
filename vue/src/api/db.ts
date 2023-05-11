@@ -21,6 +21,12 @@ export const getDbBasicInfo = async () => {
   return resp.data as DataBaseBasicInfo
 }
 
+export const getExpiredDirs = async () => {
+  const resp = await axiosInst.get('/db/expired_dirs')
+  return resp.data as Pick<DataBaseBasicInfo, 'expired' | 'expired_dirs'>
+}
+
+
 export const updateImageData = async () => {
   await axiosInst.post('/db/update_image_data', {}, { timeout: Infinity })
 }

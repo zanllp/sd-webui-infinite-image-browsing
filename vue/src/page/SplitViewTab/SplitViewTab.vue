@@ -4,11 +4,14 @@ import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { defineAsyncComponent, watch, ref, nextTick } from 'vue'
-import { key } from '@/util'
-import { uniqueId } from 'lodash-es'
+import { gradioApp, key, globalEvents, asyncCheck } from '@/util'
+import { debounce, uniqueId } from 'lodash-es'
 import edgeTrigger from './edgeTrigger.vue'
 import { t } from '@/i18n'
 import { ID } from 'vue3-ts-util'
+import { tryOnMounted, useDocumentVisibility, type Fn } from '@vueuse/core'
+
+
 const global = useGlobalStore()
 const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> = {
   local: defineAsyncComponent(() => import('@/page/fileTransfer/stackView.vue')),
@@ -70,29 +73,32 @@ watch(
   },
   { immediate: true, deep: true }
 )
+
+const emitReturnToIIB = debounce(() => globalEvents.emit('return-to-iib'), 100)
+
+tryOnMounted(async () => {
+  const par = window.parent as Window & { get_uiCurrentTabContent (): undefined | HTMLButtonElement, onUiTabChange (cb: Fn): void }
+  if (!await asyncCheck(() => par?.onUiTabChange, 200, 30_000)) {
+    console.log('watch tab change failed');
+    return 
+  }
+  par.onUiTabChange(() => {
+    const el = par.get_uiCurrentTabContent()
+    if (el?.id.includes("infinite-image-browsing")) {
+      emitReturnToIIB()
+    }
+  })
+})
+watch(useDocumentVisibility(), v => v && emitReturnToIIB())
 </script>
 <template>
   <div ref="container">
     <splitpanes class="default-theme">
       <pane v-for="(tab, tabIdx) in global.tabList" :key="key(tab)">
         <edge-trigger :tabIdx="tabIdx">
-          <a-tabs
-            type="editable-card"
-            v-model:activeKey="tab.key"
-            @edit="(key, act) => onEdit(tabIdx, key, act)"
-          >
-            <a-tab-pane
-              v-for="(pane, paneIdx) in tab.panes"
-              :key="pane.key"
-              :tab="pane.name"
-              class="pane"
-            >
-              <component
-                :is="compMap[pane.type]"
-                :tabIdx="tabIdx"
-                :paneIdx="paneIdx"
-                v-bind="pane"
-              />
+          <a-tabs type="editable-card" v-model:activeKey="tab.key" @edit="(key, act) => onEdit(tabIdx, key, act)">
+            <a-tab-pane v-for="(pane, paneIdx) in tab.panes" :key="pane.key" :tab="pane.name" class="pane">
+              <component :is="compMap[pane.type]" :tabIdx="tabIdx" :paneIdx="paneIdx" v-bind="pane" />
             </a-tab-pane>
           </a-tabs>
         </edge-trigger>

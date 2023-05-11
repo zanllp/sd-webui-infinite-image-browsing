@@ -6,15 +6,17 @@ import {
   type DataBaseBasicInfo,
   type Tag,
   addCustomTag,
-  removeCustomTag
+  removeCustomTag,
+  getExpiredDirs
 } from '@/api/db'
 import { SearchSelect } from 'vue3-ts-util'
 import { CheckOutlined, PlusOutlined, CloseOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { groupBy, uniqueId } from 'lodash-es'
-import { createReactiveQueue, type Dict } from '@/util'
+import { createReactiveQueue, type Dict, useGlobalEventListen } from '@/util'
 import { Modal, message } from 'ant-design-vue'
 import { t } from '@/i18n'
+import { makeAsyncFunctionSingle } from '@/util'
 
 const props = defineProps<{ tabIdx: number; paneIdx: number }>()
 const global = useGlobalStore()
@@ -51,16 +53,20 @@ onMounted(async () => {
   }
 })
 
-const onUpdateBtnClick = async () => {
-  queue.pushAction(async () => {
-    await updateImageData()
-    info.value = await getDbBasicInfo()
-  })
-}
+const onUpdateBtnClick = makeAsyncFunctionSingle(() => queue.pushAction(async () => {
+  await updateImageData()
+  info.value = await getDbBasicInfo()
+  return info.value
+}).res)
 
 const query = () => {
   global.openTagSearchMatchedImageGridInRight(props.tabIdx, pairid, Array.from(selectedId.value))
 }
+
+useGlobalEventListen('return-to-iib', async () => {
+  const res = await queue.pushAction(getExpiredDirs).res
+  info.value!.expired = res.expired
+})
 
 const toTagDisplayName = (v: Tag, withType = false) =>
   (withType ? `[${v.type}] ` : '') + (v.display_name ? `${v.display_name} : ${v.name}` : v.name)
@@ -87,7 +93,7 @@ const onAddTagBtnSubmit = async () => {
 const onTagRemoveClick = (tagId: number) => {
   Modal.confirm({
     title: t('confirmDelete'),
-    async onOk() {
+    async onOk () {
       await removeCustomTag({ tag_id: tagId })
       const idx = info.value?.tags.findIndex((v) => v.id === tagId) ?? -1
       info.value?.tags.splice(idx, 1)
@@ -105,35 +111,18 @@ const onTagRemoveClick = (tagId: number) => {
     <template v-if="info">
       <div>
         <div class="search-bar">
-          <SearchSelect
-            :conv="{
-              value: (v) => v.id,
-              text: toTagDisplayName,
-              optionText: (v) => toTagDisplayName(v, true)
-            }"
-            mode="multiple"
-            style="width: 100%"
-            :options="tags"
-            :value="Array.from(selectedId)"
-            :disabled="!tags.length"
-            placeholder="Select tags to match images"
-            @update:value="(v) => (selectedId = new Set(v))"
-          />
-          <AButton
-            @click="onUpdateBtnClick"
-            :loading="!queue.isIdle"
-            type="primary"
-            v-if="info.expired || !info.img_count"
-          >
-            {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton
-          >
-          <AButton
-            v-else
-            type="primary"
-            @click="query"
-            :loading="!queue.isIdle"
-            :disabled="!selectedId.size"
-            >{{ $t('search') }}
+          <SearchSelect :conv="{
+            value: (v) => v.id,
+            text: toTagDisplayName,
+            optionText: (v) => toTagDisplayName(v, true)
+          }" mode="multiple" style="width: 100%" :options="tags" :value="Array.from(selectedId)"
+            :disabled="!tags.length" placeholder="Select tags to match images"
+            @update:value="(v) => (selectedId = new Set(v))" />
+          <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary"
+            v-if="info.expired || !info.img_count">
+            {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
+          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!selectedId.size">{{
+            $t('search') }}
           </AButton>
         </div>
       </div>
@@ -144,43 +133,25 @@ const onTagRemoveClick = (tagId: number) => {
       <div class="list-container">
         <ul class="tag-list" v-for="[name, list] in classifyTags" :key="name">
           <h3 class="cat-name">{{ $t(name) }}</h3>
-          <li
-            v-for="(tag, idx) in list"
-            :key="tag.id"
-            class="tag"
-            :class="{ selected: selectedId.has(tag.id) }"
-            @click="selectedId.has(tag.id) ? selectedId.delete(tag.id) : selectedId.add(tag.id)"
-          >
+          <li v-for="(tag, idx) in list" :key="tag.id" class="tag" :class="{ selected: selectedId.has(tag.id) }"
+            @click="selectedId.has(tag.id) ? selectedId.delete(tag.id) : selectedId.add(tag.id)">
             <CheckOutlined v-if="selectedId.has(tag.id)" />
             {{ toTagDisplayName(tag) }}
-            <span
-              v-if="name === 'custom' && idx !== 0"
-              class="remove"
-              @click.capture.stop="onTagRemoveClick(tag.id)"
-            >
+            <span v-if="name === 'custom' && idx !== 0" class="remove" @click.capture.stop="onTagRemoveClick(tag.id)">
               <CloseOutlined />
             </span>
           </li>
           <li v-if="name === 'custom'" class="tag" @click="addInputing = true">
             <template v-if="addInputing">
               <a-input-group compact>
-                <a-input
-                  v-model:value="addTagName"
-                  style="width: 128px"
-                  :loading="loading"
-                  allow-clear
-                  size="small"
-                />
-                <a-button
-                  size="small"
-                  type="primary"
-                  @click.capture.stop="onAddTagBtnSubmit"
-                  :loading="loading"
-                  >{{ addTagName ? $t('submit') : $t('cancel') }}</a-button
-                >
+                <a-input v-model:value="addTagName" style="width: 128px" :loading="loading" allow-clear size="small" />
+                <a-button size="small" type="primary" @click.capture.stop="onAddTagBtnSubmit" :loading="loading">{{
+                  addTagName ? $t('submit') : $t('cancel') }}</a-button>
               </a-input-group>
             </template>
-            <template v-else> <PlusOutlined /> {{ $t('add') }} </template>
+            <template v-else>
+              <PlusOutlined /> {{ $t('add') }}
+            </template>
           </li>
         </ul>
       </div>
@@ -210,6 +181,7 @@ const onTagRemoveClick = (tagId: number) => {
     padding: 4px;
     position: cursor;
     border-radius: 2px;
+
     &:hover {
       background-color: var(--zp-secondary-background);
     }

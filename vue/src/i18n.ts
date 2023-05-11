@@ -124,10 +124,14 @@ const zh = {
   "walk-mode-move-message": "在walk模式下仅允许使用“快速移动”移动位置",
   "long_loading": "已经连续加载超过5秒，如果你认为不是网络问题的话，请尝试关掉VPN或者添加启动参数 --no-gradio-queue。如果还是不行，请提Issue。",
   "manualExitFullScreen": "你删除了最后一张图片，也许需要你手动退出全屏预览",
-  "copied": "已复制！"
+  "copied": "已复制！",
+  "index.expired": "索引过期，正在自动更新",
+  "auto.refreshed": "自动刷新完成！"
 }
 const en: Record<keyof typeof zh, string> = {
+   "auto.refreshed": "Auto refresh completed!",
   copied: "Copied!",
+  "index.expired": "Index expired, updating automatically",
   "manualExitFullScreen": "You have deleted the last image and may need to manually exit full-screen preview",
   "long_loading": "Loading has been continuing for more than 5 seconds. If you don't think it's a network issue, please try turning off your VPN or adding the startup parameter --no-gradio-queue. If it still doesn't work, please submit an issue.",
   "walk-mode-move-message": "Moving position is only allowed using 'Quick Move' in walk mode",
