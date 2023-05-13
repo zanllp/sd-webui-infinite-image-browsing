@@ -137,7 +137,7 @@ const zh = {
   
 }
 const en: Record<keyof typeof zh, string> = {
-  "faq": "常见问题",
+  "faq": "FAQ",
   "selectExactMatchTag": "Select Exact Match Tags",
   "selectAnyMatchTag": "Optional, Select Any Match Tags",
   "selectExcludeTag": "Optional, Select Exclude Tags",
