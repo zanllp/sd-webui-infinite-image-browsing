@@ -20,7 +20,7 @@ onMounted(async () => {
 
 <template>
   <a-skeleton :loading="!queue.isIdle">
-    <split-view-tab />
+    <SplitViewTab />
   </a-skeleton>
 </template>
 <style scoped lang="scss"></style>

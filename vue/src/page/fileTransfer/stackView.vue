@@ -24,7 +24,6 @@ import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { watch } from 'vue'
 import FileItem from './FileItem.vue'
 import fullScreenContextMenu from './fullScreenContextMenu.vue'
-import 'antd-vue-volar'
 import { copy2clipboardI18n } from '@/util'
 
 const global = useGlobalStore()

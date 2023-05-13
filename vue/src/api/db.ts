@@ -31,8 +31,14 @@ export const updateImageData = async () => {
   await axiosInst.post('/db/update_image_data', {}, { timeout: Infinity })
 }
 
-export const getImagesByTags = async (ids: number[]) => {
-  const resp = await axiosInst.get('/db/match_images_by_tags', { params: { tag_ids: ids.join() } })
+export interface MatchImageByTagsReq {
+  and_tags: number[]
+  or_tags: number[]
+  not_tags: number[]
+}
+
+export const getImagesByTags = async (req: MatchImageByTagsReq) => {
+  const resp = await axiosInst.post('/db/match_images_by_tags', req)
   return resp.data as FileNodeInfo[]
 }
 

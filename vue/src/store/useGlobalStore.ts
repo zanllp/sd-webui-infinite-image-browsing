@@ -1,9 +1,10 @@
 import type { GlobalConf } from '@/api'
+import type { MatchImageByTagsReq } from '@/api/db'
 import { i18n, t } from '@/i18n'
 import { getPreferredLang } from '@/i18n'
 import type { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
 import type { ReturnTypeAsync } from '@/util'
-import { uniqueId } from 'lodash-es'
+import { cloneDeep, uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { watch } from 'vue'
 import { ref } from 'vue'
@@ -20,7 +21,7 @@ interface TagSearchMatchedImageGridTabPane {
   type: 'tag-search-matched-image-grid'
   name: string
   readonly key: string
-  selectedTagIds: number[]
+  selectedTagIds: MatchImageByTagsReq
   id: string
 }
 
@@ -75,7 +76,7 @@ export const useGlobalStore = defineStore(
     const openTagSearchMatchedImageGridInRight = async (
       tabIdx: number,
       id: string,
-      tagIds: number[]
+      tagIds: MatchImageByTagsReq
     ) => {
       let pane = tabList.value
         .map((v) => v.panes)
@@ -84,13 +85,13 @@ export const useGlobalStore = defineStore(
           (v) => v.type === 'tag-search-matched-image-grid' && v.id === id
         ) as TagSearchMatchedImageGridTabPane
       if (pane) {
-        pane.selectedTagIds = tagIds.slice()
+        pane.selectedTagIds = cloneDeep(tagIds)
         return
       } else {
         pane = {
           type: 'tag-search-matched-image-grid',
           id: id,
-          selectedTagIds: tagIds.slice(),
+          selectedTagIds: cloneDeep(tagIds),
           key: uniqueId(),
           name: t('searchResults')
         }

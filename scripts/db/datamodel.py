@@ -314,9 +314,27 @@ class ImageTag:
                     "tag_id IN ({})".format(",".join("?" * len(tag_ids)))
                 )
                 params.extend(tag_ids)
-            elif operator == "not":
+            elif operator == "not" and tag_dict["not"]:
                 where_clauses.append(
-                    "tag_id NOT IN ({})".format(",".join("?" * len(tag_ids)))
+                    """(image_id NOT IN (
+  SELECT image_id
+  FROM image_tag
+  WHERE tag_id IN ({})
+))""".format(
+                        ",".join("?" * len(tag_ids))
+                    )
+                )
+                params.extend(tag_ids)
+            elif operator == "or" and tag_dict["or"]:
+                where_clauses.append(
+                    """(image_id IN (
+  SELECT image_id
+  FROM image_tag
+  WHERE tag_id IN ({})
+  GROUP BY image_id
+  HAVING COUNT(DISTINCT tag_id) >= 1
+)
+)""".format(",".join("?" * len(tag_ids)))
                 )
                 params.extend(tag_ids)
 

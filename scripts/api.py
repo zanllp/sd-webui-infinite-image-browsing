@@ -324,12 +324,20 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         finally:
             DataBase._initing = False
 
-    @app.get(db_pre + "/match_images_by_tags")
-    async def match_image_by_tags(tag_ids: str):
-        ids = [int(x) for x in tag_ids.split(",")]
+    class MatchImagesByTagsReq(BaseModel):
+        and_tags: List[int]
+        or_tags: List[int]
+        not_tags: List[int]
+
+    @app.post(db_pre + "/match_images_by_tags")
+    async def match_image_by_tags(req: MatchImagesByTagsReq):
         conn = DataBase.get_conn()
         return [
-            x.to_file_info() for x in ImageTag.get_images_by_tags(conn, {"and": ids})
+            x.to_file_info() for x in ImageTag.get_images_by_tags(conn, {
+                "and": req.and_tags,
+                "or": req.or_tags,
+                "not": req.not_tags
+            })
         ]
 
     @app.get(db_pre + "/img_selected_custom_tag")
