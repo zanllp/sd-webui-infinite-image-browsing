@@ -16,7 +16,7 @@ import {
   useFileTransfer
 } from '@/page/fileTransfer/hook'
 import { identity } from 'lodash-es'
-import { getImagesByTags } from '@/api/db'
+import { getImagesByTags, type MatchImageByTagsReq } from '@/api/db'
 import { watch } from 'vue'
 import { copy2clipboardI18n, createReactiveQueue } from '@/util'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
@@ -29,7 +29,7 @@ const queue = createReactiveQueue()
 const props = defineProps<{
   tabIdx: number
   paneIdx: number
-  selectedTagIds: number[]
+  selectedTagIds: MatchImageByTagsReq
   id: string
 }>()
 

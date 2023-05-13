@@ -54,7 +54,7 @@ const zh = {
   sortingMethod: '排序方法',
   copyPath: '复制路径',
   deleteSelected: '删除选中',
-  previewInNewWindow: '在新窗口预览（如果浏览器处理不了会下载，大文件的话谨慎）',
+  previewInNewWindow: '在新窗口预览',
   downloadDirectly: '直接下载（大文件的话谨慎）',
   copySourceFilePreviewLink: '复制源文件预览链接',
   viewGenerationInfo: '查看生成信息(prompt等)',
@@ -110,7 +110,6 @@ const zh = {
   add: '新增',
   cancel: '取消',
   submit: '提交',
-  embedding: 'embedding',
   existInOtherType: '已存在于其他类型',
   alreadyExists: '已存在',
   toggleTag: '切换标签选中 (收藏)',
@@ -120,22 +119,40 @@ const zh = {
   removedTagFromImage: '已从本图片上移除该标签',
   openContextMenu: '打开上下文菜单',
   copyPrompt: '复制提示',
-  "refreshCompleted": "刷新完成",
-  "walk-mode-move-message": "在walk模式下仅允许使用“快速移动”移动位置",
-  "long_loading": "已经连续加载超过5秒，如果你认为不是网络问题的话，请尝试关掉VPN或者添加启动参数 --no-gradio-queue。如果还是不行，请提Issue。",
-  "manualExitFullScreen": "你删除了最后一张图片，也许需要你手动退出全屏预览",
-  "copied": "已复制！",
-  "index.expired": "索引过期，正在自动更新",
-  "auto.refreshed": "自动刷新完成！"
+  refreshCompleted: '刷新完成',
+  'walk-mode-move-message': '在walk模式下仅允许使用“快速移动”移动位置',
+  long_loading:
+    '已经连续加载超过5秒，如果你认为不是网络问题的话，请尝试关掉VPN或者添加启动参数 --no-gradio-queue。如果还是不行，请提Issue。',
+  manualExitFullScreen: '你删除了最后一张图片，也许需要你手动退出全屏预览',
+  copied: '已复制！',
+  'index.expired': '索引过期，正在自动更新',
+  'auto.refreshed': '自动刷新完成！',  
+  "exactMatch": "完全匹配",
+  "anyMatch": "匹配任意",
+  "exclude": "排除掉",
+  "selectExactMatchTag": "选择完全匹配的 Tag",
+  "selectAnyMatchTag": "可选,选择匹配其中一个或多个的 Tag",
+  "selectExcludeTag": "可选，选择需要排除掉的 Tag",
+  "faq": "常见问题"
+  
 }
 const en: Record<keyof typeof zh, string> = {
-   "auto.refreshed": "Auto refresh completed!",
-  copied: "Copied!",
-  "index.expired": "Index expired, updating automatically",
-  "manualExitFullScreen": "You have deleted the last image and may need to manually exit full-screen preview",
-  "long_loading": "Loading has been continuing for more than 5 seconds. If you don't think it's a network issue, please try turning off your VPN or adding the startup parameter --no-gradio-queue. If it still doesn't work, please submit an issue.",
-  "walk-mode-move-message": "Moving position is only allowed using 'Quick Move' in walk mode",
-  "refreshCompleted": "Refresh completed",
+  "faq": "FAQ",
+  "selectExactMatchTag": "Select Exact Match Tags",
+  "selectAnyMatchTag": "Optional, Select Any Match Tags",
+  "selectExcludeTag": "Optional, Select Exclude Tags",
+  "exactMatch": "Exact Match",
+  "anyMatch": "Match Any",
+  "exclude": "Exclude",
+  'auto.refreshed': 'Auto refresh completed!',
+  copied: 'Copied!',
+  'index.expired': 'Index expired, updating automatically',
+  manualExitFullScreen:
+    'You have deleted the last image and may need to manually exit full-screen preview',
+  long_loading:
+    "Loading has been continuing for more than 5 seconds. If you don't think it's a network issue, please try turning off your VPN or adding the startup parameter --no-gradio-queue. If it still doesn't work, please submit an issue.",
+  'walk-mode-move-message': "Moving position is only allowed using 'Quick Move' in walk mode",
+  refreshCompleted: 'Refresh completed',
   addedTagToImage: 'Tag has been added to this image',
   removedTagFromImage: 'Tag has been removed from this image',
   openContextMenu: 'Open context menu',
@@ -145,7 +162,6 @@ const en: Record<keyof typeof zh, string> = {
   removeComplete: 'Remove Complete',
   existInOtherType: 'Already exists in other type',
   alreadyExists: 'Already exists',
-  embedding: 'embedding',
   cancel: 'Cancel',
   submit: 'Submit',
   add: 'Add',
@@ -216,7 +232,7 @@ const en: Record<keyof typeof zh, string> = {
   copyPath: 'Copy path',
   deleteSelected: 'Delete selected',
   previewInNewWindow:
-    'Open in new window (will download if browser cannot handle it, use with caution for large files)',
+    'Open in new window',
   downloadDirectly: 'Download directly (use with caution for large files)',
   copySourceFilePreviewLink: 'Copy source file preview link',
   viewGenerationInfo: 'View generation information (prompt, etc.)',
@@ -261,7 +277,7 @@ const en: Record<keyof typeof zh, string> = {
 }
 declare module 'vue' {
   export interface ComponentCustomProperties {
-    $t (key: keyof typeof zh, ...args: []): string
+    $t(key: keyof typeof zh, ...args: []): string
   }
 }
 

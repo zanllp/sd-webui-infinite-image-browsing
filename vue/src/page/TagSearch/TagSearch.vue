@@ -7,7 +7,8 @@ import {
   type Tag,
   addCustomTag,
   removeCustomTag,
-  getExpiredDirs
+  getExpiredDirs,
+  type MatchImageByTagsReq
 } from '@/api/db'
 import { SearchSelect } from 'vue3-ts-util'
 import { CheckOutlined, PlusOutlined, CloseOutlined } from '@/icon'
@@ -23,7 +24,7 @@ const global = useGlobalStore()
 const queue = createReactiveQueue()
 const loading = computed(() => !queue.isIdle)
 const info = ref<DataBaseBasicInfo>()
-const selectedId = ref(new Set<number>())
+const matchIds = ref<MatchImageByTagsReq>({ and_tags: [], or_tags: [], not_tags: [] })
 const tags = computed(() =>
   info.value ? info.value.tags.slice().sort((a, b) => b.count - a.count) : []
 )
@@ -40,6 +41,7 @@ const classSort = [
   p[c] = i
   return p
 }, {} as Dict<number>)
+
 const classifyTags = computed(() => {
   return Object.entries(groupBy(tags.value, (v) => v.type)).sort(
     (a, b) => classSort[a[0]] - classSort[b[0]]
@@ -53,14 +55,17 @@ onMounted(async () => {
   }
 })
 
-const onUpdateBtnClick = makeAsyncFunctionSingle(() => queue.pushAction(async () => {
-  await updateImageData()
-  info.value = await getDbBasicInfo()
-  return info.value
-}).res)
+const onUpdateBtnClick = makeAsyncFunctionSingle(
+  () =>
+    queue.pushAction(async () => {
+      await updateImageData()
+      info.value = await getDbBasicInfo()
+      return info.value
+    }).res
+)
 
 const query = () => {
-  global.openTagSearchMatchedImageGridInRight(props.tabIdx, pairid, Array.from(selectedId.value))
+  global.openTagSearchMatchedImageGridInRight(props.tabIdx, pairid, matchIds.value)
 }
 
 useGlobalEventListen('return-to-iib', async () => {
@@ -104,6 +109,24 @@ const onTagRemoveClick = (tagId: number) => {
     }
   })
 }
+const selectedTagIds = computed(
+  () => new Set([matchIds.value.and_tags, matchIds.value.or_tags, matchIds.value.not_tags].flat())
+)
+const onTagClick = (tag: Tag) => {
+  if (selectedTagIds.value.has(tag.id)) {
+    matchIds.value.and_tags = matchIds.value.and_tags.filter((v) => v !== tag.id)
+    matchIds.value.or_tags = matchIds.value.or_tags.filter((v) => v !== tag.id)
+    matchIds.value.not_tags = matchIds.value.not_tags.filter((v) => v !== tag.id)
+  } else {
+    matchIds.value.and_tags.push(tag.id)
+  }
+}
+
+const conv = {
+  value: (v: Tag) => v.id,
+  text: toTagDisplayName,
+  optionText: (v: Tag) => toTagDisplayName(v, true)
+}
 </script>
 <template>
   <div class="container">
@@ -111,19 +134,25 @@ const onTagRemoveClick = (tagId: number) => {
     <template v-if="info">
       <div>
         <div class="search-bar">
-          <SearchSelect :conv="{
-            value: (v) => v.id,
-            text: toTagDisplayName,
-            optionText: (v) => toTagDisplayName(v, true)
-          }" mode="multiple" style="width: 100%" :options="tags" :value="Array.from(selectedId)"
-            :disabled="!tags.length" placeholder="Select tags to match images"
-            @update:value="(v) => (selectedId = new Set(v))" />
+          <div class="form-name">{{ $t('exactMatch') }}</div>
+          <SearchSelect :conv="conv" mode="multiple" style="width: 100%" :options="tags" v-model:value="matchIds.and_tags"
+            :disabled="!tags.length" :placeholder="$t('selectExactMatchTag')" />
           <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary"
             v-if="info.expired || !info.img_count">
             {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
-          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!selectedId.size">{{
+          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!matchIds.and_tags.length">{{
             $t('search') }}
           </AButton>
+        </div>
+        <div class="search-bar">
+          <div class="form-name">{{ $t('anyMatch') }}</div>
+          <SearchSelect :conv="conv" mode="multiple" style="width: 100%" :options="tags" v-model:value="matchIds.or_tags"
+            :disabled="!tags.length" :placeholder="$t('selectAnyMatchTag')" />
+        </div>
+        <div class="search-bar">
+          <div class="form-name">{{ $t('exclude') }}</div>
+          <SearchSelect :conv="conv" mode="multiple" style="width: 100%" :options="tags" v-model:value="matchIds.not_tags"
+            :disabled="!tags.length" :placeholder="$t('selectExcludeTag')" />
         </div>
       </div>
 
@@ -133,9 +162,9 @@ const onTagRemoveClick = (tagId: number) => {
       <div class="list-container">
         <ul class="tag-list" v-for="[name, list] in classifyTags" :key="name">
           <h3 class="cat-name">{{ $t(name) }}</h3>
-          <li v-for="(tag, idx) in list" :key="tag.id" class="tag" :class="{ selected: selectedId.has(tag.id) }"
-            @click="selectedId.has(tag.id) ? selectedId.delete(tag.id) : selectedId.add(tag.id)">
-            <CheckOutlined v-if="selectedId.has(tag.id)" />
+          <li v-for="(tag, idx) in list" :key="tag.id" class="tag" :class="{ selected: selectedTagIds.has(tag.id) }"
+            @click="onTagClick(tag)">
+            <CheckOutlined v-if="selectedTagIds.has(tag.id)" />
             {{ toTagDisplayName(tag) }}
             <span v-if="name === 'custom' && idx !== 0" class="remove" @click.capture.stop="onTagRemoveClick(tag.id)">
               <CloseOutlined />
@@ -194,6 +223,11 @@ const onTagRemoveClick = (tagId: number) => {
   .search-bar {
     padding: 8px;
     display: flex;
+    .form-name {
+      flex-shrink: 0;
+      padding: 4px 8px;
+      width: 128px;
+    }
   }
 
   .list-container {

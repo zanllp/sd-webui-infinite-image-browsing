@@ -1,5 +1,8 @@
 ## [中文文档](./README-zh.md)
 #  Stable Diffusion webui Infinite Image Browsing
+
+[View recent updates](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/131)
+
 ## Key Features
 
 ### Excellent Performance
@@ -17,6 +20,7 @@
 - Tags will be listed based on their frequency of use.
 - Supports tag autocomplete, translation, and customization.
 - Image favorite can be achieved by toggling custom tags for images in the right-click menu.
+- Support for advanced search similar to Google
 
 ### View Image & `Send To`
 - Supports viewing image generation information. Also supported in full-screen preview mode.
@@ -34,6 +38,7 @@
 - Supports basic file operations as well as multi-select deletion/moving.
 - Press and hold Ctrl, Shift, or Cmd to select multiple items.
 - Supports sending files directly to other folders via context menu.
+- Support for automatic refresh
 
 If you like this project and find it helpful, please consider giving it a ⭐️. This would be very important for me to continue developing and maintaining this project. If you have any suggestions or ideas, please feel free to raise them in the issue section, and I will respond as soon as possible. Thank you again for your support!
 
