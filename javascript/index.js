@@ -1,4 +1,8 @@
 ;(() => {
+  /**
+   * This is a file generated using `yarn deliver-dist`.
+   * If you want to make changes, please modify `index.tpl.js` and run the command to generate it again.
+   */
   const html = `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -8,8 +12,8 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
-    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-ce048bd1.js"></script>
-    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-0f2e5895.css">
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-d29b41a3.js"></script>
+    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-a7429eec.css">
   </head>
 
   <body>
@@ -60,6 +64,7 @@
           handler === "iib_hidden_img_update_trigger" ||
           handler.startsWith("iib_hidden_tab_")
       ) {
+          // eslint-disable-next-line no-undef
           const btn = gradioApp().querySelector(`#${handler}`);
           btn.click();
       }
