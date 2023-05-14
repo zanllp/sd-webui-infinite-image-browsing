@@ -12,7 +12,7 @@ import {
   typedEventEmitter,
   ID
 } from 'vue3-ts-util'
-import { createReactiveQueue, gradioApp, isImageFile, copy2clipboardI18n, useGlobalEventListen, makeAsyncFunctionSingle } from '@/util'
+import { createReactiveQueue, isImageFile, copy2clipboardI18n, useGlobalEventListen, makeAsyncFunctionSingle } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
 import { cloneDeep, debounce, last, range, uniqBy, uniqueId } from 'lodash-es'
@@ -29,6 +29,7 @@ import { toggleCustomTagToImg } from '@/api/db'
 export const stackCache = new Map<string, Page[]>()
 
 const global = useGlobalStore()
+const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
 export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
   `/infinite_image_browsing/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''
   }`
@@ -721,16 +722,12 @@ export function useFileItemActions (
       try {
         spinning.value = true
         await setImgPath(file.fullpath) // 设置图像路径
-        const btn = gradioApp().querySelector(
-          '#iib_hidden_img_update_trigger'
-        )! as HTMLButtonElement
-        btn.click() // 触发图像组件更新
+        imgTransferBus.postMessage('iib_hidden_img_update_trigger') // 触发图像组件更新
         const warnId = setTimeout(() => notification.warn({ message: t('long_loading'), duration: 20 }), 5000)
         // ok(await genInfoCompleted(), 'genInfoCompleted timeout') // 等待消息生成完成
         await genInfoCompleted() // 等待消息生成完成
         clearTimeout(warnId)
-        const tabBtn = gradioApp().querySelector(`#iib_hidden_tab_${tab}`) as HTMLButtonElement
-        tabBtn.click() // 触发粘贴
+        imgTransferBus.postMessage(`iib_hidden_tab_${tab}`) // 触发粘贴
       } catch (error) {
         console.error(error)
         message.error('发送图像失败，请携带console的错误消息找开发者')

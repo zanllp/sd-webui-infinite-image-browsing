@@ -8,8 +8,8 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
-    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-0f1509d8.js"></script>
-    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-99766f9b.css">
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-ce048bd1.js"></script>
+    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-0f2e5895.css">
   </head>
 
   <body>
@@ -51,5 +51,17 @@
     iframe.srcdoc = html
     iframe.style = `width: 100%;height:100vh`
     wrap.appendChild(iframe)
+  })
+
+  const imgTransferBus = new BroadcastChannel("iib-image-transfer-bus");
+  imgTransferBus.addEventListener("message", (ev) => {
+      const handler = ev.data;
+      if (
+          handler === "iib_hidden_img_update_trigger" ||
+          handler.startsWith("iib_hidden_tab_")
+      ) {
+          const btn = gradioApp().querySelector(`#${handler}`);
+          btn.click();
+      }
   })
 })()

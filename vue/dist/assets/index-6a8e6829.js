@@ -1,1 +1,0 @@
-import{aO as e,c2 as n,c3 as a}from"./index-0f1509d8.js";var i="[object Object]",s=Function.prototype,p=Object.prototype,c=s.toString,b=p.hasOwnProperty,f=c.call(Object);function j(o){if(!e(o)||n(o)!=i)return!1;var r=a(o);if(r===null)return!0;var t=b.call(r,"constructor")&&r.constructor;return typeof t=="function"&&t instanceof t&&c.call(t)==f}export{j as i};
