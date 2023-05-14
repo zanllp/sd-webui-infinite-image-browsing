@@ -3,17 +3,6 @@ import { message } from 'ant-design-vue'
 import { reactive } from 'vue'
 import { FetchQueue, idKey, typedEventEmitter, type UniqueId } from 'vue3-ts-util'
 
-export function gradioApp (): Window & Document  {
-  try {
-    return (parent.window as any).gradioApp()
-  } catch (error) {
-    //
-  }
-  const elems = parent.document.getElementsByTagName('gradio-app')
-  const gradioShadowRoot = elems.length == 0 ? null : elems[0].shadowRoot
-  return (gradioShadowRoot ? gradioShadowRoot : document) as any
-}
-
 export const asyncCheck = async <T> (getter: () => T, checkSize = 100, timeout = 1000) => {
   return new Promise<T>((x) => {
     const check = (num = 0) => {
