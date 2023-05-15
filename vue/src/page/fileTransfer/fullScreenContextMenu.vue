@@ -14,7 +14,8 @@ import {
   FullscreenExitOutlined,
   FullscreenOutlined,
   StarFilled,
-  StarOutlined
+  StarOutlined,
+  ArrowsAltOutlined
 } from '@/icon'
 import { t } from '@/i18n'
 import { getImageSelectedCustomTag, type Tag } from '@/api/db'
@@ -87,18 +88,13 @@ useResizeAndDrag(el, resizeHandle, dragHandle, {
   }, 300)
 })
 
-function todiv(p: any) {
+function todiv (p: any) {
   return p.parentNode as HTMLDivElement
 }
 </script>
 
 <template>
-  <div
-    ref="el"
-    class="full-screen-menu"
-    @wheel.capture.stop
-    :class="{ 'unset-size': !state.expanded }"
-  >
+  <div ref="el" class="full-screen-menu" @wheel.capture.stop :class="{ 'unset-size': !state.expanded }">
     <div class="container">
       <div class="actoion-bar">
         <div ref="dragHandle" class="icon" style="cursor: grab">
@@ -110,12 +106,8 @@ function todiv(p: any) {
         </div>
         <template v-if="state.expanded">
           <div flex-placeholder></div>
-          <a-dropdown
-            :trigger="['hover']"
-            style="z-index: 99999"
-            :get-popup-container="(p) => todiv(p)"
-            @visible-change="onMouseHoverContext"
-          >
+          <a-dropdown :trigger="['hover']" style="z-index: 99999" :get-popup-container="(p) => todiv(p)"
+            @visible-change="onMouseHoverContext">
             <a-button>{{ t('openContextMenu') }}</a-button>
             <template #overlay>
               <a-menu @click="emit('contextMenuClick', $event, file, idx)" style="z-index: 99999">
@@ -126,8 +118,8 @@ function todiv(p: any) {
                 <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
                 <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
                 <a-sub-menu key="toggle-tag" :title="$t('toggleTag')">
-                  <a-menu-item v-for="tag in tags" :key="tag.id"
-                    >{{ tag.name }} <star-filled v-if="tag.selected" /><star-outlined v-else />
+                  <a-menu-item v-for="tag in tags" :key="tag.id">{{ tag.name }} <star-filled
+                      v-if="tag.selected" /><star-outlined v-else />
                   </a-menu-item>
                 </a-sub-menu>
               </a-menu>
@@ -143,7 +135,9 @@ function todiv(p: any) {
       </div>
     </div>
 
-    <div class="mouse-sensor" ref="resizeHandle" v-if="state.expanded" />
+    <div class="mouse-sensor" ref="resizeHandle" v-if="state.expanded">
+      <ArrowsAltOutlined />
+    </div>
   </div>
 </template>
 
@@ -152,7 +146,7 @@ function todiv(p: any) {
   position: fixed;
   z-index: 99999;
   background: var(--zp-primary-background);
-  padding: 16px;
+  padding: 8px 16px;
   box-shadow: 0px 0px 4px var(--zp-secondary);
   border-radius: 4px;
 
@@ -169,6 +163,7 @@ function todiv(p: any) {
     white-space: pre-line;
     overflow: auto;
     z-index: 1;
+    padding-top: 4px;
     position: relative;
   }
 
@@ -181,21 +176,33 @@ function todiv(p: any) {
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 10px;
-    height: 10px;
-    background-color: var(--zp-secondary);
+    transform: rotate(90deg);
     cursor: se-resize;
+    z-index: 2333;
+    background: var(--zp-primary-background);
+    border-radius: 2px;
+
+    &>* {
+      font-size: 18px;
+      padding: 4px;
+    }
   }
 
   .actoion-bar {
     display: flex;
     align-items: center;
+    user-select: none;
 
     .icon {
       font-size: 1.5em;
+      padding: 2px 4px;
+      border-radius: 4px;
+      &:hover {
+        background: var(--zp-secondary-variant-background);
+      }
     }
 
-    & > * {
+    &>* {
       margin-right: 8px;
     }
   }

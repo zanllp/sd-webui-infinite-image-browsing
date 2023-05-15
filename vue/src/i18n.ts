@@ -78,7 +78,7 @@ const zh = {
   deleteNotAllowedWithOnePaneLeft: '在仅剩一个pane的情况下，不允许删除!!!',
   t2i: '文生图',
   i2i: '图生图',
-  saveButtonSavesTo: '使用“保存”按钮保存图像的目录',
+  saveButtonSavesTo: '保存',
   extra: '附加',
   gridImage: '宫格图',
   'i2i-grid': '图生图网格',
@@ -122,7 +122,7 @@ const zh = {
   refreshCompleted: '刷新完成',
   'walk-mode-move-message': '在walk模式下仅允许使用“快速移动”移动位置',
   long_loading:
-    '已经连续加载超过5秒，如果你认为不是网络问题的话，请尝试关掉VPN或者添加启动参数 --no-gradio-queue。如果还是不行，请提Issue。',
+    '已经连续加载超过5秒，这可能在一会后恢复，如果一直发生这种问题请查看FAQ自行解决或者提issue',
   manualExitFullScreen: '你删除了最后一张图片，也许需要你手动退出全屏预览',
   copied: '已复制！',
   'index.expired': '索引过期，正在自动更新',
@@ -133,10 +133,12 @@ const zh = {
   "selectExactMatchTag": "选择完全匹配的 Tag",
   "selectAnyMatchTag": "可选,选择匹配其中一个或多个的 Tag",
   "selectExcludeTag": "可选，选择需要排除掉的 Tag",
-  "faq": "常见问题"
+  "faq": "常见问题",
+  "autoUpdate": "检测到发生改变自动更新"
   
 }
 const en: Record<keyof typeof zh, string> = {
+   "autoUpdate": "Detected changes, automatically updating",
   "faq": "FAQ",
   "selectExactMatchTag": "Select Exact Match Tags",
   "selectAnyMatchTag": "Optional, Select Any Match Tags",
@@ -150,7 +152,7 @@ const en: Record<keyof typeof zh, string> = {
   manualExitFullScreen:
     'You have deleted the last image and may need to manually exit full-screen preview',
   long_loading:
-    "Loading has been continuing for more than 5 seconds. If you don't think it's a network issue, please try turning off your VPN or adding the startup parameter --no-gradio-queue. If it still doesn't work, please submit an issue.",
+    "Loading has been taking more than 5 seconds, it may recover shortly. If this issue persists, please check the FAQ for a solution or open an issue.",
   'walk-mode-move-message': "Moving position is only allowed using 'Quick Move' in walk mode",
   refreshCompleted: 'Refresh completed',
   addedTagToImage: 'Tag has been added to this image',
