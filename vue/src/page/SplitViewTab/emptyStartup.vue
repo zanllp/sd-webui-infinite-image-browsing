@@ -76,7 +76,7 @@ const restoreRecord = () => {
           $t('restoreLastRecord')
         }}</a>
       </div>
-      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank" class="last-record" style="color: unset;">{{ $t('faq') }}</a>
+      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank" class="last-record">{{ $t('faq') }}</a>
     </div>
     <div class="content">
       <div class="quick-start" v-if="walkModeSupportedDir.length">
@@ -159,14 +159,14 @@ const restoreRecord = () => {
 }
 
 .last-record {
-  margin-left: 8px;
+  margin-left: 16px;
   font-size: 14px;
-  color: var(--zp-tertiary);
+  color: var(--zp-secondary);
 }
 
 .last-record a {
   text-decoration: none;
-  color: var(--zp-tertiary);
+  color: var(--zp-secondary);
 }
 
 .last-record a:hover {

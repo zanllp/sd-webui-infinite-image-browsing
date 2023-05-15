@@ -417,8 +417,11 @@ export function useLocation (props: Props) {
           'local',
           stack.value.length === 1 ? '/' : currLocation.value
         )
-        last(stack.value)!.files = files
-        message.success(t('auto.refreshed'))
+        const currFiles = last(stack.value)!.files
+        if (currFiles.map(v => v.date).join() !== files.map(v => v.date).join()) {
+          last(stack.value)!.files = files
+          message.success(t('autoUpdate'))
+        }
       } finally {
         np.value?.done()
       }
