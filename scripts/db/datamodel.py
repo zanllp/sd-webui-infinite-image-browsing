@@ -139,6 +139,18 @@ class Image:
             conn.commit()
 
     @classmethod
+    def safe_batch_remove(cls, conn: Connection, image_ids: List[int]) -> None:
+        with closing(conn.cursor()) as cur:
+            try:
+                placeholders = ",".join("?" * len(image_ids))
+                cur.execute(f"DELETE FROM image_tag WHERE image_id IN ({placeholders})", image_ids)
+                cur.execute(f"DELETE FROM image WHERE id IN ({placeholders})", image_ids)
+            except BaseException as e:
+                print(e)
+            finally:
+                conn.commit()
+
+    @classmethod
     def find_by_substring(cls, conn: Connection, substring: str, limit: int = 500) -> List["Image"]:
         with closing(conn.cursor()) as cur:
             cur.execute("SELECT * FROM image WHERE path LIKE ? OR exif LIKE ? ORDER BY date DESC LIMIT ?", 
@@ -146,9 +158,14 @@ class Image:
             rows = cur.fetchall()
 
         images = []
+        deleted_ids = []
         for row in rows:
-            images.append(cls.from_row(row))
-
+            img = cls.from_row(row)
+            if os.path.exists(img.path):
+                images.append(img)
+            else: 
+                deleted_ids.append(img.id)
+        cls.safe_batch_remove(conn, deleted_ids)
         return images
 
 
@@ -365,9 +382,16 @@ class ImageTag:
         with closing(conn.cursor()) as cur:
             cur.execute(query, params)
             rows = cur.fetchall()
-            return [
-                Image(id=row[0], path=row[1], size=row[2], date=row[3]) for row in rows
-            ]
+            images = []            
+            deleted_ids = []
+            for row in rows:
+                img = Image(id=row[0], path=row[1], size=row[2], date=row[3])
+                if os.path.exists(img.path):
+                    images.append(img)
+                else: 
+                    deleted_ids.append(img.id)
+            Image.safe_batch_remove(conn, deleted_ids)
+            return images
 
     @classmethod
     def remove(
