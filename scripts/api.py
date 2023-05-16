@@ -417,3 +417,11 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     async def remove_custom_tag_from_img(req: RemoveCustomTagFromReq):
         conn = DataBase.get_conn()
         ImageTag.remove(conn, image_id=req.img_id, tag_id=req.tag_id)
+
+    @app.get(db_pre + "/search_by_substr")
+    async def search_by_substr(substr: str):
+        conn = DataBase.get_conn()
+        imgs = DbImg.find_by_substring(conn=conn, substring=substr)
+        return  [
+            x.to_file_info() for x in  imgs
+        ]
