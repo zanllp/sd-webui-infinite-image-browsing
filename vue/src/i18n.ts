@@ -134,10 +134,16 @@ const zh = {
   "selectAnyMatchTag": "可选,选择匹配其中一个或多个的 Tag",
   "selectExcludeTag": "可选，选择需要排除掉的 Tag",
   "faq": "常见问题",
-  "autoUpdate": "检测到发生改变自动更新"
+  "autoUpdate": "检测到发生改变自动更新",
+  "fuzzy-search": "模糊搜索",
+  "fuzzy-search-placeholder": "输入图像信息或者文件名的一部分来进行搜索",
+  "fuzzy-search-noResults": "什么都没找到"
   
 }
 const en: Record<keyof typeof zh, string> = {
+  "fuzzy-search-noResults": "Nothing was found",
+  "fuzzy-search-placeholder": "Enter a part of the image information or filename to search",
+  "fuzzy-search": "Fuzzy search",
    "autoUpdate": "Detected changes, automatically updating",
   "faq": "FAQ",
   "selectExactMatchTag": "Select Exact Match Tags",

@@ -21,6 +21,7 @@
 - Supports tag autocomplete, translation, and customization.
 - Image favorite can be achieved by toggling custom tags for images in the right-click menu.
 - Support for advanced search similar to Google
+- Also supports fuzzy search, you can search by a part of the filename or generated information.
 
 ### View Image & `Send To`
 - Supports viewing image generation information. Also supported in full-screen preview mode.

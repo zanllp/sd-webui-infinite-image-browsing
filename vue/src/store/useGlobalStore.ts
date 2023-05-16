@@ -11,7 +11,7 @@ import { ref } from 'vue'
 import { type UniqueId, ID } from 'vue3-ts-util'
 
 interface OtherTabPane {
-  type: 'empty' | 'global-setting' | 'tag-search'
+  type: 'empty' | 'global-setting' | 'tag-search' | 'fuzzy-search'
   name: string
   readonly key: string
 }

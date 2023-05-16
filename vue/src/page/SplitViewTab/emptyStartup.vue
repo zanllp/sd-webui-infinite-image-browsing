@@ -11,6 +11,7 @@ const props = defineProps<{ tabIdx: number; paneIdx: number }>()
 const compCnMap: Partial<Record<TabPane['type'], string>> = {
   local: t('local'),
   'tag-search': t('imgSearch'),
+  'fuzzy-search': t('fuzzy-search'),
   'global-setting': t('globalSettings')
 }
 const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false) => {
@@ -20,6 +21,7 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
       return
     case 'global-setting':
     case 'tag-search':
+    case 'fuzzy-search':
     case 'empty':
       pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId() }
       break

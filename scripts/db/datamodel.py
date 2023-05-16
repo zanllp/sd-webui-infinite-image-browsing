@@ -138,6 +138,19 @@ class Image:
             cur.execute("DELETE FROM image WHERE id = ?", (image_id,))
             conn.commit()
 
+    @classmethod
+    def find_by_substring(cls, conn: Connection, substring: str, limit: int = 500) -> List["Image"]:
+        with closing(conn.cursor()) as cur:
+            cur.execute("SELECT * FROM image WHERE path LIKE ? OR exif LIKE ? ORDER BY date DESC LIMIT ?", 
+                        (f"%{substring}%", f"%{substring}%", limit))
+            rows = cur.fetchall()
+
+        images = []
+        for row in rows:
+            images.append(cls.from_row(row))
+
+        return images
+
 
 class Tag:
     def __init__(self, name: str, score: int, type: str, count=0):

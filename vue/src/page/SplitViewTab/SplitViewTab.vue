@@ -20,7 +20,8 @@ const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> 
   'tag-search-matched-image-grid': defineAsyncComponent(
     () => import('@/page/TagSearch/MatchedImageGrid.vue')
   ),
-  'tag-search': defineAsyncComponent(() => import('@/page/TagSearch/TagSearch.vue'))
+  'tag-search': defineAsyncComponent(() => import('@/page/TagSearch/TagSearch.vue')),
+  'fuzzy-search': defineAsyncComponent(() => import('@/page/TagSearch/SubstrSearch.vue'))
 }
 const onEdit = (idx: number, targetKey: any, action: string) => {
   const tab = global.tabList[idx]
