@@ -54,7 +54,16 @@ export const createReactiveQueue = () => reactive(new FetchQueue(-1, 0, -1, 'thr
 
 export const copy2clipboardI18n = async (text: string) => {
   try {
-    await navigator.clipboard.writeText(text)
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text)
+    } else {
+      const input = document.createElement('input');
+      input.value = text;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+    }
     message.success(t('copied'))
   } catch (error) {
     message.error("copy failed. maybe it's non-secure environment")
