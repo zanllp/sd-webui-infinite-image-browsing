@@ -110,7 +110,10 @@ function todiv (p: any) {
             @visible-change="onMouseHoverContext">
             <a-button>{{ t('openContextMenu') }}</a-button>
             <template #overlay>
-              <a-menu @click="emit('contextMenuClick', $event, file, idx)" style="z-index: 99999">
+              <a-menu @click="emit('contextMenuClick', $event, file, idx)" style="z-index: 99999">       
+                <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
+                <a-menu-item key="download">{{ $t('downloadDirectly') }}</a-menu-item>
+                <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
                 <a-menu-item key="deleteFiles">{{ $t('deleteSelected') }}</a-menu-item>
                 <a-menu-item key="send2txt2img">{{ $t('sendToTxt2img') }}</a-menu-item>
                 <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
