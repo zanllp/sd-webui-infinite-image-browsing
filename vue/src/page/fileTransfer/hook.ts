@@ -30,11 +30,12 @@ export const stackCache = new Map<string, Page[]>()
 
 const global = useGlobalStore()
 const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
+const encode = encodeURIComponent
 export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
-  `/infinite_image_browsing/file?filename=${encodeURIComponent(file.fullpath)}${download ? `&disposition=${encodeURIComponent(file.name)}` : ''
+  `/infinite_image_browsing/file?filename=${encode(file.fullpath)}&created_time=${encode(file.created_time)}${download ? `&disposition=${encode(file.name)}` : ''
   }`
 export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) =>
-  `/infinite_image_browsing/image-thumbnail?path=${encodeURIComponent(file.fullpath)}&size=${size}`
+  `/infinite_image_browsing/image-thumbnail?path=${encode(file.fullpath)}&size=${size}&created_time=${encode(file.created_time)}`
 
 const { eventEmitter: events, useEventListen } = typedEventEmitter<{
   removeFiles(_:{ paths: string[]; loc: string }): void
@@ -275,7 +276,7 @@ export function useLocation (props: Props) {
   onMounted(async () => {
     if (!stack.value.length) {
       // 有传入stack时直接使用传入的
-      const resp = await getTargetFolderFiles('local', '/')
+      const resp = await getTargetFolderFiles('/')
       stack.value.push({
         files: resp.files,
         curr: '/'
@@ -325,7 +326,7 @@ export function useLocation (props: Props) {
     }
     try {
       np.value?.start()
-      const { files } = await getTargetFolderFiles('local', file.fullpath)
+      const { files } = await getTargetFolderFiles(file.fullpath)
       stack.value.push({
         files,
         curr: file.name
@@ -396,10 +397,7 @@ export function useLocation (props: Props) {
         back(0)
         await handleWalkModeTo(walkModePath.value)
       } else {
-        const { files } = await getTargetFolderFiles(
-          'local',
-          stack.value.length === 1 ? '/' : currLocation.value
-        )
+        const { files } = await getTargetFolderFiles(stack.value.length === 1 ? '/' : currLocation.value)
         last(stack.value)!.files = files
       }
       scroller.value?.scrollToItem(0)
@@ -413,10 +411,7 @@ export function useLocation (props: Props) {
     if (!props.walkMode) {
       try {
         np.value?.start()
-        const { files } = await getTargetFolderFiles(
-          'local',
-          stack.value.length === 1 ? '/' : currLocation.value
-        )
+        const { files } = await getTargetFolderFiles( stack.value.length === 1 ? '/' : currLocation.value)
         const currFiles = last(stack.value)!.files
         if (currFiles.map(v => v.date).join() !== files.map(v => v.date).join()) {
           last(stack.value)!.files = files
@@ -513,7 +508,7 @@ export function useFilesDisplay (props: Props) {
       if (currIdx !== -1) {
         const next = parFilesSorted[currIdx + 1]
         const p = Path.join(currLocation.value, '../', next.name)
-        const r = await getTargetFolderFiles('local', p)
+        const r = await getTargetFolderFiles(p)
         const page = currPage.value!
         page.curr = next.name
         if (!page.walkFiles) {
@@ -617,7 +612,7 @@ export function useFileTransfer () {
         content,
         maskClosable: true,
         async onOk () {
-          await moveFiles('local', data.path, toPath)
+          await moveFiles(data.path, toPath)
           events.emit('removeFiles', { paths: data.path, loc: data.loc })
           await eventEmitter.value.emit('refresh')
         }
@@ -761,7 +756,7 @@ export function useFileItemActions (
         }
         const absolutePath = Path.normalizeRelativePathToAbsolute(dir.dir, global.conf?.sd_cwd!)
         const selectedImg = getSelectedImg()
-        await moveFiles('local', selectedImg.map(v => v.fullpath), absolutePath)
+        await moveFiles(selectedImg.map(v => v.fullpath), absolutePath)
         events.emit('removeFiles', { paths: selectedImg.map(v => v.fullpath), loc: currLocation.value })
         events.emit('addFiles', { files: selectedImg, loc: absolutePath })
         break
@@ -831,7 +826,7 @@ export function useFileItemActions (
             ),
             async onOk () {
               const paths = selectedFiles.map((v) => v.fullpath)
-              await deleteFiles('local', paths)
+              await deleteFiles(paths)
               message.success(t('deleteSuccess'))
               events.emit('removeFiles', { paths: paths, loc: currLocation.value })
               resolve()

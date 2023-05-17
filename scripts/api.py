@@ -64,115 +64,105 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         file_paths: List[str]
 
     @app.post(pre + "/delete_files/{target}")
-    async def delete_files(req: DeleteFilesReq, target: Literal["local", "netdisk"]):
-        if target == "local":
-            conn = DataBase.get_conn()
-            for path in req.file_paths:
-                try:
-                    if os.path.isdir(path):
-                        if len(os.listdir(path)):
-                            error_msg = (
-                                "When a folder is not empty, it is not allowed to be deleted."
-                                if locale == "en"
-                                else "文件夹不为空时不允许删除。"
-                            )
-                            raise HTTPException(400, detail=error_msg)
-                        shutil.rmtree(path)
-                    else:
-                        os.remove(path)
-                        img = DbImg.get(conn, os.path.normpath(path))
-                        if img:
-                            logger.info("delete file: %s", path)
-                            ImageTag.remove(conn, img.id)
-                            DbImg.remove(conn, img.id)
-                except OSError as e:
-                    # 处理删除失败的情况
-                    logger.error("delete failed")
-                    error_msg = (
-                        f"Error deleting file {path}: {e}"
-                        if locale == "en"
-                        else f"删除文件 {path} 时出错：{e}"
-                    )
-                    raise HTTPException(400, detail=error_msg)
-        else:
-            pass
+    async def delete_files(req: DeleteFilesReq):
+        conn = DataBase.get_conn()
+        for path in req.file_paths:
+            try:
+                if os.path.isdir(path):
+                    if len(os.listdir(path)):
+                        error_msg = (
+                            "When a folder is not empty, it is not allowed to be deleted."
+                            if locale == "en"
+                            else "文件夹不为空时不允许删除。"
+                        )
+                        raise HTTPException(400, detail=error_msg)
+                    shutil.rmtree(path)
+                else:
+                    os.remove(path)
+                    img = DbImg.get(conn, os.path.normpath(path))
+                    if img:
+                        logger.info("delete file: %s", path)
+                        ImageTag.remove(conn, img.id)
+                        DbImg.remove(conn, img.id)
+            except OSError as e:
+                # 处理删除失败的情况
+                logger.error("delete failed")
+                error_msg = (
+                    f"Error deleting file {path}: {e}"
+                    if locale == "en"
+                    else f"删除文件 {path} 时出错：{e}"
+                )
+                raise HTTPException(400, detail=error_msg)
 
     class MoveFilesReq(BaseModel):
         file_paths: List[str]
         dest: str
 
     @app.post(pre + "/move_files/{target}")
-    async def move_files(req: MoveFilesReq, target: Literal["local", "netdisk"]):
+    async def move_files(req: MoveFilesReq):
         conn = DataBase.get_conn()
-        if target == "local":
-            for path in req.file_paths:
-                try:
-                    shutil.move(path, req.dest)
-                    img = DbImg.get(conn, os.path.normpath(path))
-                    if img:
-                        ImageTag.remove(conn, img.id)
-                        DbImg.remove(conn, img.id)
-                except OSError as e:
-                    error_msg = (
-                        f"Error moving file {path} to {req.dest}: {e}"
-                        if locale == "en"
-                        else f"移动文件 {path} 到 {req.dest} 时出错：{e}"
-                    )
-                    raise HTTPException(400, detail=error_msg)
-        else:
-            pass
+        for path in req.file_paths:
+            try:
+                shutil.move(path, req.dest)
+                img = DbImg.get(conn, os.path.normpath(path))
+                if img:
+                    ImageTag.remove(conn, img.id)
+                    DbImg.remove(conn, img.id)
+            except OSError as e:
+                error_msg = (
+                    f"Error moving file {path} to {req.dest}: {e}"
+                    if locale == "en"
+                    else f"移动文件 {path} 到 {req.dest} 时出错：{e}"
+                )
+                raise HTTPException(400, detail=error_msg)
 
-    @app.get(pre + "/files/{target}")
+    @app.get(pre + "/files")
     async def get_target_floder_files(
-        target: Literal["local", "netdisk"], folder_path: str
+        folder_path: str
     ):
         files = []
         try:
-            if target == "local":
-                if is_win and folder_path == "/":
-                    for item in get_windows_drives():
-                        files.append(
-                            {"type": "dir", "size": "-", "name": item, "fullpath": item}
-                        )
-                else:
-                    for item in os.listdir(folder_path):
-                        path = os.path.join(folder_path, item)
-                        if not os.path.exists(path):
-                            continue
-                        date = get_modified_date(path)
-                        created_time = get_created_date(path)
-                        if os.path.isfile(path):
-                            bytes = os.path.getsize(path)
-                            size = human_readable_size(bytes)
-                            files.append(
-                                {
-                                    "type": "file",
-                                    "date": date,
-                                    "size": size,
-                                    "name": item,
-                                    "bytes": bytes,
-                                    "created_time": created_time,
-                                    "fullpath": os.path.normpath(
-                                        os.path.join(folder_path, item)
-                                    ),
-                                }
-                            )
-                        elif os.path.isdir(path):
-                            files.append(
-                                {
-                                    "type": "dir",
-                                    "date": date,
-                                    "created_time": created_time,
-                                    "size": "-",
-                                    "name": item,
-                                    "fullpath": os.path.normpath(
-                                        os.path.join(folder_path, item)
-                                    ),
-                                }
-                            )
+            if is_win and folder_path == "/":
+                for item in get_windows_drives():
+                    files.append(
+                        {"type": "dir", "size": "-", "name": item, "fullpath": item}
+                    )
             else:
-                pass
-
+                for item in os.listdir(folder_path):
+                    path = os.path.join(folder_path, item)
+                    if not os.path.exists(path):
+                        continue
+                    date = get_modified_date(path)
+                    created_time = get_created_date(path)
+                    if os.path.isfile(path):
+                        bytes = os.path.getsize(path)
+                        size = human_readable_size(bytes)
+                        files.append(
+                            {
+                                "type": "file",
+                                "date": date,
+                                "size": size,
+                                "name": item,
+                                "bytes": bytes,
+                                "created_time": created_time,
+                                "fullpath": os.path.normpath(
+                                    os.path.join(folder_path, item)
+                                ),
+                            }
+                        )
+                    elif os.path.isdir(path):
+                        files.append(
+                            {
+                                "type": "dir",
+                                "date": date,
+                                "created_time": created_time,
+                                "size": "-",
+                                "name": item,
+                                "fullpath": os.path.normpath(
+                                    os.path.join(folder_path, item)
+                                ),
+                            }
+                        )
         except Exception as e:
             logger.error(e)
             raise HTTPException(status_code=400, detail=str(e))
@@ -180,13 +170,15 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         return {"files": files}
 
     @app.get(pre + "/image-thumbnail")
-    async def thumbnail(path: str, size: str = "256,256"):
+    async def thumbnail(path: str, created_time: str , size: str = "256,256"):
         if not temp_path:
-            encoded_params = urlencode({"filename": path})
+            encoded_params = urlencode({"filename": path, "created_time" : created_time })
             return RedirectResponse(url=f"{pre}/file?{encoded_params}")
         # 生成缓存文件的路径
-        hash = hashlib.md5((path + size).encode("utf-8")).hexdigest()
-        cache_path = os.path.join(temp_path, f"{hash}.webp")
+        hash_dir = hashlib.md5((path + created_time).encode("utf-8")).hexdigest()
+        hash = hashlib.md5((path + created_time + size).encode("utf-8")).hexdigest()
+        cache_dir = os.path.join(temp_path, 'iib_cache', hash_dir)
+        cache_path = os.path.join(cache_dir, f"{size}.webp")
 
         # 如果缓存文件存在，则直接返回该文件
         if os.path.exists(cache_path):
@@ -200,6 +192,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         with Image.open(path) as img:
             w, h = size.split(",")
             img.thumbnail((int(w), int(h)))
+            os.makedirs(cache_dir, exist_ok=True)
             img.save(cache_path, "webp")
 
         # 返回缓存文件
@@ -230,9 +223,8 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         return False
 
     @app.get(pre + "/file")
-    async def get_file(filename: str, disposition: Optional[str] = None):
+    async def get_file(filename: str, created_time: str , disposition: Optional[str] = None):
         import mimetypes
-
         if not os.path.exists(filename):
             raise HTTPException(status_code=404)
         if not os.path.isfile(filename):
@@ -243,7 +235,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         if disposition:
             headers["Content-Disposition"] = f'attachment; filename="{disposition}"'
         if need_cache(filename) and is_valid_image_path(filename):  # 认为永远不变,不要协商缓存了试试
-            headers["Cache-Control"] = "public, max-age=31536000"
+            headers["Cache-Control"] = "public, max-age=31536000" # 针对同样名字文件但实际上不同内容的文件要求必须传入创建时间来避免浏览器缓存
             headers["Expires"] = (datetime.now() + timedelta(days=365)).strftime(
                 "%a, %d %b %Y %H:%M:%S GMT"
             )

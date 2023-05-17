@@ -49,8 +49,12 @@ def update_image_data(search_dirs: List[str]):
                 process_folder(file_path)
 
             elif is_valid_image_path(file_path):
-                if DbImg.get(conn, file_path):  # 已存在的跳过
-                    continue
+                img = DbImg.get(conn, file_path)
+                if img:  # 已存在的跳过
+                    if img.date == get_modified_date(img.path):
+                        continue
+                    else:
+                        DbImg.safe_batch_remove(conn=conn, image_ids=[img.id])
                 parsed_params, info = get_exif_data(file_path)
                 img = DbImg(
                     file_path,
