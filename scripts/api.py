@@ -63,7 +63,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     class DeleteFilesReq(BaseModel):
         file_paths: List[str]
 
-    @app.post(pre + "/delete_files/{target}")
+    @app.post(pre + "/delete_files")
     async def delete_files(req: DeleteFilesReq):
         conn = DataBase.get_conn()
         for path in req.file_paths:
@@ -98,7 +98,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         file_paths: List[str]
         dest: str
 
-    @app.post(pre + "/move_files/{target}")
+    @app.post(pre + "/move_files")
     async def move_files(req: MoveFilesReq):
         conn = DataBase.get_conn()
         for path in req.file_paths:
@@ -106,8 +106,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                 shutil.move(path, req.dest)
                 img = DbImg.get(conn, os.path.normpath(path))
                 if img:
-                    ImageTag.remove(conn, img.id)
-                    DbImg.remove(conn, img.id)
+                    DbImg.safe_batch_remove(conn, [img.id])
             except OSError as e:
                 error_msg = (
                     f"Error moving file {path} to {req.dest}: {e}"
@@ -170,13 +169,13 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         return {"files": files}
 
     @app.get(pre + "/image-thumbnail")
-    async def thumbnail(path: str, created_time: str , size: str = "256,256"):
+    async def thumbnail(path: str, t: str , size: str = "256x256"):
         if not temp_path:
-            encoded_params = urlencode({"filename": path, "created_time" : created_time })
+            encoded_params = urlencode({"filename": path, "t" : t })
             return RedirectResponse(url=f"{pre}/file?{encoded_params}")
         # 生成缓存文件的路径
-        hash_dir = hashlib.md5((path + created_time).encode("utf-8")).hexdigest()
-        hash = hashlib.md5((path + created_time + size).encode("utf-8")).hexdigest()
+        hash_dir = hashlib.md5((path + t).encode("utf-8")).hexdigest()
+        hash = hash_dir + size
         cache_dir = os.path.join(temp_path, 'iib_cache', hash_dir)
         cache_path = os.path.join(cache_dir, f"{size}.webp")
 
@@ -190,7 +189,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
 
         # 如果缓存文件不存在，则生成缩略图并保存
         with Image.open(path) as img:
-            w, h = size.split(",")
+            w, h = size.split("x")
             img.thumbnail((int(w), int(h)))
             os.makedirs(cache_dir, exist_ok=True)
             img.save(cache_path, "webp")
@@ -223,7 +222,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         return False
 
     @app.get(pre + "/file")
-    async def get_file(filename: str, created_time: str , disposition: Optional[str] = None):
+    async def get_file(filename: str, t: str , disposition: Optional[str] = None):
         import mimetypes
         if not os.path.exists(filename):
             raise HTTPException(status_code=404)
