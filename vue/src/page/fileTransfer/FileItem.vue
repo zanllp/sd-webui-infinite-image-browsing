@@ -48,8 +48,8 @@ const onRightClick = () => {
 const q = createReactiveQueue()
 const thumbnailSize = computed(() =>
   props.viewMode === 'grid'
-    ? [global.gridThumbnailSize, global.gridThumbnailSize].join()
-    : [global.largeGridThumbnailSize, global.largeGridThumbnailSize].join()
+    ? [global.gridThumbnailSize, global.gridThumbnailSize].join('x')
+    : [global.largeGridThumbnailSize, global.largeGridThumbnailSize].join('x')
 )
 </script>
 <template>
