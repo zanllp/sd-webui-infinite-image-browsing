@@ -33,11 +33,14 @@ class DataBase:
     def init(clz):
         # 创建连接并打开数据库
         conn = connect(os.path.join(cwd, "iib.db"))
-        Floder.create_table(conn)
-        ImageTag.create_table(conn)
-        Tag.create_table(conn)
-        Image.create_table(conn)
-        conn.commit()
+        try:            
+            Floder.create_table(conn)
+            ImageTag.create_table(conn)
+            Tag.create_table(conn)
+            Image.create_table(conn)
+            ExtraPath.create_table(conn)
+        finally:
+            conn.commit()
         clz.num += 1
         if is_dev:
             print(f"当前连接数{clz.num}")
@@ -472,3 +475,58 @@ class Floder:
                 ):
                     dirs.append(folder_path)
             return dirs
+        
+    @classmethod
+    def remove_folder(cls, conn: Connection, folder_path: str):
+        folder_path = os.path.normpath(folder_path)
+        with closing(conn.cursor()) as cur:
+            cur.execute("DELETE FROM folders WHERE path = ?", (folder_path,))
+
+
+# Define the ScannedPath class
+class ExtraPath:
+    def __init__(self, path: str, type: str = "scanned"):
+        self.path = os.path.normpath(path)
+        self.type = type
+
+    def save(self, conn):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                "INSERT INTO extra_path (path, type) VALUES (?, ?) ON CONFLICT (path) DO UPDATE SET type = ?",
+                (self.path, self.type, self.type),
+            )
+
+    @classmethod
+    def get_extra_paths(cls, conn, type: str = "scanned"):
+        query = "SELECT * FROM extra_path"
+        params = ()
+        if type:
+            query += " WHERE type = ?"
+            params = (type,)
+        with closing(conn.cursor()) as cur:
+            cur.execute(query, params)
+            rows = cur.fetchall()
+            paths: List[ExtraPath] = []
+            for row in rows:
+                paths.append(ExtraPath(row[0], row[1]))
+            return paths
+
+    @classmethod
+    def remove(cls, conn, path: str):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                "DELETE FROM extra_path WHERE path = ?",
+                (os.path.normpath(path),),
+            )
+            Floder.remove_folder(conn, path)
+            conn.commit()
+
+    @classmethod
+    def create_table(cls, conn):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """CREATE TABLE IF NOT EXISTS extra_path (
+                            path TEXT PRIMARY KEY,
+                            type TEXT NOT NULL
+                        )"""
+            )

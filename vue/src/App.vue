@@ -5,16 +5,20 @@ import { getGlobalSetting } from './api'
 import { useGlobalStore } from './store/useGlobalStore'
 import { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
 import SplitViewTab from '@/page/SplitViewTab/SplitViewTab.vue'
-import { createReactiveQueue } from './util'
+import { createReactiveQueue, globalEvents, useGlobalEventListen } from './util'
 
 const globalStore = useGlobalStore()
 const queue = createReactiveQueue()
+
+useGlobalEventListen('updateGlobalSetting', async () => {
+
+  const resp = await getGlobalSetting()
+  globalStore.conf = resp
+  const r = await getAutoCompletedTagList(resp)
+  globalStore.autoCompletedDirList = r.filter((v) => v?.dir?.trim?.())
+})
 onMounted(async () => {
-  getGlobalSetting().then(async (resp) => {
-    globalStore.conf = resp
-    const r = await getAutoCompletedTagList(resp)
-    globalStore.autoCompletedDirList = r.filter((v) => v?.dir?.trim?.())
-  })
+  globalEvents.emit('updateGlobalSetting')
 })
 </script>
 

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import os
 import shutil
+import sqlite3
 from scripts.tool import (
     human_readable_size,
     is_valid_image_path,
@@ -13,7 +14,8 @@ from scripts.tool import (
     get_windows_drives,
     get_sd_webui_conf,
     get_valid_img_dirs,
-    get_created_date
+    get_created_date,
+    open_folder
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -24,7 +26,14 @@ from fastapi.responses import FileResponse, RedirectResponse
 from PIL import Image
 import hashlib
 from urllib.parse import urlencode
-from scripts.db.datamodel import DataBase, Image as DbImg, Tag, Floder, ImageTag
+from scripts.db.datamodel import (
+    DataBase,
+    Image as DbImg,
+    Tag,
+    Floder,
+    ImageTag,
+    ExtraPath,
+)
 from scripts.db.update_image_data import update_image_data
 from scripts.logger import logger
 
@@ -47,8 +56,12 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     @app.get(f"{pre}/global_setting")
     async def global_setting():
         all_custom_tags = []
+
+        extra_paths = []
         try:
-            all_custom_tags = Tag.get_all_custom_tag(DataBase.get_conn())
+            conn = DataBase.get_conn()
+            all_custom_tags = Tag.get_all_custom_tag(conn)
+            extra_paths = ExtraPath.get_extra_paths(conn)
         except Exception as e:
             print(e)
         return {
@@ -58,6 +71,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             "home": os.environ.get("USERPROFILE") if is_win else os.environ.get("HOME"),
             "sd_cwd": os.getcwd(),
             "all_custom_tags": all_custom_tags,
+            "extra_paths": extra_paths
         }
 
     class DeleteFilesReq(BaseModel):
@@ -116,9 +130,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                 raise HTTPException(400, detail=error_msg)
 
     @app.get(pre + "/files")
-    async def get_target_floder_files(
-        folder_path: str
-    ):
+    async def get_target_floder_files(folder_path: str):
         files = []
         try:
             if is_win and folder_path == "/":
@@ -169,14 +181,14 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         return {"files": files}
 
     @app.get(pre + "/image-thumbnail")
-    async def thumbnail(path: str, t: str , size: str = "256x256"):
+    async def thumbnail(path: str, t: str, size: str = "256x256"):
         if not temp_path:
-            encoded_params = urlencode({"filename": path, "t" : t })
+            encoded_params = urlencode({"filename": path, "t": t})
             return RedirectResponse(url=f"{pre}/file?{encoded_params}")
         # 生成缓存文件的路径
         hash_dir = hashlib.md5((path + t).encode("utf-8")).hexdigest()
         hash = hash_dir + size
-        cache_dir = os.path.join(temp_path, 'iib_cache', hash_dir)
+        cache_dir = os.path.join(temp_path, "iib_cache", hash_dir)
         cache_path = os.path.join(cache_dir, f"{size}.webp")
 
         # 如果缓存文件存在，则直接返回该文件
@@ -201,29 +213,31 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             headers={"Cache-Control": "max-age=31536000", "ETag": hash},
         )
 
-    forever_cache_path = []
     img_search_dirs = []
     try:
-        forever_cache_path = get_valid_img_dirs(get_sd_webui_conf(**kwargs))
-        img_search_dirs = forever_cache_path
+        img_search_dirs = get_valid_img_dirs(get_sd_webui_conf(**kwargs))
     except:
         pass
 
-    def need_cache(path, parent_paths=forever_cache_path):
+    def need_cache(path, parent_paths=img_search_dirs):
         """
         判断 path 是否是 parent_paths 中某个路径的子路径
         """
         try:
             for parent_path in parent_paths:
-                if os.path.commonpath([os.path.normpath(path), parent_path]) == parent_path:
+                if (
+                    os.path.commonpath([os.path.normpath(path), parent_path])
+                    == parent_path
+                ):
                     return True
         except:
             pass
         return False
 
     @app.get(pre + "/file")
-    async def get_file(filename: str, t: str , disposition: Optional[str] = None):
+    async def get_file(filename: str, t: str, disposition: Optional[str] = None):
         import mimetypes
+
         if not os.path.exists(filename):
             raise HTTPException(status_code=404)
         if not os.path.isfile(filename):
@@ -234,7 +248,9 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         if disposition:
             headers["Content-Disposition"] = f'attachment; filename="{disposition}"'
         if need_cache(filename) and is_valid_image_path(filename):  # 认为永远不变,不要协商缓存了试试
-            headers["Cache-Control"] = "public, max-age=31536000" # 针对同样名字文件但实际上不同内容的文件要求必须传入创建时间来避免浏览器缓存
+            headers[
+                "Cache-Control"
+            ] = "public, max-age=31536000"  # 针对同样名字文件但实际上不同内容的文件要求必须传入创建时间来避免浏览器缓存
             headers["Expires"] = (datetime.now() + timedelta(days=365)).strftime(
                 "%a, %d %b %Y %H:%M:%S GMT"
             )
@@ -278,6 +294,14 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     @app.get(pre)
     def index_bd():
         return FileResponse(os.path.join(cwd, "vue/dist/index.html"))
+    
+
+    class OpenFolderReq(BaseModel):
+        path: str
+
+    @app.post(pre  + "/open_folder")
+    def open_folder_using_explore(req: OpenFolderReq):
+        open_folder(*os.path.split(req.path))
 
     db_pre = pre + "/db"
 
@@ -294,7 +318,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             "expired_dirs": expired_dirs,
         }
 
-    @app.get(db_pre+"/expired_dirs")
+    @app.get(db_pre + "/expired_dirs")
     async def get_db_expired():
         conn = DataBase.get_conn()
         expired_dirs = Floder.get_expired_dirs(conn)
@@ -302,6 +326,10 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             "expired": len(expired_dirs) != 0,
             "expired_dirs": expired_dirs,
         }
+    
+    def get_extra_paths(conn: sqlite3.Connection):
+        r = ExtraPath.get_extra_paths(conn, "scanned")
+        return [x.path for x in r]
 
     @app.post(db_pre + "/update_image_data")
     async def update_image_db_data():
@@ -309,9 +337,10 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             DataBase._initing = True
             conn = DataBase.get_conn()
             img_count = DbImg.count(conn)
-            update_image_data(
+            dirs = (
                 img_search_dirs if img_count == 0 else Floder.get_expired_dirs(conn)
-            )
+            ) + get_extra_paths(conn)
+            update_image_data(dirs)
         finally:
             DataBase._initing = False
 
@@ -324,19 +353,18 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     async def match_image_by_tags(req: MatchImagesByTagsReq):
         conn = DataBase.get_conn()
         return [
-            x.to_file_info() for x in ImageTag.get_images_by_tags(conn, {
-                "and": req.and_tags,
-                "or": req.or_tags,
-                "not": req.not_tags
-            })
+            x.to_file_info()
+            for x in ImageTag.get_images_by_tags(
+                conn, {"and": req.and_tags, "or": req.or_tags, "not": req.not_tags}
+            )
         ]
 
     @app.get(db_pre + "/img_selected_custom_tag")
     async def get_img_selected_custom_tag(path: str):
         path = os.path.normpath(path)
-        if not need_cache(path):
-            return []
         conn = DataBase.get_conn()
+        if not need_cache(path, img_search_dirs + get_extra_paths(conn)):
+            return []
         img = DbImg.get(conn, path)
         if not img:
             if DbImg.count(conn) == 0:
@@ -355,12 +383,12 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     async def toggle_custom_tag_to_img(req: ToggleCustomTagToImgReq):
         conn = DataBase.get_conn()
         path = os.path.normpath(req.img_path)
-        if not need_cache(path):
+        if not need_cache(path, img_search_dirs + get_extra_paths(conn)):
             raise HTTPException(
                 400,
-                "非 Stable Diffusion webui 文件夹下不支持切换 tag，如果有需要请提 Issue"
+                "当前文件不在搜索路径内，你可以将它添加到扫描路径再尝试。"
                 if locale == "zh"
-                else "Tag toggleing is not supported outside the Stable Diffusion webui folder. Please open an issue if you have any questions.",
+                else "The current file is not within the scan path. You can add it to the scan path and try again.",
             )
         img = DbImg.get(conn, path)
         if not img:
@@ -413,6 +441,27 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     async def search_by_substr(substr: str):
         conn = DataBase.get_conn()
         imgs = DbImg.find_by_substring(conn=conn, substring=substr)
-        return  [
-            x.to_file_info() for x in  imgs
-        ]
+        return [x.to_file_info() for x in imgs]
+
+    class ScannedPathModel(BaseModel):
+        path: str
+
+    @app.post(f"{db_pre}/scanned_paths", status_code=201)
+    async def create_scanned_path(scanned_path: ScannedPathModel):
+        conn = DataBase.get_conn()
+        path = ExtraPath(scanned_path.path)
+        try:
+            path.save(conn)
+        finally:
+            conn.commit()
+
+    @app.get(f"{db_pre}/scanned_paths", response_model=List[ScannedPathModel])
+    async def read_scanned_paths():
+        conn = DataBase.get_conn()
+        paths = ExtraPath.get_extra_paths(conn, "scanned")
+        return [{"path": path.path} for path in paths]
+
+    @app.delete(f"{db_pre}/scanned_paths")
+    async def delete_scanned_path(scanned_path: ScannedPathModel):
+        conn = DataBase.get_conn()
+        ExtraPath.remove(conn, scanned_path.path)

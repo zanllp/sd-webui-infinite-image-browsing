@@ -137,10 +137,15 @@ const zh = {
   "autoUpdate": "检测到发生改变自动更新",
   "fuzzy-search": "模糊搜索",
   "fuzzy-search-placeholder": "输入图像信息或者文件名的一部分来进行搜索",
-  "fuzzy-search-noResults": "什么都没找到"
-  
+  "fuzzy-search-noResults": "什么都没找到",
+  "openWithLocalFileBrowser": "使用本地文件浏览器打开",
+  addToSearchScanPathAndQuickMove: '添加到搜索扫描路径和快速移动',
+  removeFromSearchScanPathAndQuickMove: '从搜索扫描路径和快速移动中移除',
 }
 const en: Record<keyof typeof zh, string> = {
+  removeFromSearchScanPathAndQuickMove: 'Remove from Search Scan Path and Quick Move',
+  addToSearchScanPathAndQuickMove: 'Add to Search Scan Path and Quick Move',
+  "openWithLocalFileBrowser": "Open with Local File Browser",
   "fuzzy-search-noResults": "Nothing was found",
   "fuzzy-search-placeholder": "Enter a part of the image information or filename to search",
   "fuzzy-search": "Fuzzy search",

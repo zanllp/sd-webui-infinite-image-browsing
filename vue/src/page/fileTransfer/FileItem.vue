@@ -143,6 +143,7 @@ const thumbnailSize = computed(() =>
             <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
             <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
             <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
+            <a-menu-item key="openWithLocalFileBrowser">{{ $t('openWithLocalFileBrowser') }}</a-menu-item>
             <a-sub-menu key="toggle-tag" :title="$t('toggleTag')">
               <a-menu-item v-for="tag in tags" :key="tag.id"
                 >{{ tag.name }} <star-filled v-if="tag.selected" /><star-outlined v-else />

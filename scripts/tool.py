@@ -4,6 +4,7 @@ import platform
 import re
 import tempfile
 import imghdr
+import subprocess
 from typing import Dict
 import piexif
 import piexif.helper
@@ -327,3 +328,22 @@ try:
             tags_translate[en.strip()] = mapping.strip()
 except Exception as e:
     pass
+
+
+def open_folder(folder_path, file_path=None):
+    folder = os.path.realpath(folder_path)
+    if file_path:
+        file = os.path.join(folder, file_path)
+        if os.name == 'nt':
+            subprocess.run(['explorer', '/select,', file])
+        elif os.name == 'posix':
+            subprocess.run(['xdg-open', file])
+        elif os.name == 'mac':
+            subprocess.run(['open', '-R', file])
+    else:
+        if os.name == 'nt':
+            subprocess.run(['explorer', folder])
+        elif os.name == 'posix':
+            subprocess.run(['xdg-open', folder])
+        elif os.name == 'mac':
+            subprocess.run(['open', folder])

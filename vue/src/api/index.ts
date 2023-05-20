@@ -29,6 +29,7 @@ export interface GlobalConf {
   cwd: string
   home: string
   sd_cwd: string
+  extra_paths: { path: string }[]
 }
 
 export const getGlobalSetting = async () => {
@@ -52,3 +53,8 @@ export const genInfoCompleted = async () => {
 export const getImageGenerationInfo = async (path: string) => {
   return (await axiosInst.get(`/image_geninfo?path=${encodeURIComponent(path)}`)).data as string
 }
+
+
+export const openFolder = async (path: string) => {
+  await axiosInst.post('/open_folder', { path })
+} 
