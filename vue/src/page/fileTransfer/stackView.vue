@@ -25,6 +25,7 @@ import { watch } from 'vue'
 import FileItem from './FileItem.vue'
 import fullScreenContextMenu from './fullScreenContextMenu.vue'
 import { copy2clipboardI18n } from '@/util'
+import { openFolder } from '@/api'
 
 const global = useGlobalStore()
 const props = defineProps<{
@@ -48,7 +49,7 @@ const {
   multiSelectedIdxs,
   spinning
 } = useHookShareState().toRefs()
-const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to, quickMoveTo } =
+const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to, quickMoveTo, addToSearchScanPathAndQuickMove, searchPathInfo } =
   useLocation(props)
 const {
   gridItems,
@@ -62,7 +63,8 @@ const {
   loadNextDir,
   loadNextDirLoading,
   canLoadNext,
-  onScroll
+  onScroll,
+  
 } = useFilesDisplay(props)
 const { onDrop, onFileDragStart } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions(
@@ -167,10 +169,19 @@ watch(
                     <search-select v-model:value="sortMethod" @click.stop :conv="sortMethodConv"
                       :options="Object.keys(sortMethodMap)" />
                   </a-form-item>
-                  <a-form-item>
+                  <div style="padding: 4px;">
                     <a @click.prevent="copyLocation">{{ $t('copyPath') }}</a>
+                  </div>
+                  <div style="padding: 4px;">
                     <folder-navigator :loc="currLocation" @to="to" />
-                  </a-form-item>
+                  </div>
+                  <div style="padding: 4px;">
+                    <a @click.prevent="addToSearchScanPathAndQuickMove" v-if="!searchPathInfo ">{{  $t('addToSearchScanPathAndQuickMove') }}</a>
+                    <a @click.prevent="addToSearchScanPathAndQuickMove" v-else-if="searchPathInfo.can_delete">{{ $t('removeFromSearchScanPathAndQuickMove') }}</a>
+                  </div>
+                  <div style="padding: 4px;">
+                    <a @click.prevent="openFolder(currLocation + '/')">{{ $t('openWithLocalFileBrowser') }}</a>
+                  </div>
                 </a-form>
               </div>
             </template>

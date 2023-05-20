@@ -26,7 +26,6 @@ export const getExpiredDirs = async () => {
   return resp.data as Pick<DataBaseBasicInfo, 'expired' | 'expired_dirs'>
 }
 
-
 export const updateImageData = async () => {
   await axiosInst.post('/db/update_image_data', {}, { timeout: Infinity })
 }
@@ -68,4 +67,21 @@ export const getImageSelectedCustomTag = async (path: string) => {
 export const getImagesBySubstr = async (substr: string) => {
   const resp = await axiosInst.get('/db/search_by_substr', { params: { substr } })
   return resp.data as FileNodeInfo[]
+}
+
+const scannedPaths = `/db/scanned_paths`
+interface ScannedPathModel {
+  path: string
+}
+
+export const getScannedPath = async () => {
+  const resp = await axiosInst.get(scannedPaths)
+  return resp.data as ScannedPathModel[]
+}
+
+export const addScannedPath = async (path: string) => {
+  await axiosInst.post(scannedPaths, { path })
+}
+export const removeScannedPath = async (path: string) => {
+  await axiosInst.delete(scannedPaths, { data: { path } })
 }

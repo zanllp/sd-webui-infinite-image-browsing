@@ -71,7 +71,8 @@ export const copy2clipboardI18n = async (text: string) => {
 }
 
 export const { useEventListen: useGlobalEventListen, eventEmitter: globalEvents } = typedEventEmitter<{
-  'return-to-iib'(): void
+  'return-to-iib'(): void,
+  updateGlobalSetting(): Promise<void>
 }>()
 
 type AsyncFunction<T> = (...args: any[]) => Promise<T>;

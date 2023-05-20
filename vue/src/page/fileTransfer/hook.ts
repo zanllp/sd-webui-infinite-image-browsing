@@ -2,7 +2,7 @@ import { useGlobalStore, type FileTransferTabPane } from '@/store/useGlobalStore
 import { onLongPress, useElementSize } from '@vueuse/core'
 import { ref, computed, watch, onMounted, h, type Ref } from 'vue'
 
-import { genInfoCompleted, getImageGenerationInfo, setImgPath } from '@/api'
+import { genInfoCompleted, getImageGenerationInfo, openFolder, setImgPath } from '@/api'
 import {
   useWatchDocument,
   type SearchSelectConv,
@@ -12,7 +12,7 @@ import {
   typedEventEmitter,
   ID
 } from 'vue3-ts-util'
-import { createReactiveQueue, isImageFile, copy2clipboardI18n, useGlobalEventListen, makeAsyncFunctionSingle } from '@/util'
+import { createReactiveQueue, isImageFile, copy2clipboardI18n, useGlobalEventListen, makeAsyncFunctionSingle, globalEvents } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
 import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
 import { cloneDeep, debounce, last, range, uniqBy, uniqueId } from 'lodash-es'
@@ -24,7 +24,7 @@ import { Modal, message, notification } from 'ant-design-vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
-import { toggleCustomTagToImg } from '@/api/db'
+import { addScannedPath, removeScannedPath, toggleCustomTagToImg } from '@/api/db'
 
 export const stackCache = new Map<string, Page[]>()
 
@@ -431,8 +431,36 @@ export function useLocation (props: Props) {
     }
     handleWalkModeTo(path)
   }
+  
+  const normalizedScandPath = computed(() => {
+    return global.autoCompletedDirList.map(v => ({ ...v, path: Path.normalize(v.dir) }))
+  })
+
+  const searchPathInfo = computed(() => {
+    const c = Path.normalize(currLocation.value)
+    const path = normalizedScandPath.value.find(v => v.path === c)
+    return path 
+  })
+
+  const addToSearchScanPathAndQuickMove = async () => {
+    const path = searchPathInfo.value
+    if (path) {
+      if (!path.can_delete) {
+        return 
+      }
+      await removeScannedPath(currLocation.value)
+      message.success(t('removeComplete'))
+    } else {
+      await addScannedPath(currLocation.value)
+      message.success(t('addComplete'))
+    }
+    await globalEvents.emit('updateGlobalSetting')
+  }
+
 
   return {
+    addToSearchScanPathAndQuickMove,
+    searchPathInfo,
     refresh,
     copyLocation,
     back,
@@ -811,6 +839,10 @@ export function useFileItemActions (
       case 'viewGenInfo': {
         showGenInfo.value = true
         imageGenInfo.value = await q.pushAction(() => getImageGenerationInfo(file.fullpath)).res
+        break
+      }
+      case 'openWithLocalFileBrowser': {
+        await openFolder(file.fullpath)
         break
       }
       case 'deleteFiles': {

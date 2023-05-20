@@ -1,11 +1,14 @@
 import { checkPathExists, type getGlobalSetting } from '@/api'
 import { t } from '@/i18n'
 import { pick, type ReturnTypeAsync } from '@/util'
+import { normalize } from '@/util/path'
 
 export const getAutoCompletedTagList = async ({
   global_setting,
   sd_cwd,
-  home
+  home,
+  extra_paths,
+  cwd
 }: ReturnTypeAsync<typeof getGlobalSetting>) => {
   const picked = pick(
     global_setting,
@@ -45,6 +48,23 @@ export const getAutoCompletedTagList = async ({
     cwd: t('workingFolder'),
     home: 'home'
   }
+  const pathAliasMap = {
+    home: normalize(home),
+    [t('workingFolder')]: normalize(cwd),
+    [t('t2i')]: normalize(picked.outdir_txt2img_samples),
+    [t('i2i')]: normalize(picked.outdir_img2img_samples)
+  }
+  const findshortest = (path: string) => {
+    path = normalize(path)
+    const replacedPaths = [] as string[]
+    for (const [k,v] of Object.entries(pathAliasMap)) {
+      if (k && v) {
+        replacedPaths.push(path.replace(v, '$' + k))
+      }
+    }
+    console.log(replacedPaths, picked)
+    return replacedPaths.sort((a,b) => a.length - b.length)[0]
+  }
   return Object.keys(cnMap)
     .filter((k) => exists[pathMap[k as keyof typeof pathMap] as string])
     .map((k) => {
@@ -52,7 +72,8 @@ export const getAutoCompletedTagList = async ({
       return {
         key,
         zh: cnMap[key],
-        dir: pathMap[key]
+        dir: pathMap[key],
+        can_delete: false
       }
-    })
+    }).concat(extra_paths.map(v => ({ key: v.path, zh: findshortest(v.path), dir: v.path, can_delete: true })) as any[])
 }
