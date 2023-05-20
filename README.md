@@ -15,7 +15,6 @@
 
 ### Image Search & Favorite
 - The prompt, model, Lora, and other information will be converted into tags and sorted by frequency of use for precise searching.
-- Tags will be listed based on their frequency of use.
 - Supports tag autocomplete, translation, and customization.
 - Image favorite can be achieved by toggling custom tags for images in the right-click menu.
 - Support for advanced search similar to Google
