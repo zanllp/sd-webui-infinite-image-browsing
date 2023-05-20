@@ -14,13 +14,13 @@
 - Tested to work properly with over 27,000 files.
 
 ### Image Search & Favorite
-- Supports image search using Prompt, Model, Lora, etc. 
-- Will automatically convert the parameters of the image into tags.
+- The prompt, model, Lora, and other information will be converted into tags and sorted by frequency of use for precise searching.
 - Tags will be listed based on their frequency of use.
 - Supports tag autocomplete, translation, and customization.
 - Image favorite can be achieved by toggling custom tags for images in the right-click menu.
 - Support for advanced search similar to Google
 - Also supports fuzzy search, you can search by a part of the filename or generated information.
+- Support adding custom search paths for easy management of folders created by the user.
 
 ### View Image & `Send To`
 - Supports viewing image generation information. Also supported in full-screen preview mode.
