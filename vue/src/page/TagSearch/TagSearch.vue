@@ -52,7 +52,6 @@ const openedKeys = ref((classifyTags.value.map(v => v[0])))
 onMounted(async () => {
   info.value = await getDbBasicInfo()
   openedKeys.value = (classifyTags.value.map(v => v[0]))
-  console.log(openedKeys.value)
   if (info.value.img_count && info.value.expired) {
     onUpdateBtnClick()
   }
@@ -63,6 +62,7 @@ const onUpdateBtnClick = makeAsyncFunctionSingle(
     queue.pushAction(async () => {
       await updateImageData()
       info.value = await getDbBasicInfo()
+      openedKeys.value = (classifyTags.value.map(v => v[0]))
       return info.value
     }).res
 )
