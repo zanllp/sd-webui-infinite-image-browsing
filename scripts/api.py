@@ -183,7 +183,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     @app.get(pre + "/image-thumbnail")
     async def thumbnail(path: str, t: str, size: str = "256x256"):
         if not temp_path:
-            return RedirectResponse(url=f"{pre}/file/{urlencode(path)}/{urlencode(t)}")
+            return RedirectResponse(url=f"{pre}/file/{urlencode(path)}?t={urlencode(t)}")
         # 生成缓存文件的路径
         hash_dir = hashlib.md5((path + t).encode("utf-8")).hexdigest()
         hash = hash_dir + size
@@ -233,7 +233,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             pass
         return False
 
-    @app.get(pre + "/file/{path}/{t}")
+    @app.get(pre + "/file/{path}")
     async def get_file(path: str, t: str, disposition: Optional[str] = None):
         filename = path
         import mimetypes
