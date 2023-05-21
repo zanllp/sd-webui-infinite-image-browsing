@@ -32,7 +32,7 @@ const global = useGlobalStore()
 const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
 const encode = encodeURIComponent
 export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
-  `/infinite_image_browsing/file?filename=${encode(file.fullpath)}&t=${encode(file.date)}${download ? `&disposition=${encode(file.name)}` : ''
+  `/infinite_image_browsing/file/${encode(file.fullpath)}/${encode(file.date)}${download ? `?disposition=${encode(file.name)}` : ''
   }`
 export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) =>
   `/infinite_image_browsing/image-thumbnail?path=${encode(file.fullpath)}&size=${size}&t=${encode(file.date)}`
