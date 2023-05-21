@@ -32,7 +32,7 @@ const global = useGlobalStore()
 const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
 const encode = encodeURIComponent
 export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
-  `/infinite_image_browsing/file/${encode(file.fullpath)}?t=${encode(file.date)}${download ? `&disposition=${encode(file.name)}` : ''
+  `/infinite_image_browsing/file?path=${encode(file.fullpath)}&t=${encode(file.date)}${download ? `&disposition=${encode(file.name)}` : ''
   }`
 export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) =>
   `/infinite_image_browsing/image-thumbnail?path=${encode(file.fullpath)}&size=${size}&t=${encode(file.date)}`
@@ -216,9 +216,9 @@ export function usePreview (props: Props, custom?: { files: Ref<FileNodeInfo[] |
     }
     return isImageFile(files.value[next]?.name) ?? ''
   }
-  
+
   useEventListen('removeFiles', async () => {
-    if (previewing.value && !state.sortedFiles[previewIdx.value]) { 
+    if (previewing.value && !state.sortedFiles[previewIdx.value]) {
       message.info(t('manualExitFullScreen'), 5)
       await delay(500);
       (document.querySelector('.ant-image-preview-operations-operation .anticon-close') as HTMLDivElement)?.click()
@@ -431,7 +431,7 @@ export function useLocation (props: Props) {
     }
     handleWalkModeTo(path)
   }
-  
+
   const normalizedScandPath = computed(() => {
     return global.autoCompletedDirList.map(v => ({ ...v, path: Path.normalize(v.dir) }))
   })
@@ -439,14 +439,14 @@ export function useLocation (props: Props) {
   const searchPathInfo = computed(() => {
     const c = Path.normalize(currLocation.value)
     const path = normalizedScandPath.value.find(v => v.path === c)
-    return path 
+    return path
   })
 
   const addToSearchScanPathAndQuickMove = async () => {
     const path = searchPathInfo.value
     if (path) {
       if (!path.can_delete) {
-        return 
+        return
       }
       await removeScannedPath(currLocation.value)
       message.success(t('removeComplete'))

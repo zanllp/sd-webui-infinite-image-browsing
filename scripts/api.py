@@ -183,7 +183,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     @app.get(pre + "/image-thumbnail")
     async def thumbnail(path: str, t: str, size: str = "256x256"):
         if not temp_path:
-            return RedirectResponse(url=f"{pre}/file/{urlencode(path)}?t={urlencode(t)}")
+            return
         # 生成缓存文件的路径
         hash_dir = hashlib.md5((path + t).encode("utf-8")).hexdigest()
         hash = hash_dir + size
@@ -233,7 +233,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             pass
         return False
 
-    @app.get(pre + "/file/{path}")
+    @app.get(pre + "/file")
     async def get_file(path: str, t: str, disposition: Optional[str] = None):
         filename = path
         import mimetypes
@@ -294,7 +294,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     @app.get(pre)
     def index_bd():
         return FileResponse(os.path.join(cwd, "vue/dist/index.html"))
-    
+
 
     class OpenFolderReq(BaseModel):
         path: str
@@ -326,7 +326,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             "expired": len(expired_dirs) != 0,
             "expired_dirs": expired_dirs,
         }
-    
+
     def get_extra_paths(conn: sqlite3.Connection):
         r = ExtraPath.get_extra_paths(conn, "scanned")
         return [x.path for x in r]
