@@ -52,7 +52,7 @@ export const getAutoCompletedTagList = async ({
     home: normalize(home),
     [t('workingFolder')]: normalize(cwd),
     [t('t2i')]: picked.outdir_txt2img_samples &&  normalize(picked.outdir_txt2img_samples),
-    [t('i2i')]: picked.outdir_txt2img_samples && normalize(picked.outdir_img2img_samples)
+    [t('i2i')]: picked.outdir_img2img_samples && normalize(picked.outdir_img2img_samples)
   }
   const findshortest = (path: string) => {
     path = normalize(path)
