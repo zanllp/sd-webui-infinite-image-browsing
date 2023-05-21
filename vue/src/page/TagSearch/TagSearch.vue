@@ -11,7 +11,7 @@ import {
   type MatchImageByTagsReq
 } from '@/api/db'
 import { SearchSelect } from 'vue3-ts-util'
-import { CheckOutlined, PlusOutlined, CloseOutlined } from '@/icon'
+import { CheckOutlined, PlusOutlined, CloseOutlined, ArrowRightOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { groupBy, uniqueId } from 'lodash-es'
 import { createReactiveQueue, type Dict, useGlobalEventListen } from '@/util'
@@ -48,8 +48,11 @@ const classifyTags = computed(() => {
   )
 })
 const pairid = uniqueId()
+const openedKeys = ref((classifyTags.value.map(v => v[0])))
 onMounted(async () => {
   info.value = await getDbBasicInfo()
+  openedKeys.value = (classifyTags.value.map(v => v[0]))
+  console.log(openedKeys.value)
   if (info.value.img_count && info.value.expired) {
     onUpdateBtnClick()
   }
@@ -160,34 +163,50 @@ const conv = {
         {{ $t('needGenerateIdx') }}
       </p>
       <div class="list-container">
-        <ul class="tag-list" v-for="[name, list] in classifyTags" :key="name">
-          <h3 class="cat-name">{{ $t(name) }}</h3>
-          <li v-for="(tag, idx) in list" :key="tag.id" class="tag" :class="{ selected: selectedTagIds.has(tag.id) }"
-            @click="onTagClick(tag)">
-            <CheckOutlined v-if="selectedTagIds.has(tag.id)" />
-            {{ toTagDisplayName(tag) }}
-            <span v-if="name === 'custom' && idx !== 0" class="remove" @click.capture.stop="onTagRemoveClick(tag.id)">
-              <CloseOutlined />
-            </span>
-          </li>
-          <li v-if="name === 'custom'" class="tag" @click="addInputing = true">
-            <template v-if="addInputing">
-              <a-input-group compact>
-                <a-input v-model:value="addTagName" style="width: 128px" :loading="loading" allow-clear size="small" />
-                <a-button size="small" type="primary" @click.capture.stop="onAddTagBtnSubmit" :loading="loading">{{
-                  addTagName ? $t('submit') : $t('cancel') }}</a-button>
-              </a-input-group>
-            </template>
-            <template v-else>
-              <PlusOutlined /> {{ $t('add') }}
-            </template>
-          </li>
+        <ul class="tag-list" :key="name" v-for="[name, list] in classifyTags">
+          <h3 class="cat-name"
+            @click="!openedKeys.includes(name) ? openedKeys.push(name) : openedKeys.splice(openedKeys.indexOf(name), 1)">
+            <ArrowRightOutlined class="arrow" :class="{ down: openedKeys.includes(name) }" />
+            {{ $t(name) }}
+          </h3>
+          <a-collapse ghost v-model:activeKey="openedKeys">
+            <template #expandIcon></template>
+            <a-collapse-panel :key="name">
+              <li v-for="(tag, idx) in list" :key="tag.id" class="tag" :class="{ selected: selectedTagIds.has(tag.id) }"
+                @click="onTagClick(tag)">
+                <CheckOutlined v-if="selectedTagIds.has(tag.id)" />
+                {{ toTagDisplayName(tag) }}
+                <span v-if="name === 'custom' && idx !== 0" class="remove" @click.capture.stop="onTagRemoveClick(tag.id)">
+                  <CloseOutlined />
+                </span>
+              </li>
+              <li v-if="name === 'custom'" class="tag" @click="addInputing = true">
+                <template v-if="addInputing">
+                  <a-input-group compact>
+                    <a-input v-model:value="addTagName" style="width: 128px" :loading="loading" allow-clear
+                      size="small" />
+                    <a-button size="small" type="primary" @click.capture.stop="onAddTagBtnSubmit" :loading="loading">{{
+                      addTagName ? $t('submit') : $t('cancel') }}</a-button>
+                  </a-input-group>
+                </template>
+                <template v-else>
+                  <PlusOutlined /> {{ $t('add') }}
+                </template>
+              </li>
+            </a-collapse-panel>
+          </a-collapse>
         </ul>
       </div>
     </template>
   </div>
 </template>
 <style scoped lang="scss">
+:deep() {
+  .ant-collapse>.ant-collapse-item>.ant-collapse-header {
+    padding: 0;
+  }
+}
+
 .container {
   height: var(--pane-max-height);
   overflow: auto;
@@ -223,6 +242,7 @@ const conv = {
   .search-bar {
     padding: 8px;
     display: flex;
+
     .form-name {
       flex-shrink: 0;
       padding: 4px 8px;
@@ -235,6 +255,33 @@ const conv = {
     overflow: scroll;
   }
 
+  .cat-name {
+    user-select: none;
+    position: sticky;
+    top: 0;
+    padding: 4px 16px;
+    background: var(--zp-primary-background);
+    margin: 4px;
+    transition: all .3s ease;
+    border-left: 4px solid var(--primary-color);
+    cursor: pointer;
+
+    &:hover {
+      border-radius: 4px;
+      background-color: var(--zp-secondary-background);
+    }
+
+    .arrow {
+      color: var(--primary-color);
+      transition: all .3s ease;
+      margin-right: 16px;
+
+      &.down {
+        transform: rotate(90deg);
+      }
+    }
+  }
+
   .tag-list {
     list-style: none;
     padding: 0;
@@ -243,14 +290,6 @@ const conv = {
     background: var(--zp-primary-background);
     padding: 8px;
 
-    .cat-name {
-      position: sticky;
-      top: 0;
-      padding: 4px 16px;
-      background: var(--zp-primary-background);
-      border-left: 4px solid var(--primary-color);
-      margin: 4px;
-    }
 
     .tag {
       border: 2px solid var(--zp-secondary);
