@@ -105,7 +105,7 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     walkModePath,
     props,
     ...typedEventEmitter<{
-      loadNextDir(): Promise<void>
+      loadNextDir(isFullscreenPreview?: boolean): Promise<void>
       refresh(): Promise<void>,
     }>()
   }
@@ -150,7 +150,7 @@ export function usePreview (props: Props, custom?: { files: Ref<FileNodeInfo[] |
     if (props.walkMode) {
       if (!canPreview('next') && canLoadNext) {
         message.info(t('loadingNextFolder'))
-        eventEmitter.value.emit('loadNextDir')
+        eventEmitter.value.emit('loadNextDir', true) // 如果在全屏预览时外面scroller可能还停留在很久之前，使用全屏预览的索引
       }
     }
   }
@@ -483,7 +483,8 @@ export function useFilesDisplay (props: Props) {
     currLocation,
     currPage,
     stackViewEl,
-    canLoadNext
+    canLoadNext,
+    previewIdx
   } = useHookShareState().toRefs()
   const { state } = useHookShareState()
   const moreActionsDropdownShow = ref(false)
@@ -553,10 +554,11 @@ export function useFilesDisplay (props: Props) {
     }
   }
 
-  const fill = async () => {
+  const fill = async (isFullScreenPreview = false) => {
     const s = scroller.value
     // 填充够一页，直到不行为止
-    while (!sortedFiles.value.length || s && (s.$_endIndex > (sortedFiles.value.length - 20)) && canLoadNext.value) {
+    const currIdx = () => isFullScreenPreview ? previewIdx.value : (s?.$_endIndex ?? 0)
+    while (!sortedFiles.value.length || (currIdx() > (sortedFiles.value.length - 20)) && canLoadNext.value) {
       await delay(100)
       await loadNextDir()
     }
@@ -565,7 +567,7 @@ export function useFilesDisplay (props: Props) {
 
   state.useEventListen('loadNextDir', fill)
 
-  const onScroll = debounce(fill, 300)
+  const onScroll = debounce(() => fill(), 300)
 
   return {
     gridItems,
