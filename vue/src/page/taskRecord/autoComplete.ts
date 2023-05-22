@@ -62,7 +62,6 @@ export const getAutoCompletedTagList = async ({
         replacedPaths.push(path.replace(v, '$' + k))
       }
     }
-    console.log(replacedPaths, picked)
     return replacedPaths.sort((a,b) => a.length - b.length)[0]
   }
   return Object.keys(cnMap)

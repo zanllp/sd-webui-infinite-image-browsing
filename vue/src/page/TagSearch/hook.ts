@@ -1,8 +1,7 @@
-import { getDbBasicInfo, updateImageData, type DataBaseBasicInfo } from '@/api/db'
 import type { FileNodeInfo } from '@/api/files'
-import { createReactiveQueue, makeAsyncFunctionSingle } from '@/util'
+import { createReactiveQueue } from '@/util'
 import { identity } from 'lodash-es'
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import {
   useHookShareState,
   useFilesDisplay,

@@ -1,0 +1,1 @@
+import{aP as n,bl as c,bm as a}from"./index-26c09688.js";var i="[object Object]",s=Function.prototype,b=Object.prototype,e=s.toString,p=b.hasOwnProperty,f=e.call(Object);function j(o){if(!n(o)||c(o)!=i)return!1;var r=a(o);if(r===null)return!0;var t=p.call(r,"constructor")&&r.constructor;return typeof t=="function"&&t instanceof t&&e.call(t)==f}export{j as i};
