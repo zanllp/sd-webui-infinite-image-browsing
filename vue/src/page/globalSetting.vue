@@ -2,14 +2,20 @@
 import { t } from '@/i18n'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { ref } from 'vue'
+import { SearchSelect, delay } from 'vue3-ts-util'
 
 const globalStore = useGlobalStore()
 
 const langChanged = ref(false)
-const w = window
+const reload = async () => {
+  await delay(100)
+  window.location.reload()
+}
+const langs: { text: string, value: string }[] = [{ value: 'en', text: 'English' }, { value: 'zh', text: '中文' }, { value: 'de', text: 'Deutsch' }]
 </script>
 <template>
   <div class="panel">
+    <a-select v-if="false" />
     <a-form>
       <a-form-item :label="$t('useThumbnailPreview')">
         <a-switch v-model:checked="globalStore.enableThumbnail" />
@@ -30,12 +36,9 @@ const w = window
       </a-form-item>
       <a-form-item :label="$t('lang')">
         <div class="lang-select-wrap">
-          <a-select v-model:value="globalStore.lang" @change="langChanged = true">
-            <a-select-option value="zh"> 中文 </a-select-option>
-            <a-select-option lang="en"> English </a-select-option>
-          </a-select>
+          <SearchSelect :options="langs" v-model:value="globalStore.lang" @change="langChanged = true" />
         </div>
-        <a-button type="primary" @click="w.location.reload()" v-if="langChanged" ghost>{{
+        <a-button type="primary" @click="reload" v-if="langChanged" ghost>{{
           t('langChangeReload')
         }}</a-button>
       </a-form-item>
@@ -49,7 +52,7 @@ const w = window
   border-radius: 8px;
   background: var(--zp-primary-background);
 
-  & > :not(:first-child) {
+  &> :not(:first-child) {
     margin-left: 16px;
   }
 }
