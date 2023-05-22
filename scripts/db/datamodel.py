@@ -1,5 +1,5 @@
 from sqlite3 import Connection, connect
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from scripts.tool import (
     cwd,
     get_modified_date,
@@ -438,6 +438,8 @@ class Floder:
     def check_need_update(cls, conn: Connection, folder_path: str):
         folder_path = os.path.normpath(folder_path)
         with closing(conn.cursor()) as cur:
+            if not os.path.exists(folder_path):
+                return False
             cur.execute("SELECT * FROM folders WHERE path=?", (folder_path,))
             folder_record = cur.fetchone()  # 如果这个文件夹没有记录，或者修改时间与数据库不同，则需要修改
             return not folder_record or (
@@ -508,7 +510,11 @@ class ExtraPath:
             rows = cur.fetchall()
             paths: List[ExtraPath] = []
             for row in rows:
-                paths.append(ExtraPath(row[0], row[1]))
+                path = row[0]
+                if os.path.exists(path):
+                    paths.append(ExtraPath(path, row[1]))
+                else:
+                    cls.remove(conn, path)
             return paths
 
     @classmethod

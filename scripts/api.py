@@ -139,6 +139,8 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                         {"type": "dir", "size": "-", "name": item, "fullpath": item}
                     )
             else:
+                if not os.path.exists(folder_path):
+                    return {"files": []}
                 for item in os.listdir(folder_path):
                     path = os.path.join(folder_path, item)
                     if not os.path.exists(path):
