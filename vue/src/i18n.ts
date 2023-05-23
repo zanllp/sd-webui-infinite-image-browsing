@@ -130,8 +130,10 @@ const zh = {
   "openWithLocalFileBrowser": "使用本地文件浏览器打开",
   addToSearchScanPathAndQuickMove: '添加到搜索扫描路径和快速移动',
   removeFromSearchScanPathAndQuickMove: '从搜索扫描路径和快速移动中移除',
+  serverKeyRequired: "服务器配置了密匙，你必须提供相同的密匙才能继续使用"
 }
 const en: Record<keyof typeof zh, string> = {
+  serverKeyRequired: "The server has configured a key. You must provide the same key to continue using it.",
   removeFromSearchScanPathAndQuickMove: 'Remove from Search Scan Path and Quick Move',
   addToSearchScanPathAndQuickMove: 'Add to Search Scan Path and Quick Move',
   "openWithLocalFileBrowser": "Open with Local File Browser",
@@ -268,7 +270,7 @@ const en: Record<keyof typeof zh, string> = {
 }
 
 
-const de: Record<keyof typeof zh, string> = {
+const de: Partial<Record<keyof typeof zh, string>> = {
   removeFromSearchScanPathAndQuickMove: "Schnellzugriff entfernen",
   addToSearchScanPathAndQuickMove: "Schnellzugriff hinzufügen",
   "openWithLocalFileBrowser": "Im lokalen Dateimanager öffnen",

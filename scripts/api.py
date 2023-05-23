@@ -15,7 +15,7 @@ from scripts.tool import (
     get_sd_webui_conf,
     get_valid_img_dirs,
     get_created_date,
-    open_folder
+    open_folder,
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -24,6 +24,7 @@ from typing import Any, List, Literal, Optional
 from pydantic import BaseModel
 from fastapi.responses import FileResponse, RedirectResponse
 from PIL import Image
+from fastapi import Depends, FastAPI, HTTPException, Request
 import hashlib
 from urllib.parse import urlencode
 from scripts.db.datamodel import (
@@ -38,7 +39,35 @@ from scripts.db.update_image_data import update_image_data
 from scripts.logger import logger
 
 
+
 send_img_path = {"value": ""}
+
+options = {"IIB_SECRET_KEY": ""}
+mem = {
+    "IIB_SECRET_KEY_HASH" : None
+}
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(cwd, ".env"))
+    secret_key = os.getenv("IIB_SECRET_KEY")
+    if secret_key:
+        options["IIB_SECRET_KEY"] = secret_key
+        print(f"Secret key loaded successfully. ")
+except BaseException as e:
+    print(e)
+
+
+async def get_token(request: Request):
+    secert = options["IIB_SECRET_KEY"]
+    if not secert:
+        return
+    token = request.cookies.get("IIB_S")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if not mem["IIB_SECRET_KEY_HASH"]:
+        mem["IIB_SECRET_KEY_HASH"] = hashlib.sha256((secert+"_ciallo").encode("utf-8")).hexdigest()
+    if mem["IIB_SECRET_KEY_HASH"] != token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
@@ -53,7 +82,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     async def greeting():
         return "hello"
 
-    @app.get(f"{pre}/global_setting")
+    @app.get(f"{pre}/global_setting", dependencies=[Depends(get_token)])
     async def global_setting():
         all_custom_tags = []
 
@@ -71,13 +100,13 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             "home": os.environ.get("USERPROFILE") if is_win else os.environ.get("HOME"),
             "sd_cwd": os.getcwd(),
             "all_custom_tags": all_custom_tags,
-            "extra_paths": extra_paths
+            "extra_paths": extra_paths,
         }
 
     class DeleteFilesReq(BaseModel):
         file_paths: List[str]
 
-    @app.post(pre + "/delete_files")
+    @app.post(pre + "/delete_files", dependencies=[Depends(get_token)])
     async def delete_files(req: DeleteFilesReq):
         conn = DataBase.get_conn()
         for path in req.file_paths:
@@ -112,7 +141,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         file_paths: List[str]
         dest: str
 
-    @app.post(pre + "/move_files")
+    @app.post(pre + "/move_files", dependencies=[Depends(get_token)])
     async def move_files(req: MoveFilesReq):
         conn = DataBase.get_conn()
         for path in req.file_paths:
@@ -129,7 +158,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                 )
                 raise HTTPException(400, detail=error_msg)
 
-    @app.get(pre + "/files")
+    @app.get(pre + "/files", dependencies=[Depends(get_token)])
     async def get_target_floder_files(folder_path: str):
         files = []
         try:
@@ -182,7 +211,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
 
         return {"files": files}
 
-    @app.get(pre + "/image-thumbnail")
+    @app.get(pre + "/image-thumbnail", dependencies=[Depends(get_token)])
     async def thumbnail(path: str, t: str, size: str = "256x256"):
         if not temp_path:
             return
@@ -235,7 +264,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             pass
         return False
 
-    @app.get(pre + "/file")
+    @app.get(pre + "/file", dependencies=[Depends(get_token)])
     async def get_file(path: str, t: str, disposition: Optional[str] = None):
         filename = path
         import mimetypes
@@ -263,12 +292,12 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             headers=headers,
         )
 
-    @app.post(pre + "/send_img_path")
+    @app.post(pre + "/send_img_path", dependencies=[Depends(get_token)])
     async def api_set_send_img_path(path: str):
         send_img_path["value"] = path
 
     # 等待图片信息生成完成
-    @app.get(pre + "/gen_info_completed")
+    @app.get(pre + "/gen_info_completed", dependencies=[Depends(get_token)])
     async def api_set_send_img_path():
         for _ in range(120):  # 等待12s
             if send_img_path["value"] == "":  # 等待setup里面生成完成
@@ -278,7 +307,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             await asyncio.sleep(0.1)
         return send_img_path["value"] == ""
 
-    @app.get(pre + "/image_geninfo")
+    @app.get(pre + "/image_geninfo", dependencies=[Depends(get_token)])
     async def image_geninfo(path: str):
         with Image.open(path) as img:
             return read_info_from_image(img)
@@ -286,7 +315,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     class CheckPathExistsReq(BaseModel):
         paths: List[str]
 
-    @app.post(pre + "/check_path_exists")
+    @app.post(pre + "/check_path_exists", dependencies=[Depends(get_token)])
     async def check_path_exists(req: CheckPathExistsReq):
         res = {}
         for path in req.paths:
@@ -297,17 +326,16 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     def index_bd():
         return FileResponse(os.path.join(cwd, "vue/dist/index.html"))
 
-
     class OpenFolderReq(BaseModel):
         path: str
 
-    @app.post(pre  + "/open_folder")
+    @app.post(pre + "/open_folder", dependencies=[Depends(get_token)])
     def open_folder_using_explore(req: OpenFolderReq):
         open_folder(*os.path.split(req.path))
 
     db_pre = pre + "/db"
 
-    @app.get(db_pre + "/basic_info")
+    @app.get(db_pre + "/basic_info", dependencies=[Depends(get_token)])
     async def get_db_basic_info():
         conn = DataBase.get_conn()
         img_count = DbImg.count(conn)
@@ -320,7 +348,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             "expired_dirs": expired_dirs,
         }
 
-    @app.get(db_pre + "/expired_dirs")
+    @app.get(db_pre + "/expired_dirs", dependencies=[Depends(get_token)])
     async def get_db_expired():
         conn = DataBase.get_conn()
         expired_dirs = Floder.get_expired_dirs(conn)
@@ -333,7 +361,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         r = ExtraPath.get_extra_paths(conn, "scanned")
         return [x.path for x in r]
 
-    @app.post(db_pre + "/update_image_data")
+    @app.post(db_pre + "/update_image_data", dependencies=[Depends(get_token)])
     async def update_image_db_data():
         try:
             DataBase._initing = True
@@ -351,7 +379,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         or_tags: List[int]
         not_tags: List[int]
 
-    @app.post(db_pre + "/match_images_by_tags")
+    @app.post(db_pre + "/match_images_by_tags", dependencies=[Depends(get_token)])
     async def match_image_by_tags(req: MatchImagesByTagsReq):
         conn = DataBase.get_conn()
         return [
@@ -361,7 +389,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             )
         ]
 
-    @app.get(db_pre + "/img_selected_custom_tag")
+    @app.get(db_pre + "/img_selected_custom_tag", dependencies=[Depends(get_token)])
     async def get_img_selected_custom_tag(path: str):
         path = os.path.normpath(path)
         conn = DataBase.get_conn()
@@ -381,7 +409,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         img_path: str
         tag_id: int
 
-    @app.post(db_pre + "/toggle_custom_tag_to_img")
+    @app.post(db_pre + "/toggle_custom_tag_to_img", dependencies=[Depends(get_token)])
     async def toggle_custom_tag_to_img(req: ToggleCustomTagToImgReq):
         conn = DataBase.get_conn()
         path = os.path.normpath(req.img_path)
@@ -414,7 +442,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     class AddCustomTagReq(BaseModel):
         tag_name: str
 
-    @app.post(db_pre + "/add_custom_tag")
+    @app.post(db_pre + "/add_custom_tag", dependencies=[Depends(get_token)])
     async def add_custom_tag(req: AddCustomTagReq):
         conn = DataBase.get_conn()
         tag = Tag.get_or_create(conn, name=req.tag_name, type="custom")
@@ -424,7 +452,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     class RemoveCustomTagReq(BaseModel):
         tag_id: str
 
-    @app.post(db_pre + "/remove_custom_tag")
+    @app.post(db_pre + "/remove_custom_tag", dependencies=[Depends(get_token)])
     async def remove_custom_tag(req: RemoveCustomTagReq):
         conn = DataBase.get_conn()
         ImageTag.remove(conn, tag_id=req.tag_id)
@@ -434,12 +462,12 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         img_id: int
         tag_id: str
 
-    @app.post(db_pre + "/remove_custom_tag_from_img")
+    @app.post(db_pre + "/remove_custom_tag_from_img", dependencies=[Depends(get_token)])
     async def remove_custom_tag_from_img(req: RemoveCustomTagFromReq):
         conn = DataBase.get_conn()
         ImageTag.remove(conn, image_id=req.img_id, tag_id=req.tag_id)
 
-    @app.get(db_pre + "/search_by_substr")
+    @app.get(db_pre + "/search_by_substr", dependencies=[Depends(get_token)])
     async def search_by_substr(substr: str):
         conn = DataBase.get_conn()
         imgs = DbImg.find_by_substring(conn=conn, substring=substr)
@@ -448,7 +476,9 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     class ScannedPathModel(BaseModel):
         path: str
 
-    @app.post(f"{db_pre}/scanned_paths", status_code=201)
+    @app.post(
+        f"{db_pre}/scanned_paths", status_code=201, dependencies=[Depends(get_token)]
+    )
     async def create_scanned_path(scanned_path: ScannedPathModel):
         conn = DataBase.get_conn()
         path = ExtraPath(scanned_path.path)
@@ -457,13 +487,17 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         finally:
             conn.commit()
 
-    @app.get(f"{db_pre}/scanned_paths", response_model=List[ScannedPathModel])
+    @app.get(
+        f"{db_pre}/scanned_paths",
+        response_model=List[ScannedPathModel],
+        dependencies=[Depends(get_token)],
+    )
     async def read_scanned_paths():
         conn = DataBase.get_conn()
         paths = ExtraPath.get_extra_paths(conn, "scanned")
         return [{"path": path.path} for path in paths]
 
-    @app.delete(f"{db_pre}/scanned_paths")
+    @app.delete(f"{db_pre}/scanned_paths", dependencies=[Depends(get_token)])
     async def delete_scanned_path(scanned_path: ScannedPathModel):
         conn = DataBase.get_conn()
         ExtraPath.remove(conn, scanned_path.path)

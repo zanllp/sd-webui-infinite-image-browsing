@@ -3,13 +3,33 @@ import axios, { isAxiosError } from 'axios'
 import type { GlobalSettingPart } from './type'
 import { t } from '@/i18n'
 import type { Tag } from './db'
+import cookie from 'js-cookie'
+import { delay } from 'vue3-ts-util'
 export const axiosInst = axios.create({
   baseURL: '/infinite_image_browsing'
 })
+
+async function hash(data: string) {
+  const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(data))
+  const hashHex = Array.prototype.map
+    .call(new Uint8Array(digest), (x) => ('00' + x.toString(16)).slice(-2))
+    .join('')
+  return hashHex
+}
+
 axiosInst.interceptors.response.use(
   (resp) => resp,
-  (err) => {
+  async (err) => {
     if (isAxiosError(err)) {
+      if (err.response?.status === 401) {
+        const key = prompt(t('serverKeyRequired'))
+        if (!key) {
+          return
+        }
+        cookie.set('IIB_S', await hash(key + '_ciallo'))
+        await delay(100)
+        location.reload()
+      }
       const errmsg = err.response?.data?.detail ?? t('errorOccurred')
       message.error(errmsg)
       throw new Error(errmsg)
@@ -54,7 +74,6 @@ export const getImageGenerationInfo = async (path: string) => {
   return (await axiosInst.get(`/image_geninfo?path=${encodeURIComponent(path)}`)).data as string
 }
 
-
 export const openFolder = async (path: string) => {
   await axiosInst.post('/open_folder', { path })
-} 
+}
