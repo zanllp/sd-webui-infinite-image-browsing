@@ -37,7 +37,7 @@ export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
 export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) =>
   `/infinite_image_browsing/image-thumbnail?path=${encode(file.fullpath)}&size=${size}&t=${encode(file.date)}`
 
-const { eventEmitter: events, useEventListen } = typedEventEmitter<{
+export const { eventEmitter: events, useEventListen } = typedEventEmitter<{
   removeFiles(_:{ paths: string[]; loc: string }): void
   addFiles(_:{ files: FileNodeInfo[]; loc: string }): void
 }>()
@@ -696,6 +696,7 @@ export function useFileItemActions (
   const q = createReactiveQueue()
   const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo, idx: number) => {
     previewIdx.value = idx
+    global.fullscreenPreviewInitialUrl = toRawFileUrl(file)
     const idxInSelected = multiSelectedIdxs.value.indexOf(idx)
     if (e.shiftKey) {
       if (idxInSelected !== -1) {
@@ -762,6 +763,21 @@ export function useFileItemActions (
       } finally {
         spinning.value = false
       }
+    }
+    if (e.keyPath?.[0] === 'toggle-tag') {
+      const { is_remove } = await toggleCustomTagToImg({
+        tag_id: e.key as number,
+        img_path: file.fullpath
+      })
+      message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
+      return
+    } else if (e.key.toString().startsWith('toggle-tag-')) {
+      const { is_remove } = await toggleCustomTagToImg({
+        tag_id: +e.key.toString().split('toggle-tag-')[1],
+        img_path: file.fullpath
+      })
+      message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
+      return
     }
     switch (e.key) {
       case 'previewInNewWindow':
@@ -869,19 +885,6 @@ export function useFileItemActions (
         })
         break
       }
-    }
-    if (e.keyPath?.[0] === 'toggle-tag') {
-      const { is_remove } = await toggleCustomTagToImg({
-        tag_id: e.key as number,
-        img_path: file.fullpath
-      })
-      message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
-    } else if (e.key.toString().startsWith('toggle-tag-')) {
-      const { is_remove } = await toggleCustomTagToImg({
-        tag_id: +e.key.toString().split('toggle-tag-')[1],
-        img_path: file.fullpath
-      })
-      message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
     }
     return {
 

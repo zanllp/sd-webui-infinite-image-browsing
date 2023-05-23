@@ -75,7 +75,9 @@ const thumbnailSize = computed(() =>
       @contextmenu="onRightClick"
       @click.capture="emit('fileItemClick', $event, file, idx)"
     >
-      <div v-if="viewMode !== 'line'">
+      <div v-if="viewMode !== 'line'" >
+        <!-- :key="fullScreenPreviewImageUrl ? undefined : file.fullpath" 
+          这么复杂是因为再全屏预览时可能因为直接删除导致fullpath变化，然后整个预览直接退出-->
         <a-image
           :key="file.fullpath"
           :class="`idx-${idx}`"
