@@ -21,6 +21,8 @@ If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has a
 
 See [Vite Configuration Reference](https://vitejs.dev/config/).
 
+好的，按照您的要求，以下是增加了命令 `yarn deliver-dist` 的更新后的项目设置说明：
+
 ## Project Setup
 
 ```sh
@@ -37,6 +39,12 @@ yarn dev
 
 ```sh
 yarn build
+```
+
+### Deliver to Production Mode Resources
+
+```sh
+yarn deliver-dist
 ```
 
 ### Lint with [ESLint](https://eslint.org/)
