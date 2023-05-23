@@ -1,3 +1,4 @@
 fastapi
 uvicorn
 piexif
+python-dotenv

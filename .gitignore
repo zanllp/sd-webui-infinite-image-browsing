@@ -6,3 +6,4 @@ tags-translate.csv
 launch.sh
 conf.json
 iib.db-journal
+.env
