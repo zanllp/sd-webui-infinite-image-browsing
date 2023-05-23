@@ -160,6 +160,7 @@ function getParNode (p: any) {
   .container {
     height: 100%;
     display: flex;
+    overflow: hidden;
     flex-direction: column;
   }
 
@@ -211,6 +212,7 @@ function getParNode (p: any) {
     }
 
     &>* {
+      flex-wrap: wrap;
       margin-right: 8px;
     }
   }
