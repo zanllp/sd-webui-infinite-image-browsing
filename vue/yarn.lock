@@ -775,10 +775,10 @@ ansi-styles@^4.1.0:
   dependencies:
     color-convert "^2.0.1"
 
-ant-design-vue@^3.2.16:
-  version "3.2.16"
-  resolved "https://registry.yarnpkg.com/ant-design-vue/-/ant-design-vue-3.2.16.tgz#d79209537f93d6b87edff712b9cd50fbbea128bc"
-  integrity sha512-kBGxk4csoEi2iaWO62DpNECTnBLIf/CNYW8RdNjLPWo6TBWLQNqLchxRcg8KatOkDRpdWRaqdqeD5P+F6MDC3Q==
+ant-design-vue@^3.2.20:
+  version "3.2.20"
+  resolved "https://registry.yarnpkg.com/ant-design-vue/-/ant-design-vue-3.2.20.tgz#552f5f08e2acbcc10bd4089145d4cc2b15d4cfec"
+  integrity sha512-YWpMfGaGoRastIXEYfCoJiaRiDHk4chqtYhlKQM5GqPt6NfvrM1Vg2e60yHtjxlZjed91wCMm0rAmyUr7Hwzdg==
   dependencies:
     "@ant-design/colors" "^6.0.0"
     "@ant-design/icons-vue" "^6.1.0"

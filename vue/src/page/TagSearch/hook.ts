@@ -9,7 +9,8 @@ import {
   useFileTransfer,
   useFileItemActions,
   usePreview,
-  type Scroller
+  type Scroller,
+  useEventListen
 } from '../fileTransfer/hook'
 
 export const useImageSearch = () => {
@@ -35,12 +36,12 @@ export const useImageSearch = () => {
 
   const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
     stack.value = [{ curr: '', files: images.value! }] // hack，for delete multi files
-    const idxs = multiSelectedIdxs.value.includes(idx) ? multiSelectedIdxs.value : [idx] // when click confirm ok button, idxs will be reset
     await onContextMenuClick(e, file, idx)
-    if (e.key === 'deleteFiles') {
-      images.value = images.value!.filter((_, idx) => !idxs.includes(idx))
-    }
   }
+
+  useEventListen('removeFiles', async ({ paths }) => {
+    images.value = images.value?.filter(v => !paths.includes(v.fullpath))
+  })
 
   return {
     scroller,
