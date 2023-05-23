@@ -876,6 +876,12 @@ export function useFileItemActions (
         img_path: file.fullpath
       })
       message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
+    } else if (e.key.toString().startsWith('toggle-tag-')) {
+      const { is_remove } = await toggleCustomTagToImg({
+        tag_id: +e.key.toString().split('toggle-tag-')[1],
+        img_path: file.fullpath
+      })
+      message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
     }
     return {
 
