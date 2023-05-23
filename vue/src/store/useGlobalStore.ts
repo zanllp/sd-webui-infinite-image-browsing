@@ -121,7 +121,6 @@ export const useGlobalStore = defineStore(
       autoCompletedDirList,
       enableThumbnail,
       stackViewSplit,
-      autoUploadRecvDir,
       dragingTab,
       saveRecord,
       recent,
@@ -130,7 +129,8 @@ export const useGlobalStore = defineStore(
       largeGridThumbnailSize,
       longPressOpenContextMenu,
       openTagSearchMatchedImageGridInRight,
-      onlyFoldersAndImages: ref(true)
+      onlyFoldersAndImages: ref(true),
+      fullscreenPreviewInitialUrl: ref('')
     }
   },
   {
@@ -140,7 +140,6 @@ export const useGlobalStore = defineStore(
         'enableThumbnail',
         'lastTabListRecord',
         'stackViewSplit',
-        'autoUploadRecvDir',
         'recent',
         'gridThumbnailSize',
         'largeGridThumbnailSize',

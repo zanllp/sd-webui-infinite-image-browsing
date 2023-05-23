@@ -20,6 +20,7 @@ import {
 import { t } from '@/i18n'
 import { getImageSelectedCustomTag, type Tag } from '@/api/db'
 import { createReactiveQueue } from '@/util'
+import { toRawFileUrl } from './hook'
 
 const global = useGlobalStore()
 const el = ref<HTMLElement>()
@@ -120,12 +121,13 @@ function getParNode (p: any) {
             <a-button>{{ t('openContextMenu') }}</a-button>
             <template #overlay>
               <a-menu @click="emit('contextMenuClick', $event, file, idx)">
-                <a-menu-item key="deleteFiles">{{ $t('deleteSelected') }}</a-menu-item>
                 <a-menu-item key="send2txt2img">{{ $t('sendToTxt2img') }}</a-menu-item>
                 <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
                 <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
                 <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
                 <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
+                <a-menu-item key="deleteFiles" :disabled="toRawFileUrl(file) === global.fullscreenPreviewInitialUrl">{{
+                  $t('deleteSelected') }}</a-menu-item>
                 <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
                 <a-menu-item key="download">{{ $t('downloadDirectly') }}</a-menu-item>
                 <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>

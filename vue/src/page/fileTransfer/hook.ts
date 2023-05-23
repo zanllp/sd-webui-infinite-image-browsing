@@ -696,6 +696,7 @@ export function useFileItemActions (
   const q = createReactiveQueue()
   const onFileItemClick = async (e: MouseEvent, file: FileNodeInfo, idx: number) => {
     previewIdx.value = idx
+    global.fullscreenPreviewInitialUrl = toRawFileUrl(file)
     const idxInSelected = multiSelectedIdxs.value.indexOf(idx)
     if (e.shiftKey) {
       if (idxInSelected !== -1) {
