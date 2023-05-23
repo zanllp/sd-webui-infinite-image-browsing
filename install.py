@@ -3,7 +3,7 @@ import os
 import pkg_resources
 
 req_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "requirements.txt")
-# copy form controlnet, thanks
+# copy from controlnet, thanks
 with open(req_file) as file:
     for package in file:
         try:
