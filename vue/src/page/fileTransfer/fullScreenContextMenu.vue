@@ -156,6 +156,7 @@ function todiv (p: any) {
   .container {
     height: 100%;
     display: flex;
+    overflow: hidden;
     flex-direction: column;
   }
 
@@ -206,6 +207,7 @@ function todiv (p: any) {
     }
 
     &>* {
+      flex-wrap: wrap;
       margin-right: 8px;
     }
   }
