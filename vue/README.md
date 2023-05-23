@@ -39,6 +39,12 @@ yarn dev
 yarn build
 ```
 
+### Deliver to Production Mode Resources
+
+```sh
+yarn deliver-dist
+```
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh

@@ -88,7 +88,7 @@ useResizeAndDrag(el, resizeHandle, dragHandle, {
   }, 300)
 })
 
-function todiv (p: any) {
+function getParNode (p: any) {
   return p.parentNode as HTMLDivElement
 }
 </script>
@@ -96,7 +96,7 @@ function todiv (p: any) {
 <template>
   <div ref="el" class="full-screen-menu" @wheel.capture.stop :class="{ 'unset-size': !state.expanded }">
     <div class="container">
-      <div class="actoion-bar">
+      <div class="action-bar">
         <div ref="dragHandle" class="icon" style="cursor: grab">
           <DragOutlined />
         </div>
@@ -104,34 +104,38 @@ function todiv (p: any) {
           <FullscreenExitOutlined v-if="state.expanded" />
           <FullscreenOutlined v-else />
         </div>
-        <template v-if="state.expanded">
-          <div flex-placeholder></div>
-          <a-dropdown :trigger="['hover']" style="z-index: 99999" :get-popup-container="(p) => todiv(p)"
-            @visible-change="onMouseHoverContext">
+        <div flex-placeholder></div>
+        <div v-if="state.expanded" class="action-bar">
+          <a-dropdown :trigger="['hover']" :get-popup-container="getParNode" @visible-change="onMouseHoverContext">
+            <a-button>{{ $t('toggleTag') }}</a-button>
+            <template #overlay>
+              <a-menu @click="emit('contextMenuClick', $event, file, idx)">
+                <a-menu-item v-for="tag in tags" :key="`toggle-tag-${tag.id}`">{{ tag.name }} <star-filled
+                    v-if="tag.selected" /><star-outlined v-else />
+                </a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+          <a-dropdown :trigger="['hover']" :get-popup-container="getParNode">
             <a-button>{{ t('openContextMenu') }}</a-button>
             <template #overlay>
-              <a-menu @click="emit('contextMenuClick', $event, file, idx)" style="z-index: 99999">       
-                <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
-                <a-menu-item key="download">{{ $t('downloadDirectly') }}</a-menu-item>
-                <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
+              <a-menu @click="emit('contextMenuClick', $event, file, idx)">
                 <a-menu-item key="deleteFiles">{{ $t('deleteSelected') }}</a-menu-item>
                 <a-menu-item key="send2txt2img">{{ $t('sendToTxt2img') }}</a-menu-item>
                 <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
                 <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
                 <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
                 <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
-                <a-sub-menu key="toggle-tag" :title="$t('toggleTag')">
-                  <a-menu-item v-for="tag in tags" :key="tag.id">{{ tag.name }} <star-filled
-                      v-if="tag.selected" /><star-outlined v-else />
-                  </a-menu-item>
-                </a-sub-menu>
+                <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
+                <a-menu-item key="download">{{ $t('downloadDirectly') }}</a-menu-item>
+                <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
           <a-button @click="copy2clipboardI18n(imageGenInfo)">{{
             $t('copyPrompt')
           }}</a-button>
-        </template>
+        </div>
       </div>
       <div class="gen-info" v-if="state.expanded">
         {{ imageGenInfo }}
@@ -192,7 +196,7 @@ function todiv (p: any) {
     }
   }
 
-  .actoion-bar {
+  .action-bar {
     display: flex;
     align-items: center;
     user-select: none;
@@ -201,6 +205,7 @@ function todiv (p: any) {
       font-size: 1.5em;
       padding: 2px 4px;
       border-radius: 4px;
+
       &:hover {
         background: var(--zp-secondary-variant-background);
       }
