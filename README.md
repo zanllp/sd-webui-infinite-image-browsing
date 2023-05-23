@@ -5,15 +5,15 @@
 
 ## Key Features
 
-### Excellent Performance
+### 🔥 Excellent Performance
 - Once caching is generated, images can be displayed in just a few milliseconds.
 - Images are displayed by default using thumbnails with a default size of 256 pixels. You can adjust the size of the thumbnails in the global settings page.
 
-### 'Walk' Mode
+### 🚶‍♂️ 'Walk' Mode
 - Automatically load the next folder `(similar to os.walk)`, allowing you to browse all images without paging.
 - Tested to work properly with over 27,000 files.
 
-### Image Search & Favorite
+### 🔍 Image Search & Favorite
 - The prompt, model, Lora, and other information will be converted into tags and sorted by frequency of use for precise searching.
 - Supports tag autocomplete, translation, and customization.
 - Image favorite can be achieved by toggling custom tags for images in the right-click menu.
@@ -21,27 +21,32 @@
 - Also supports fuzzy search, you can search by a part of the filename or generated information.
 - Support adding custom search paths for easy management of folders created by the user.
 
-### View Image & `Send To`
+### 🖼️ View Image & `Send To`
 - Supports viewing image generation information. Also supported in full-screen preview mode.
 - Supports sending images to other tabs.
 - Supports full-screen preview.
 - Support navigating to the previous or next image in full-screen preview mode by pressing arrow keys or clicking buttons.
 
-### Standalone Operation
+### 💻 Standalone Operation
 - Supports standalone operation without sd-webui.
 - Almost all functions can be used normally.
 - [Click here for details](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47).
 
-### Preview based on File Tree Structure & File operations
+### 🌳 Preview based on File Tree Structure & File operations
 - Supports preview based on the file tree structure.
 - Supports basic file operations as well as multi-select deletion/moving.
 - Press and hold Ctrl, Shift, or Cmd to select multiple items.
 - Supports sending files directly to other folders via context menu.
 - Support for automatic refresh
 
-### Multilingual Support
+### 🌐 Multilingual Support
 - Currently supports Simplified Chinese/English/German.
 - If you would like to add a new language, please refer to [i18n.ts](https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/vue/src/i18n.ts) and submit the relevant code.
+
+### 🔐 Added support for authentication
+- You just need to create a `.env` file under the root directory of this extension and enter your key.
+- Then you will be prompted to enter your key when you open the extension.
+- If the authentication fails, all your requests will be rejected.
 
 If you like this project and find it helpful, please consider giving it a ⭐️. This would be very important for me to continue developing and maintaining this project. If you have any suggestions or ideas, please feel free to raise them in the issue section, and I will respond as soon as possible. Thank you again for your support!
 
