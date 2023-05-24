@@ -1,6 +1,7 @@
 import { createI18n } from 'vue-i18n'
 
 const zh = {
+  //! MissingTranslations: "像这样标记缺失的翻译" ← i just translated it with google translate ♥
   errorOccurred: '发生了个错误',
   useThumbnailPreview: '使用缩略图预览',
   smallerIntervalMeansMoreNetworkTraffic: '越小对网络压力越大',
@@ -133,6 +134,7 @@ const zh = {
   serverKeyRequired: "服务器配置了密匙，你必须提供相同的密匙才能继续使用"
 }
 const en: Record<keyof typeof zh, string> = {
+  //! MissingTranslations: "Mark missing translations like this" 
   serverKeyRequired: "The server has configured a key. You must provide the same key to continue using it.",
   removeFromSearchScanPathAndQuickMove: 'Remove from Search Scan Path and Quick Move',
   addToSearchScanPathAndQuickMove: 'Add to Search Scan Path and Quick Move',
@@ -271,6 +273,8 @@ const en: Record<keyof typeof zh, string> = {
 
 
 const de: Partial<Record<keyof typeof zh, string>> = {
+  //! MissingTranslations: "Markiere fehlende Übersetzungen auf diese Weise"
+  serverKeyRequired: "Für die weitere Nutzung ist die Eingabe eines Schlüssels erforderlich, der vom Server konfiguriert wurde.",
   removeFromSearchScanPathAndQuickMove: "Schnellzugriff entfernen",
   addToSearchScanPathAndQuickMove: "Schnellzugriff hinzufügen",
   "openWithLocalFileBrowser": "Im lokalen Dateimanager öffnen",
