@@ -1,10 +1,12 @@
-import { message } from 'ant-design-vue'
+import { Input, Modal, message } from 'ant-design-vue'
 import axios, { isAxiosError } from 'axios'
 import type { GlobalSettingPart } from './type'
 import { t } from '@/i18n'
 import type { Tag } from './db'
 import cookie from 'js-cookie'
 import { delay } from 'vue3-ts-util'
+import { h, ref } from 'vue'
+import 'ant-design-vue/es/input/style/index.css'
 export const axiosInst = axios.create({
   baseURL: '/infinite_image_browsing'
 })
@@ -22,7 +24,21 @@ axiosInst.interceptors.response.use(
   async (err) => {
     if (isAxiosError(err)) {
       if (err.response?.status === 401) {
-        const key = prompt(t('serverKeyRequired'))
+        const key = await new Promise<string>((resolve) => {
+          const key = ref('')
+          Modal.confirm({
+            title: t('serverKeyRequired'),
+            content: () => {
+              return h(Input, {
+                value: key.value,
+                'onUpdate:value': (v: string) => (key.value = v)
+              })
+            },
+            onOk() {
+              resolve(key.value)
+            }
+          })
+        })
         if (!key) {
           return
         }

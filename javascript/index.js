@@ -12,8 +12,8 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
-    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-66a3e480.js"></script>
-    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-050489b7.css">
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-32658d15.js"></script>
+    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-1e6c902f.css">
   </head>
 
   <body>
