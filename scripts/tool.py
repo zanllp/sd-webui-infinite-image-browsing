@@ -21,6 +21,22 @@ sd_img_dirs = [
 ]
 
 
+is_dev = os.getenv("APP_ENV") == "dev"
+cwd = os.path.normpath(os.path.join(__file__, "../../"))
+is_win = platform.system().lower().find("windows") != -1
+
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(cwd, ".env"))
+except BaseException as e:
+    print(e)
+secret_key = os.getenv("IIB_SECRET_KEY")
+if secret_key:
+    print(f"Secret key loaded successfully. ")
+
+
+
 def get_sd_webui_conf(**kwargs):
     try:
         from modules.shared import opts
@@ -107,29 +123,6 @@ def convert_to_bytes(file_size_str):
         raise ValueError(f"Invalid file size string '{file_size_str}'")
 
 
-import asyncio
-
-
-def debounce(delay):
-    """用于优化高频事件的装饰器"""
-
-    def decorator(func):
-        from typing import Union
-
-        task: Union[None, asyncio.Task] = None
-
-        async def debounced(*args, **kwargs):
-            nonlocal task
-            if task:
-                task.cancel()
-            task = asyncio.create_task(asyncio.sleep(delay))
-            await task
-            return await func(*args, **kwargs)
-
-        return debounced
-
-    return decorator
-
 
 def is_valid_image_path(path):
     """
@@ -145,9 +138,6 @@ def is_valid_image_path(path):
     return True
 
 
-is_dev = "APP_ENV" in os.environ and os.environ["APP_ENV"] == "dev"
-cwd = os.path.normpath(os.path.join(__file__, "../../"))
-is_win = platform.system().lower().find("windows") != -1
 
 
 def get_temp_path():
@@ -183,7 +173,9 @@ temp_path = get_temp_path()
 
 def get_locale():
     import locale
-
+    env_lang = os.getenv("IIB_SERVER_LANG")
+    if env_lang in ['zh', 'en']:
+        return env_lang
     lang, _ = locale.getdefaultlocale()
     return "zh" if lang and lang.startswith("zh") else "en"
 
