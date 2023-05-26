@@ -16,17 +16,17 @@ from scripts.tool import (
     get_valid_img_dirs,
     get_created_date,
     open_folder,
+    secret_key
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 import asyncio
-from typing import Any, List, Literal, Optional
+from typing import Any, List, Optional
 from pydantic import BaseModel
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse
 from PIL import Image
 from fastapi import Depends, FastAPI, HTTPException, Request
 import hashlib
-from urllib.parse import urlencode
 from scripts.db.datamodel import (
     DataBase,
     Image as DbImg,
@@ -41,31 +41,19 @@ from scripts.logger import logger
 
 
 send_img_path = {"value": ""}
-
-options = {"IIB_SECRET_KEY": ""}
 mem = {
     "IIB_SECRET_KEY_HASH" : None
 }
-try:
-    from dotenv import load_dotenv
-    load_dotenv(os.path.join(cwd, ".env"))
-    secret_key = os.getenv("IIB_SECRET_KEY")
-    if secret_key:
-        options["IIB_SECRET_KEY"] = secret_key
-        print(f"Secret key loaded successfully. ")
-except BaseException as e:
-    print(e)
 
 
 async def get_token(request: Request):
-    secert = options["IIB_SECRET_KEY"]
-    if not secert:
+    if not secret_key:
         return
     token = request.cookies.get("IIB_S")
     if not token:
         raise HTTPException(status_code=401, detail="Unauthorized")
     if not mem["IIB_SECRET_KEY_HASH"]:
-        mem["IIB_SECRET_KEY_HASH"] = hashlib.sha256((secert+"_ciallo").encode("utf-8")).hexdigest()
+        mem["IIB_SECRET_KEY_HASH"] = hashlib.sha256((secret_key+"_ciallo").encode("utf-8")).hexdigest()
     if mem["IIB_SECRET_KEY_HASH"] != token:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
