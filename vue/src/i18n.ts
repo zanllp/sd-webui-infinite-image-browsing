@@ -52,6 +52,7 @@ const zh = {
   sendToTxt2img: '发送到文生图',
   sendToImg2img: '发送到图生图',
   sendToInpaint: '发送到局部重绘',
+  sendToControlNet: '发送到ControlNet',
   sendToExtraFeatures: '发送到附加功能',
   loadNextPage: '加载下一页',
   autoUpload: '自动上传',
@@ -236,6 +237,8 @@ const en: Record<keyof typeof zh, string> = {
   sendToImg2img: 'Send to img2img',
   sendToInpaint: 'Send to Inpaint',
   sendToExtraFeatures: 'Send to Extra',
+  //! MissingTranslations
+  sendToControlNet: 'Send to ControlNet',
   loadNextPage: 'Load next page',
   autoUpload: 'Auto upload',
   localFile: 'Local file',

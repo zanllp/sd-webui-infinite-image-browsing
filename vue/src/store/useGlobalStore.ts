@@ -48,7 +48,6 @@ export const useGlobalStore = defineStore(
     const autoCompletedDirList = ref([] as ReturnTypeAsync<typeof getAutoCompletedTagList>)
     const enableThumbnail = ref(true)
     const stackViewSplit = ref(50)
-    const autoUploadRecvDir = ref('/')
     const createEmptyPane = (): TabPane =>  ({ type: 'empty', name: t('emptyStartPage'), key: uniqueId() })
     const emptyPane = createEmptyPane()
     const tabList = ref<Tab[]>([ID({ panes: [emptyPane], key: emptyPane.key })])
