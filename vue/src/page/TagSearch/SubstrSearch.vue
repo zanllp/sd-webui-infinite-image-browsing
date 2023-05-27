@@ -66,8 +66,8 @@ useGlobalEventListen('return-to-iib', async () => {
 </script>
 <template>
   <div class="container" ref="stackViewEl">
-    <div class="search-bar" v-if="info">
-      <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder')" />
+    <div class="search-bar" v-if="info" >
+      <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder')" :disabled="!queue.isIdle" @keydown.enter="query"/>
       <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
         {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
       <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!substr">{{
