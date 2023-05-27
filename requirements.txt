@@ -2,3 +2,4 @@ fastapi
 uvicorn
 piexif
 python-dotenv
+Pillow
