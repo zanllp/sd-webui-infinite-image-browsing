@@ -6,7 +6,7 @@ import type { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
 import type { ReturnTypeAsync } from '@/util'
 import { cloneDeep, uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
-import { watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import { ref } from 'vue'
 import { type UniqueId, ID } from 'vue3-ts-util'
 
@@ -49,8 +49,11 @@ export const useGlobalStore = defineStore(
     const enableThumbnail = ref(true)
     const stackViewSplit = ref(50)
     const createEmptyPane = (): TabPane =>  ({ type: 'empty', name: t('emptyStartPage'), key: uniqueId() })
-    const emptyPane = createEmptyPane()
-    const tabList = ref<Tab[]>([ID({ panes: [emptyPane], key: emptyPane.key })])
+    const tabList = ref<Tab[]>([])
+    onMounted(() => {
+      const emptyPane = createEmptyPane()
+      tabList.value.push(ID({ panes: [emptyPane], key: emptyPane.key }))
+    })
     const dragingTab = ref<{ tabIdx: number; paneIdx: number }>()
     const recent = ref(new Array<{ path: string; key: string; }>())
     const time = Date.now()
