@@ -237,7 +237,6 @@ const en: Record<keyof typeof zh, string> = {
   sendToImg2img: 'Send to img2img',
   sendToInpaint: 'Send to Inpaint',
   sendToExtraFeatures: 'Send to Extra',
-  //! MissingTranslations
   sendToControlNet: 'Send to ControlNet',
   loadNextPage: 'Load next page',
   autoUpload: 'Auto upload',
@@ -373,6 +372,7 @@ const de: Partial<Record<keyof typeof zh, string>> = {
   sendToImg2img: "Senden an Bild-zu-Bild",
   sendToInpaint: "Senden an Inpaint",
   sendToExtraFeatures: "Senden an Extras",
+  sendToControlNet: 'Senden an ControlNet',
   loadNextPage: "Nächste Seite laden",
   autoUpload: "Automatisches Hochladen",
   localFile: "Lokale Datei",
