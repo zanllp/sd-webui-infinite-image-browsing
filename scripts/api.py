@@ -15,8 +15,7 @@ from scripts.tool import (
     get_sd_webui_conf,
     get_valid_img_dirs,
     get_created_date,
-    open_folder,
-    secret_key
+    open_folder
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -44,7 +43,9 @@ send_img_path = {"value": ""}
 mem = {
     "IIB_SECRET_KEY_HASH" : None
 }
-
+secret_key = os.getenv("IIB_SECRET_KEY")
+if secret_key:
+    print("Secret key loaded successfully. ")
 
 async def get_token(request: Request):
     if not secret_key:

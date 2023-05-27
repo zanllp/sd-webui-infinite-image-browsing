@@ -136,7 +136,8 @@ const thumbnailSize = computed(() =>
         </template>
         <template v-if="file.type === 'file'">
           <template v-if="isImageFile(file.name)">
-            <a-menu-item key="viewGenInfo">{{ $t('viewGenerationInfo') }}</a-menu-item>
+            <a-menu-item key="viewGenInfo">{{ $t('viewGenerationInfo') }}</a-menu-item> 
+            <a-menu-divider />
             <a-menu-item key="send2txt2img">{{ $t('sendToTxt2img') }}</a-menu-item>
             <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
             <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
@@ -146,6 +147,7 @@ const thumbnailSize = computed(() =>
               <a-menu-item key="send2controlnet-img2img">{{ $t('i2i') }}</a-menu-item>
             </a-sub-menu>
             <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
+            <a-menu-divider />
             <a-sub-menu key="toggle-tag" :title="$t('toggleTag')">
               <a-menu-item v-for="tag in tags" :key="tag.id"
                 >{{ tag.name }} <star-filled v-if="tag.selected" /><star-outlined v-else />

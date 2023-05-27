@@ -31,9 +31,6 @@ try:
     load_dotenv(os.path.join(cwd, ".env"))
 except BaseException as e:
     print(e)
-secret_key = os.getenv("IIB_SECRET_KEY")
-if secret_key:
-    print(f"Secret key loaded successfully. ")
 
 
 
