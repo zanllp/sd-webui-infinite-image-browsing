@@ -1,4 +1,4 @@
-import { useGlobalStore, type FileTransferTabPane } from '@/store/useGlobalStore'
+import { useGlobalStore, type FileTransferTabPane, type Shortcut } from '@/store/useGlobalStore'
 import { onLongPress, useElementSize } from '@vueuse/core'
 import { ref, computed, watch, onMounted, h, type Ref } from 'vue'
 import { gradioApp, parentWindow } from '@/util'
@@ -95,7 +95,9 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
 
   const spinning = ref(false)
 
+  const previewing = ref(false)
   return {
+    previewing,
     spinning,
     canLoadNext,
     multiSelectedIdxs,
@@ -140,11 +142,10 @@ export function usePreview(
   props: Props,
   custom?: { files: Ref<FileNodeInfo[] | undefined>; scroller: Ref<Scroller | undefined> }
 ) {
-  const { previewIdx, eventEmitter, canLoadNext } = useHookShareState().toRefs()
+  const { previewIdx, eventEmitter, canLoadNext, previewing } = useHookShareState().toRefs()
   const { state } = useHookShareState()
   const files = computed(() => custom?.files.value ?? state.sortedFiles)
   const scroller = computed(() => custom?.scroller.value ?? state.scroller)
-  const previewing = ref(false)
   let waitScrollTo = null as number | null
   const onPreviewVisibleChange = (v: boolean, lv: boolean) => {
     previewing.value = v
@@ -683,7 +684,7 @@ export function useFileItemActions(
 ) {
   const showGenInfo = ref(false)
   const imageGenInfo = ref('')
-  const { sortedFiles, previewIdx, multiSelectedIdxs, stack, currLocation, spinning } =
+  const { sortedFiles, previewIdx, multiSelectedIdxs, stack, currLocation, spinning, previewing } =
     useHookShareState().toRefs()
   const nor = Path.normalize
   useEventListen('removeFiles', ({ paths, loc }) => {
@@ -743,7 +744,6 @@ export function useFileItemActions(
   }
 
   const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfo, idx: number) => {
-    console.log(e, file)
     const url = toRawFileUrl(file)
     const path = currLocation.value
 
@@ -944,6 +944,45 @@ export function useFileItemActions(
     }
     return {}
   }
+
+  useWatchDocument('keydown', (e) => {
+    if (previewing.value) {
+      const keys = [] as string[]
+      if (e.shiftKey) {
+        keys.push('Shift')
+      }
+      if (e.ctrlKey) {
+        keys.push('Ctrl')
+      }
+      if (e.code.startsWith('Key') || e.code.startsWith('Digit')) {
+        keys.push(e.code)
+        const keysStr = keys.join(' + ')
+        const action = Object.entries(global.shortcut).find(
+          (v) => v[1] === keysStr
+        )?.[0] as keyof Shortcut
+        if (action) {
+          // message.info(t('shortcutTrigger', { action: t(action) }))
+          e.stopPropagation()
+          e.preventDefault()
+          const idx = previewIdx.value
+          const file = sortedFiles.value[idx]
+          switch (action) {
+            case 'deleteInFullScreenPreviewMode': {
+              if (toRawFileUrl(file) === global.fullscreenPreviewInitialUrl) {
+                return message.warn(t('fullscreenRestriction'))
+              }
+              return onContextMenuClick({ key: 'deleteFiles' } as MenuInfo, file, idx)
+            }
+            case 'toggleLikeTagInFullScreenPreviewMode': {
+              const likeTag = global.conf?.all_custom_tags.find(v => v.name === 'like')!
+              return onContextMenuClick({ key: `toggle-tag-${likeTag.id}` } as MenuInfo, file, idx)
+            }
+          }
+        }
+      }
+    }
+  })
+
   return {
     onFileItemClick,
     onContextMenuClick,

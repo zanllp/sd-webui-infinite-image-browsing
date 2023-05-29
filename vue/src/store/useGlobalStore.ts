@@ -41,6 +41,12 @@ export interface Tab extends UniqueId {
   key: string
 }
 
+export interface Shortcut {
+  deleteInFullScreenPreviewMode: string,
+  toggleLikeTagInFullScreenPreviewMode: string
+}
+
+
 export const useGlobalStore = defineStore(
   'useGlobalStore',
   () => {
@@ -60,7 +66,6 @@ export const useGlobalStore = defineStore(
     const lastTabListRecord = ref<[{ time: number; tabs: Tab[] }, { time: number; tabs: Tab[] }]>() // [curr,last]
     const saveRecord = () => {
       const tabs = tabList.value.slice()
-      console.log(tabs)
       if (lastTabListRecord.value?.length !== 2) {
         lastTabListRecord.value = [
           { tabs, time },
@@ -115,6 +120,8 @@ export const useGlobalStore = defineStore(
     watch(lang, (v) => (i18n.global.locale.value = v as any))
 
     const longPressOpenContextMenu = ref(false)
+
+    const shortcut = ref<Shortcut>({ deleteInFullScreenPreviewMode: '', toggleLikeTagInFullScreenPreviewMode: '' })
     return {
       createEmptyPane,
       lang,
@@ -132,7 +139,8 @@ export const useGlobalStore = defineStore(
       longPressOpenContextMenu,
       openTagSearchMatchedImageGridInRight,
       onlyFoldersAndImages: ref(true),
-      fullscreenPreviewInitialUrl: ref('')
+      fullscreenPreviewInitialUrl: ref(''),
+      shortcut
     }
   },
   {
@@ -146,7 +154,8 @@ export const useGlobalStore = defineStore(
         'gridThumbnailSize',
         'largeGridThumbnailSize',
         'longPressOpenContextMenu',
-        'onlyFoldersAndImages'
+        'onlyFoldersAndImages',
+        'shortcut'
       ]
     }
   }
