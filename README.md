@@ -24,7 +24,7 @@
 ### 🖼️ View Image & `Send To`
 - Supports viewing image generation information. Also supported in full-screen preview mode.
 - Supports sending images to other tabs & ControlNet.
-- Supports full-screen preview.
+- Support full-screen preview and enable shortcut key operations while in full-screen preview mode.
 - Support navigating to the previous or next image in full-screen preview mode by pressing arrow keys or clicking buttons.
 
 ### 💻 Standalone Operation
