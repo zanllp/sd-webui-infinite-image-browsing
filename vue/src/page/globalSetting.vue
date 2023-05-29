@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { t } from '@/i18n'
-import { useGlobalStore } from '@/store/useGlobalStore'
+import { useGlobalStore, type Shortcut } from '@/store/useGlobalStore'
 import { ref } from 'vue'
 import { SearchSelect, delay } from 'vue3-ts-util'
+// import { Form as AForm, FormItem as AFormItem, Input as AInput, Row as ARow, Col as ACol, Row } from 'ant-design-vue'
 
 const globalStore = useGlobalStore()
 
@@ -12,6 +13,18 @@ const reload = async () => {
   window.location.reload()
 }
 const langs: { text: string, value: string }[] = [{ value: 'en', text: 'English' }, { value: 'zh', text: '中文' }, { value: 'de', text: 'Deutsch' }]
+const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
+  const keys = [] as string[]
+  if (e.shiftKey) {
+    keys.push('Shift')
+  } if (e.ctrlKey) {
+    keys.push('Ctrl')
+  }
+  if (e.code.startsWith('Key') || e.code.startsWith('Digit')) {
+    keys.push(e.code)
+    globalStore.shortcut[key] = keys.join(' + ')
+  }
+}
 </script>
 <template>
   <div class="panel">
@@ -42,6 +55,18 @@ const langs: { text: string, value: string }[] = [{ value: 'en', text: 'English'
           t('langChangeReload')
         }}</a-button>
       </a-form-item>
+      <a-form-item :label="$t('shortcutKey')">
+        <ARow v-for="value, key in globalStore.shortcut" :key="key" class="row">
+          <ACol :span="8">
+            {{ $t(key) }}
+          </ACol>
+          <ACol :span="16" class="col">
+            <a-input :value="value" @keydown.stop.prevent="onShortcutKeyDown($event, key as any)"
+              :placeholder="$t('shortcutKeyDescription')" />
+              <a-button @click="globalStore.shortcut[key] = ''">{{ $t('cancel') }}</a-button>
+          </ACol>
+        </ARow>
+      </a-form-item>
     </a-form>
   </div>
 </template>
@@ -61,5 +86,14 @@ const langs: { text: string, value: string }[] = [{ value: 'en', text: 'English'
   width: 128px;
   display: inline-block;
   padding-right: 16px;
+}
+
+.row {
+  margin-top: 16px;
+  padding: 0 16px;
+}
+.col {
+ display: flex;
+
 }
 </style>
