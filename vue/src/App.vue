@@ -15,7 +15,7 @@ useGlobalEventListen('updateGlobalSetting', async () => {
   const resp = await getGlobalSetting()
   globalStore.conf = resp
   const r = await getAutoCompletedTagList(resp)
-  globalStore.autoCompletedDirList = r.filter((v) => v?.dir?.trim?.())
+  globalStore.quickMovePaths = r.filter((v) => v?.dir?.trim?.())
 })
 onMounted(async () => {
   globalEvents.emit('updateGlobalSetting')

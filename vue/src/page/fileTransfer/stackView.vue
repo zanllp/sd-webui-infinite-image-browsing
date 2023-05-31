@@ -136,7 +136,7 @@ watch(
             </a>
             <template #overlay>
               <a-menu>
-                <a-menu-item v-for="item in global.autoCompletedDirList" :key="item.dir">
+                <a-menu-item v-for="item in global.quickMovePaths" :key="item.dir">
                   <a @click.prevent="quickMoveTo(item.dir)">{{ item.zh }}</a>
                 </a-menu-item>
               </a-menu>

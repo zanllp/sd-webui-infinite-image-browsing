@@ -7,6 +7,9 @@ export function isAbsolute (path: string): boolean {
 }
 
 export function normalize (path: string): string {
+  if (!path) {
+    return ''
+  }
   // 将路径分隔符替换为斜杠
   path = path.replace(/\\/g, '/')
 

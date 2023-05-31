@@ -1,3 +1,6 @@
+/* eslint-disable */
+/* prettier-ignore */
+// @ts-nocheck
 ;(() => {
   /**
    * This is a file generated using `yarn deliver-dist`.
@@ -12,7 +15,7 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
-    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-ea61a2fe.js"></script>
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-9fc801b7.js"></script>
     <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-32348713.css">
   </head>
 

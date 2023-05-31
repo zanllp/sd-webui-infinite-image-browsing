@@ -44,7 +44,7 @@ const lastRecord = computed(() => global.lastTabListRecord?.[1])
 console.log(lastRecord.value)
 
 const walkModeSupportedDir = computed(() =>
-  global.autoCompletedDirList.filter(
+  global.quickMovePaths.filter(
     ({ key: k }) =>
       k === 'outdir_txt2img_samples' ||
       k === 'outdir_img2img_samples'
@@ -95,11 +95,11 @@ const restoreRecord = () => {
           </li>
         </ul>
       </div>
-      <div class="quick-start" v-if="global.autoCompletedDirList.length">
+      <div class="quick-start" v-if="global.quickMovePaths.length">
         <h2>{{ $t('launchFromQuickMove') }}</h2>
         <ul>
           <li
-            v-for="dir in global.autoCompletedDirList"
+            v-for="dir in global.quickMovePaths"
             :key="dir.key"
             class="quick-start__item"
             @click.prevent="openInCurrentTab('local', dir.dir)"

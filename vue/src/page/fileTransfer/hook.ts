@@ -312,11 +312,17 @@ export function useLocation(props: Props) {
       const filename = pane.path!.split('/').pop()
       const getTitle = () => {
         if (!props.walkMode) {
+          const np = Path.normalize(loc)
+          for (const [k, v] of Object.entries(global.pathAliasMap)) {
+            if (np.startsWith(v)) {
+              return np.replace(v,k)
+            }
+          }
           return filename
         }
         return (
           'Walk: ' +
-          (global.autoCompletedDirList.find((v) => v.dir === walkModePath.value)?.zh ?? filename)
+          (global.quickMovePaths.find((v) => v.dir === walkModePath.value)?.zh ?? filename)
         )
       }
       pane.name = h('div', { style: 'display:flex;align-items:center' }, [
@@ -454,7 +460,7 @@ export function useLocation(props: Props) {
   }
 
   const normalizedScandPath = computed(() => {
-    return global.autoCompletedDirList.map((v) => ({ ...v, path: Path.normalize(v.dir) }))
+    return global.quickMovePaths.map((v) => ({ ...v, path: Path.normalize(v.dir) }))
   })
 
   const searchPathInfo = computed(() => {
@@ -786,9 +792,9 @@ export function useFileItemActions(
       }
     }
     if (`${e.key}`.startsWith('toggle-tag-')) {
-      const tagId = +(`${e.key}`.split('toggle-tag-')[1])
+      const tagId = +`${e.key}`.split('toggle-tag-')[1]
       const { is_remove } = await toggleCustomTagToImg({ tag_id: tagId, img_path: file.fullpath })
-      const tag = global.conf?.all_custom_tags.find(v => v.id === tagId)?.name!
+      const tag = global.conf?.all_custom_tags.find((v) => v.id === tagId)?.name!
       message.success(t(is_remove ? 'removedTagFromImage' : 'addedTagToImage', { tag }))
       return
     }
@@ -809,7 +815,7 @@ export function useFileItemActions(
       case 'send2extras':
         return copyImgTo('extras')
       case 'send2savedDir': {
-        const dir = global.autoCompletedDirList.find((v) => v.key === 'outdir_save')
+        const dir = global.quickMovePaths.find((v) => v.key === 'outdir_save')
         if (!dir) {
           return message.error(t('unknownSavedDir'))
         }
@@ -966,7 +972,7 @@ export function useFileItemActions(
               return onContextMenuClick({ key: 'deleteFiles' } as MenuInfo, file, idx)
             }
             case 'toggleLikeTagInFullScreenPreviewMode': {
-              const likeTag = global.conf?.all_custom_tags.find(v => v.name === 'like')!
+              const likeTag = global.conf?.all_custom_tags.find((v) => v.name === 'like')!
               return onContextMenuClick({ key: `toggle-tag-${likeTag.id}` } as MenuInfo, file, idx)
             }
           }

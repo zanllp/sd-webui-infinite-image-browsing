@@ -9,7 +9,7 @@ const globalStore = useGlobalStore()
 
 const langChanged = ref(false)
 const reload = async () => {
-  await delay(100)
+  await delay(300)
   window.location.reload()
 }
 const langs: { text: string, value: string }[] = [{ value: 'en', text: 'English' }, { value: 'zh', text: '中文' }, { value: 'de', text: 'Deutsch' }]
