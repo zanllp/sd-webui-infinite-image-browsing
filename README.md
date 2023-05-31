@@ -48,6 +48,9 @@
 - Then you will be prompted to enter your key when you open the extension.
 - If the authentication fails, all your requests will be rejected.
 
+### ⌨️ (Keyboard Shortcuts)
+- Allows for deleting and adding/removing tags, with customizable trigger buttons in the global settings page.
+
 If you like this project and find it helpful, please consider giving it a ⭐️. This would be very important for me to continue developing and maintaining this project. If you have any suggestions or ideas, please feel free to raise them in the issue section, and I will respond as soon as possible. Thank you again for your support!
 
 It is strongly recommended to use "Open in new tab" (in the upper right corner of the plugin startup page), which is much more comfortable than being embedded in Gradio.
@@ -73,8 +76,16 @@ In full-screen preview mode, you can also view image information and perform ope
 
 https://user-images.githubusercontent.com/25872019/235327735-bfb50ea7-7682-4e50-b303-38159456e527.mp4
 
+If you, like me, don't need to view the generation information, you can choose to simply minimize this panel, and all contextual operations will still be available.
+
+<img width="599" alt="image" src="https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/f26abe8c-7a76-45c3-9d7f-18ae8b6b6a91">
+
 ### Right-click menu
 <img width="536" alt="image" src="https://user-images.githubusercontent.com/25872019/232162244-e728d510-b6c6-45e6-afb3-872bd67db05b.png">
+
+You can also trigger it by hovering your mouse over the icon in the top right corner.
+
+<img width="227" alt="image" src="https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/f2005ad3-2d3b-4fa7-b3e5-bc17f26f7e19">
 
 ### Walk mode
 

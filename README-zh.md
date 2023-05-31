@@ -46,9 +46,13 @@
 - 目前支持简体中文/英文/德语。
 - 如果您希望添加新的语言，请参考 [i18n.ts](https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/vue/src/i18n.ts) 并提交相关的代码。
 
+
 ### 🔐 身份验证支持
 - 您只需要在此扩展的根目录下创建一个 `.env` 文件并输入您的密钥。然后在打开扩展时，您将被提示输入密钥。
 - 如果身份验证失败，所有请求将被拒绝。
+
+### ⌨️ 快捷键
+- 支持删除和添加/移除Tag，在全局设置页进行自定义触发按钮
 
 
 如果您喜欢这个项目并且觉得它对您有帮助，请考虑给我点个⭐️。这将对我持续开发和维护这个项目非常重要。如果您有任何建议或者想法，请随时在issue中提出，我会尽快回复。再次感谢您的支持！
@@ -80,8 +84,15 @@
 https://user-images.githubusercontent.com/25872019/235327735-bfb50ea7-7682-4e50-b303-38159456e527.mp4
 
 
+如果你和我一样不需要查看生成信息，你可以选择直接缩小这个面板，所有上下文操作仍然可用
+
+<img width="599" alt="image" src="https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/f26abe8c-7a76-45c3-9d7f-18ae8b6b6a91">
+
 ### 右键菜单
 <img width="1024" alt="image" src="https://user-images.githubusercontent.com/25872019/230896820-26344b09-2297-4a2f-a6a7-4c2f0edb8a2c.png">
+
+也可以通过右上角的图标来触发
+<img width="227" alt="image" src="https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/f2005ad3-2d3b-4fa7-b3e5-bc17f26f7e19">
 
 ### Walk模式
 
