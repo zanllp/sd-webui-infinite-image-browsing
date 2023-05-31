@@ -48,7 +48,7 @@
 - Then you will be prompted to enter your key when you open the extension.
 - If the authentication fails, all your requests will be rejected.
 
-### ⌨️ (Keyboard Shortcuts)
+### ⌨️ Keyboard Shortcuts
 - Allows for deleting and adding/removing tags, with customizable trigger buttons in the global settings page.
 
 If you like this project and find it helpful, please consider giving it a ⭐️. This would be very important for me to continue developing and maintaining this project. If you have any suggestions or ideas, please feel free to raise them in the issue section, and I will respond as soon as possible. Thank you again for your support!
