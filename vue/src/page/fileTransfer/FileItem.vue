@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FileOutlined, FolderOpenOutlined, StarFilled, StarOutlined } from '@/icon'
+import { FileOutlined, FolderOpenOutlined, EllipsisOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { fallbackImage } from 'vue3-ts-util'
 import type { FileNodeInfo } from '@/api/files'
@@ -8,6 +8,7 @@ import { toImageThumbnailUrl, toRawFileUrl, type ViewMode } from './hook'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { computed, ref } from 'vue'
 import { getImageSelectedCustomTag, type Tag } from '@/api/db'
+import ContextMenu from './ContextMenu.vue'
 
 const global = useGlobalStore()
 const props = withDefaults(
@@ -19,7 +20,7 @@ const props = withDefaults(
     viewMode?: ViewMode
     fullScreenPreviewImageUrl?: string
   }>(),
-  {  selected: false, viewMode: 'grid' }
+  { selected: false, viewMode: 'grid' }
 )
 
 const emit = defineEmits<{
@@ -31,11 +32,6 @@ const emit = defineEmits<{
 }>()
 
 const selectedTag = ref([] as Tag[])
-const tags = computed(() => {
-  return (global.conf?.all_custom_tags ?? []).reduce((p, c) => {
-    return [...p, { ...c, selected: !!selectedTag.value.find((v) => v.id === c.id) }]
-  }, [] as (Tag & { selected: boolean })[])
-})
 const onRightClick = () => {
   if (props?.file?.type !== 'file') {
     return
@@ -58,7 +54,7 @@ const thumbnailSize = computed(() =>
     :visible="
       !global.longPressOpenContextMenu ? undefined : typeof idx === 'number' && showMenuIdx === idx
     "
-    @update:visible="(v) => typeof idx === 'number' && emit('update:showMenuIdx', v ? idx : -1)"
+    @update:visible="(v: boolean) => typeof idx === 'number' && emit('update:showMenuIdx', v ? idx : -1)"
   >
     <li
       class="file file-item-trigger"
@@ -75,7 +71,20 @@ const thumbnailSize = computed(() =>
       @contextmenu="onRightClick"
       @click.capture="emit('fileItemClick', $event, file, idx)"
     >
-      <div v-if="viewMode !== 'line'" >
+      <div v-if="viewMode !== 'line'">
+        <a-dropdown>
+          <div class="more">
+            <ellipsis-outlined />
+          </div>
+          <template #overlay>
+            <context-menu
+              :file="file"
+              :idx="idx"
+              :selected-tag="selectedTag"
+              @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)"
+            />
+          </template>
+        </a-dropdown>
         <!-- :key="fullScreenPreviewImageUrl ? undefined : file.fullpath" 
           这么复杂是因为再全屏预览时可能因为直接删除导致fullpath变化，然后整个预览直接退出-->
         <a-image
@@ -127,39 +136,12 @@ const thumbnailSize = computed(() =>
       </template>
     </li>
     <template #overlay>
-      <a-menu @click="emit('contextMenuClick', $event, file, idx)">
-        <a-menu-item key="deleteFiles">{{ $t('deleteSelected') }}</a-menu-item>
-        <template v-if="file.type === 'dir'">
-          <a-menu-item key="openInNewTab">{{ $t('openInNewTab') }}</a-menu-item>
-          <a-menu-item key="openOnTheRight">{{ $t('openOnTheRight') }}</a-menu-item>
-          <a-menu-item key="openWithWalkMode">{{ $t('openWithWalkMode') }}</a-menu-item>
-        </template>
-        <template v-if="file.type === 'file'">
-          <template v-if="isImageFile(file.name)">
-            <a-menu-item key="viewGenInfo">{{ $t('viewGenerationInfo') }}</a-menu-item> 
-            <a-menu-divider />
-            <a-menu-item key="send2txt2img">{{ $t('sendToTxt2img') }}</a-menu-item>
-            <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
-            <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
-            <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>  
-            <a-sub-menu key="send2controlnet" :title="$t('sendToControlNet')">
-              <a-menu-item key="send2controlnet-txt2img">{{ $t('t2i') }}</a-menu-item>
-              <a-menu-item key="send2controlnet-img2img">{{ $t('i2i') }}</a-menu-item>
-            </a-sub-menu>
-            <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
-            <a-menu-divider />
-            <a-sub-menu key="toggle-tag" :title="$t('toggleTag')">
-              <a-menu-item v-for="tag in tags" :key="tag.id"
-                >{{ tag.name }} <star-filled v-if="tag.selected" /><star-outlined v-else />
-              </a-menu-item>
-            </a-sub-menu>
-            <a-menu-item key="openWithLocalFileBrowser">{{ $t('openWithLocalFileBrowser') }}</a-menu-item>
-          </template>
-          <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
-          <a-menu-item key="download">{{ $t('downloadDirectly') }}</a-menu-item>
-          <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
-        </template>
-      </a-menu>
+      <context-menu
+        :file="file"
+        :idx="idx"
+        :selected-tag="selectedTag"
+        @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)"
+      />
     </template>
   </a-dropdown>
 </template>
@@ -180,6 +162,29 @@ const thumbnailSize = computed(() =>
   box-shadow: 0 0 4px var(--zp-secondary-variant-background);
   position: relative;
   overflow: hidden;
+
+  &:hover .more {
+    opacity: 1;
+  }
+
+  .more {
+    opacity: 0;
+    transition: all 0.3s ease;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    cursor: pointer;
+    z-index: 100;
+    font-size: 500;
+    font-size: 1.8em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 100vh;
+    color: white;
+    background: var(--zp-icon-bg);
+  }
 
   &.grid {
     padding: 0;

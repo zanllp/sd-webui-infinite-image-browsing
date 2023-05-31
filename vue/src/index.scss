@@ -63,6 +63,7 @@ $success-color: #28a745;
   --zp-secondary-variant-background: var(--zp-grey7);
   // 边框颜色
   --zp-border: var(--zp-grey20);
+  --zp-icon-bg: #0004;
   @media (prefers-color-scheme: dark) {
     --zp-primary: var(--zp-grey20);
     --zp-secondary: var(--zp-grey60);
@@ -72,6 +73,7 @@ $success-color: #28a745;
     --zp-secondary-variant-background: var(--zp-grey90);
     --zp-tertiary-background: var(--zp-grey4);
     --zp-border: var(--zp-grey96);
+    --zp-icon-bg: #fff4;
   }
   body.dark {
     --zp-primary: var(--zp-grey20);
@@ -82,6 +84,7 @@ $success-color: #28a745;
     --zp-secondary-variant-background: var(--zp-grey90);
     --zp-tertiary-background: var(--zp-grey4);
     --zp-border: var(--zp-grey96);
+    --zp-icon-bg: #fff4;
   }
 }
 

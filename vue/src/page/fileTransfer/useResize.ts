@@ -34,8 +34,8 @@ export function useResizeAndDrag(
     e.preventDefault()
     if (!elementRef.value || !resizeHandleRef.value) return
 
-    startX = (e instanceof MouseEvent ? e.clientX : e.touches[0].clientX)
-    startY = (e instanceof MouseEvent ? e.clientY : e.touches[0].clientY)
+    startX = e instanceof MouseEvent ? e.clientX : e.touches[0].clientX
+    startY = e instanceof MouseEvent ? e.clientY : e.touches[0].clientY
     startWidth = elementRef.value.offsetWidth
     startHeight = elementRef.value.offsetHeight
     resizeHandle.x = resizeHandleRef.value.offsetLeft
@@ -50,10 +50,14 @@ export function useResizeAndDrag(
   const handleResizeMouseMove = (e: MouseEvent | TouchEvent) => {
     if (!elementRef.value || !resizeHandleRef.value) return
 
-    const width = startWidth + ((e instanceof MouseEvent ? e.clientX : e.touches[0].clientX) - startX)
-    const height = startHeight + ((e instanceof MouseEvent ? e.clientY : e.touches[0].clientY) - startY)
-    const handleX = resizeHandle.x + ((e instanceof MouseEvent ? e.clientX : e.touches[0].clientX) - startX)
-    const handleY = resizeHandle.y + ((e instanceof MouseEvent ? e.clientY : e.touches[0].clientY) - startY)
+    const width =
+      startWidth + ((e instanceof MouseEvent ? e.clientX : e.touches[0].clientX) - startX)
+    const height =
+      startHeight + ((e instanceof MouseEvent ? e.clientY : e.touches[0].clientY) - startY)
+    const handleX =
+      resizeHandle.x + ((e instanceof MouseEvent ? e.clientX : e.touches[0].clientX) - startX)
+    const handleY =
+      resizeHandle.y + ((e instanceof MouseEvent ? e.clientY : e.touches[0].clientY) - startY)
 
     elementRef.value.style.width = `${width}px`
     elementRef.value.style.height = `${height}px`
@@ -79,8 +83,8 @@ export function useResizeAndDrag(
     isDragging = true
     startLeft = elementRef.value.offsetLeft
     startTop = elementRef.value.offsetTop
-    startX = (e instanceof MouseEvent ? e.clientX : e.touches[0].clientX)
-    startY = (e instanceof MouseEvent ? e.clientY : e.touches[0].clientY)
+    startX = e instanceof MouseEvent ? e.clientX : e.touches[0].clientX
+    startY = e instanceof MouseEvent ? e.clientY : e.touches[0].clientY
     document.documentElement.addEventListener('mousemove', handleDragMouseMove)
     document.documentElement.addEventListener('touchmove', handleDragMouseMove)
     document.documentElement.addEventListener('mouseup', handleDragMouseUp)
@@ -137,9 +141,11 @@ export function useResizeAndDrag(
   watch(
     () => [elementRef.value, resizeHandleRef.value, dragHandleRef.value],
     ([element, resizeHandle, dragHandle]) => {
-      if (element && resizeHandle && dragHandle) {
+      if (element && resizeHandle) {
         resizeHandle.addEventListener('mousedown', handleResizeMouseDown)
         resizeHandle.addEventListener('touchstart', handleResizeMouseDown)
+      }
+      if (element && dragHandle) {
         dragHandle.addEventListener('mousedown', handleDragMouseDown)
         dragHandle.addEventListener('touchstart', handleDragMouseDown)
       }

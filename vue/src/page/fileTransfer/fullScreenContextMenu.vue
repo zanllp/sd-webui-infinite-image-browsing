@@ -15,12 +15,14 @@ import {
   FullscreenOutlined,
   StarFilled,
   StarOutlined,
-  ArrowsAltOutlined
+  ArrowsAltOutlined,
+  EllipsisOutlined
 } from '@/icon'
 import { t } from '@/i18n'
 import { getImageSelectedCustomTag, type Tag } from '@/api/db'
 import { createReactiveQueue } from '@/util'
 import { toRawFileUrl } from './hook'
+import ContextMenu from './ContextMenu.vue'
 
 const global = useGlobalStore()
 const el = ref<HTMLElement>()
@@ -105,7 +107,17 @@ function getParNode (p: any) {
           <FullscreenExitOutlined v-if="state.expanded" />
           <FullscreenOutlined v-else />
         </div>
-        <div flex-placeholder></div>
+        <a-dropdown @visible-change="onMouseHoverContext" :get-popup-container="getParNode">
+          <div class="icon" style="cursor: pointer" v-if="!state.expanded">
+            <ellipsis-outlined />
+          </div>
+          <template #overlay>
+            <context-menu :file="file" :idx="idx" :selected-tag="selectedTag"
+              :disable-delete="toRawFileUrl(file) === global.fullscreenPreviewInitialUrl"
+              @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)" />
+          </template>
+        </a-dropdown>
+        <div flex-placeholder v-if="state.expanded" />
         <div v-if="state.expanded" class="action-bar">
           <a-dropdown :trigger="['hover']" :get-popup-container="getParNode" @visible-change="onMouseHoverContext">
             <a-button>{{ $t('toggleTag') }}</a-button>
@@ -129,7 +141,7 @@ function getParNode (p: any) {
                 <a-menu-item key="deleteFiles" :disabled="toRawFileUrl(file) === global.fullscreenPreviewInitialUrl">{{
                   $t('deleteSelected') }}</a-menu-item>
                 <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
-                <a-menu-item key="download">{{ $t('downloadDirectly') }}</a-menu-item>
+                <a-menu-item key="download">{{ $t('download') }}</a-menu-item>
                 <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
               </a-menu>
             </template>
@@ -188,7 +200,7 @@ function getParNode (p: any) {
     right: 0;
     transform: rotate(90deg);
     cursor: se-resize;
-    z-index: 2333;
+    z-index: 1;
     background: var(--zp-primary-background);
     border-radius: 2px;
 
@@ -215,7 +227,10 @@ function getParNode (p: any) {
 
     &>* {
       flex-wrap: wrap;
-      margin-right: 8px;
+
+      &:not(:last-child) {
+        margin-right: 8px;
+      }
     }
   }
 }
