@@ -785,19 +785,11 @@ export function useFileItemActions(
         spinning.value = false
       }
     }
-    if (e.keyPath?.[0] === 'toggle-tag') {
-      const { is_remove } = await toggleCustomTagToImg({
-        tag_id: e.key as number,
-        img_path: file.fullpath
-      })
-      message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
-      return
-    } else if (e.key.toString().startsWith('toggle-tag-')) {
-      const { is_remove } = await toggleCustomTagToImg({
-        tag_id: +e.key.toString().split('toggle-tag-')[1],
-        img_path: file.fullpath
-      })
-      message.success(is_remove ? t('removedTagFromImage') : t('addedTagToImage'))
+    if (`${e.key}`.startsWith('toggle-tag-')) {
+      const tagId = +(`${e.key}`.split('toggle-tag-')[1])
+      const { is_remove } = await toggleCustomTagToImg({ tag_id: tagId, img_path: file.fullpath })
+      const tag = global.conf?.all_custom_tags.find(v => v.id === tagId)?.name!
+      message.success(t(is_remove ? 'removedTagFromImage' : 'addedTagToImage', { tag }))
       return
     }
     switch (e.key) {
