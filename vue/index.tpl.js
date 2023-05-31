@@ -1,3 +1,6 @@
+/* eslint-disable */
+/* prettier-ignore */
+// @ts-nocheck
 ;(() => {
   /**
    * This is a file generated using `yarn deliver-dist`.
