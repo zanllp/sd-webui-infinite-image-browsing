@@ -55,17 +55,24 @@ const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
           t('langChangeReload')
         }}</a-button>
       </a-form-item>
-      <a-form-item :label="$t('shortcutKey')">
-        <ARow v-for="value, key in globalStore.shortcut" :key="key" class="row">
-          <ACol :span="8">
-            {{ $t(key) }}
-          </ACol>
-          <ACol :span="16" class="col">
-            <a-input :value="value" @keydown.stop.prevent="onShortcutKeyDown($event, key as any)"
-              :placeholder="$t('shortcutKeyDescription')" />
-              <a-button @click="globalStore.shortcut[key] = ''">{{ $t('cancel') }}</a-button>
-          </ACol>
-        </ARow>
+      <h2>{{ t('shortcutKey') }}</h2>
+      <a-form-item :label="$t('deleteSelected')">
+        <div class="col">
+          <a-input :value="globalStore.shortcut.delete" @keydown.stop.prevent="onShortcutKeyDown($event, 'delete')"
+            :placeholder="$t('shortcutKeyDescription')" />
+          <a-button @click="globalStore.shortcut.delete = ''" class="clear-btn">{{ $t('clear') }}</a-button>
+        </div>
+      </a-form-item>
+      <a-form-item :label="$t('toggleTagSelection', { tag: tag.name })"
+        v-for="tag in globalStore.conf?.all_custom_tags ?? []" :key="tag.id">
+        <div class="col">
+          <a-input :value="globalStore.shortcut[`toggle_tag_${tag.name}`]"
+            @keydown.stop.prevent="onShortcutKeyDown($event, `toggle_tag_${tag.name}`)"
+            :placeholder="$t('shortcutKeyDescription')" />
+          <a-button @click="globalStore.shortcut[`toggle_tag_${tag.name}`] = ''" class="clear-btn">
+            {{ $t('clear') }}
+          </a-button>
+        </div>
       </a-form-item>
     </a-form>
   </div>
@@ -88,12 +95,21 @@ const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
   padding-right: 16px;
 }
 
+h2 {
+  margin: 64px 0 32px;
+}
+
 .row {
   margin-top: 16px;
   padding: 0 16px;
 }
-.col {
- display: flex;
 
+.col {
+  display: flex;
+
+}
+
+.clear-btn {
+  margin-left: 16px;
 }
 </style>

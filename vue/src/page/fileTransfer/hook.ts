@@ -965,15 +965,18 @@ export function useFileItemActions(
           const idx = previewIdx.value
           const file = sortedFiles.value[idx]
           switch (action) {
-            case 'deleteInFullScreenPreviewMode': {
+            case 'delete': {
               if (toRawFileUrl(file) === global.fullscreenPreviewInitialUrl) {
                 return message.warn(t('fullscreenRestriction'))
               }
               return onContextMenuClick({ key: 'deleteFiles' } as MenuInfo, file, idx)
             }
-            case 'toggleLikeTagInFullScreenPreviewMode': {
-              const likeTag = global.conf?.all_custom_tags.find((v) => v.name === 'like')!
-              return onContextMenuClick({ key: `toggle-tag-${likeTag.id}` } as MenuInfo, file, idx)
+            default: {
+              const name = /^toggle_tag_(.*)$/.exec(action)?.[1]
+              if (!name) return 
+              const tag = global.conf?.all_custom_tags.find((v) => v.name === name)
+              if (!tag) return
+              return onContextMenuClick({ key: `toggle-tag-${tag.id}` } as MenuInfo, file, idx)
             }
           }
         }

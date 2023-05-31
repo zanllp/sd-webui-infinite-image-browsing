@@ -129,22 +129,22 @@ const zh = {
   addToSearchScanPathAndQuickMove: '添加到搜索扫描路径和快速移动',
   removeFromSearchScanPathAndQuickMove: '从搜索扫描路径和快速移动中移除',
   serverKeyRequired: '服务器配置了密匙，你必须提供相同的密匙才能继续使用',
-  shortcutKey: '快捷键',
+  shortcutKey: '快捷键（仅允许在全屏预览下使用）',
   shortcutKeyDescription: '点击输入框按下你想使用的案件，支持与Shift和Ctrl进行组合',
-  deleteInFullScreenPreviewMode: '在全屏预览模式下删除',
-  toggleLikeTagInFullScreenPreviewMode: '在全屏预览模式下切换Like标签',
-  fullscreenRestriction: '受技术限制，当前拓展不允许删除打开全屏预览时的首张图片。'
+  fullscreenRestriction: '受技术限制，当前拓展不允许删除打开全屏预览时的首张图片。',
+  clear: '清除',
+  toggleTagSelection: '切换 "{tag}" 标签选中'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  clear: 'Clear',
+  toggleTagSelection: 'Toggle Selection of Tag "{tag}"',
   fullscreenRestriction:
     'Due to technical limitations, the first image cannot be deleted when opening the fullscreen preview.',
-  shortcutKey: 'Keyboard Shortcuts',
+  shortcutKey: 'Keyboard Shortcuts (Only Available in full-screen preview mode)',
   shortcutKeyDescription:
     'Click on the input box and press the shortcut key you want to use, supporting combinations with Shift and Ctrl.',
-  deleteInFullScreenPreviewMode: 'Delete in full screen preview mode',
-  toggleLikeTagInFullScreenPreviewMode: 'Toggle Like tag in full screen preview mode',
   serverKeyRequired:
     'The server has configured a key. You must provide the same key to continue using it.',
   removeFromSearchScanPathAndQuickMove: 'Remove from Search Scan Path and Quick Move',
