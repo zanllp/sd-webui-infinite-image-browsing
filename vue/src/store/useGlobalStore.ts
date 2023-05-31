@@ -42,9 +42,8 @@ export interface Tab extends UniqueId {
   key: string
 }
 
-export interface Shortcut {
-  deleteInFullScreenPreviewMode: string
-  toggleLikeTagInFullScreenPreviewMode: string
+export interface Shortcut extends Record<`toggle_tag_${string}`, string | undefined> {
+  delete: string
 }
 
 export const useGlobalStore = defineStore(
@@ -126,8 +125,7 @@ export const useGlobalStore = defineStore(
     const longPressOpenContextMenu = ref(false)
 
     const shortcut = ref<Shortcut>({
-      deleteInFullScreenPreviewMode: '',
-      toggleLikeTagInFullScreenPreviewMode: ''
+      delete: ''
     })
 
     const pathAliasMap = computed((): Dict<string> => {
