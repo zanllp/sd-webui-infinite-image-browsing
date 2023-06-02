@@ -1,10 +1,12 @@
 {
-  "extends": "@vue/tsconfig/tsconfig.node.json",
-  "include": ["vite.config.*", "vitest.config.*", "cypress.config.*", "playwright.config.*", "build.ts"],
   "compilerOptions": {
-    "module": "ES2022",
     "composite": true,
-    "types": ["node"],
-    "rootDir": "src"
-  }
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "types": ["node", "vite/client"],
+  },
+
+  "include": ["vite.config.ts"]
 }

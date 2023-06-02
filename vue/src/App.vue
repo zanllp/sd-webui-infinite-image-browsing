@@ -1,4 +1,3 @@
-<!-- eslint-disable no-empty -->
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { getGlobalSetting } from './api'
@@ -27,4 +26,3 @@ onMounted(async () => {
     <SplitViewTab />
   </a-skeleton>
 </template>
-<style scoped lang="scss"></style>
