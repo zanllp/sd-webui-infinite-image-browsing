@@ -3,8 +3,6 @@ import { t } from '@/i18n'
 import { useGlobalStore, type Shortcut } from '@/store/useGlobalStore'
 import { ref } from 'vue'
 import { SearchSelect, delay } from 'vue3-ts-util'
-// import { Form as AForm, FormItem as AFormItem, Input as AInput, Row as ARow, Col as ACol, Row } from 'ant-design-vue'
-
 const globalStore = useGlobalStore()
 
 const langChanged = ref(false)

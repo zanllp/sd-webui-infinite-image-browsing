@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount, type Ref, watch } from 'vue'
+import { onMounted, onBeforeUnmount, type Ref, watch } from 'vue'
 
 interface ResizeHandle {
   x: number

@@ -1,4 +1,6 @@
 import { createApp, watch } from 'vue'
+import type {} from 'antd-vue-volar'
+// @ts-ignore
 import App from './App.vue'
 import 'ant-design-vue/es/message/style'
 import 'ant-design-vue/es/notification/style'
@@ -24,6 +26,7 @@ const getParDark = () => {
   }
   return false
 }
+
 
 watch(
   [dark, getParDark],
