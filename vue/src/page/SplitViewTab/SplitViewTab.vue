@@ -4,11 +4,10 @@ import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { defineAsyncComponent, watch, ref, nextTick } from 'vue'
-import { key, globalEvents, asyncCheck } from '@/util'
+import { globalEvents, asyncCheck } from '@/util'
 import { debounce, uniqueId } from 'lodash-es'
 import edgeTrigger from './edgeTrigger.vue'
 import { t } from '@/i18n'
-import { ID } from 'vue3-ts-util'
 import { tryOnMounted, useDocumentVisibility, type Fn } from '@vueuse/core'
 
 
@@ -41,7 +40,7 @@ const onEdit = (idx: number, targetKey: any, action: string) => {
     }
     if (global.tabList.length === 0) {
       const pane = global.createEmptyPane()
-      global.tabList.push(ID({ panes: [pane], key: pane.key }))
+      global.tabList.push({ panes: [pane], key: pane.key, id: uniqueId() })
     }
   }
 }
@@ -95,7 +94,7 @@ watch(useDocumentVisibility(), v => v && emitReturnToIIB())
 <template>
   <div ref="container">
     <splitpanes class="default-theme">
-      <pane v-for="(tab, tabIdx) in global.tabList" :key="key(tab)">
+      <pane v-for="(tab, tabIdx) in global.tabList" :key="tab.id">
         <edge-trigger :tabIdx="tabIdx">
           <a-tabs type="editable-card" v-model:activeKey="tab.key" @edit="(key, act) => onEdit(tabIdx, key, act)">
             <a-tab-pane v-for="(pane, paneIdx) in tab.panes" :key="pane.key" :tab="pane.name" class="pane">

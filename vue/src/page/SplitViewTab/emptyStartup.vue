@@ -2,9 +2,10 @@
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { uniqueId } from 'lodash-es'
 import { computed } from 'vue'
-import { ID, ok } from 'vue3-ts-util'
+import { ok } from 'vue3-ts-util'
 import { FileDoneOutlined } from '@/icon'
 import { t } from '@/i18n'
+import { cloneDeep } from 'lodash-es'
 
 const global = useGlobalStore()
 const props = defineProps<{ tabIdx: number; paneIdx: number }>()
@@ -31,7 +32,7 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
         name: compCnMap[type]!,
         key: Date.now() + uniqueId(),
         path,
-        walkMode
+        walkModePath: walkMode ? path: undefined
       }
   }
   const tab = global.tabList[props.tabIdx]
@@ -39,9 +40,8 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
   tab.key = pane.key
 }
 
-const lastRecord = computed(() => global.lastTabListRecord?.[1])
+const lastRecord = computed(() => global.tabListHistoryRecord?.[1])
 
-console.log(lastRecord.value)
 
 const walkModeSupportedDir = computed(() =>
   global.quickMovePaths.filter(
@@ -55,14 +55,8 @@ const previewInNewWindow = () => window.parent.open('/infinite_image_browsing')
 
 const restoreRecord = () => {
   ok(lastRecord.value)
-  global.tabList = lastRecord.value.tabs.map((v) => ID(v, true))
-  global.tabList.forEach((tab) => {
-    tab.panes.forEach((pane) => {
-      if (typeof pane.name !== 'string') {
-        pane.name = ''
-      }
-    })
-  })
+  global.tabList = cloneDeep(lastRecord.value.tabs)
+  
 }
 </script>
 <template>
@@ -70,68 +64,51 @@ const restoreRecord = () => {
     <div class="header">
       <h1>{{ $t('welcome') }}</h1>
       <div flex-placeholder />
-      <div v-if="canpreviewInNewWindow" class="last-record" @click="previewInNewWindow">
-        <a>{{ $t('openInNewWindow') }}</a>
-      </div>
-      <div class="last-record">
-        <a v-if="lastRecord?.tabs.length" @click.prevent="restoreRecord">{{
-          $t('restoreLastRecord')
-        }}</a>
-      </div>
-      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank" class="last-record">{{ $t('faq') }}</a>
+      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/131" target="_blank"
+        class="last-record">{{ $t('changlog') }}</a>
+      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank"
+        class="last-record">{{ $t('faq') }}</a>
     </div>
     <div class="content">
       <div class="quick-start" v-if="walkModeSupportedDir.length">
         <h2>{{ $t('walkMode') }}</h2>
         <ul>
-          <li v-for="item in walkModeSupportedDir" :key="item.dir" class="quick-start__item">
-            <AButton
-              @click="openInCurrentTab('local', item.dir, true)"
-              ghost
-              type="primary"
-              block
-              >{{ item.zh }}</AButton
-            >
+          <li v-for="item in walkModeSupportedDir" :key="item.dir" class="item">
+            <AButton @click="openInCurrentTab('local', item.dir, true)" ghost type="primary" block>{{ item.zh }}</AButton>
           </li>
         </ul>
       </div>
       <div class="quick-start" v-if="global.quickMovePaths.length">
         <h2>{{ $t('launchFromQuickMove') }}</h2>
         <ul>
-          <li
-            v-for="dir in global.quickMovePaths"
-            :key="dir.key"
-            class="quick-start__item"
-            @click.prevent="openInCurrentTab('local', dir.dir)"
-          >
-            <span class="quick-start__text line-clamp-1">{{ dir.zh }}</span>
+          <li v-for="dir in global.quickMovePaths" :key="dir.key" class="item"
+            @click.prevent="openInCurrentTab('local', dir.dir)">
+            <span class="text line-clamp-1">{{ dir.zh }}</span>
           </li>
         </ul>
       </div>
       <div class="quick-start">
         <h2>{{ $t('launch') }}</h2>
         <ul>
-          <li
-            v-for="comp in Object.keys(compCnMap) as TabPane['type'][]"
-            :key="comp"
-            class="quick-start__item"
-            @click.prevent="openInCurrentTab(comp)"
-          >
-            <span class="quick-start__text line-clamp-1">{{ compCnMap[comp] }}</span>
+          <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp" class="item"
+            @click.prevent="openInCurrentTab(comp)">
+            <span class="text line-clamp-1">{{ compCnMap[comp] }}</span>
+          </li>
+          <li class="item" v-if="canpreviewInNewWindow" @click="previewInNewWindow">
+            <span class="text line-clamp-1">{{ $t('openInNewWindow') }}</span>
+          </li>
+          <li class="item" v-if="lastRecord?.tabs.length" @click="restoreRecord">
+            <span class="text line-clamp-1">{{ $t('restoreLastRecord') }}</span>
           </li>
         </ul>
       </div>
       <div class="quick-start" v-if="global.recent.length">
         <h2>{{ $t('recent') }}</h2>
         <ul>
-          <li
-            v-for="item in global.recent"
-            :key="item.key"
-            class="quick-start__item"
-            @click.prevent="openInCurrentTab('local', item.path)"
-          >
-            <FileDoneOutlined class="quick-start__icon" />
-            <span class="quick-start__text line-clamp-1">{{ item.path }}</span>
+          <li v-for="item in global.recent" :key="item.key" class="item"
+            @click.prevent="openInCurrentTab('local', item.path)">
+            <FileDoneOutlined class="icon" />
+            <span class="text line-clamp-1">{{ item.path }}</span>
           </li>
         </ul>
       </div>
@@ -191,6 +168,24 @@ const restoreRecord = () => {
     list-style: none;
     padding: 4px;
   }
+
+  .item {
+    margin-bottom: 10px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+
+    &:hover {
+      background: var(--zp-secondary-background);
+      border-radius: 4px;
+      color: var(--primary-color);
+      cursor: pointer;
+    }
+  }
+
+  .icon {
+    margin-right: 8px;
+  }
 }
 
 .quick-start h2 {
@@ -201,26 +196,9 @@ const restoreRecord = () => {
   color: var(--zp-primary);
 }
 
-.quick-start__item {
-  margin-bottom: 10px;
-  padding: 4px 8px;
-  display: flex;
-  align-items: center;
 
-  &:hover {
-    background: var(--zp-secondary-background);
-    border-radius: 4px;
-    color: var(--primary-color);
-    cursor: pointer;
-  }
-}
-
-.quick-start__text {
+.text {
   flex: 1;
   font-size: 16px;
-}
-
-.quick-start__icon {
-  margin-right: 8px;
 }
 </style>

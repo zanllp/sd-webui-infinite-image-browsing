@@ -35,7 +35,7 @@ const props = defineProps<{
    * 初始打开路径
    */
   path?: string
-  walkMode?: boolean
+  walkModePath?: string
   /**
    * 页面栈,跳过不必要的api请求
    */
@@ -43,7 +43,6 @@ const props = defineProps<{
 }>()
 const {
   scroller,
-  walkModePath,
   stackViewEl,
   props: _props,
   multiSelectedIdxs,
@@ -79,9 +78,6 @@ watch(
   () => props,
   () => {
     _props.value = props
-    if (props.walkMode) {
-      walkModePath.value = props.path
-    }
     const stackC = stackCache.get(props.stackKey ?? '')
     if (stackC) {
       stack.value = stackC.slice() // 浅拷贝
@@ -113,7 +109,7 @@ watch(
       </AModal>
       <div class="location-bar">
         <div class="breadcrumb">
-          <a-tooltip v-if="props.walkMode">
+          <a-tooltip v-if="props.walkModePath">
             <template #title>{{ $t('walk-mode-move-message') }}</template><a-breadcrumb style="flex: 1">
               <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx">
                 <span>{{ item.curr === '/' ? $t('root') : item.curr.replace(/:\/$/, $t('drive')) }}</span>
@@ -198,7 +194,7 @@ watch(
               @file-item-click="onFileItemClick" @dragstart="onFileDragStart"
               @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick" />
           </template>
-          <template v-if="props.walkMode" #after>
+          <template v-if="props.walkModePath" #after>
             <AButton @click="loadNextDir" :loading="loadNextDirLoading" block type="primary" :disabled="!canLoadNext"
               ghost>
               {{ $t('loadNextPage') }}</AButton>
@@ -243,8 +239,9 @@ watch(
 }
 
 .container {
-  height: 100%;
   background: var(--zp-secondary-background);
+  height: var(--pane-max-height);
+
 }
 
 .location-bar {
@@ -269,7 +266,7 @@ watch(
 
 .view {
   padding: 8px;
-  height: calc(100vh - 96px);
+  height: calc(100vh - 48px);
 
   .file-list {
     list-style: none;

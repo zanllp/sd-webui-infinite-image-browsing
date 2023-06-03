@@ -2,12 +2,11 @@
 import { t } from '@/i18n'
 import { useGlobalStore, type Shortcut } from '@/store/useGlobalStore'
 import { ref } from 'vue'
-import { SearchSelect, delay } from 'vue3-ts-util'
+import { SearchSelect } from 'vue3-ts-util'
 const globalStore = useGlobalStore()
 
 const langChanged = ref(false)
 const reload = async () => {
-  await delay(300)
   window.location.reload()
 }
 const langs: { text: string, value: string }[] = [{ value: 'en', text: 'English' }, { value: 'zh', text: '中文' }, { value: 'de', text: 'Deutsch' }]

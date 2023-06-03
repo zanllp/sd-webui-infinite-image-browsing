@@ -133,11 +133,13 @@ const zh = {
   shortcutKeyDescription: '点击输入框按下你想使用的案件，支持与Shift和Ctrl进行组合',
   fullscreenRestriction: '受技术限制，当前拓展不允许删除打开全屏预览时的首张图片。',
   clear: '清除',
-  toggleTagSelection: '切换 "{tag}" 标签选中'
+  toggleTagSelection: '切换 "{tag}" 标签选中',
+  changlog: '更新日志'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  changlog: 'Change log',
   clear: 'Clear',
   toggleTagSelection: 'Toggle Selection of Tag "{tag}"',
   fullscreenRestriction:
