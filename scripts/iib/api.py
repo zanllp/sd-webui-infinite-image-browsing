@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import os
 import shutil
 import sqlite3
-from scripts.tool import (
+from scripts.iib.tool import (
     human_readable_size,
     is_valid_image_path,
     temp_path,
@@ -26,7 +26,7 @@ from fastapi.responses import FileResponse
 from PIL import Image
 from fastapi import Depends, FastAPI, HTTPException, Request
 import hashlib
-from scripts.db.datamodel import (
+from scripts.iib.db.datamodel import (
     DataBase,
     Image as DbImg,
     Tag,
@@ -34,8 +34,8 @@ from scripts.db.datamodel import (
     ImageTag,
     ExtraPath,
 )
-from scripts.db.update_image_data import update_image_data
-from scripts.logger import logger
+from scripts.iib.db.update_image_data import update_image_data
+from scripts.iib.logger import logger
 
 
 

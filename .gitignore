@@ -7,3 +7,4 @@ launch.sh
 conf.json
 iib.db-journal
 .env
+standalone.cmd

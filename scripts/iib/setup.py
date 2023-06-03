@@ -1,9 +1,9 @@
-from scripts.api import infinite_image_browsing_api, send_img_path
+from scripts.iib.api import infinite_image_browsing_api, send_img_path
 from modules import script_callbacks, generation_parameters_copypaste as send
-from scripts.tool import locale
-from scripts.tool import read_info_from_image
+from scripts.iib.tool import locale
+from scripts.iib.tool import read_info_from_image
 from PIL import Image
-from scripts.logger import logger
+from scripts.iib.logger import logger
 
 
 """

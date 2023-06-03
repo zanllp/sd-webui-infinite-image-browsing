@@ -22,7 +22,7 @@ sd_img_dirs = [
 
 
 is_dev = os.getenv("APP_ENV") == "dev"
-cwd = os.path.normpath(os.path.join(__file__, "../../"))
+cwd = os.path.normpath(os.path.join(__file__, "../../../"))
 is_win = platform.system().lower().find("windows") != -1
 
 

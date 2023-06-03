@@ -1,5 +1,5 @@
 
-from scripts.tool import is_dev,cwd
+from scripts.iib.tool import is_dev,cwd
 
 import logging
 logger = logging.getLogger(__name__)
