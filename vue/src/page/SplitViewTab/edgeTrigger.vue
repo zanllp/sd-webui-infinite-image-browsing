@@ -2,7 +2,7 @@
 import { useMouseInElement } from '@vueuse/core'
 import { computed, ref } from 'vue'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { ID } from 'vue3-ts-util'
+import { uniqueId } from 'lodash-es'
 
 const global = useGlobalStore()
 const props = defineProps<{ tabIdx: number }>()
@@ -31,7 +31,7 @@ const onDrop = (payload: DragEvent, type: 'add-right' | 'insert') => {
     if (type === 'add-right') {
       tabs[props.tabIdx].key =
         tabs[props.tabIdx].panes[from.paneIdx - 1]?.key ?? tabs[props.tabIdx].panes[0].key
-      tabs.splice(props.tabIdx + 1, 0, ID({ panes: [pane], key: pane.key }))
+      tabs.splice(props.tabIdx + 1, 0, { panes: [pane], key: pane.key, id: uniqueId() })
     } else {
       tabs[from.tabIdx].key =
         tabs[from.tabIdx].panes[from.paneIdx - 1]?.key ?? tabs[from.tabIdx].panes[0]?.key

@@ -9,8 +9,7 @@ import {
   ok,
   createTypedShareStateHook,
   delay,
-  typedEventEmitter,
-  ID
+  typedEventEmitter
 } from 'vue3-ts-util'
 import {
   createReactiveQueue,
@@ -76,7 +75,7 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
       global.onlyFoldersAndImages
         ? files.filter((file) => file.type === 'dir' || isImageFile(file.name))
         : files
-    if (props.value.walkMode) {
+    if (props.value.walkModePath) {
       /**
        * @see Page
        */
@@ -91,11 +90,13 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
 
   const canLoadNext = ref(true)
 
-  const walkModePath = ref<string>()
-
   const spinning = ref(false)
 
   const previewing = ref(false)
+
+  const getPane = () => {
+    return global.tabList[props.value.tabIdx].panes[props.value.paneIdx] as FileTransferTabPane
+  }
   return {
     previewing,
     spinning,
@@ -110,8 +111,8 @@ export const { useHookShareState } = createTypedShareStateHook(() => {
     sortedFiles,
     scroller: ref<Scroller>(),
     stackViewEl: ref<HTMLDivElement>(),
-    walkModePath,
     props,
+    getPane,
     ...typedEventEmitter<{
       loadNextDir(isFullscreenPreview?: boolean): Promise<void>
       refresh(): Promise<void>
@@ -123,7 +124,7 @@ export interface Props {
   tabIdx: number
   paneIdx: number
   path?: string
-  walkMode?: boolean
+  walkModePath?: string
 }
 
 export type ViewMode = 'line' | 'grid' | 'large-size-grid'
@@ -157,7 +158,7 @@ export function usePreview(
   }
 
   const loadNextIfNeeded = () => {
-    if (props.walkMode) {
+    if (props.walkModePath) {
       if (!canPreview('next') && canLoadNext) {
         message.info(t('loadingNextFolder'))
         eventEmitter.value.emit('loadNextDir', true) // 如果在全屏预览时外面scroller可能还停留在很久之前，使用全屏预览的索引
@@ -259,8 +260,8 @@ export function useLocation(props: Props) {
     currLocation,
     sortMethod,
     useEventListen,
-    walkModePath,
-    eventEmitter
+    eventEmitter,
+    getPane
   } = useHookShareState().toRefs()
 
   watch(
@@ -274,7 +275,7 @@ export function useLocation(props: Props) {
 
   const handleWalkModeTo = async (path: string) => {
     await to(path)
-    if (props.walkMode) {
+    if (props.walkModePath) {
       await delay()
       const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
         (v) => v.type === 'dir'
@@ -298,7 +299,7 @@ export function useLocation(props: Props) {
     np.value = new NProgress()
     np.value!.configure({ parent: stackViewEl.value as any })
     if (props.path && props.path !== '/') {
-      await handleWalkModeTo(props.path)
+      await handleWalkModeTo(props.walkModePath ?? props.path)
     } else {
       global.conf?.home && to(global.conf.home)
     }
@@ -307,11 +308,11 @@ export function useLocation(props: Props) {
   watch(
     currLocation,
     debounce((loc) => {
-      const pane = global.tabList[props.tabIdx].panes[props.paneIdx] as FileTransferTabPane
+      const pane = getPane.value()
       pane.path = loc
       const filename = pane.path!.split('/').pop()
       const getTitle = () => {
-        if (!props.walkMode) {
+        if (!props.walkModePath) {
           const np = Path.normalize(loc)
           for (const [k, v] of Object.entries(global.pathAliasMap)) {
             if (np.startsWith(v)) {
@@ -322,13 +323,15 @@ export function useLocation(props: Props) {
         }
         return (
           'Walk: ' +
-          (global.quickMovePaths.find((v) => v.dir === walkModePath.value)?.zh ?? filename)
+          (global.quickMovePaths.find((v) => v.dir === pane.walkModePath)?.zh ?? filename)
         )
       }
+      const title = getTitle()
       pane.name = h('div', { style: 'display:flex;align-items:center' }, [
         h(DatabaseOutlined),
-        h('span', { class: 'line-clamp-1', style: 'max-width: 256px' }, getTitle())
-      ]) as any as string
+        h('span', { class: 'line-clamp-1', style: 'max-width: 256px' }, title)
+      ])
+      pane.nameFallbackStr = title
       global.recent = global.recent.filter((v) => v.key !== pane.key)
       global.recent.unshift({ path: loc, key: pane.key })
       if (global.recent.length > 20) {
@@ -413,9 +416,9 @@ export function useLocation(props: Props) {
   const refresh = makeAsyncFunctionSingle(async () => {
     try {
       np.value?.start()
-      if (walkModePath.value) {
+      if (props.walkModePath) {
         back(0)
-        await handleWalkModeTo(walkModePath.value)
+        await handleWalkModeTo(props.walkModePath)
       } else {
         const { files } = await getTargetFolderFiles(
           stack.value.length === 1 ? '/' : currLocation.value
@@ -432,7 +435,7 @@ export function useLocation(props: Props) {
   useGlobalEventListen(
     'return-to-iib',
     makeAsyncFunctionSingle(async () => {
-      if (!props.walkMode) {
+      if (!props.walkModePath) {
         try {
           np.value?.start()
           const { files } = await getTargetFolderFiles(
@@ -453,8 +456,8 @@ export function useLocation(props: Props) {
   useEventListen.value('refresh', refresh)
 
   const quickMoveTo = (path: string) => {
-    if (props.walkMode) {
-      walkModePath.value = path
+    if (props.walkModePath) {
+      getPane.value().walkModePath = path
     }
     handleWalkModeTo(path)
   }
@@ -552,7 +555,7 @@ export function useFilesDisplay(props: Props) {
   const loadNextDirLoading = ref(false)
 
   const loadNextDir = async () => {
-    if (loadNextDirLoading.value || !props.walkMode || !canLoadNext.value) {
+    if (loadNextDirLoading.value || !props.walkModePath || !canLoadNext.value) {
       return
     }
     try {
@@ -870,7 +873,7 @@ export function useFileItemActions(
           path: file.fullpath,
           name: t('local'),
           stackKey: path,
-          walkMode: true
+          walkModePath: file.fullpath
         }
         tab.panes.push(pane)
         tab.key = pane.key
@@ -894,7 +897,7 @@ export function useFileItemActions(
         stackCache.set(path, stack.value)
         let tab = global.tabList[props.tabIdx + 1]
         if (!tab) {
-          tab = ID({ panes: [], key: '' })
+          tab = ({ panes: [], key: '', id: uniqueId() })
           global.tabList[props.tabIdx + 1] = tab
         }
         const pane: FileTransferTabPane = {
@@ -973,7 +976,6 @@ export function useFileItemActions(
             }
             default: {
               const name = /^toggle_tag_(.*)$/.exec(action)?.[1]
-              if (!name) return 
               const tag = global.conf?.all_custom_tags.find((v) => v.name === name)
               if (!tag) return
               return onContextMenuClick({ key: `toggle-tag-${tag.id}` } as MenuInfo, file, idx)

@@ -7,38 +7,38 @@ import type { Dict, ReturnTypeAsync } from '@/util'
 import { isAbsolute, join, normalize } from '@/util/path'
 import { cloneDeep, uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
-import { computed, onMounted, watch } from 'vue'
+import { VNode, computed, onMounted, toRaw, watch } from 'vue'
 import { ref } from 'vue'
-import { type UniqueId, ID } from 'vue3-ts-util'
 
-interface OtherTabPane {
-  type: 'empty' | 'global-setting' | 'tag-search' | 'fuzzy-search'
-  name: string
+interface TabPaneBase {
+  name: string | VNode
+  nameFallbackStr?: string
   readonly key: string
+}
+
+interface OtherTabPane extends TabPaneBase {
+  type: 'empty' | 'global-setting' | 'tag-search' | 'fuzzy-search'
 }
 // logDetailId
 
-interface TagSearchMatchedImageGridTabPane {
+interface TagSearchMatchedImageGridTabPane extends TabPaneBase  {
   type: 'tag-search-matched-image-grid'
-  name: string
-  readonly key: string
   selectedTagIds: MatchImageByTagsReq
   id: string
 }
 
-export interface FileTransferTabPane {
+export interface FileTransferTabPane extends TabPaneBase  {
   type: 'local'
-  name: string
-  readonly key: string
   path?: string
-  walkMode?: boolean
+  walkModePath?: string
   stackKey?: string
 }
 
 export type TabPane = FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane
 
-export interface Tab extends UniqueId {
+export interface Tab {
   panes: TabPane[]
+  id: string
   key: string
 }
 
@@ -46,6 +46,17 @@ export interface Shortcut extends Record<`toggle_tag_${string}`, string | undefi
   delete: string
 }
 
+export const copyPane = (pane: TabPane) => {
+  return cloneDeep({ ...pane, name: typeof pane.name === 'string' ? pane.name : (pane.nameFallbackStr ?? '')})
+}
+
+export const copyTab = (tab: Tab) => {
+  return {
+    ...tab,
+    panes: tab.panes.map(copyPane) 
+  }
+}
+ 
 export const useGlobalStore = defineStore(
   'useGlobalStore',
   () => {
@@ -61,26 +72,20 @@ export const useGlobalStore = defineStore(
     const tabList = ref<Tab[]>([])
     onMounted(() => {
       const emptyPane = createEmptyPane()
-      tabList.value.push(ID({ panes: [emptyPane], key: emptyPane.key }))
+      tabList.value.push(({ panes: [emptyPane], key: emptyPane.key, id: uniqueId() }))
     })
     const dragingTab = ref<{ tabIdx: number; paneIdx: number }>()
     const recent = ref(new Array<{ path: string; key: string }>())
     const time = Date.now()
-    const lastTabListRecord = ref<[{ time: number; tabs: Tab[] }, { time: number; tabs: Tab[] }]>() // [curr,last]
+    const tabListHistoryRecord = ref<{ time: number; tabs: Tab[] }[]>() // [curr,last]
     const saveRecord = () => {
-      const tabs = tabList.value.slice()
-      if (lastTabListRecord.value?.length !== 2) {
-        lastTabListRecord.value = [
-          { tabs, time },
-          { tabs, time }
-        ]
-      }
-      if (lastTabListRecord.value[0].time === time) {
-        lastTabListRecord.value[0].tabs = tabs
+      const tabs = toRaw(tabList.value).map(copyTab)
+      if (tabListHistoryRecord.value?.[0].time !== time) {
+        tabListHistoryRecord.value = [{ tabs, time }, ...(tabListHistoryRecord.value ?? [])]
       } else {
-        lastTabListRecord.value.unshift({ tabs, time })
+        tabListHistoryRecord.value[0].tabs = tabs
       }
-      lastTabListRecord.value = lastTabListRecord.value.slice(0, 2) as any
+      tabListHistoryRecord.value = tabListHistoryRecord.value.slice(0, 2)
     }
 
     const openTagSearchMatchedImageGridInRight = async (
@@ -109,7 +114,7 @@ export const useGlobalStore = defineStore(
 
       const tab = tabList.value[tabIdx + 1]
       if (!tab) {
-        tabList.value.push(ID({ panes: [pane], key: pane.key }))
+        tabList.value.push({ panes: [pane], key: pane.key, id: uniqueId() })
       } else {
         tab.key = pane.key
         tab.panes.push(pane)
@@ -139,8 +144,10 @@ export const useGlobalStore = defineStore(
         [t('i2i-grid')]: paths.outdir_img2img_grids,
         [t('t2i-grid')]: paths.outdir_txt2img_grids
       }
-      const existPaths = quickMovePaths.value.map(v => v.dir)
-      const res = Object.keys(map).filter(v => existPaths.includes(map[v])).map(v => [v, isAbsolute(map[v]) ? normalize(map[v]) : join(sd_cwd, map[v])])
+      const existPaths = quickMovePaths.value.map((v) => v.dir)
+      const res = Object.keys(map)
+        .filter((v) => existPaths.includes(map[v]))
+        .map((v) => [v, isAbsolute(map[v]) ? normalize(map[v]) : join(sd_cwd, map[v])])
       return Object.fromEntries(res)
     })
     return {
@@ -155,7 +162,7 @@ export const useGlobalStore = defineStore(
       dragingTab,
       saveRecord,
       recent,
-      lastTabListRecord,
+      tabListHistoryRecord,
       gridThumbnailSize,
       largeGridThumbnailSize,
       longPressOpenContextMenu,
@@ -167,10 +174,11 @@ export const useGlobalStore = defineStore(
   },
   {
     persist: {
+      // debug: true,
       paths: [
         'lang',
         'enableThumbnail',
-        'lastTabListRecord',
+        'tabListHistoryRecord',
         'stackViewSplit',
         'recent',
         'gridThumbnailSize',
