@@ -2,10 +2,10 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 import uvicorn
 import os
-from scripts.api import infinite_image_browsing_api
-from scripts.tool import cwd, get_sd_webui_conf, get_valid_img_dirs, sd_img_dirs
-from scripts.db.datamodel import DataBase, Image
-from scripts.db.update_image_data import update_image_data
+from scripts.iib.api import infinite_image_browsing_api
+from scripts.iib.tool import cwd, get_sd_webui_conf, get_valid_img_dirs, sd_img_dirs
+from scripts.iib.db.datamodel import DataBase, Image
+from scripts.iib.db.update_image_data import update_image_data
 import argparse
 
 tag = "\033[31m[warn]\033[0m"

@@ -1,8 +1,8 @@
 from typing import Dict, List
-from scripts.db.datamodel import Image as DbImg, Tag, ImageTag, DataBase, Floder
+from scripts.iib.db.datamodel import Image as DbImg, Tag, ImageTag, DataBase, Floder
 import os
 from PIL import Image
-from scripts.tool import (
+from scripts.iib.tool import (
     read_info_from_image,
     parse_generation_parameters,
     is_valid_image_path,
@@ -10,7 +10,7 @@ from scripts.tool import (
     is_dev,
 )
 
-from scripts.logger import logger
+from scripts.iib.logger import logger
 
 
 # 定义一个函数来获取图片文件的EXIF数据
