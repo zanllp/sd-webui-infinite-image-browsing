@@ -51,7 +51,12 @@
 ### ⌨️ Keyboard Shortcuts
 - Allows for deleting and adding/removing tags, with customizable trigger buttons in the global settings page.
 
+
+> It is strongly recommended to use "Open in new tab", which is much more comfortable than being embedded in Gradio.
+
+
 If you like this project and find it helpful, please consider giving it a ⭐️. This would be very important for me to continue developing and maintaining this project. If you have any suggestions or ideas, please feel free to raise them in the issue section, and I will respond as soon as possible. Thank you again for your support!
+
 
 <a href='https://ko-fi.com/zanllp' target='_blank'><img height='35' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />
 
