@@ -57,68 +57,76 @@ export interface Scroller {
   scrollToItem(idx: number): void
 }
 
-export const { useHookShareState } = createTypedShareStateHook(() => {
-  const props = ref<Props>({ tabIdx: -1, paneIdx: -1 })
-  const currPage = computed(() => last(stack.value))
-  const stack = ref<Page[]>([])
-  const basePath = computed(() => stack.value.map((v) => v.curr).slice(global.conf?.is_win ? 1 : 0))
-  const currLocation = computed(() => Path.join(...basePath.value))
-  const sortMethod = ref(SortMethod.CREATED_TIME_DESC)
-  const sortedFiles = computed(() => {
-    if (!currPage.value) {
-      return []
+export const { useHookShareState } = createTypedShareStateHook(
+  (_inst, { images }) => {
+    const props = ref<Props>({ tabIdx: -1, paneIdx: -1 })
+    const currPage = computed(() => last(stack.value))
+    const stack = ref<Page[]>([])
+    const basePath = computed(() =>
+      stack.value.map((v) => v.curr).slice(global.conf?.is_win ? 1 : 0)
+    )
+    const currLocation = computed(() => Path.join(...basePath.value))
+    const sortMethod = ref(SortMethod.CREATED_TIME_DESC)
+    const sortedFiles = computed(() => {
+      if (images.value) {
+        return images.value
+      }
+      if (!currPage.value) {
+        return []
+      }
+      const files = currPage.value?.files ?? []
+      const method = sortMethod.value
+      const { walkFiles } = currPage.value!
+      const filter = (files: FileNodeInfo[]) =>
+        global.onlyFoldersAndImages
+          ? files.filter((file) => file.type === 'dir' || isImageFile(file.name))
+          : files
+      if (props.value.walkModePath) {
+        /**
+         * @see Page
+         */
+        return walkFiles
+          ? walkFiles.map((dir) => sortFiles(filter(dir), method)).flat()
+          : sortFiles(filter(files), method)
+      }
+      return sortFiles(filter(files), method)
+    })
+    const multiSelectedIdxs = ref([] as number[])
+    const previewIdx = ref(-1)
+
+    const canLoadNext = ref(true)
+
+    const spinning = ref(false)
+
+    const previewing = ref(false)
+
+    const getPane = () => {
+      return global.tabList[props.value.tabIdx].panes[props.value.paneIdx] as FileTransferTabPane
     }
-    const files = currPage.value?.files ?? []
-    const method = sortMethod.value
-    const { walkFiles } = currPage.value!
-    const filter = (files: FileNodeInfo[]) =>
-      global.onlyFoldersAndImages
-        ? files.filter((file) => file.type === 'dir' || isImageFile(file.name))
-        : files
-    if (props.value.walkModePath) {
-      /**
-       * @see Page
-       */
-      return walkFiles
-        ? walkFiles.map((dir) => sortFiles(filter(dir), method)).flat()
-        : sortFiles(filter(files), method)
+    return {
+      previewing,
+      spinning,
+      canLoadNext,
+      multiSelectedIdxs,
+      previewIdx,
+      basePath,
+      currLocation,
+      currPage,
+      stack,
+      sortMethod,
+      sortedFiles,
+      scroller: ref<Scroller>(),
+      stackViewEl: ref<HTMLDivElement>(),
+      props,
+      getPane,
+      ...typedEventEmitter<{
+        loadNextDir(isFullscreenPreview?: boolean): Promise<void>
+        refresh(): Promise<void>
+      }>()
     }
-    return sortFiles(filter(files), method)
-  })
-  const multiSelectedIdxs = ref([] as number[])
-  const previewIdx = ref(-1)
-
-  const canLoadNext = ref(true)
-
-  const spinning = ref(false)
-
-  const previewing = ref(false)
-
-  const getPane = () => {
-    return global.tabList[props.value.tabIdx].panes[props.value.paneIdx] as FileTransferTabPane
-  }
-  return {
-    previewing,
-    spinning,
-    canLoadNext,
-    multiSelectedIdxs,
-    previewIdx,
-    basePath,
-    currLocation,
-    currPage,
-    stack,
-    sortMethod,
-    sortedFiles,
-    scroller: ref<Scroller>(),
-    stackViewEl: ref<HTMLDivElement>(),
-    props,
-    getPane,
-    ...typedEventEmitter<{
-      loadNextDir(isFullscreenPreview?: boolean): Promise<void>
-      refresh(): Promise<void>
-    }>()
-  }
-})
+  },
+  () => ({ images: ref<FileNodeInfo[]>() })
+)
 
 export interface Props {
   tabIdx: number
@@ -316,7 +324,7 @@ export function useLocation(props: Props) {
           const np = Path.normalize(loc)
           for (const [k, v] of Object.entries(global.pathAliasMap)) {
             if (np.startsWith(v)) {
-              return np.replace(v,k)
+              return np.replace(v, k)
             }
           }
           return filename
@@ -897,7 +905,7 @@ export function useFileItemActions(
         stackCache.set(path, stack.value)
         let tab = global.tabList[props.tabIdx + 1]
         if (!tab) {
-          tab = ({ panes: [], key: '', id: uniqueId() })
+          tab = { panes: [], key: '', id: uniqueId() }
           global.tabList[props.tabIdx + 1] = tab
         }
         const pane: FileTransferTabPane = {

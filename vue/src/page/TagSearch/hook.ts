@@ -18,7 +18,7 @@ export const useImageSearch = () => {
   const queue = createReactiveQueue()
   const scroller = ref<Scroller>()
   const propsMock = { tabIdx: -1, target: 'local', paneIdx: -1, walkMode: false } as const
-  const { stackViewEl, multiSelectedIdxs, stack } = useHookShareState().toRefs()
+  const { stackViewEl, multiSelectedIdxs, stack } = useHookShareState({ images }).toRefs()
   const { itemSize, gridItems } = useFilesDisplay(propsMock)
   const { showMenuIdx } = useMobileOptimization()
   useFileTransfer() // for reset selected
