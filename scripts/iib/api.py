@@ -7,7 +7,7 @@ from scripts.iib.tool import (
     is_valid_image_path,
     temp_path,
     read_info_from_image,
-    get_modified_date,
+    get_formatted_date,
     is_win,
     cwd,
     locale,
@@ -159,39 +159,37 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             else:
                 if not os.path.exists(folder_path):
                     return {"files": []}
-                for item in os.listdir(folder_path):
-                    path = os.path.join(folder_path, item)
-                    if not os.path.exists(path):
+                folder_listing: List[os.DirEntry] = os.scandir(folder_path)
+                for item in folder_listing:
+                    if not os.path.exists(item.path):
                         continue
-                    date = get_modified_date(path)
-                    created_time = get_created_date(path)
-                    if os.path.isfile(path):
-                        bytes = os.path.getsize(path)
+                    fullpath = os.path.normpath(item.path)
+                    name = os.path.basename(item.path)
+                    date = get_formatted_date(item.stat().st_mtime)
+                    created_time = get_formatted_date(item.stat().st_ctime)
+                    if item.is_file():
+                        bytes = item.stat().st_size
                         size = human_readable_size(bytes)
                         files.append(
                             {
                                 "type": "file",
                                 "date": date,
                                 "size": size,
-                                "name": item,
+                                "name": name,
                                 "bytes": bytes,
                                 "created_time": created_time,
-                                "fullpath": os.path.normpath(
-                                    os.path.join(folder_path, item)
-                                ),
+                                "fullpath": fullpath
                             }
                         )
-                    elif os.path.isdir(path):
+                    elif item.is_dir():
                         files.append(
                             {
                                 "type": "dir",
                                 "date": date,
                                 "created_time": created_time,
                                 "size": "-",
-                                "name": item,
-                                "fullpath": os.path.normpath(
-                                    os.path.join(folder_path, item)
-                                ),
+                                "name": name,
+                                "fullpath": fullpath
                             }
                         )
         except Exception as e:
