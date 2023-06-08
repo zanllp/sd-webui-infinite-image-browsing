@@ -3,6 +3,16 @@ import os
 import pkg_resources
 
 req_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "requirements.txt")
+
+def dist2package(dist):
+    if dist == "python-dotenv":
+        package = "dotenv"
+    elif dist == "Pillow":
+        package = "PIL"
+    else:
+        package = dist
+    return package
+
 # copy from controlnet, thanks
 with open(req_file) as file:
     for package in file:
@@ -13,8 +23,8 @@ with open(req_file) as file:
                 installed_version = pkg_resources.get_distribution(package_name).version
                 if installed_version != package_version:
                     launch.run_pip(f"install {package}", f"sd-webui-infinite-image-browsing requirement: changing {package_name} version from {installed_version} to {package_version}")
-            elif not launch.is_installed(package):
+            elif not launch.is_installed(dist2package(package)):
                 launch.run_pip(f"install {package}", f"sd-webui-infinite-image-browsing requirement: {package}")
         except Exception as e:
             print(e)
-            print(f'Warning: Failed to install {package}, some preprocessors may not work.')
+            print(f'Warning: Failed to install {package}, something may not work.')
