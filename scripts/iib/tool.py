@@ -180,16 +180,14 @@ def get_locale():
 locale = get_locale()
 
 
-def get_modified_date(folder_path: str):
-    return datetime.fromtimestamp(os.path.getmtime(folder_path)).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+def get_formatted_date(timestamp: float) -> str:
+    return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
+def get_modified_date(folder_path: str):
+    return get_formatted_date(os.path.getmtime(folder_path))
 
 def get_created_date(folder_path: str):
-    return datetime.fromtimestamp(os.path.getctime(folder_path)).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+    return get_formatted_date(os.path.getctime(folder_path))
 
 def unique_by(seq, key_func):
     seen = set()
