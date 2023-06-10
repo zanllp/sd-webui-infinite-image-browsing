@@ -3,7 +3,7 @@ import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { uniqueId } from 'lodash-es'
 import { computed } from 'vue'
 import { ok } from 'vue3-ts-util'
-import { FileDoneOutlined } from '@/icon'
+import { FileDoneOutlined, LockOutlined } from '@/icon'
 import { t } from '@/i18n'
 import { cloneDeep } from 'lodash-es'
 
@@ -32,7 +32,7 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
         name: compCnMap[type]!,
         key: Date.now() + uniqueId(),
         path,
-        walkModePath: walkMode ? path: undefined
+        walkModePath: walkMode ? path : undefined
       }
   }
   const tab = global.tabList[props.tabIdx]
@@ -56,7 +56,7 @@ const previewInNewWindow = () => window.parent.open('/infinite_image_browsing')
 const restoreRecord = () => {
   ok(lastRecord.value)
   global.tabList = cloneDeep(lastRecord.value.tabs)
-  
+
 }
 </script>
 <template>
@@ -69,6 +69,11 @@ const restoreRecord = () => {
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank"
         class="last-record">{{ $t('faq') }}</a>
     </div>
+    <a-alert :message="$t('accessControlModeTips')"  show-icon v-if="global.conf?.enable_access_control">
+      <template #icon>
+        <LockOutlined></LockOutlined>
+      </template>
+    </a-alert>
     <div class="content">
       <div class="quick-start" v-if="walkModeSupportedDir.length">
         <h2>{{ $t('walkMode') }}</h2>
@@ -128,7 +133,6 @@ const restoreRecord = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
 }
 
 .header h1 {
@@ -156,6 +160,7 @@ const restoreRecord = () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   grid-gap: 20px;
+  margin-top: 16px;
 }
 
 .quick-start {
@@ -167,6 +172,8 @@ const restoreRecord = () => {
   ul {
     list-style: none;
     padding: 4px;
+    max-height: 70vh;
+    overflow-y: auto;
   }
 
   .item {

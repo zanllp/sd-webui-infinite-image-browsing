@@ -66,6 +66,7 @@ export interface GlobalConf {
   home: string
   sd_cwd: string
   extra_paths: { path: string }[]
+  enable_access_control: boolean
 }
 
 export const getGlobalSetting = async () => {
