@@ -43,10 +43,10 @@
 - Currently supports Simplified Chinese/English/German.
 - If you would like to add a new language, please refer to [i18n.ts](https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/vue/src/i18n.ts) and submit the relevant code.
 
-### 🔐 Added support for authentication
-- You just need to create a `.env` file under the root directory of this extension and enter your key.
-- Then you will be prompted to enter your key when you open the extension.
-- If the authentication fails, all your requests will be rejected.
+### 🔐 Privacy and Security
+- Support configuring a key for authentication.
+- Support configuring access control for the file system. By default, it will be enabled when the service allows public access.
+- [Click here to see details](.env.example)
 
 ### ⌨️ Keyboard Shortcuts
 - Allows for deleting and adding/removing tags, with customizable trigger buttons in the global settings page.
