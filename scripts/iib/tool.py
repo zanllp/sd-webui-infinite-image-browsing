@@ -167,6 +167,20 @@ def get_temp_path():
 
 temp_path = get_temp_path()
 
+def get_enable_access_control():
+    ctrl = os.getenv("IIB_ACCESS_CONTROL")
+    if ctrl == "enable":
+        return True
+    if ctrl == "disable":
+        return False
+    try:
+        from modules.shared import cmd_opts
+        return cmd_opts.share or cmd_opts.ngrok or cmd_opts.listen or cmd_opts.server_name
+    except:
+        pass
+    return False
+
+enable_access_control = get_enable_access_control()
 
 def get_locale():
     import locale

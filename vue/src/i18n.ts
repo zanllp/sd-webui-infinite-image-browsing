@@ -134,11 +134,13 @@ const zh = {
   fullscreenRestriction: '受技术限制，当前拓展不允许删除打开全屏预览时的首张图片。',
   clear: '清除',
   toggleTagSelection: '切换 "{tag}" 标签选中',
-  changlog: '更新日志'
+  changlog: '更新日志',
+  accessControlModeTips: "为确保数据安全，您当前正以访问控制模式运行，仅能访问授权文件夹。您可以通过编辑.env文件来调整访问权限设置。"
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  accessControlModeTips: "To ensure data security, you are currently running in access control mode, which only allows access to authorized folders. You can adjust access permissions by editing the .env file.",
   changlog: 'Change log',
   clear: 'Clear',
   toggleTagSelection: 'Toggle Selection of Tag "{tag}"',
