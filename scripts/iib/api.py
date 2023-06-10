@@ -70,7 +70,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
     except:
         pass
 
-    
+
     def update_extra_paths(conn: sqlite3.Connection):
         r = ExtraPath.get_extra_paths(conn, "scanned")
         mem["EXTRA_PATHS"] = [x.path for x in r]
@@ -93,7 +93,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         except:
             pass
         return False
-    
+
     def is_path_trusted(path: str):
         if not enable_access_control:
             return True
@@ -110,7 +110,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         except:
             pass
         return False
-    
+
     def check_path_trust(path: str):
         if not is_path_trusted(path):
             raise HTTPException(status_code=403)
@@ -204,7 +204,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
                     else f"移动文件 {path} 到 {req.dest} 时出错：{e}"
                 )
                 raise HTTPException(400, detail=error_msg)
-            
+
     class FileInfoDict(TypedDict):
         type: str
         date: float
@@ -402,7 +402,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
             DataBase._initing = True
             conn = DataBase.get_conn()
             img_count = DbImg.count(conn)
-            update_extra_paths()
+            update_extra_paths(conn)
             dirs = (
                 img_search_dirs if img_count == 0 else Floder.get_expired_dirs(conn)
             ) + mem["EXTRA_PATHS"]
