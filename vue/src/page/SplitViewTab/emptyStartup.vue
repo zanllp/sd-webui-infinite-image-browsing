@@ -63,13 +63,25 @@ const restoreRecord = () => {
   <div class="container">
     <div class="header">
       <h1>{{ $t('welcome') }}</h1>
+      <div v-if="global.conf?.enable_access_control && global.dontShowAgain" style="margin-left: 16px;font-size: 1.5em;">
+        <LockOutlined title="Access Control mode" style="vertical-align: text-bottom;" />
+      </div>
       <div flex-placeholder />
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/131" target="_blank"
         class="last-record">{{ $t('changlog') }}</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank"
         class="last-record">{{ $t('faq') }}</a>
     </div>
-    <a-alert :message="$t('accessControlModeTips')"  show-icon v-if="global.conf?.enable_access_control">
+    <a-alert show-icon v-if="global.conf?.enable_access_control && !global.dontShowAgain">
+      <template #message>
+        <div class="access-mode-message">
+          <div>
+            {{ $t('accessControlModeTips') }}
+          </div>
+          <div flex-placeholder />
+          <a @click.prevent="global.dontShowAgain = true">{{ $t('dontShowAgain') }}</a>
+        </div>
+      </template>
       <template #icon>
         <LockOutlined></LockOutlined>
       </template>
@@ -122,6 +134,16 @@ const restoreRecord = () => {
 </template>
 
 <style scoped lang="scss">
+.access-mode-message {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  a {
+    margin-left: 16px;
+  }
+}
+
 .container {
   padding: 20px;
   background-color: var(--zp-secondary-background);
@@ -139,6 +161,7 @@ const restoreRecord = () => {
   font-size: 28px;
   font-weight: bold;
   color: var(--zp-primary);
+  margin: 0;
 }
 
 .last-record {

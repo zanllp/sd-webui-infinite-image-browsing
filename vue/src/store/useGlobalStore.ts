@@ -21,13 +21,13 @@ interface OtherTabPane extends TabPaneBase {
 }
 // logDetailId
 
-interface TagSearchMatchedImageGridTabPane extends TabPaneBase  {
+interface TagSearchMatchedImageGridTabPane extends TabPaneBase {
   type: 'tag-search-matched-image-grid'
   selectedTagIds: MatchImageByTagsReq
   id: string
 }
 
-export interface FileTransferTabPane extends TabPaneBase  {
+export interface FileTransferTabPane extends TabPaneBase {
   type: 'local'
   path?: string
   walkModePath?: string
@@ -47,16 +47,19 @@ export interface Shortcut extends Record<`toggle_tag_${string}`, string | undefi
 }
 
 export const copyPane = (pane: TabPane) => {
-  return cloneDeep({ ...pane, name: typeof pane.name === 'string' ? pane.name : (pane.nameFallbackStr ?? '')})
+  return cloneDeep({
+    ...pane,
+    name: typeof pane.name === 'string' ? pane.name : pane.nameFallbackStr ?? ''
+  })
 }
 
 export const copyTab = (tab: Tab) => {
   return {
     ...tab,
-    panes: tab.panes.map(copyPane) 
+    panes: tab.panes.map(copyPane)
   }
 }
- 
+
 export const useGlobalStore = defineStore(
   'useGlobalStore',
   () => {
@@ -72,7 +75,7 @@ export const useGlobalStore = defineStore(
     const tabList = ref<Tab[]>([])
     onMounted(() => {
       const emptyPane = createEmptyPane()
-      tabList.value.push(({ panes: [emptyPane], key: emptyPane.key, id: uniqueId() }))
+      tabList.value.push({ panes: [emptyPane], key: emptyPane.key, id: uniqueId() })
     })
     const dragingTab = ref<{ tabIdx: number; paneIdx: number }>()
     const recent = ref(new Array<{ path: string; key: string }>())
@@ -169,13 +172,15 @@ export const useGlobalStore = defineStore(
       openTagSearchMatchedImageGridInRight,
       onlyFoldersAndImages: ref(true),
       fullscreenPreviewInitialUrl: ref(''),
-      shortcut
+      shortcut,
+      dontShowAgain: ref(false)
     }
   },
   {
     persist: {
       // debug: true,
       paths: [
+        'dontShowAgain',
         'lang',
         'enableThumbnail',
         'tabListHistoryRecord',
