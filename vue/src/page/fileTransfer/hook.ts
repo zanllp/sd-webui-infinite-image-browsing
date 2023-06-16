@@ -5,7 +5,6 @@ import { gradioApp, parentWindow } from '@/util'
 import { genInfoCompleted, getImageGenerationInfo, openFolder, setImgPath } from '@/api'
 import {
   useWatchDocument,
-  type SearchSelectConv,
   ok,
   createTypedShareStateHook,
   delay,
@@ -20,7 +19,7 @@ import {
   globalEvents
 } from '@/util'
 import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
-import { sortFiles, sortMethodMap, SortMethod } from './fileSort'
+import { sortFiles, sortMethodConv } from './fileSort'
 import { cloneDeep, debounce, last, range, uniqBy, uniqueId } from 'lodash-es'
 import * as Path from '@/util/path'
 import type Progress from 'nprogress'
@@ -66,7 +65,7 @@ export const { useHookShareState } = createTypedShareStateHook(
       stack.value.map((v) => v.curr).slice(global.conf?.is_win ? 1 : 0)
     )
     const currLocation = computed(() => Path.join(...basePath.value))
-    const sortMethod = ref(SortMethod.CREATED_TIME_DESC)
+    const sortMethod = ref(global.defaultSortingMethod)
     const sortedFiles = computed(() => {
       if (images.value) {
         return images.value
@@ -135,7 +134,8 @@ export interface Props {
   walkModePath?: string
 }
 
-export type ViewMode = 'line' | 'grid' | 'large-size-grid'
+export type ViewMode = 'detailList' | 'previewGrid' | 'largePreviewGrid'
+export const viewModes: ViewMode[] = ['detailList', 'largePreviewGrid', 'previewGrid']
 
 export interface Page {
   files: FileNodeInfo[]
@@ -525,34 +525,25 @@ export function useFilesDisplay(props: Props) {
   } = useHookShareState().toRefs()
   const { state } = useHookShareState()
   const moreActionsDropdownShow = ref(false)
-  const viewMode = ref<ViewMode>('grid')
-  const viewModeMap: Record<ViewMode, string> = {
-    line: t('detailList'),
-    grid: t('previewGrid'),
-    'large-size-grid': t('largePreviewGrid')
-  }
-  const sortMethodConv: SearchSelectConv<SortMethod> = {
-    value: (v) => v,
-    text: (v) => t('sortBy') + ' ' + sortMethodMap[v].toLocaleLowerCase()
-  }
+  const viewMode = ref(global.defaultViewMode)  
   const gridSize = 272
   const profileHeight = 64
   const largeGridSize = gridSize * 2
   const { width } = useElementSize(stackViewEl)
   const gridItems = computed(() => {
     const w = width.value
-    if (viewMode.value === 'line' || !w) {
+    if (viewMode.value === 'detailList' || !w) {
       return
     }
-    return ~~(w / (viewMode.value === 'grid' ? gridSize : largeGridSize))
+    return ~~(w / (viewMode.value === 'previewGrid' ? gridSize : largeGridSize))
   })
 
   const itemSize = computed(() => {
     const mode = viewMode.value
-    if (mode === 'line') {
+    if (mode === 'detailList') {
       return { first: 80, second: undefined }
     }
-    const second = mode === 'grid' ? gridSize : largeGridSize
+    const second = mode === 'previewGrid' ? gridSize : largeGridSize
     const first = second + profileHeight
     return {
       first,
@@ -612,7 +603,6 @@ export function useFilesDisplay(props: Props) {
     gridItems,
     sortedFiles,
     sortMethodConv,
-    viewModeMap,
     moreActionsDropdownShow,
     viewMode,
     gridSize,

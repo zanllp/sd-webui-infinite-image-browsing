@@ -1,7 +1,8 @@
 import type { FileNodeInfo } from '@/api/files'
 import { t } from '@/i18n'
+import { SearchSelectConv } from 'vue3-ts-util'
 
-export const sortMethodMap: Record<SortMethod, string> = {
+export const sortMethodMap = (): Record<SortMethod, string> => ({
   'date-asc': t('sortByDateAscending'),
   'date-desc': t('sortByDateDescending'),
   'name-asc': t('sortByNameAscending'),
@@ -10,7 +11,7 @@ export const sortMethodMap: Record<SortMethod, string> = {
   'size-desc': t('sortBySizeDescending'),
   'created-time-asc': t('sortByCreatedDateAscending'),
   'created-time-desc': t('sortByCreatedDateDescending')
-}
+})
 export enum SortMethod {
   DATE_ASC = 'date-asc',
   DATE_DESC = 'date-desc',
@@ -22,6 +23,13 @@ export enum SortMethod {
   CREATED_TIME_DESC = 'created-time-desc'
 }
 
+export const sortMethods = Object.values(SortMethod) as SortMethod[]
+
+
+export const sortMethodConv: SearchSelectConv<SortMethod> = {
+  value: (v) => v,
+  text: (v) => t('sortBy') + ' ' + sortMethodMap()[v].toLocaleLowerCase()
+}
 type FileList = FileNodeInfo[]
 
 const compareByType = (a: FileNodeInfo, b: FileNodeInfo) => {

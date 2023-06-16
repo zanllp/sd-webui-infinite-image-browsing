@@ -2,6 +2,8 @@ import type { GlobalConf } from '@/api'
 import type { MatchImageByTagsReq } from '@/api/db'
 import { i18n, t } from '@/i18n'
 import { getPreferredLang } from '@/i18n'
+import { SortMethod } from '@/page/fileTransfer/fileSort'
+import { ViewMode } from '@/page/fileTransfer/hook'
 import type { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
 import type { Dict, ReturnTypeAsync } from '@/util'
 import { isAbsolute, join, normalize } from '@/util/path'
@@ -127,6 +129,9 @@ export const useGlobalStore = defineStore(
     const gridThumbnailSize = ref(256)
     const largeGridThumbnailSize = ref(512)
 
+    const defaultSortingMethod = ref(SortMethod.CREATED_TIME_DESC)
+    const defaultViewMode = ref<ViewMode>('previewGrid')
+
     const lang = ref(getPreferredLang())
     watch(lang, (v) => (i18n.global.locale.value = v as any))
 
@@ -154,6 +159,8 @@ export const useGlobalStore = defineStore(
       return Object.fromEntries(res)
     })
     return {
+      defaultSortingMethod,
+      defaultViewMode,
       pathAliasMap,
       createEmptyPane,
       lang,
@@ -180,6 +187,8 @@ export const useGlobalStore = defineStore(
     persist: {
       // debug: true,
       paths: [
+        'defaultSortingMethod',
+        'defaultViewMode',
         'dontShowAgain',
         'lang',
         'enableThumbnail',

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { DownOutlined, LeftCircleOutlined, RightCircleOutlined } from '@/icon'
-import { sortMethodMap } from './fileSort'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import {
   useFileTransfer,
@@ -8,11 +7,11 @@ import {
   useHookShareState,
   useLocation,
   usePreview,
-  type ViewMode,
   useFileItemActions,
   toRawFileUrl,
   stackCache,
-  useMobileOptimization
+  useMobileOptimization,
+  viewModes
 } from './hook'
 import { SearchSelect } from 'vue3-ts-util'
 
@@ -26,6 +25,7 @@ import FileItem from './FileItem.vue'
 import fullScreenContextMenu from './fullScreenContextMenu.vue'
 import { copy2clipboardI18n } from '@/util'
 import { openFolder } from '@/api'
+import { sortMethods } from './fileSort'
 
 const global = useGlobalStore()
 const props = defineProps<{
@@ -57,7 +57,6 @@ const {
   sortedFiles,
   sortMethod,
   viewMode,
-  viewModeMap,
   itemSize,
   loadNextDir,
   loadNextDirLoading,
@@ -158,12 +157,10 @@ watch(
                 }">
                   <a-form-item :label="$t('viewMode')">
                     <search-select v-model:value="viewMode" @click.stop
-                      :conv="{ value: v => v, text: v => viewModeMap[v as ViewMode] }"
-                      :options="Object.keys(viewModeMap)" />
+                      :conv="{ value: v => v, text: v => $t(v) }" :options="viewModes" />
                   </a-form-item>
                   <a-form-item :label="$t('sortingMethod')">
-                    <search-select v-model:value="sortMethod" @click.stop :conv="sortMethodConv"
-                      :options="Object.keys(sortMethodMap)" />
+                    <search-select v-model:value="sortMethod" @click.stop :conv="sortMethodConv" :options="sortMethods" />
                   </a-form-item>
                   <div style="padding: 4px;">
                     <a @click.prevent="copyLocation">{{ $t('copyPath') }}</a>

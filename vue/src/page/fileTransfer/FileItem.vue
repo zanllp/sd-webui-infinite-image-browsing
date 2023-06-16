@@ -20,7 +20,7 @@ const props = withDefaults(
     viewMode?: ViewMode
     fullScreenPreviewImageUrl?: string
   }>(),
-  { selected: false, viewMode: 'grid' }
+  { selected: false, viewMode: 'previewGrid' }
 )
 
 const emit = defineEmits<{
@@ -43,10 +43,13 @@ const onRightClick = () => {
 
 const q = createReactiveQueue()
 const thumbnailSize = computed(() =>
-  props.viewMode === 'grid'
+  props.viewMode === 'previewGrid'
     ? [global.gridThumbnailSize, global.gridThumbnailSize].join('x')
     : [global.largeGridThumbnailSize, global.largeGridThumbnailSize].join('x')
 )
+const imageSrc = computed(() => {
+  return global.enableThumbnail ? toImageThumbnailUrl(props.file, thumbnailSize.value) : toRawFileUrl(props.file)
+})
 </script>
 <template>
   <a-dropdown
@@ -61,8 +64,8 @@ const thumbnailSize = computed(() =>
       :class="{
         clickable: file.type === 'dir',
         selected,
-        grid: viewMode === 'grid' || viewMode === 'large-size-grid',
-        'large-grid': viewMode === 'large-size-grid'
+        grid: viewMode === 'previewGrid' || viewMode === 'largePreviewGrid',
+        'large-grid': viewMode === 'largePreviewGrid'
       }"
       :data-idx="idx"
       :key="file.name"
@@ -71,7 +74,7 @@ const thumbnailSize = computed(() =>
       @contextmenu="onRightClick"
       @click.capture="emit('fileItemClick', $event, file, idx)"
     >
-      <div v-if="viewMode !== 'line'">
+      <div v-if="viewMode !== 'detailList'">
         <a-dropdown>
           <div class="more">
             <ellipsis-outlined />
@@ -90,10 +93,8 @@ const thumbnailSize = computed(() =>
         <a-image
           :key="file.fullpath"
           :class="`idx-${idx}`"
-          v-if="isImageFile(file.name)"
-          :src="
-            global.enableThumbnail ? toImageThumbnailUrl(file, thumbnailSize) : toRawFileUrl(file)
-          "
+          v-if="isImageFile(file.name) "
+          :src="imageSrc"
           :fallback="fallbackImage"
           :preview="{
             src: fullScreenPreviewImageUrl,

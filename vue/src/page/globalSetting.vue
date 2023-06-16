@@ -3,6 +3,8 @@ import { t } from '@/i18n'
 import { useGlobalStore, type Shortcut } from '@/store/useGlobalStore'
 import { ref } from 'vue'
 import { SearchSelect } from 'vue3-ts-util'
+import { sortMethodConv, sortMethods } from '../page/fileTransfer/fileSort'
+import { viewModes } from '../page/fileTransfer/hook'
 const globalStore = useGlobalStore()
 
 const langChanged = ref(false)
@@ -30,7 +32,12 @@ const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
       <a-form-item :label="$t('useThumbnailPreview')">
         <a-switch v-model:checked="globalStore.enableThumbnail" />
       </a-form-item>
-
+      <a-form-item :label="$t('defaultSortingMethod')">
+        <search-select v-model:value="globalStore.defaultSortingMethod" :conv="sortMethodConv" :options="sortMethods" />
+      </a-form-item>
+      <a-form-item :label="$t('defaultViewMode')">
+        <search-select v-model:value="globalStore.defaultViewMode" :conv="{ value: v => v, text: v => $t(v) }" :options="viewModes" />
+      </a-form-item>
       <a-form-item :label="$t('gridThumbnailWidth')">
         <a-input-number v-model:value="globalStore.gridThumbnailSize" :min="256" :max="1024" /> (px)
       </a-form-item>

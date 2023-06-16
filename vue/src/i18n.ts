@@ -135,14 +135,22 @@ const zh = {
   clear: '清除',
   toggleTagSelection: '切换 "{tag}" 标签选中',
   changlog: '更新日志',
-  accessControlModeTips: "为确保数据安全，您当前正以访问控制模式运行，仅能访问授权文件夹。您可以通过编辑本拓展根目录的下.env文件来调整访问权限设置.如果不存在.env文件, 你可以将.env.example文件复制并重命名为.env",
-  dontShowAgain: "不再显示"
+  accessControlModeTips:
+    '为确保数据安全，您当前正以访问控制模式运行，仅能访问授权文件夹。您可以通过编辑本拓展根目录的下.env文件来调整访问权限设置.如果不存在.env文件, 你可以将.env.example文件复制并重命名为.env',
+  dontShowAgain: '不再显示',
+  defaultSortingMethod: '默认排序方法',
+  defaultViewMode: '默认查看模式',
+  showPreviewImage: '显示预览图'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  defaultSortingMethod: 'Default Sorting Method',
+  defaultViewMode: 'Default View Mode',
+  showPreviewImage: 'Show Preview Image',
   dontShowAgain: "Don't show again",
-  accessControlModeTips: "To ensure data security, you are currently running in access control mode, which only allows access to authorized folders. You can adjust the access permissions settings by editing the .env file in the root directory of this extension. If the .env file does not exist, you can copy the .env.example file and rename it to .env.",
+  accessControlModeTips:
+    'To ensure data security, you are currently running in access control mode, which only allows access to authorized folders. You can adjust the access permissions settings by editing the .env file in the root directory of this extension. If the .env file does not exist, you can copy the .env.example file and rename it to .env.',
   changlog: 'Change log',
   clear: 'Clear',
   toggleTagSelection: 'Toggle Selection of Tag "{tag}"',
