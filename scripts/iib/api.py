@@ -75,7 +75,8 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         r = ExtraPath.get_extra_paths(conn, "scanned")
         mem["EXTRA_PATHS"] = [x.path for x in r]
 
-    def is_path_under_parents(path, parent_paths = img_search_dirs + mem["EXTRA_PATHS"]):
+
+    def is_path_under_parents(path, parent_paths = img_search_dirs + mem["EXTRA_PATHS"] + kwargs.get("extra_paths_cli", [])):
         """
         Check if the given path is under one of the specified parent paths.
         :param path: The path to check.
@@ -98,7 +99,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         if not enable_access_control:
             return True
         try:
-            parent_paths: List[str] = img_search_dirs + mem["EXTRA_PATHS"]
+            parent_paths: List[str] = img_search_dirs + mem["EXTRA_PATHS"] + kwargs.get("extra_paths_cli", [])
             path = os.path.normpath(path)
             for parent_path in parent_paths:
                 if (len(path) <= len(parent_path)):
@@ -133,7 +134,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
         try:
             conn = DataBase.get_conn()
             all_custom_tags = Tag.get_all_custom_tag(conn)
-            extra_paths = ExtraPath.get_extra_paths(conn)
+            extra_paths = ExtraPath.get_extra_paths(conn) + [ExtraPath(path, "cli_access_only") for path in kwargs.get("extra_paths_cli", [])]
             update_extra_paths(conn)
         except Exception as e:
             print(e)
