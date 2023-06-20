@@ -640,7 +640,7 @@ export function useFileTransfer() {
       'text/plain',
       JSON.stringify({
         includeDir,
-        loc: currLocation.value || 'search-result',
+        loc: currLocation.value,
         path: uniqBy(files, 'fullpath').map((f) => f.fullpath)
       })
     )
