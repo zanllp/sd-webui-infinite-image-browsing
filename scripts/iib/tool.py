@@ -6,6 +6,7 @@ import tempfile
 import imghdr
 import subprocess
 from typing import Dict
+import sys
 import piexif
 import piexif.helper
 
@@ -337,14 +338,14 @@ def open_folder(folder_path, file_path=None):
         file = os.path.join(folder, file_path)
         if os.name == 'nt':
             subprocess.run(['explorer', '/select,', file])
+        elif sys.platform == 'darwin':
+            subprocess.run(['open', '-R', file])
         elif os.name == 'posix':
             subprocess.run(['xdg-open', file])
-        elif os.name == 'mac':
-            subprocess.run(['open', '-R', file])
     else:
         if os.name == 'nt':
             subprocess.run(['explorer', folder])
+        elif sys.platform == 'darwin':
+            subprocess.run(['open', folder])
         elif os.name == 'posix':
             subprocess.run(['xdg-open', folder])
-        elif os.name == 'mac':
-            subprocess.run(['open', folder])
