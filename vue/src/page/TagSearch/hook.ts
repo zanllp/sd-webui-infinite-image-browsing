@@ -21,7 +21,7 @@ export const useImageSearch = () => {
   const { stackViewEl, multiSelectedIdxs, stack } = useHookShareState({ images }).toRefs()
   const { itemSize, gridItems } = useFilesDisplay(propsMock)
   const { showMenuIdx } = useMobileOptimization()
-  useFileTransfer() // for reset selected
+  const { onFileDragStart } = useFileTransfer() // for reset selected
   const {
     showGenInfo,
     imageGenInfo,
@@ -63,5 +63,6 @@ export const useImageSearch = () => {
     onFileItemClick,
     showMenuIdx,
     multiSelectedIdxs,
+    onFileDragStart
   }
 }
