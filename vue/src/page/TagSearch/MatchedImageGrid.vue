@@ -28,8 +28,7 @@ const {
   multiSelectedIdxs,
   onFileItemClick,
   scroller,
-  showMenuIdx,
-  onFileDragStart
+  showMenuIdx
 } = useImageSearch()
 
 const props = defineProps<{
@@ -86,7 +85,6 @@ watch(
             :idx="idx"
             :file="file"
             v-model:show-menu-idx="showMenuIdx"
-            @dragstart="onFileDragStart"
             @file-item-click="onFileItemClick"
             :full-screen-preview-image-url="
               images[previewIdx] ? toRawFileUrl(images[previewIdx]) : ''
