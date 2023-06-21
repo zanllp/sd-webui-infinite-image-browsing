@@ -6,6 +6,13 @@
 
 [查看近期更新](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/131)
 
+<p style="text-align:center;margin:0 32px">不仅仅是图像浏览器，更是一个强大的图像管理器。精确的图像搜索配合多选操作，成倍提高效率。更是支持以独立模式运行，无需SD-Webui</p>
+
+
+
+https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b890b-7be8-4816-abba-f3ad340a2232
+
+
 ## 主要特性
 
 ### 🔥 极佳性能
