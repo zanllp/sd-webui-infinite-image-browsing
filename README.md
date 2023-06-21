@@ -1,8 +1,12 @@
-## [中文文档](./README-zh.md)
+[中文文档](./README-zh.md)
+
+[View recent updates (Change log)](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/131)
+
 #  Stable Diffusion webui Infinite Image Browsing
 
-[View recent updates](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/131)
+<p style="text-align:center;margin:0 32px;">Not just an image browser, it is also a powerful image manager. Accurate image search combined with multi-select operations greatly improves efficiency. It also supports running in independent mode without SD-Webui.</p>
 
+https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b890b-7be8-4816-abba-f3ad340a2232
 ## Key Features
 
 ### 🔥 Excellent Performance
