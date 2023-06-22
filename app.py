@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse
 import uvicorn
 import os
 from scripts.iib.api import infinite_image_browsing_api, index_html_path
-from scripts.iib.tool import cwd, get_sd_webui_conf, get_valid_img_dirs, sd_img_dirs
+from scripts.iib.tool import get_sd_webui_conf, get_valid_img_dirs, sd_img_dirs
 from scripts.iib.db.datamodel import DataBase, Image
 from scripts.iib.db.update_image_data import update_image_data
 import argparse
@@ -16,6 +16,7 @@ tag = "\033[31m[warn]\033[0m"
 
 default_port = 8000
 default_host = "127.0.0.1"
+
 
 def normalize_paths(paths: List[str]):
     """
@@ -78,12 +79,12 @@ def update_image_index_func(sd_webui_config: str):
 
 
 class AppUtils(object):
-
-    def __init__(self,
-                sd_webui_config: Optional[str] = None,
-                update_image_index: bool = False,
-                extra_paths: List[str] = [],
-        ):
+    def __init__(
+        self,
+        sd_webui_config: Optional[str] = None,
+        update_image_index: bool = False,
+        extra_paths: List[str] = [],
+    ):
         """
         sd_webui_config, type=str, default=None, help="the path to the config file"
         update_image_index, action="store_true", help="update the image index"
@@ -94,11 +95,11 @@ class AppUtils(object):
         self.extra_paths = extra_paths
 
     def set_params(self, *args, **kwargs) -> None:
-        """ 改变参数，与__init__的行为一致 """
+        """改变参数，与__init__的行为一致"""
         self.__init__(*args, **kwargs)
 
     @staticmethod
-    def async_run(app: FastAPI, port: int=default_port) -> Coroutine:
+    def async_run(app: FastAPI, port: int = default_port) -> Coroutine:
         """
         用于从异步运行的FastAPI，在jupyter notebook环境中非常有用
 
@@ -112,10 +113,8 @@ class AppUtils(object):
         config = uvicorn.Config(app, host=default_host, port=port)
         server = uvicorn.Server(config)
         return server.serve()
-    
-    def wrap_app(self,
-                app: FastAPI,
-    ) -> None:
+
+    def wrap_app(self, app: FastAPI) -> None:
         """
         为传递的app挂载上infinite_image_browsing后端
         """
@@ -129,11 +128,12 @@ class AppUtils(object):
                 update_image_index_func(sd_webui_config)
         paths_check(extra_paths)
 
-        infinite_image_browsing_api(app,
-                                    sd_webui_config=sd_webui_config,
-                                    extra_paths_cli=normalize_paths(extra_paths),
+        infinite_image_browsing_api(
+            app,
+            sd_webui_config=sd_webui_config,
+            extra_paths_cli=normalize_paths(extra_paths),
         )
-    
+
     def get_root_browser_app(self) -> FastAPI:
         """
         获取首页挂载在"/"上的infinite_image_browsing FastAPI实例
@@ -144,13 +144,13 @@ class AppUtils(object):
         @app.get("/")
         def index():
             return FileResponse(index_html_path)
-    
+
         self.wrap_app(app)
         return app
 
 
 def setup_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser = argparse.ArgumentParser(description="A fast and powerful image browser for Stable Diffusion webui.")
     parser.add_argument("--port", type=int, help="The port to use", default=default_port)
     parser.add_argument("--sd_webui_config", type=str, default=None, help="The path to the config file")
     parser.add_argument("--update_image_index", action="store_true", help="Update the image index")
@@ -160,18 +160,7 @@ def setup_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def check_cmd_params(*args, **kwargs) -> argparse.Namespace:
-    """
-    parser.parse_known_args()的装饰器，用于报告非法参数
-    无任何传递将从sys.argv中解析参数
-    """
-    cmd_params, unkonwn = parser.parse_known_args(*args, **kwargs)
-    if unkonwn:
-        logging.warning(f"{tag} Illegal args will be ingored: {unkonwn}")
-    return cmd_params
-
-
-def launch_app(port: int=default_port, *args, **kwargs) -> None:
+def launch_app(port: int = default_port, *args, **kwargs) -> None:
     """
     同步函数
 
@@ -179,14 +168,14 @@ def launch_app(port: int=default_port, *args, **kwargs) -> None:
     sd_webui_config, type=str, default=None, help="the path to the config file"
     update_image_index, action="store_true", help="update the image index"
     extra_paths", nargs="+", help="extra paths to use, will be added to Quick Move.", default=[]
-    
+
     """
     app_utils = AppUtils(*args, **kwargs)
     app = app_utils.get_root_browser_app()
     uvicorn.run(app, host=default_host, port=port)
-    
 
-async def async_launch_app(port: int=default_port, *args, **kwargs) -> None:
+
+async def async_launch_app(port: int = default_port, *args, **kwargs) -> None:
     """
     协程函数
 
@@ -194,21 +183,19 @@ async def async_launch_app(port: int=default_port, *args, **kwargs) -> None:
     sd_webui_config, type=str, default=None, help="the path to the config file"
     update_image_index, action="store_true", help="update the image index"
     extra_paths", nargs="+", help="extra paths to use, will be added to Quick Move.", default=[]
-    
+
     """
     app_utils = AppUtils(*args, **kwargs)
     app = app_utils.get_root_browser_app()
     await app_utils.async_run(app, port=port)
 
 
-parser = setup_parser()
-
 if __name__ == "__main__":
-    cmd_params = check_cmd_params()
-    params_dict = dict(sd_webui_config = cmd_params.sd_webui_config,
-                        update_image_index = cmd_params.update_image_index,
-                        extra_paths = cmd_params.extra_paths,
+    parser = setup_parser()
+    cmd_params = parser.parse_args()
+    launch_app(
+        cmd_params.port,
+        sd_webui_config=cmd_params.sd_webui_config,
+        update_image_index=cmd_params.update_image_index,
+        extra_paths=cmd_params.extra_paths,
     )
-    app_utils = AppUtils(**params_dict)
-    app = app_utils.get_root_browser_app()
-    uvicorn.run(app, host=default_host, port=cmd_params.port)
