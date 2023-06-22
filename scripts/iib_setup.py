@@ -4,7 +4,10 @@ from scripts.iib.tool import locale
 from scripts.iib.tool import read_info_from_image
 from PIL import Image
 from scripts.iib.logger import logger
+from typing import Any
 
+from fastapi import FastAPI
+import gradio as gr
 
 """
 api函数声明和启动分离方便另外一边被外部调用
@@ -12,8 +15,7 @@ api函数声明和启动分离方便另外一边被外部调用
 
 
 def on_ui_tabs():
-    import gradio as gr
-
+    
     with gr.Blocks(analytics_enabled=False) as view:
         with gr.Row():
             with gr.Column():
@@ -67,6 +69,10 @@ def on_ui_tabs():
             ),
         )
 
+def on_app_started(_: gr.Blocks, app: FastAPI) -> None:
+    # 第一个参数是SD-WebUI传进来的gr.Blocks，但是不需要使用
+    infinite_image_browsing_api(app)
+
 
 script_callbacks.on_ui_tabs(on_ui_tabs)
-script_callbacks.on_app_started(infinite_image_browsing_api)
+script_callbacks.on_app_started(on_app_started)

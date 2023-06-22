@@ -38,6 +38,8 @@ from scripts.iib.db.update_image_data import update_image_data
 from scripts.iib.logger import logger
 
 
+index_html_path = os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
+
 
 send_img_path = {"value": ""}
 mem = {
@@ -60,7 +62,7 @@ async def get_token(request: Request):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
+def infinite_image_browsing_api(app: FastAPI, **kwargs):
     pre = "/infinite_image_browsing"
 
 
@@ -361,7 +363,7 @@ def infinite_image_browsing_api(_: Any, app: FastAPI, **kwargs):
 
     @app.get(pre)
     def index_bd():
-        return FileResponse(os.path.join(cwd, "vue/dist/index.html"))
+        return FileResponse(index_html_path)
 
     class OpenFolderReq(BaseModel):
         path: str
