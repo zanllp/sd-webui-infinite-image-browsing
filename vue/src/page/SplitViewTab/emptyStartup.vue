@@ -66,7 +66,9 @@ const restoreRecord = () => {
       <div v-if="global.conf?.enable_access_control && global.dontShowAgain" style="margin-left: 16px;font-size: 1.5em;">
         <LockOutlined title="Access Control mode" style="vertical-align: text-bottom;" />
       </div>
-      <div flex-placeholder />
+      <div flex-placeholder />     
+       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing" target="_blank"
+        class="last-record">{{ $t('document') }}</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/131" target="_blank"
         class="last-record">{{ $t('changlog') }}</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank"

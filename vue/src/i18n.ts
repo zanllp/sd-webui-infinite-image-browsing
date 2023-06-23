@@ -140,11 +140,19 @@ const zh = {
   dontShowAgain: '不再显示',
   defaultSortingMethod: '默认排序方法',
   defaultViewMode: '默认查看模式',
-  showPreviewImage: '显示预览图'
+  showPreviewImage: '显示预览图',
+  copy: '复制',
+  edit: '编辑',
+  document: '文档',
+  multiSelectTips: '您可以按住 Shift、Ctrl 或 Cmd 键，然后单击文件来进行多选删除/移动操作'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  multiSelectTips: 'You can hold down the Shift, Ctrl, or Cmd key and then click on files to perform batch delete/move operations',
+  document: 'Document',
+  copy: 'Copy',
+  edit: 'Edit',
   defaultSortingMethod: 'Default Sorting Method',
   defaultViewMode: 'Default View Mode',
   showPreviewImage: 'Show Preview Image',
