@@ -81,7 +81,6 @@ watch(
         :gridItems="gridItems"
       >
         <template v-slot="{ item: file, index: idx }">
-          <!-- idx 和file有可能丢失 -->
           <file-item-cell
             :idx="idx"
             :file="file"

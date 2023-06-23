@@ -16,7 +16,6 @@ import {
 import { SearchSelect } from 'vue3-ts-util'
 
 import 'multi-nprogress/nprogress.css'
-import FolderNavigator from './folderNavigator.vue'
 // @ts-ignore
 import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
 import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
@@ -48,8 +47,9 @@ const {
   multiSelectedIdxs,
   spinning
 } = useHookShareState().toRefs()
-const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, to, quickMoveTo, addToSearchScanPathAndQuickMove, searchPathInfo } =
-  useLocation(props)
+const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, quickMoveTo,
+  addToSearchScanPathAndQuickMove, searchPathInfo, locInputValue, isLocationEditing, onLocEditEnter, onEditBtnClick
+} = useLocation(props)
 const {
   gridItems,
   sortMethodConv,
@@ -62,7 +62,7 @@ const {
   loadNextDirLoading,
   canLoadNext,
   onScroll,
-  
+
 } = useFilesDisplay(props)
 const { onDrop, onFileDragStart } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions(
@@ -84,6 +84,9 @@ watch(
   },
   { immediate: true }
 )
+
+
+
 </script>
 <template>
   <ASpin :spinning="spinning" size="large">
@@ -107,20 +110,30 @@ watch(
         </ASkeleton>
       </AModal>
       <div class="location-bar">
-        <div class="breadcrumb">
-          <a-tooltip v-if="props.walkModePath">
+        <div v-if="props.walkModePath">
+          <a-tooltip>
             <template #title>{{ $t('walk-mode-move-message') }}</template><a-breadcrumb style="flex: 1">
               <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx">
                 <span>{{ item.curr === '/' ? $t('root') : item.curr.replace(/:\/$/, $t('drive')) }}</span>
               </a-breadcrumb-item>
             </a-breadcrumb>
           </a-tooltip>
+        </div>
+        <div class="breadcrumb" :style="{ flex: isLocationEditing ? 1 : '' }" v-else>
+          <AInput v-if="isLocationEditing" style="flex: 1" v-model:value="locInputValue" @click.stop
+            @press-enter="onLocEditEnter"></AInput>
           <a-breadcrumb style="flex: 1" v-else>
             <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx">
               <a @click.prevent="back(idx)">{{ item.curr === '/' ? $t('root') : item.curr.replace(/:\/$/, $t('drive'))
               }}</a>
             </a-breadcrumb-item>
           </a-breadcrumb>
+
+          <AButton size="small" v-if="isLocationEditing" @click="onLocEditEnter" type="primary">{{ $t('go') }}</AButton>
+          <div v-else style="margin-left: 8px;">
+            <a @click.prevent="copyLocation">{{ $t('copy') }}</a><span style="margin: 0 4px;">/</span><a
+              @click.prevent.stop="onEditBtnClick">{{ $t('edit') }}</a>
+          </div>
         </div>
         <div class="actions">
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
@@ -156,21 +169,17 @@ watch(
                   wrapperCol: { span: 18 }
                 }">
                   <a-form-item :label="$t('viewMode')">
-                    <search-select v-model:value="viewMode" @click.stop
-                      :conv="{ value: v => v, text: v => $t(v) }" :options="viewModes" />
+                    <search-select v-model:value="viewMode" @click.stop :conv="{ value: v => v, text: v => $t(v) }"
+                      :options="viewModes" />
                   </a-form-item>
                   <a-form-item :label="$t('sortingMethod')">
                     <search-select v-model:value="sortMethod" @click.stop :conv="sortMethodConv" :options="sortMethods" />
                   </a-form-item>
                   <div style="padding: 4px;">
-                    <a @click.prevent="copyLocation">{{ $t('copyPath') }}</a>
-                  </div>
-                  <div style="padding: 4px;">
-                    <folder-navigator :loc="currLocation" @to="to" />
-                  </div>
-                  <div style="padding: 4px;">
-                    <a @click.prevent="addToSearchScanPathAndQuickMove" v-if="!searchPathInfo ">{{  $t('addToSearchScanPathAndQuickMove') }}</a>
-                    <a @click.prevent="addToSearchScanPathAndQuickMove" v-else-if="searchPathInfo.can_delete">{{ $t('removeFromSearchScanPathAndQuickMove') }}</a>
+                    <a @click.prevent="addToSearchScanPathAndQuickMove" v-if="!searchPathInfo">{{
+                      $t('addToSearchScanPathAndQuickMove') }}</a>
+                    <a @click.prevent="addToSearchScanPathAndQuickMove" v-else-if="searchPathInfo.can_delete">{{
+                      $t('removeFromSearchScanPathAndQuickMove') }}</a>
                   </div>
                   <div style="padding: 4px;">
                     <a @click.prevent="openFolder(currLocation + '/')">{{ $t('openWithLocalFileBrowser') }}</a>
@@ -186,8 +195,9 @@ watch(
           :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems">
           <template v-slot="{ item: file, index: idx }">
             <!-- idx 和file有可能丢失 -->
-            <file-item :idx="idx" :file="file" :full-screen-preview-image-url="sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : ''
-            " v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :view-mode="viewMode"
+            <file-item :idx="idx" :file="file"
+              :full-screen-preview-image-url="sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : ''"
+              v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :view-mode="viewMode"
               @file-item-click="onFileItemClick" @dragstart="onFileDragStart"
               @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick" />
           </template>
@@ -232,6 +242,15 @@ watch(
       pointer-events: none;
       cursor: none;
     }
+  }
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+
+  &>* {
+    margin-right: 4px;
   }
 }
 

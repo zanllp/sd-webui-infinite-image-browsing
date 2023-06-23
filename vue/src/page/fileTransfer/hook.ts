@@ -495,7 +495,27 @@ export function useLocation(props: Props) {
     await globalEvents.emit('updateGlobalSetting')
   }
 
+  const isLocationEditing = ref(false)
+  const locInputValue = ref(currLocation.value)
+  const onEditBtnClick = () => {
+    isLocationEditing.value = true
+    locInputValue.value = currLocation.value
+  }
+
+  const onLocEditEnter = async () => {
+    await to(locInputValue.value)
+    isLocationEditing.value = false
+  }
+
+  useWatchDocument('click', () => {
+    isLocationEditing.value = false
+  })
+
   return {
+    locInputValue,
+    isLocationEditing,
+    onLocEditEnter,
+    onEditBtnClick,
     addToSearchScanPathAndQuickMove,
     searchPathInfo,
     refresh,
@@ -525,7 +545,7 @@ export function useFilesDisplay(props: Props) {
   } = useHookShareState().toRefs()
   const { state } = useHookShareState()
   const moreActionsDropdownShow = ref(false)
-  const viewMode = ref(global.defaultViewMode)  
+  const viewMode = ref(global.defaultViewMode)
   const gridSize = 272
   const profileHeight = 64
   const largeGridSize = gridSize * 2
@@ -615,7 +635,18 @@ export function useFilesDisplay(props: Props) {
     itemSize
   }
 }
-
+const multiSelectTips = () =>
+  h(
+    'p',
+    {
+      style: {
+        background: 'var(--zp-secondary-background)',
+        padding: '8px',
+        borderLeft: '4px solid var(--primary-color)',
+      }
+    },
+    `Tips: ${t('multiSelectTips')}`
+  )
 export function useFileTransfer() {
   const { currLocation, sortedFiles, currPage, multiSelectedIdxs, eventEmitter } =
     useHookShareState().toRefs()
@@ -664,7 +695,8 @@ export function useFileTransfer() {
         h(
           'ol',
           data.path.map((v) => v.split(/[/\\]/).pop()).map((v) => h('li', v))
-        )
+        ),
+        multiSelectTips()
       ])
       Modal.confirm({
         title: t('confirm'),
@@ -924,11 +956,14 @@ export function useFileItemActions(
           Modal.confirm({
             title: t('confirmDelete'),
             maskClosable: true,
-            content: h(
-              'ol',
-              { style: 'max-height:50vh;overflow:auto;' },
-              selectedFiles.map((v) => v.fullpath.split(/[/\\]/).pop()).map((v) => h('li', v))
-            ),
+            content: h('div', [
+              h(
+                'ol',
+                { style: 'max-height:50vh;overflow:auto;' },
+                selectedFiles.map((v) => v.fullpath.split(/[/\\]/).pop()).map((v) => h('li', v))
+              ),
+              multiSelectTips()
+            ]),
             async onOk() {
               const paths = selectedFiles.map((v) => v.fullpath)
               await deleteFiles(paths)
