@@ -38,9 +38,21 @@ export interface FileTransferTabPane extends TabPaneBase {
 
 export type TabPane = FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane
 
+/**
+ * This interface represents a tab, which contains an array of panes, an ID, and a key
+ */
 export interface Tab {
+  /**
+   * An array of panes that belong to this tab
+   */
   panes: TabPane[]
+  /**
+   * A unique identifier for this tab
+   */
   id: string
+  /**
+   * A value indicating which pane is currently selected within the tab
+   */
   key: string
 }
 

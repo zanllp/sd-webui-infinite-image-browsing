@@ -4,7 +4,7 @@ import { exit } from 'process'
 
 const main = async () => {
   try {
-    console.log(execSync('yarn build').toString('utf8'))
+    console.log(execSync('vue-tsc && vite build').toString('utf8'))
   } catch (error: any) {
     if (error.stdout && error.stderr) {
       console.log(error.stdout.toString('utf8'))

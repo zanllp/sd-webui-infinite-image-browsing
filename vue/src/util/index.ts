@@ -4,17 +4,17 @@ import { reactive } from 'vue'
 import { FetchQueue, idKey, typedEventEmitter, type UniqueId } from 'vue3-ts-util'
 
 export const parentWindow = () => {
-  return parent.window as any as (Window & {
+  return parent.window as any as Window & {
     switch_to_img2img(): void
     switch_to_txt2img(): void
-  })
+  }
 }
 
 /**
  * 勿删
- * @returns 
+ * @returns
  */
-export function gradioApp (): Window & Document   {
+export function gradioApp(): Window & Document {
   try {
     return (parent.window as any).gradioApp()
   } catch (error) {
@@ -25,8 +25,16 @@ export function gradioApp (): Window & Document   {
   return (gradioShadowRoot ? gradioShadowRoot : document) as any
 }
 
+export const getTabIdxInSDWebui = () => {
+  const tabList = gradioApp().querySelectorAll('#tabs > .tabitem[id^=tab_]')
+  return Array.from(tabList).findIndex(v => v.id.includes('infinite-image-browsing'))
+}
 
-export const asyncCheck = async <T> (getter: () => T, checkSize = 100, timeout = 1000) => {
+export const switch2IBB = () => {
+  gradioApp().querySelector('#tabs')!.querySelectorAll('button')[getTabIdxInSDWebui()].click()
+}
+
+export const asyncCheck = async <T>(getter: () => T, checkSize = 100, timeout = 1000) => {
   return new Promise<T>((x) => {
     const check = (num = 0) => {
       const target = getter()
@@ -50,7 +58,7 @@ export type Dict<T = any> = Record<string, T>
  * @param v
  * @param keys
  */
-export const pick = <T extends Dict, keys extends Array<keyof T>> (v: T, ...keys: keys) => {
+export const pick = <T extends Dict, keys extends Array<keyof T>>(v: T, ...keys: keys) => {
   return keys.reduce((p, c) => {
     p[c] = v?.[c]
     return p
@@ -63,7 +71,7 @@ export const pick = <T extends Dict, keys extends Array<keyof T>> (v: T, ...keys
  */
 export type ReturnTypeAsync<T extends (...arg: any) => Promise<any>> = Awaited<ReturnType<T>>
 
-export function isImageFile (filename: string): boolean {
+export function isImageFile(filename: string): boolean {
   if (typeof filename !== 'string') {
     return false
   }
@@ -72,53 +80,77 @@ export function isImageFile (filename: string): boolean {
   return extension !== undefined && imageExtensions.includes(`.${extension}`)
 }
 
-
 export const createReactiveQueue = () => reactive(new FetchQueue(-1, 0, -1, 'throw'))
 
-export const copy2clipboardI18n = async (text: string) => {
+export const copy2clipboardI18n = async (text: string, msg?: string) => {
   try {
     if (navigator.clipboard) {
       await navigator.clipboard.writeText(text)
     } else {
-      const input = document.createElement('input');
-      input.value = text;
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand('copy');
-      document.body.removeChild(input);
+      const input = document.createElement('input')
+      input.value = text
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
     }
-    message.success(t('copied'))
+    message.success(msg ?? t('copied'))
   } catch (error) {
     message.error("copy failed. maybe it's non-secure environment")
   }
 }
 
-export const { useEventListen: useGlobalEventListen, eventEmitter: globalEvents } = typedEventEmitter<{
-  'return-to-iib'(): void,
-  updateGlobalSetting(): Promise<void>
-}>()
+export const { useEventListen: useGlobalEventListen, eventEmitter: globalEvents } =
+  typedEventEmitter<{
+    'return-to-iib'(): void
+    updateGlobalSetting(): void
+  }>()
 
-type AsyncFunction<T> = (...args: any[]) => Promise<T>;
+type AsyncFunction<T> = (...args: any[]) => Promise<T>
 
 export function makeAsyncFunctionSingle<T>(fn: AsyncFunction<T>): AsyncFunction<T> {
-  let promise: Promise<T> | null = null;
-  let isExecuting = false;
+  let promise: Promise<T> | null = null
+  let isExecuting = false
 
   return async function (this: any, ...args: any[]): Promise<T> {
     if (isExecuting) {
       // 如果当前有其他调用正在执行，直接返回上一个 Promise 对象
-      return promise as Promise<T>;
+      return promise as Promise<T>
     }
 
-    isExecuting = true;
+    isExecuting = true
 
     try {
       // 执行异步函数并等待结果
-      promise = fn.apply(this, args);
-      const result = await promise;
-      return result;
+      promise = fn.apply(this, args)
+      const result = await promise
+      return result
     } finally {
-      isExecuting = false;
+      isExecuting = false
     }
-  };
+  }
+}
+
+export function removeQueryParams(keys: string[]): string {
+  // 获取当前 URL
+  const url: string = parent.location.href
+
+  // 解析 URL，获取查询参数部分
+  const searchParams: URLSearchParams = new URLSearchParams(parent.location.search)
+
+  // 删除指定的键
+  keys.forEach((key: string) => {
+    searchParams.delete(key)
+  })
+
+  // 构建新的 URL
+  const newUrl: string = `${url.split('?')[0]}${
+    searchParams.size ? '?' : ''
+  }${searchParams.toString()}`
+
+  // 使用 pushState() 方法将新 URL 添加到浏览器历史记录中
+  parent.history.pushState(null, '', newUrl)
+
+  // 返回新的 URL
+  return newUrl
 }

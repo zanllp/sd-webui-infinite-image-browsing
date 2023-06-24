@@ -48,7 +48,8 @@ const {
   spinning
 } = useHookShareState().toRefs()
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, quickMoveTo,
-  addToSearchScanPathAndQuickMove, searchPathInfo, locInputValue, isLocationEditing, onLocEditEnter, onEditBtnClick
+  addToSearchScanPathAndQuickMove, searchPathInfo, locInputValue, isLocationEditing,
+  onLocEditEnter, onEditBtnClick, share
 } = useLocation(props)
 const {
   gridItems,
@@ -131,12 +132,12 @@ watch(
 
           <AButton size="small" v-if="isLocationEditing" @click="onLocEditEnter" type="primary">{{ $t('go') }}</AButton>
           <div v-else style="margin-left: 8px;">
-            <a @click.prevent="copyLocation">{{ $t('copy') }}</a><span style="margin: 0 4px;">/</span><a
-              @click.prevent.stop="onEditBtnClick">{{ $t('edit') }}</a>
+            <a @click.prevent="copyLocation" style="margin-right: 4px;">{{ $t('copy') }}</a> <a @click.prevent.stop="onEditBtnClick">{{ $t('edit') }}</a>
           </div>
         </div>
         <div class="actions">
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
+          <a class="opt" @click.prevent="share"> {{ $t('share') }} </a>
           <a-dropdown>
             <a class="opt" @click.prevent>
               {{ $t('quickMove') }}
