@@ -33,16 +33,11 @@ yarn
 yarn dev
 ```
 
-### Type-Check, Compile and Minify for Production
+
+### Compile and Minify for Production, Deliver to Production Mode Resources
 
 ```sh
 yarn build
-```
-
-### Deliver to Production Mode Resources
-
-```sh
-yarn deliver-dist
 ```
 
 ### Lint with [ESLint](https://eslint.org/)

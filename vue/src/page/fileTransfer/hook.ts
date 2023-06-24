@@ -511,6 +511,16 @@ export function useLocation(props: Props) {
     isLocationEditing.value = false
   })
 
+  const share = () => {
+    const loc = parent.location
+    const baseUrl = loc.href.substring(0, loc.href.length - loc.search.length)
+    const params = new URLSearchParams(loc.search)
+    params.set('action', 'open')
+    params.set('path', currLocation.value)
+    const url = `${baseUrl}?${params.toString()}`
+    copy2clipboardI18n(url, t('copyLocationUrlSuccessMsg'))
+  }
+
   return {
     locInputValue,
     isLocationEditing,
@@ -527,6 +537,7 @@ export function useLocation(props: Props) {
     to,
     stack,
     scroller,
+    share,
     quickMoveTo
   }
 }

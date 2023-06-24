@@ -144,11 +144,15 @@ const zh = {
   copy: '复制',
   edit: '编辑',
   document: '文档',
-  multiSelectTips: '您可以按住 Shift、Ctrl 或 Cmd 键，然后单击文件来进行多选删除/移动操作'
+  multiSelectTips: '您可以按住 Shift、Ctrl 或 Cmd 键，然后单击文件来进行多选删除/移动操作',
+  copyLocationUrlSuccessMsg: "复制完成，你可以通过复制的链接直接打开当前文件夹",
+  share: '分享'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  share: 'Share',
+  copyLocationUrlSuccessMsg: 'Copy completed, you can directly open the current folder through the copied link',
   multiSelectTips: 'You can hold down the Shift, Ctrl, or Cmd key and then click on files to perform batch delete/move operations',
   document: 'Document',
   copy: 'Copy',
