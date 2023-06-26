@@ -27,6 +27,7 @@ const emit = defineEmits<{
   (type: 'update:showMenuIdx', v: number): void
   (type: 'fileItemClick', event: MouseEvent, file: FileNodeInfo, idx: number): void
   (type: 'dragstart', event: DragEvent, idx: number): void
+  (type: 'dragend', event: DragEvent, idx: number): void
   (type: 'previewVisibleChange', value: boolean, last: boolean): void
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
 }>()
@@ -71,6 +72,7 @@ const imageSrc = computed(() => {
       :key="file.name"
       draggable="true"
       @dragstart="emit('dragstart', $event, idx)"
+      @dragend="emit('dragend', $event, idx)"
       @contextmenu="onRightClick"
       @click.capture="emit('fileItemClick', $event, file, idx)"
     >

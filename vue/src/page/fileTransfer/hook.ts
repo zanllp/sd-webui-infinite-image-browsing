@@ -1,4 +1,5 @@
 import { useGlobalStore, type FileTransferTabPane, type Shortcut } from '@/store/useGlobalStore'
+import { useImgSliStore } from '@/store/useImgSli'
 import { onLongPress, useElementSize } from '@vueuse/core'
 import { ref, computed, watch, onMounted, h, type Ref } from 'vue'
 import { gradioApp, parentWindow } from '@/util'
@@ -30,21 +31,14 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
 import { addScannedPath, removeScannedPath, toggleCustomTagToImg } from '@/api/db'
+import { FileTransferData, isFileTransferData, toRawFileUrl } from './util'
+export * from './util'
 
 export const stackCache = new Map<string, Page[]>()
 
 const global = useGlobalStore()
+const sli = useImgSliStore()
 const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
-const encode = encodeURIComponent
-export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
-  `/infinite_image_browsing/file?path=${encode(file.fullpath)}&t=${encode(file.date)}${
-    download ? `&disposition=${encode(file.name)}` : ''
-  }`
-export const toImageThumbnailUrl = (file: FileNodeInfo, size: string) =>
-  `/infinite_image_browsing/image-thumbnail?path=${encode(file.fullpath)}&size=${size}&t=${encode(
-    file.date
-  )}`
-
 export const { eventEmitter: events, useEventListen } = typedEventEmitter<{
   removeFiles(_: { paths: string[]; loc: string }): void
   addFiles(_: { files: FileNodeInfo[]; loc: string }): void
@@ -646,6 +640,7 @@ export function useFilesDisplay(props: Props) {
     itemSize
   }
 }
+
 const multiSelectTips = () =>
   h(
     'p',
@@ -653,11 +648,12 @@ const multiSelectTips = () =>
       style: {
         background: 'var(--zp-secondary-background)',
         padding: '8px',
-        borderLeft: '4px solid var(--primary-color)',
+        borderLeft: '4px solid var(--primary-color)'
       }
     },
     `Tips: ${t('multiSelectTips')}`
   )
+
 export function useFileTransfer() {
   const { currLocation, sortedFiles, currPage, multiSelectedIdxs, eventEmitter } =
     useHookShareState().toRefs()
@@ -670,6 +666,7 @@ export function useFileTransfer() {
 
   const onFileDragStart = (e: DragEvent, idx: number) => {
     const file = cloneDeep(sortedFiles.value[idx])
+    sli.fileDragging = true
     console.log('onFileDragStart set drag file ', e, idx, file)
     const files = [file]
     let includeDir = file.type === 'dir'
@@ -678,25 +675,26 @@ export function useFileTransfer() {
       files.push(...selectedFiles)
       includeDir = selectedFiles.some((v) => v.type === 'dir')
     }
+    const data: FileTransferData = {
+      includeDir,
+      loc: currLocation.value || 'search-result',
+      path: uniqBy(files, 'fullpath').map((f) => f.fullpath),
+      nodes: uniqBy(files, 'fullpath'),
+      __id: 'FileTransferData'
+    }
     e.dataTransfer!.setData(
       'text/plain',
-      JSON.stringify({
-        includeDir,
-        loc: currLocation.value || 'search-result',
-        path: uniqBy(files, 'fullpath').map((f) => f.fullpath)
-      })
+      JSON.stringify(data)
     )
   }
 
+  const onFileDragEnd = () => {
+    sli.fileDragging = false
+  }
+
   const onDrop = async (e: DragEvent) => {
-    type Data = {
-      path: string[]
-      loc: string
-      includeDir: boolean
-    }
-    const data = JSON.parse(e.dataTransfer?.getData('text') || '{}') as Data
-    console.log(data)
-    if (data.path && typeof data.includeDir !== 'undefined' && data.loc) {
+    const data = JSON.parse(e.dataTransfer?.getData('text') ?? '{}')
+    if (isFileTransferData(data)) {
       const toPath = currLocation.value
       if (data.loc === toPath) {
         return
@@ -724,7 +722,8 @@ export function useFileTransfer() {
   return {
     onFileDragStart,
     onDrop,
-    multiSelectedIdxs
+    multiSelectedIdxs,
+    onFileDragEnd
   }
 }
 

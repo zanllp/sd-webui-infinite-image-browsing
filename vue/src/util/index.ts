@@ -31,7 +31,11 @@ export const getTabIdxInSDWebui = () => {
 }
 
 export const switch2IBB = () => {
-  gradioApp().querySelector('#tabs')!.querySelectorAll('button')[getTabIdxInSDWebui()].click()
+  try {
+    gradioApp().querySelector('#tabs')!.querySelectorAll('button')[getTabIdxInSDWebui()].click()
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 export const asyncCheck = async <T>(getter: () => T, checkSize = 100, timeout = 1000) => {
@@ -153,4 +157,14 @@ export function removeQueryParams(keys: string[]): string {
 
   // 返回新的 URL
   return newUrl
+}
+
+
+export const createImage = (src: string) => {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = err => reject(err)
+    img.src = src
+  })
 }

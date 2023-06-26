@@ -65,7 +65,7 @@ const {
   onScroll,
 
 } = useFilesDisplay(props)
-const { onDrop, onFileDragStart } = useFileTransfer()
+const { onDrop, onFileDragStart,  onFileDragEnd } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions(
   props,
   { openNext }
@@ -199,7 +199,7 @@ watch(
             <file-item :idx="idx" :file="file"
               :full-screen-preview-image-url="sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : ''"
               v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :view-mode="viewMode"
-              @file-item-click="onFileItemClick" @dragstart="onFileDragStart"
+              @file-item-click="onFileItemClick" @dragstart="onFileDragStart" @dragend=" onFileDragEnd"
               @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick" />
           </template>
           <template v-if="props.walkModePath" #after>
