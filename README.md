@@ -43,6 +43,8 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - Supports sending files directly to other folders via context menu.
 - Support for automatic refresh
 
+### 🆚 image comparison (similar to Imgsli)
+
 ### 🌐 Multilingual Support
 - Currently supports Simplified Chinese/English/German.
 - If you would like to add a new language, please refer to [i18n.ts](https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/vue/src/i18n.ts) and submit the relevant code.
@@ -88,6 +90,9 @@ https://user-images.githubusercontent.com/25872019/235327735-bfb50ea7-7682-4e50-
 If you, like me, don't need to view the generation information, you can choose to simply minimize this panel, and all contextual operations will still be available.
 
 <img width="599" alt="image" src="https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/f26abe8c-7a76-45c3-9d7f-18ae8b6b6a91">
+
+## Image comparison
+<img width="950" alt="image" src="https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/eae3f7e8-11cf-41f5-8b4d-c56d51669086">
 
 ### Right-click menu
 <img width="536" alt="image" src="https://user-images.githubusercontent.com/25872019/232162244-e728d510-b6c6-45e6-afb3-872bd67db05b.png">
