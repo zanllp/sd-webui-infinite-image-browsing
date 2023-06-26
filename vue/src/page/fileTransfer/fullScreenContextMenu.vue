@@ -23,6 +23,7 @@ import { getImageSelectedCustomTag, type Tag } from '@/api/db'
 import { createReactiveQueue } from '@/util'
 import { toRawFileUrl } from './hook'
 import ContextMenu from './ContextMenu.vue'
+import { useWatchDocument } from 'vue3-ts-util'
 
 const global = useGlobalStore()
 const el = ref<HTMLElement>()
@@ -36,6 +37,7 @@ const tags = computed(() => {
     return [...p, { ...c, selected: !!selectedTag.value.find((v) => v.id === c.id) }]
   }, [] as (Tag & { selected: boolean })[])
 })
+const currImgResolution = ref('')
 const q = createReactiveQueue()
 const imageGenInfo = ref('')
 const emit = defineEmits<{
@@ -94,6 +96,21 @@ useResizeAndDrag(el, resizeHandle, dragHandle, {
 function getParNode (p: any) {
   return p.parentNode as HTMLDivElement
 }
+
+useWatchDocument('load', e => {
+  const el = e.target as HTMLImageElement
+  if (el.className === 'ant-image-preview-img') {
+    currImgResolution.value = `${el.width} x ${el.height}`
+  }
+}, { capture: true })
+
+const baseInfoTags = computed(() => {
+  const tags: { val: string, name: string }[] = [{ name: t('fileName'), val: props.file.name }, { name: t('fileSize'), val: props.file.size }]
+  if (currImgResolution.value) {
+    tags.push({ name: t('resolution'), val: currImgResolution.value })
+  }
+  return tags
+})
 </script>
 
 <template>
@@ -152,6 +169,16 @@ function getParNode (p: any) {
         </div>
       </div>
       <div class="gen-info" v-if="state.expanded">
+        <div class="tags">
+          <span class="tag" v-for="tag in baseInfoTags" :key="tag.name">
+            <span class="name">
+              {{ tag.name }}
+            </span>
+            <span class="value">
+              {{ tag.val }}
+            </span>
+          </span>
+        </div>
         {{ imageGenInfo }}
       </div>
     </div>
@@ -187,6 +214,28 @@ function getParNode (p: any) {
     z-index: 1;
     padding-top: 4px;
     position: relative;
+
+    .tags {
+      .tag {
+        display: inline-block;
+        overflow: hidden;
+        border-radius: 4px;
+        margin-right: 8px;
+        border: 2px solid var(--zp-primary);
+      }
+
+
+      .name {
+        background-color: var(--zp-primary);
+        color: var(--zp-primary-background);
+        padding: 4px;
+      }
+
+      .value {
+        padding: 4px;
+      }
+
+    }
   }
 
   &.unset-size {
