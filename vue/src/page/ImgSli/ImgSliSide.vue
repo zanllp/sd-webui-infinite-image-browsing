@@ -1,0 +1,49 @@
+<script setup lang="ts">
+import { useImgSliStore } from '@/store/useImgSli'
+import { toRawFileUrl } from '../fileTransfer/util'
+import { computed } from 'vue'
+const props = defineProps<{ side: 'left' | 'right' }>()
+const sli = useImgSliStore()
+const style = computed(() => {
+  let x = ''
+  const width = document.body.getBoundingClientRect().width - 48 - 7
+  const per = sli.splitPercent
+
+  if (props.side === 'left') {
+    x = `calc(50% - ${(per - 50) / 100 * width}px)`
+  } else {
+    x = `calc(-50% - ${(per - 50) / 100 * width}px)`
+  }
+  return `${sli.maxEdge === 'width' ? 'width:100%' : 'height:100%'};transform: translate(${x}, -50%)`
+})
+</script>
+
+<template>
+  <div class="container" v-if="sli?.[side]">
+    <img class="img" :class="[side]" :style="style" :src="toRawFileUrl(sli[side]!)" />
+  </div>
+</template>
+
+<style lang="scss" scoped>
+
+.container {
+  position: relative;
+  user-select: none;
+  height: 100%;
+
+  .img {
+    position: absolute;
+    top: 50%;
+  }
+
+  .left {
+    transform: translate(50%, -50%);
+    right: 0;
+  }
+
+  .right {
+    transform: translate(-50%, -50%);
+    left: 0;
+  }
+}
+</style>

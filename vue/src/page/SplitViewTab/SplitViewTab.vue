@@ -9,6 +9,8 @@ import { debounce, uniqueId } from 'lodash-es'
 import edgeTrigger from './edgeTrigger.vue'
 import { t } from '@/i18n'
 import { tryOnMounted, useDocumentVisibility, type Fn } from '@vueuse/core'
+import ImgSliDrawer from '../ImgSli/ImgSliDrawer.vue'
+
 
 
 const global = useGlobalStore()
@@ -79,8 +81,8 @@ const emitReturnToIIB = debounce(() => globalEvents.emit('return-to-iib'), 100)
 tryOnMounted(async () => {
   const par = window.parent as Window & { get_uiCurrentTabContent (): undefined | HTMLButtonElement, onUiTabChange (cb: Fn): void }
   if (!await asyncCheck(() => par?.onUiTabChange, 200, 30_000)) {
-    console.log('watch tab change failed');
-    return 
+    console.log('watch tab change failed')
+    return
   }
   par.onUiTabChange(() => {
     const el = par.get_uiCurrentTabContent()
@@ -104,6 +106,7 @@ watch(useDocumentVisibility(), v => v && emitReturnToIIB())
         </edge-trigger>
       </pane>
     </splitpanes>
+    <img-sli-drawer />
   </div>
 </template>
 <style scoped lang="scss">

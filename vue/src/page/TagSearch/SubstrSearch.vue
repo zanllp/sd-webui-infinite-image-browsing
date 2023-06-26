@@ -31,7 +31,8 @@ const {
   onFileItemClick,
   scroller,
   showMenuIdx,
-  onFileDragStart
+  onFileDragStart,
+  onFileDragEnd
 } = useImageSearch()
 const substr = ref('')
 
@@ -99,7 +100,7 @@ useGlobalEventListen('return-to-iib', async () => {
           <file-item-cell :idx="idx" :file="file" v-model:show-menu-idx="showMenuIdx" @file-item-click="onFileItemClick"
             :full-screen-preview-image-url="images[previewIdx] ? toRawFileUrl(images[previewIdx]) : ''"
             :selected="multiSelectedIdxs.includes(idx)" @context-menu-click="onContextMenuClickU"
-            @dragstart="onFileDragStart"
+            @dragstart="onFileDragStart" @dragend="onFileDragEnd"
             @preview-visible-change="onPreviewVisibleChange" />
         </template>
       </RecycleScroller>
