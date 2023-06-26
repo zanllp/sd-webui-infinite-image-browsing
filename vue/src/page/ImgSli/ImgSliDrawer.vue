@@ -1,66 +1,43 @@
 <script setup lang="ts">
-// @ts-ignore
-import { Splitpanes, Pane } from 'splitpanes'
 import DraggingPort from './DraggingPort.vue'
 import { useImgSliStore } from '@/store/useImgSli'
-import ImgSliSide from './ImgSliSide.vue'
+import ImgSliSplitPane from './ImgSliComparePane.vue'
+import { ref } from 'vue'
 
 const sli = useImgSliStore()
-
-
-const onResize = ([{ size }]: { size: number }[]) => {
-  sli.splitPercent = size
-}
+const splitpane = ref<{ requestFullScreen (): void }>()
 </script>
 <template>
-  <ADrawer width="100vw" v-model:visible="sli.drawerVisible" destroy-on-close class="img-sli">
-    <splitpanes class="default-theme" @resize="onResize">
-      <pane>
-        <ImgSliSide side="left" />
-      </pane>
-      <pane>
-        <ImgSliSide side="right" />
-      </pane>
-    </splitpanes>
+  <ADrawer width="100vw" v-model:visible="sli.drawerVisible" destroy-on-close class="img-sli" :close-icon="null">
+    <ImgSliSplitPane ref="splitpane" v-if="sli.left && sli.right" :left="sli.left" :right="sli.right" />
+    <template #footer>
+      <div class="actions">
+        <AButton @click="sli.drawerVisible = false">{{ $t('close') }}</AButton>
+        <AButton @click="splitpane?.requestFullScreen()">{{ $t('fullscreenview') }}</AButton>
+      </div>
+    </template>
   </ADrawer>
   <DraggingPort />
 </template>
 
 <style lang="scss">
-.img-sli .default-theme {
-  .splitpanes {
-    background-color: #f8f8f8;
+.img-sli {
+  .ant-drawer-header,.ant-drawer-body {
+    padding: 0;
   }
 
-  .splitpanes__splitter {
-    background-color: #ccc;
-    position: relative;
-    width: 2px;
-  }
+  .default-theme {
 
-  .splitpanes__splitter:before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    transition: opacity 0.4s;
-    opacity: 0;
-    z-index: 1;
-  }
+    .splitpanes__splitter {
+      background-color: #ccc;
+      position: relative;
+      width: 4px;
+    }
 
-  .splitpanes__splitter:hover:before {
-    opacity: 1;
-  }
+    .splitpanes {
+      background-color: #f8f8f8;
+    }
 
-  .splitpanes--vertical>.splitpanes__splitter:before {
-    left: -30px;
-    right: -30px;
-    height: 100%;
   }
-
-  .splitpanes--horizontal>.splitpanes__splitter:before {
-    top: -30px;
-    bottom: -30px;
-    width: 100%;
-  }
-}</style>
+}
+</style>

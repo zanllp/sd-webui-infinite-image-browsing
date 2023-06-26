@@ -148,11 +148,15 @@ const zh = {
   copyLocationUrlSuccessMsg: '复制完成，你可以通过复制的链接直接打开当前文件夹',
   share: '分享',
   dragImageHere: '拖拽图像到这里',
-  imgCompare: '图像对比'
+  imgCompare: '图像对比',
+  close: '关闭',
+  fullscreenview: '全屏查看',
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  close: 'Close',
+  fullscreenview: 'Fullscreen View',
   imgCompare: 'Image Comparison',
   share: 'Share',
   dragImageHere: 'Drag image here',
@@ -253,7 +257,7 @@ const en: Record<keyof typeof zh, string> = {
   largePreviewGrid: 'Large preview grid',
   sortBy: 'Sort by',
   moveSelectedFilesTo: 'Move selected files to',
-  confirm: 'Confirm?',
+  confirm: 'Confirm',
   download: 'Download',
   local: 'Local',
   sendImageFailed:
