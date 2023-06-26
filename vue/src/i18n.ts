@@ -28,7 +28,7 @@ const zh = {
   largePreviewGrid: '大尺寸预览网格',
   sortBy: '按照',
   moveSelectedFilesTo: '下列文件移动至',
-  confirm: '确定?',
+  confirm: '确定',
   download: '下载',
   local: '本地',
   sendImageFailed: '发送图像失败，请携带console的错误消息找开发者',
@@ -151,11 +151,17 @@ const zh = {
   imgCompare: '图像对比',
   close: '关闭',
   fullscreenview: '全屏查看',
+  fileName: '文件名',
+  resolution: '分辨率',
+  fileSize: '文件大小'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
   close: 'Close',
+  fileName: 'File Name',
+  resolution: 'Resolution',
+  fileSize: 'File Size',
   fullscreenview: 'Fullscreen View',
   imgCompare: 'Image Comparison',
   share: 'Share',
@@ -395,7 +401,7 @@ const de: Partial<Record<keyof typeof zh, string>> = {
   largePreviewGrid: 'Grosses Vorschau-Rasteransicht',
   sortBy: 'Sortieren nach',
   moveSelectedFilesTo: 'Ausgewählte Dateien verschieben nach',
-  confirm: 'Bestätigen?',
+  confirm: 'Bestätigen',
   download: 'Herunterladen',
   local: 'Lokal',
   sendImageFailed:

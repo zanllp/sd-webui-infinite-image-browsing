@@ -12,11 +12,3 @@ defineProps<{
 <ImgSliComparePane :left="left" :right="right">
 </ImgSliComparePane>
 </template>
-
-<style lang="scss" scoped>
-.actions {
-  &>* {
-    margin-right: 8px;
-  }
-}
-</style>

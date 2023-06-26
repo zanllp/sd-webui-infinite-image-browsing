@@ -36,7 +36,7 @@ const openInNewTab = () => {
     type: 'img-sli',
     left: left.value,
     right: right.value,
-    name: `${t('imgCompare')}( ${left.value.name} vs ${right.value.name})`,
+    name: `${t('imgCompare')} ( ${left.value.name} vs ${right.value.name})`,
     key: uniqueId()
   }
   g.tabList[0].panes.push(pane)
