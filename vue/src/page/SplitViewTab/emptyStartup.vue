@@ -19,6 +19,7 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
   let pane: TabPane
   switch (type) {
     case 'tag-search-matched-image-grid':
+    case 'img-sli':
       return
     case 'global-setting':
     case 'tag-search':

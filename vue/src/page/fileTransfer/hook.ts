@@ -708,7 +708,7 @@ export function useFileTransfer() {
         multiSelectTips()
       ])
       Modal.confirm({
-        title: t('confirm'),
+        title: t('confirm') + '?',
         content,
         maskClosable: true,
         async onOk() {

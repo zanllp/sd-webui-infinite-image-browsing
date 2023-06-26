@@ -1,5 +1,6 @@
 import type { GlobalConf } from '@/api'
 import type { MatchImageByTagsReq } from '@/api/db'
+import { FileNodeInfo } from '@/api/files'
 import { i18n, t } from '@/i18n'
 import { getPreferredLang } from '@/i18n'
 import { SortMethod } from '@/page/fileTransfer/fileSort'
@@ -28,6 +29,11 @@ interface TagSearchMatchedImageGridTabPane extends TabPaneBase {
   selectedTagIds: MatchImageByTagsReq
   id: string
 }
+export interface ImgSliTabPane extends TabPaneBase {
+  type: 'img-sli'
+  left: FileNodeInfo
+  right: FileNodeInfo
+}
 
 export interface FileTransferTabPane extends TabPaneBase {
   type: 'local'
@@ -36,7 +42,7 @@ export interface FileTransferTabPane extends TabPaneBase {
   stackKey?: string
 }
 
-export type TabPane = FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane
+export type TabPane = FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane | ImgSliTabPane
 
 /**
  * This interface represents a tab, which contains an array of panes, an ID, and a key

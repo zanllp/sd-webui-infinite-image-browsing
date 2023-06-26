@@ -153,3 +153,10 @@ body {
 .line-clamp-3 {
   @include line-clamp(3);
 }
+
+
+.actions {
+  &>* {
+    margin-right: 8px;
+  }
+}
