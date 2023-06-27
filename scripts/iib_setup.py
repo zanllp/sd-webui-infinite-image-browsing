@@ -28,7 +28,7 @@ def on_ui_tabs():
 
                 def on_img_change():
                     send_img_path["value"] = ""  # 真正收到图片改变才允许放行
-
+                
                 img.change(on_img_change)
 
                 img_update_trigger = gr.Button(
@@ -42,10 +42,10 @@ def on_ui_tabs():
                         path = send_img_path.get("value")
                         logger.info("img_update_func %s", path)
                         img = Image.open(path)
-                        info = read_info_from_image(img)
+                        info = read_info_from_image(img, path)
                         return img, info
                     except Exception as e:
-                        logger.error("img_update_func %s",e)
+                        logger.error("img_update_func err %s",e)
 
                 img_file_info = gr.Textbox(elem_id="iib_hidden_img_file_info")
                 img_update_trigger.click(img_update_func, outputs=[img, img_file_info])

@@ -29,21 +29,23 @@ is_win = platform.system().lower().find("windows") != -1
 
 try:
     from dotenv import load_dotenv
-    load_dotenv(os.path.join(cwd, ".env"))
-except BaseException as e:
-    print(e)
 
+    load_dotenv(os.path.join(cwd, ".env"))
+except Exception as e:
+    print(e)
 
 
 def get_sd_webui_conf(**kwargs):
     try:
         from modules.shared import opts
+
         return opts.data
     except:
         pass
     try:
         with open(kwargs.get("sd_webui_config"), "r") as f:
             import json
+
             return json.loads(f.read())
     except:
         pass
@@ -121,7 +123,6 @@ def convert_to_bytes(file_size_str):
         raise ValueError(f"Invalid file size string '{file_size_str}'")
 
 
-
 def is_valid_image_path(path):
     """
     判断给定的路径是否是图像文件
@@ -134,8 +135,6 @@ def is_valid_image_path(path):
     if not imghdr.what(abs_path):  # 判断是否是图像文件
         return False
     return True
-
-
 
 
 def get_temp_path():
@@ -168,6 +167,7 @@ def get_temp_path():
 
 temp_path = get_temp_path()
 
+
 def get_enable_access_control():
     ctrl = os.getenv("IIB_ACCESS_CONTROL")
     if ctrl == "enable":
@@ -176,17 +176,23 @@ def get_enable_access_control():
         return False
     try:
         from modules.shared import cmd_opts
-        return cmd_opts.share or cmd_opts.ngrok or cmd_opts.listen or cmd_opts.server_name
+
+        return (
+            cmd_opts.share or cmd_opts.ngrok or cmd_opts.listen or cmd_opts.server_name
+        )
     except:
         pass
     return False
 
+
 enable_access_control = get_enable_access_control()
+
 
 def get_locale():
     import locale
+
     env_lang = os.getenv("IIB_SERVER_LANG")
-    if env_lang in ['zh', 'en']:
+    if env_lang in ["zh", "en"]:
         return env_lang
     lang, _ = locale.getdefaultlocale()
     return "zh" if lang and lang.startswith("zh") else "en"
@@ -198,23 +204,43 @@ locale = get_locale()
 def get_formatted_date(timestamp: float) -> str:
     return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
+
 def get_modified_date(folder_path: str):
     return get_formatted_date(os.path.getmtime(folder_path))
 
+
 def get_created_date(folder_path: str):
     return get_formatted_date(os.path.getctime(folder_path))
+
 
 def unique_by(seq, key_func):
     seen = set()
     return [x for x in seq if not (key := key_func(x)) in seen and not seen.add(key)]
 
 
-def read_info_from_image(image) -> str:
+def get_img_geninfo_txt_path(path: str):
+    txt_path = re.sub(r"\..+$", ".txt", path)
+    if os.path.exists(txt_path):
+        return txt_path
+
+def read_info_from_image(image, path="") -> str:
+    """
+    Reads metadata from an image file.
+
+    Args:
+        image (PIL.Image.Image): The image object to read metadata from.
+        path (str): Optional. The path to the image file. Used to look for a .txt file with additional metadata.
+
+    Returns:
+        str: The metadata as a string.
+    """
     items = image.info or {}
     geninfo = items.pop("parameters", None)
+
     if "exif" in items:
         exif = piexif.load(items["exif"])
         exif_comment = (exif or {}).get("Exif", {}).get(piexif.ExifIFD.UserComment, b"")
+
         try:
             exif_comment = piexif.helper.UserComment.load(exif_comment)
         except ValueError:
@@ -223,6 +249,16 @@ def read_info_from_image(image) -> str:
         if exif_comment:
             items["exif comment"] = exif_comment
             geninfo = exif_comment
+
+    if not geninfo and path:
+        try:
+            txt_path = get_img_geninfo_txt_path(path)
+            if txt_path:
+                with open(txt_path) as f:
+                    geninfo = f.read()
+        except Exception as e:
+            pass
+
     return geninfo
 
 
@@ -336,16 +372,16 @@ def open_folder(folder_path, file_path=None):
     folder = os.path.realpath(folder_path)
     if file_path:
         file = os.path.join(folder, file_path)
-        if os.name == 'nt':
-            subprocess.run(['explorer', '/select,', file])
-        elif sys.platform == 'darwin':
-            subprocess.run(['open', '-R', file])
-        elif os.name == 'posix':
-            subprocess.run(['xdg-open', file])
+        if os.name == "nt":
+            subprocess.run(["explorer", "/select,", file])
+        elif sys.platform == "darwin":
+            subprocess.run(["open", "-R", file])
+        elif os.name == "posix":
+            subprocess.run(["xdg-open", file])
     else:
-        if os.name == 'nt':
-            subprocess.run(['explorer', folder])
-        elif sys.platform == 'darwin':
-            subprocess.run(['open', folder])
-        elif os.name == 'posix':
-            subprocess.run(['xdg-open', folder])
+        if os.name == "nt":
+            subprocess.run(["explorer", folder])
+        elif sys.platform == "darwin":
+            subprocess.run(["open", folder])
+        elif os.name == "posix":
+            subprocess.run(["xdg-open", folder])
