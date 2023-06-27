@@ -49,6 +49,8 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - 按住 Ctrl、Shift 或 Cmd 键可选择多个项目。
 - 支持通过右键菜单直接将文件发送到其他文件夹。
 
+### 🆚 图像对比 (类似ImgSli)
+
 ### 🌐 多语言支持
 - 目前支持简体中文/英文/德语。
 - 如果您希望添加新的语言，请参考 [i18n.ts](https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/vue/src/i18n.ts) 并提交相关的代码。
@@ -84,7 +86,9 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 图像搜索支持翻译，你需要在插件文件夹下放置一个tags-translate.csv的文件，你可以在issue中找到这个文件。欢迎其他语言的也分享出来，方便大家使用。
 <img width="1109" alt="image" src="https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/62d1ffe3-2d1f-4449-803a-970273753855">
 <img width="620" alt="image" src="https://user-images.githubusercontent.com/25872019/234639759-2d270fe5-b24b-4542-b75a-a025ba78ec89.png">
+## 图像比较
 
+![ezgif com-video-to-gif](https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/4023317b-0b2d-41a3-8155-c4862eb43846)
 
 ## 全屏预览
 <img width="1024" alt="image" src="https://user-images.githubusercontent.com/25872019/232167416-32a8b19d-b766-4f98-88f6-a1d48eaebec0.png">
