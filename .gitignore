@@ -1,4 +1,4 @@
-BaiduPCS-Go*
+
 *.log
 __pycache__
 iib.db
@@ -8,3 +8,4 @@ conf.json
 iib.db-journal
 .env
 standalone.cmd
+.vscode

@@ -19,7 +19,7 @@ def get_exif_data(file_path):
     params = None
     try:
         with Image.open(file_path) as img:
-            info = read_info_from_image(img)
+            info = read_info_from_image(img, file_path)
             params = parse_generation_parameters(info)
     except Exception as e:
         if is_dev:

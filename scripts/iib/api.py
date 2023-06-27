@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import os
+import re
 import shutil
 import sqlite3
 from scripts.iib.tool import (
@@ -15,7 +16,8 @@ from scripts.iib.tool import (
     get_windows_drives,
     get_sd_webui_conf,
     get_valid_img_dirs,
-    open_folder
+    open_folder,
+    get_img_geninfo_txt_path
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -171,6 +173,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     shutil.rmtree(path)
                 else:
                     os.remove(path)
+                    txt_path = get_img_geninfo_txt_path(path)
+                    if txt_path:
+                        os.remove(txt_path)
                     img = DbImg.get(conn, os.path.normpath(path))
                     if img:
                         logger.info("delete file: %s", path)
@@ -197,6 +202,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             check_path_trust(path)
             try:
                 shutil.move(path, req.dest)
+                txt_path = get_img_geninfo_txt_path(path)
+                if txt_path:
+                    shutil.move(txt_path, req.dest)
                 img = DbImg.get(conn, os.path.normpath(path))
                 if img:
                     DbImg.safe_batch_remove(conn, [img.id])
@@ -349,7 +357,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     @app.get(pre + "/image_geninfo", dependencies=[Depends(get_token)])
     async def image_geninfo(path: str):
         with Image.open(path) as img:
-            return read_info_from_image(img)
+            return read_info_from_image(img, path)
 
     class CheckPathExistsReq(BaseModel):
         paths: List[str]
@@ -431,6 +439,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     @app.get(db_pre + "/img_selected_custom_tag", dependencies=[Depends(get_token)])
     async def get_img_selected_custom_tag(path: str):
         path = os.path.normpath(path)
+        if not is_valid_image_path(path):
+            return []
         conn = DataBase.get_conn()
         update_extra_paths(conn)
         if not is_path_under_parents(path):
