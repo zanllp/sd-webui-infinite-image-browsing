@@ -92,7 +92,8 @@ If you, like me, don't need to view the generation information, you can choose t
 <img width="599" alt="image" src="https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/f26abe8c-7a76-45c3-9d7f-18ae8b6b6a91">
 
 ## Image comparison
-<img width="950" alt="image" src="https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/eae3f7e8-11cf-41f5-8b4d-c56d51669086">
+
+![ezgif com-video-to-gif](https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/4023317b-0b2d-41a3-8155-c4862eb43846)
 
 ### Right-click menu
 <img width="536" alt="image" src="https://user-images.githubusercontent.com/25872019/232162244-e728d510-b6c6-45e6-afb3-872bd67db05b.png">
