@@ -4,7 +4,6 @@ from scripts.iib.tool import locale
 from scripts.iib.tool import read_info_from_image
 from PIL import Image
 from scripts.iib.logger import logger
-from typing import Any
 
 from fastapi import FastAPI
 import gradio as gr

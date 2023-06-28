@@ -9,6 +9,7 @@ from typing import Dict
 import sys
 import piexif
 import piexif.helper
+import json
 
 sd_img_dirs = [
     "outdir_txt2img_samples",
@@ -43,10 +44,16 @@ def get_sd_webui_conf(**kwargs):
     except:
         pass
     try:
-        with open(kwargs.get("sd_webui_config"), "r") as f:
-            import json
-
-            return json.loads(f.read())
+        sd_conf_path = kwargs.get("sd_webui_config")
+        with open(sd_conf_path, "r") as f:
+            obj = json.loads(f.read())
+            if kwargs.get("sd_webui_path_relative_to_config"):
+                for dir in sd_img_dirs:
+                    if not os.path.isabs(obj[dir]):
+                        obj[dir] = os.path.normpath(
+                            os.path.join(sd_conf_path, "../", obj[dir])
+                        )
+            return obj
     except:
         pass
     return {}
@@ -222,6 +229,7 @@ def get_img_geninfo_txt_path(path: str):
     txt_path = re.sub(r"\..+$", ".txt", path)
     if os.path.exists(txt_path):
         return txt_path
+
 
 def read_info_from_image(image, path="") -> str:
     """
