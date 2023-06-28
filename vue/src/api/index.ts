@@ -7,16 +7,14 @@ import cookie from 'js-cookie'
 import { delay } from 'vue3-ts-util'
 import { h, ref } from 'vue'
 import 'ant-design-vue/es/input/style/index.css'
+import sjcl from 'sjcl'
 export const axiosInst = axios.create({
   baseURL: '/infinite_image_browsing'
 })
 
-async function hash(data: string) {
-  const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(data))
-  const hashHex = Array.prototype.map
-    .call(new Uint8Array(digest), (x) => ('00' + x.toString(16)).slice(-2))
-    .join('')
-  return hashHex
+const sha256 = (data: string) => {
+  const hash = sjcl.hash.sha256.hash(data)
+  return sjcl.codec.hex.fromBits(hash)
 }
 
 axiosInst.interceptors.response.use(
@@ -42,7 +40,7 @@ axiosInst.interceptors.response.use(
         if (!key) {
           return
         }
-        cookie.set('IIB_S', await hash(key + '_ciallo'))
+        cookie.set('IIB_S', sha256(key + '_ciallo'))
         await delay(100)
         location.reload()
       }
