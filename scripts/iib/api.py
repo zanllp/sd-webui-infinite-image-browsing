@@ -80,6 +80,13 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         mem["EXTRA_PATHS"] = [x.path for x in r]
 
 
+    def safe_commonpath(seq):
+        try:
+            return os.path.commonpath(seq)
+        except Exception as e:
+            logger.error(e)
+            return ''
+
     def is_path_under_parents(path, parent_paths: List[str] = []):
         """
         Check if the given path is under one of the specified parent paths.
@@ -92,13 +99,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 parent_paths = img_search_dirs + mem["EXTRA_PATHS"] + kwargs.get("extra_paths_cli", [])
             path = os.path.normpath(path)
             for parent_path in parent_paths:
-                if (
-                    os.path.commonpath([path, parent_path])
-                    == parent_path
-                ):
+                if (safe_commonpath([path, parent_path]) == parent_path):
                     return True
-        except:
-            pass
+        except Exception as e:
+            logger.error(e)
         return False
 
     def is_path_trusted(path: str):
