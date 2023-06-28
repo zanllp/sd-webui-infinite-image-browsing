@@ -80,7 +80,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         mem["EXTRA_PATHS"] = [x.path for x in r]
 
 
-    def is_path_under_parents(path, parent_paths = img_search_dirs + mem["EXTRA_PATHS"] + kwargs.get("extra_paths_cli", [])):
+    def is_path_under_parents(path, parent_paths: List[str] = []):
         """
         Check if the given path is under one of the specified parent paths.
         :param path: The path to check.
@@ -88,6 +88,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         :return: True if the path is under one of the parent paths, False otherwise.
         """
         try:
+            if not parent_paths:
+                parent_paths = img_search_dirs + mem["EXTRA_PATHS"] + kwargs.get("extra_paths_cli", [])
             path = os.path.normpath(path)
             for parent_path in parent_paths:
                 if (
@@ -467,9 +469,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         if not is_path_under_parents(path):
             raise HTTPException(
                 400,
-                "当前文件不在搜索路径内，你可以将它添加到扫描路径再尝试。"
+                "当前文件不在搜索路径内，你可以将它添加到扫描路径再尝试。在右上角的\"更多\"里面"
                 if locale == "zh"
-                else "The current file is not within the scan path. You can add it to the scan path and try again.",
+                else "The current file is not within the scan path. You can add it to the scan path and try again. In the top right corner, click on \"More\".",
             )
         img = DbImg.get(conn, path)
         if not img:

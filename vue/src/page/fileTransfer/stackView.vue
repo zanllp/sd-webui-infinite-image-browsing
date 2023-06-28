@@ -203,9 +203,11 @@ watch(
               @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick" />
           </template>
           <template v-if="props.walkModePath" #after>
-            <AButton @click="loadNextDir" :loading="loadNextDirLoading" block type="primary" :disabled="!canLoadNext"
+            <div style="padding: 16px 0 32px;">
+              <AButton @click="loadNextDir" :loading="loadNextDirLoading" block type="primary" :disabled="!canLoadNext" 
               ghost>
               {{ $t('loadNextPage') }}</AButton>
+            </div>
           </template>
         </RecycleScroller>
         <div v-if="previewing" class="preview-switch">
