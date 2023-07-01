@@ -19,10 +19,6 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - 生成缓存后，图像可以在几毫秒内显示。
 - 默认使用缩略图显示图像，默认大小为256像素，您可以在全局设置页面中调整缩略图大小。
 
-### 🚶‍♂️ "Walk"模式
-- 自动加载下一个文件夹 `(类似于 os.walk)`，可让您无需分页浏览所有图像。
-- 已测试可正常处理超过 27,000 个文件。
-
 ### 🔍 图像搜索和收藏
 - 将会把Prompt、Model、Lora等信息转成标签，将根据使用频率排序以供进行精确的搜索。
 - 支持标签自动完成、翻译和自定义。
@@ -41,6 +37,10 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - 支持无需 sd-webui 单独运行。
 - 几乎所有功能都可以正常使用。
 - [点击此处获取详情](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47)。
+
+### "Walk"模式
+- 自动加载下一个文件夹 `(类似于 os.walk)`，可让您无需分页浏览所有图像。
+- 已测试可正常处理超过 27,000 个文件。
 
 ### 🌳 基于文件树结构的预览和文件操作
 - 支持基于文件树结构的预览。
