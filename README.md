@@ -13,10 +13,6 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - Once caching is generated, images can be displayed in just a few milliseconds.
 - Images are displayed by default using thumbnails with a default size of 256 pixels. You can adjust the size of the thumbnails in the global settings page.
 
-### 🚶‍♂️ 'Walk' Mode
-- Automatically load the next folder `(similar to os.walk)`, allowing you to browse all images without paging.
-- Tested to work properly with over 27,000 files.
-
 ### 🔍 Image Search & Favorite
 - The prompt, model, Lora, and other information will be converted into tags and sorted by frequency of use for precise searching.
 - Supports tag autocomplete, translation, and customization.
@@ -35,6 +31,10 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - Supports standalone operation without sd-webui.
 - Almost all functions can be used normally.
 - [Click here for details](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47).
+
+### "Walk" Mode
+- Automatically load the next folder `(similar to os.walk)`, allowing you to browse all images without paging.
+- Tested to work properly with over 27,000 files.
 
 ### 🌳 Preview based on File Tree Structure & File operations
 - Supports preview based on the file tree structure.
