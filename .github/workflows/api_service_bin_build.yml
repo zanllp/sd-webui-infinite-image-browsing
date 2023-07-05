@@ -49,8 +49,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: app.py
-          onefile: true
-          output-filename: iib_api_server
+          output-file: iib_api_server
           output-dir: out
 
       - name: Upload Artifacts
@@ -58,6 +57,10 @@ jobs:
         with:
           name: ${{ runner.os }} Build
           path: |
-            build/*.exe
-            build/*.bin
-            build/*.app/**/*
+            out/*.exe
+            out/*.bin
+            out/*.app/**/*
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.x
