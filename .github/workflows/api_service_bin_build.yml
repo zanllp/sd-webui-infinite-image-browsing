@@ -2,22 +2,8 @@ name: api_service_bin_build
 
 on:
   push:
-    branches:
-      - '**'
-    paths-ignore:
-      - docs
-      - asset
-      - .vscode
-      - README.md
-
-  pull_request:
-    branches:
-      - master
-    paths-ignore:
-      - docs
-      - asset
-      - .vscode
-      - README.md
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -27,10 +13,11 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    permissions:
+      contents: write
     steps:
       - name: Check-out repository
         uses: actions/checkout@v3
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -60,7 +47,29 @@ jobs:
             out/*.exe
             out/*.bin
             out/*.app/**/*
-      - name: Use Node.js
-        uses: actions/setup-node@v2
+
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
         with:
-          node-version: 18.x
+          workspaces: './vue/src-tauri -> target'
+
+      - name: Install frontend dependencies
+        # If you don't have `beforeBuildCommand` configured you may want to build your frontend here too.
+        run: yarn install # Change this to npm, yarn or pnpm.
+        
+
+      - name: Build the app
+        uses: tauri-apps/tauri-action@v0
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: vue
+          tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
+          releaseName: 'App Name v__VERSION__' # tauri-action replaces \_\_VERSION\_\_ with the app version.
+          releaseBody: 'See the assets to download and install this version.'
+          releaseDraft: true
+          prerelease: false
