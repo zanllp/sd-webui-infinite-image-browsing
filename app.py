@@ -93,6 +93,8 @@ class AppUtils:
         update_image_index: bool = False,
         extra_paths: List[str] = [],
         sd_webui_path_relative_to_config=False,
+        allow_cors = False,
+        enable_shutdown = False
     ):
         """
         Parameter definitions can be found by running the `python app.py -h `command or by examining the setup_parser() function.
@@ -101,6 +103,8 @@ class AppUtils:
         self.update_image_index = update_image_index
         self.extra_paths = extra_paths
         self.sd_webui_path_relative_to_config = sd_webui_path_relative_to_config
+        self.allow_cors = allow_cors
+        self.enable_shutdown = enable_shutdown
 
     def set_params(self, *args, **kwargs) -> None:
         """改变参数，与__init__的行为一致"""
@@ -138,6 +142,8 @@ class AppUtils:
             sd_webui_config=sd_webui_config,
             extra_paths_cli=normalize_paths(extra_paths),
             sd_webui_path_relative_to_config=self.sd_webui_path_relative_to_config,
+            allow_cors=self.allow_cors,
+            enable_shutdown=self.enable_shutdown
         )
 
     def get_root_browser_app(self) -> FastAPI:
@@ -178,6 +184,16 @@ def setup_parser() -> argparse.ArgumentParser:
         "--sd_webui_path_relative_to_config",
         action="store_true",
         help="Use the file path of the sd_webui_config file as the base for all relative paths provided within the sd_webui_config file.",
+    )
+    parser.add_argument(
+        "--allow_cors",
+        action="store_true",
+        help="Allow Cross-Origin Resource Sharing (CORS) for the API.",
+    )
+    parser.add_argument(
+        "--enable_shutdown",
+        action="store_true",
+        help="Enable the shutdown endpoint.",
     )
     return parser
 

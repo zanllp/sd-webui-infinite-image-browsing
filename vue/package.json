@@ -7,10 +7,13 @@
     "dev": "vite",
     "preview": "vite preview",
     "type-check": "vue-tsc --noEmit",
-    "build": "tsx build"
+    "build": "tsx build",
+    "tauri": "tauri dev",
+    "tauri-build": "tauri build",
+    "tauri-build-debug": "tauri build --debug"
   },
   "dependencies": {
-    "@types/sjcl": "^1.0.30",
+    "@tauri-apps/api": "^1.4.0",
     "@vueuse/core": "^10.1.2",
     "@zanllp/vue-virtual-scroller": "^2.0.0-beta.7",
     "ant-design-vue": "^3.2.20",
@@ -26,6 +29,8 @@
     "vue3-ts-util": "^1.0.4"
   },
   "devDependencies": {
+    "@types/sjcl": "^1.0.30",
+    "@tauri-apps/cli": "^1.4.0",
     "@types/js-cookie": "^3.0.3",
     "@types/node": "^20.2.5",
     "@types/nprogress": "^0.2.0",

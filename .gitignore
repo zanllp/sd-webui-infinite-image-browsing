@@ -9,3 +9,8 @@ iib.db-journal
 .env
 standalone.cmd
 .vscode
+build/**/*
+dist/**/*
+*.spec
+out/**/*
+vue/src-tauri/iib_api_server-x86_64-pc-windows-msvc.exe

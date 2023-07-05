@@ -87,6 +87,8 @@ const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
   margin: 16px;
   border-radius: 8px;
   background: var(--zp-primary-background);
+  overflow: auto;
+  height: calc(100% - 32px);
 
   &> :not(:first-child) {
     margin-left: 16px;

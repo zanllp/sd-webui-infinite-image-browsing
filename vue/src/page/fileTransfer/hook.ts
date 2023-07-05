@@ -435,7 +435,7 @@ export function useLocation(props: Props) {
   })
 
   useGlobalEventListen(
-    'return-to-iib',
+    'returnToIIB',
     makeAsyncFunctionSingle(async () => {
       if (!props.walkModePath) {
         try {
@@ -486,7 +486,8 @@ export function useLocation(props: Props) {
       await addScannedPath(currLocation.value)
       message.success(t('addComplete'))
     }
-    await globalEvents.emit('updateGlobalSetting')
+    globalEvents.emit('searchIndexExpired')
+    globalEvents.emit('updateGlobalSetting')
   }
 
   const isLocationEditing = ref(false)

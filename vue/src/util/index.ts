@@ -27,7 +27,7 @@ export function gradioApp(): Window & Document {
 
 export const getTabIdxInSDWebui = () => {
   const tabList = gradioApp().querySelectorAll('#tabs > .tabitem[id^=tab_]')
-  return Array.from(tabList).findIndex(v => v.id.includes('infinite-image-browsing'))
+  return Array.from(tabList).findIndex((v) => v.id.includes('infinite-image-browsing'))
 }
 
 export const switch2IBB = () => {
@@ -106,8 +106,9 @@ export const copy2clipboardI18n = async (text: string, msg?: string) => {
 
 export const { useEventListen: useGlobalEventListen, eventEmitter: globalEvents } =
   typedEventEmitter<{
-    'return-to-iib'(): void
+    returnToIIB(): void
     updateGlobalSetting(): void
+    searchIndexExpired(): void
   }>()
 
 type AsyncFunction<T> = (...args: any[]) => Promise<T>
@@ -159,12 +160,11 @@ export function removeQueryParams(keys: string[]): string {
   return newUrl
 }
 
-
 export const createImage = (src: string) => {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image()
     img.onload = () => resolve(img)
-    img.onerror = err => reject(err)
+    img.onerror = (err) => reject(err)
     img.src = src
   })
 }
