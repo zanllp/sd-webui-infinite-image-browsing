@@ -2,8 +2,8 @@ name: api_service_bin_build
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:    
+      - 'releases/**'
 
 jobs:
   build:
