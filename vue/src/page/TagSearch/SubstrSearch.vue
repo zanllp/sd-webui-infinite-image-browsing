@@ -61,10 +61,12 @@ const query = async () => {
   }
 }
 
-useGlobalEventListen('return-to-iib', async () => {
+useGlobalEventListen('returnToIIB', async () => {
   const res = await queue.pushAction(getExpiredDirs).res
   info.value!.expired = res.expired
 })
+
+useGlobalEventListen('searchIndexExpired', () => info.value && (info.value.expired = true))
 
 </script>
 <template>

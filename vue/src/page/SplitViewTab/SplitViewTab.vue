@@ -77,7 +77,7 @@ watch(
   { immediate: true, deep: true }
 )
 
-const emitReturnToIIB = debounce(() => globalEvents.emit('return-to-iib'), 100)
+const emitReturnToIIB = debounce(() => globalEvents.emit('returnToIIB'), 100)
 
 tryOnMounted(async () => {
   const par = window.parent as Window & { get_uiCurrentTabContent (): undefined | HTMLButtonElement, onUiTabChange (cb: Fn): void }

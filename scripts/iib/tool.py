@@ -24,7 +24,8 @@ sd_img_dirs = [
 
 
 is_dev = os.getenv("APP_ENV") == "dev"
-cwd = os.path.normpath(os.path.join(__file__, "../../../"))
+is_nuitka = "__compiled__" in globals()
+cwd = os.getcwd() if is_nuitka else os.path.normpath(os.path.join(__file__, "../../../"))
 is_win = platform.system().lower().find("windows") != -1
 
 
@@ -49,7 +50,7 @@ def get_sd_webui_conf(**kwargs):
             obj = json.loads(f.read())
             if kwargs.get("sd_webui_path_relative_to_config"):
                 for dir in sd_img_dirs:
-                    if not os.path.isabs(obj[dir]):
+                    if obj[dir] and not os.path.isabs(obj[dir]):
                         obj[dir] = os.path.normpath(
                             os.path.join(sd_conf_path, "../", obj[dir])
                         )
@@ -220,10 +221,16 @@ def get_created_date(folder_path: str):
     return get_formatted_date(os.path.getctime(folder_path))
 
 
-def unique_by(seq, key_func):
+def unique_by(seq, key_func = lambda x: x):
     seen = set()
     return [x for x in seq if not (key := key_func(x)) in seen and not seen.add(key)]
 
+
+def find(lst, comparator):
+    return next((item for item in lst if comparator(item)), None)
+
+def findIndex(lst, comparator):
+    return next((i for i, item in enumerate(lst) if comparator(item)), -1)
 
 def get_img_geninfo_txt_path(path: str):
     txt_path = re.sub(r"\..+$", ".txt", path)

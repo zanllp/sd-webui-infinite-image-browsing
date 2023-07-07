@@ -6,6 +6,8 @@ from scripts.iib.tool import (
     human_readable_size,
     tags_translate,
     is_dev,
+    find,
+    unique_by
 )
 from contextlib import closing
 import os
@@ -18,6 +20,8 @@ class DataBase:
     _initing = False
 
     num = 0
+
+    path = "iib.db"
 
     @classmethod
     def get_conn(clz) -> Connection:
@@ -32,7 +36,7 @@ class DataBase:
     @classmethod
     def init(clz):
         # 创建连接并打开数据库
-        conn = connect(os.path.join(cwd, "iib.db"))
+        conn = connect(clz.path if os.path.isabs(clz.path) else os.path.join(cwd, clz.path))
         try:            
             Floder.create_table(conn)
             ImageTag.create_table(conn)
@@ -469,6 +473,10 @@ class Floder:
         with closing(conn.cursor()) as cur:
             cur.execute("SELECT * FROM folders")
             result_set = cur.fetchall()
+            extra_paths = ExtraPath.get_extra_paths(conn)
+            for ep in extra_paths:
+                if not find(result_set, lambda x : x[1] == ep.path):
+                    dirs.append(ep.path)
             for row in result_set:
                 folder_path = row[1]
                 if (
@@ -476,7 +484,7 @@ class Floder:
                     and get_modified_date(folder_path) != row[2]
                 ):
                     dirs.append(folder_path)
-            return dirs
+            return unique_by(dirs, os.path.normpath)
         
     @classmethod
     def remove_folder(cls, conn: Connection, folder_path: str):
@@ -499,7 +507,7 @@ class ExtraPath:
             )
 
     @classmethod
-    def get_extra_paths(cls, conn, type: str = "scanned"):
+    def get_extra_paths(cls, conn, type: str = "scanned") -> List['ExtraPath']:
         query = "SELECT * FROM extra_path"
         params = ()
         if type:

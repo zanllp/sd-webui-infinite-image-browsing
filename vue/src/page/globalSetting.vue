@@ -5,6 +5,10 @@ import { ref } from 'vue'
 import { SearchSelect } from 'vue3-ts-util'
 import { sortMethodConv, sortMethods } from '../page/fileTransfer/fileSort'
 import { viewModes } from '../page/fileTransfer/hook'
+import { relaunch } from '@tauri-apps/api/process'
+import { appConfFilename } from '@/taurilaunchModal'
+import { fs, invoke } from '@tauri-apps/api'
+
 const globalStore = useGlobalStore()
 
 const langChanged = ref(false)
@@ -23,6 +27,13 @@ const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
     keys.push(e.code)
     globalStore.shortcut[key] = keys.join(' + ')
   }
+}
+const isTauri = !!import.meta.env.TAURI_ARCH
+
+const oninitTauriLaunchConf = async () => {
+  await invoke('shutdown_api_server_command')
+  await fs.removeFile(appConfFilename)
+  await relaunch()
 }
 </script>
 <template>
@@ -78,6 +89,16 @@ const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
           </a-button>
         </div>
       </a-form-item>
+      <template v-if="isTauri">
+        <h2>{{ t('clientSpecificSettings') }}</h2>
+        <a-form-item >
+        <div class="col">
+          <a-button @click="oninitTauriLaunchConf" class="clear-btn">
+            {{ $t('initiateSoftwareStartupConfig') }}
+          </a-button>
+        </div>
+      </a-form-item>
+      </template>
     </a-form>
   </div>
 </template>
@@ -87,6 +108,8 @@ const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
   margin: 16px;
   border-radius: 8px;
   background: var(--zp-primary-background);
+  overflow: auto;
+  height: calc(100% - 32px);
 
   &> :not(:first-child) {
     margin-left: 16px;

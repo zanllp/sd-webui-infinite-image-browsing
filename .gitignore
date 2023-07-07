@@ -9,3 +9,7 @@ iib.db-journal
 .env
 standalone.cmd
 .vscode
+build/**/*
+dist/**/*
+*.spec
+out/**/*

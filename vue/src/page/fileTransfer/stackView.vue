@@ -49,7 +49,7 @@ const {
 } = useHookShareState().toRefs()
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, quickMoveTo,
   addToSearchScanPathAndQuickMove, searchPathInfo, locInputValue, isLocationEditing,
-  onLocEditEnter, onEditBtnClick, share
+  onLocEditEnter, onEditBtnClick, share, selectAll
 } = useLocation(props)
 const {
   gridItems,
@@ -137,6 +137,7 @@ watch(
         </div>
         <div class="actions">
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
+          <a class="opt" @click.prevent.stop="selectAll"> {{ $t('selectAll') }} </a>
           <a class="opt" @click.prevent="share"> {{ $t('share') }} </a>
           <a-dropdown>
             <a class="opt" @click.prevent>

@@ -1,12 +1,13 @@
 import type { FileNodeInfo } from '@/api/files'
+import { apiBase } from '@/api'
 
 const encode = encodeURIComponent
 export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
-  `/infinite_image_browsing/file?path=${encode(file.fullpath)}&t=${encode(file.date)}${
+  `${apiBase.value}/file?path=${encode(file.fullpath)}&t=${encode(file.date)}${
     download ? `&disposition=${encode(file.name)}` : ''
   }`
 export const toImageThumbnailUrl = (file: FileNodeInfo, size: string = '256x256') =>
-  `/infinite_image_browsing/image-thumbnail?path=${encode(file.fullpath)}&size=${size}&t=${encode(
+  `${apiBase.value}/image-thumbnail?path=${encode(file.fullpath)}&size=${size}&t=${encode(
     file.date
   )}`
 

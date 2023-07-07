@@ -15,8 +15,8 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Infinite Image Browsing</title>
-    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-ecf8fdc1.js"></script>
-    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-8035c113.css">
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-37f53eea.js"></script>
+    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-3a94b414.css">
   </head>
 
   <body>

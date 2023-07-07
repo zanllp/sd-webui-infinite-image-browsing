@@ -24,6 +24,7 @@ const global = useGlobalStore()
 const queue = createReactiveQueue()
 const loading = computed(() => !queue.isIdle)
 const info = ref<DataBaseBasicInfo>()
+
 const matchIds = ref<MatchImageByTagsReq>({ and_tags: [], or_tags: [], not_tags: [] })
 const tags = computed(() =>
   info.value ? info.value.tags.slice().sort((a, b) => b.count - a.count) : []
@@ -57,6 +58,8 @@ onMounted(async () => {
   }
 })
 
+useGlobalEventListen('searchIndexExpired', () => info.value && (info.value.expired = true))
+
 const onUpdateBtnClick = makeAsyncFunctionSingle(
   () =>
     queue.pushAction(async () => {
@@ -71,7 +74,7 @@ const query = () => {
   global.openTagSearchMatchedImageGridInRight(props.tabIdx, pairid, matchIds.value)
 }
 
-useGlobalEventListen('return-to-iib', async () => {
+useGlobalEventListen('returnToIIB', async () => {
   const res = await queue.pushAction(getExpiredDirs).res
   info.value!.expired = res.expired
 })

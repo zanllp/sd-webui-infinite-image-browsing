@@ -17,17 +17,17 @@ export type DataBaseBasicInfo = {
 }
 
 export const getDbBasicInfo = async () => {
-  const resp = await axiosInst.get('/db/basic_info')
+  const resp = await axiosInst.value.get('/db/basic_info')
   return resp.data as DataBaseBasicInfo
 }
 
 export const getExpiredDirs = async () => {
-  const resp = await axiosInst.get('/db/expired_dirs')
+  const resp = await axiosInst.value.get('/db/expired_dirs')
   return resp.data as Pick<DataBaseBasicInfo, 'expired' | 'expired_dirs'>
 }
 
 export const updateImageData = async () => {
-  await axiosInst.post('/db/update_image_data', {}, { timeout: Infinity })
+  await axiosInst.value.post('/db/update_image_data', {}, { timeout: Infinity })
 }
 
 export interface MatchImageByTagsReq {
@@ -37,35 +37,35 @@ export interface MatchImageByTagsReq {
 }
 
 export const getImagesByTags = async (req: MatchImageByTagsReq) => {
-  const resp = await axiosInst.post('/db/match_images_by_tags', req)
+  const resp = await axiosInst.value.post('/db/match_images_by_tags', req)
   return resp.data as FileNodeInfo[]
 }
 
 export const addCustomTag = async (req: { tag_name: string }) => {
-  const resp = await axiosInst.post('/db/add_custom_tag', req)
+  const resp = await axiosInst.value.post('/db/add_custom_tag', req)
   return resp.data as Tag
 }
 
 export const toggleCustomTagToImg = async (req: { tag_id: number; img_path: string }) => {
-  const resp = await axiosInst.post('/db/toggle_custom_tag_to_img', req)
+  const resp = await axiosInst.value.post('/db/toggle_custom_tag_to_img', req)
   return resp.data as { is_remove: boolean }
 }
 
 export const removeCustomTag = async (req: { tag_id: number }) => {
-  await axiosInst.post('/db/remove_custom_tag', req)
+  await axiosInst.value.post('/db/remove_custom_tag', req)
 }
 
 export const removeCustomTagToImg = async (req: { tag_id: number; img_id: number }) => {
-  await axiosInst.post('/db/add_custom_tag_from_img', req)
+  await axiosInst.value.post('/db/add_custom_tag_from_img', req)
 }
 
 export const getImageSelectedCustomTag = async (path: string) => {
-  const resp = await axiosInst.get('/db/img_selected_custom_tag', { params: { path } })
+  const resp = await axiosInst.value.get('/db/img_selected_custom_tag', { params: { path } })
   return resp.data as Tag[]
 }
 
 export const getImagesBySubstr = async (substr: string) => {
-  const resp = await axiosInst.get('/db/search_by_substr', { params: { substr } })
+  const resp = await axiosInst.value.get('/db/search_by_substr', { params: { substr } })
   return resp.data as FileNodeInfo[]
 }
 
@@ -75,13 +75,13 @@ interface ScannedPathModel {
 }
 
 export const getScannedPath = async () => {
-  const resp = await axiosInst.get(scannedPaths)
+  const resp = await axiosInst.value.get(scannedPaths)
   return resp.data as ScannedPathModel[]
 }
 
 export const addScannedPath = async (path: string) => {
-  await axiosInst.post(scannedPaths, { path })
+  await axiosInst.value.post(scannedPaths, { path })
 }
 export const removeScannedPath = async (path: string) => {
-  await axiosInst.delete(scannedPaths, { data: { path } })
+  await axiosInst.value.delete(scannedPaths, { data: { path } })
 }
