@@ -33,10 +33,10 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - 支持全屏预览，并且支持在全屏预览下使用自定义快捷键进行操作
 - 支持在全屏预览模式下通过按下方向键或点击按钮移动到前一个或后一个图像。
 
-### 💻 独立运行
-- 支持无需 sd-webui 单独运行。
-- 几乎所有功能都可以正常使用。
-- [点击此处获取详情](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47)。
+### 💻 多种使用方法
+- 您可以将其作为 SD-webui 的扩展安装。
+- 您可以使用 Python 独立运行它。
+- 还提供桌面应用程序版本。
 
 ### "Walk"模式
 - 自动加载下一个文件夹 `(类似于 os.walk)`，可让您无需分页浏览所有图像。
@@ -50,6 +50,7 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - 支持通过右键菜单直接将文件发送到其他文件夹。
 
 ### 🆚 图像对比 (类似ImgSli)
+- 提供两张图片的并排比较
 
 ### 🌐 多语言支持
 - 目前支持简体中文/英文/德语。
@@ -74,8 +75,21 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 
 
 [视频演示可以在Bilibili上观看](https://space.bilibili.com/27227392/channel/series)
+# 安装/运行
 
-## 预览
+## 作为SD-webui的扩展程序:
+1. 在SD-webui中打开`扩展`选项卡。
+2. 选择`从URL安装`选项。
+3. 输入 `https://github.com/zanllp/sd-webui-infinite-image-browsing`。
+4. 点击`安装`按钮。
+5. 等待安装完成，然后点击`应用并重启UI`。
+
+## 作为使用Python运行的独立程序（不需要SD-webui）:
+请参考[Can the extension function without the web UI? ↗](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47.)
+
+## 作为桌面应用程序（不需要SD-webui和Python）:
+从仓库页面右侧的`releases`部分下载并安装程序。
+# 预览
 
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/230064374-47ba209e-562b-47b8-a2ce-d867e3afe204.png">
 
