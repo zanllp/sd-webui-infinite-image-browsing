@@ -27,10 +27,12 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - Support full-screen preview and enable custom shortcut key operations while in full-screen preview mode.
 - Support navigating to the previous or next image in full-screen preview mode by pressing arrow keys or clicking buttons.
 
-### 💻 Standalone Operation
-- Supports standalone operation without sd-webui.
-- Almost all functions can be used normally.
-- [Click here for details](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47).
+
+### 💻 Multiple Usage Methods
+- You can install it as an extension on SD-webui. 
+- You can run it independently using Python.
+- The desktop app version is also available.
+
 
 ### "Walk" Mode
 - Automatically load the next folder `(similar to os.walk)`, allowing you to browse all images without paging.
@@ -44,6 +46,7 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - Support for automatic refresh
 
 ### 🆚 image comparison (similar to Imgsli)
+- Provides a side-by-side comparison of two images.
 
 ### 🌐 Multilingual Support
 - Currently supports Simplified Chinese/English/German.
@@ -67,7 +70,22 @@ If you like this project and find it helpful, please consider giving it a ⭐️
 <a href='https://ko-fi.com/zanllp' target='_blank'><img height='35' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />
 
 
-## Preview
+
+# Installation / Running
+## As an extension for SD-webui:
+1. Open the `Extensions` tab in SD-webui.
+2. Select the `Install from URL` option.
+3. Enter `https://github.com/zanllp/sd-webui-infinite-image-browsing`.
+4. Click on the `Install` button.
+5. Wait for the installation to complete and click on `Apply and restart UI`.
+
+## As a standalone program that runs using Python. (without SD-webui):
+
+Refer to [Can the extension function without the web UI?](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47.)
+
+## As a desktop application (without SD-webui and Python):
+Download and install the program from the `releases` section on the right-hand side of the repository page.
+# Preview
 
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/232167682-67f83b00-4391-4394-a7f6-6e4c9d11f252.png">
 
