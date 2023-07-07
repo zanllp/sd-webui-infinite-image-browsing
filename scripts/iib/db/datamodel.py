@@ -21,6 +21,8 @@ class DataBase:
 
     num = 0
 
+    path = "iib.db"
+
     @classmethod
     def get_conn(clz) -> Connection:
         # for : sqlite3.ProgrammingError: SQLite objects created in a thread can only be used in that same thread
@@ -34,7 +36,7 @@ class DataBase:
     @classmethod
     def init(clz):
         # 创建连接并打开数据库
-        conn = connect(os.path.join(cwd, "iib.db"))
+        conn = connect(clz.path if os.path.isabs(clz.path) else os.path.join(cwd, clz.path))
         try:            
             Floder.create_table(conn)
             ImageTag.create_table(conn)

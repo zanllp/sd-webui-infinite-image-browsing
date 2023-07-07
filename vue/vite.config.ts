@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite'
 import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers'
+import vueJsx from '@vitejs/plugin-vue-jsx'
 import { env } from 'node:process'
 const isProd = env.NODE_ENV === 'production'
 const isDev = !isProd
@@ -27,6 +28,7 @@ export default defineConfig({
   envPrefix: ['VITE_', 'TAURI_'],
   plugins: [
     vue(),
+    vueJsx(),
     Components({
       resolvers: [AntDesignVueResolver({ importStyle: 'less' })]
     })

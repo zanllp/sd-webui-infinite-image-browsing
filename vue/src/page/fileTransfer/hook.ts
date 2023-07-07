@@ -252,6 +252,9 @@ export function usePreview(
   }
 }
 
+/**
+ * 路径栏相关
+ */
 export function useLocation(props: Props) {
   const np = ref<Progress.NProgress>()
   const {
@@ -263,7 +266,9 @@ export function useLocation(props: Props) {
     sortMethod,
     useEventListen,
     eventEmitter,
-    getPane
+    getPane,
+    multiSelectedIdxs,
+    sortedFiles
   } = useHookShareState().toRefs()
 
   watch(
@@ -516,6 +521,11 @@ export function useLocation(props: Props) {
     copy2clipboardI18n(url, t('copyLocationUrlSuccessMsg'))
   }
 
+  const selectAll = () => {
+    multiSelectedIdxs.value = range(0, sortedFiles.value.length)
+    
+  }
+
   return {
     locInputValue,
     isLocationEditing,
@@ -533,6 +543,7 @@ export function useLocation(props: Props) {
     stack,
     scroller,
     share,
+    selectAll,
     quickMoveTo
   }
 }

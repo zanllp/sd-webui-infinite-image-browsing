@@ -1,11 +1,16 @@
 <script lang="ts" setup>
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { uniqueId } from 'lodash-es'
-import { computed } from 'vue'
+import { computed, h, ref } from 'vue'
 import { ok } from 'vue3-ts-util'
-import { FileDoneOutlined, LockOutlined } from '@/icon'
+import { FileDoneOutlined, LockOutlined, PlusOutlined } from '@/icon'
 import { t } from '@/i18n'
 import { cloneDeep } from 'lodash-es'
+import { addScannedPath } from '@/api/db'
+import { globalEvents } from '@/util'
+import { Input, Modal, message } from 'ant-design-vue'
+import { open } from '@tauri-apps/api/dialog'
+import { checkPathExists } from '@/api'
 
 const global = useGlobalStore()
 const props = defineProps<{ tabIdx: number; paneIdx: number }>()
@@ -57,7 +62,49 @@ const previewInNewWindow = () => window.parent.open('/infinite_image_browsing')
 const restoreRecord = () => {
   ok(lastRecord.value)
   global.tabList = cloneDeep(lastRecord.value.tabs)
+}
 
+const addToSearchScanPathAndQuickMove = async () => {
+  let path: string
+  if (import.meta.env.TAURI_ARCH) {
+    const ret = await open({ directory: true })
+    if (typeof ret === 'string') {
+      path = ret
+    } else {
+      return
+    }
+  } else {
+    path = await new Promise<string>((resolve) => {
+      const key = ref('')
+      Modal.confirm({
+        title: t('inputTargetFolderPath'),
+        content: () => {
+          return h(Input, {
+            value: key.value,
+            'onUpdate:value': (v: string) => (key.value = v)
+          })
+        },
+        async onOk () {
+          const path = key.value
+          const res = await checkPathExists([path])
+          if (res[path]) {
+            resolve(key.value)
+          } else {
+            message.error(t('pathDoesNotExist'))
+          }
+        }
+      })
+    })
+  }
+  Modal.confirm({
+    content: t('confirmToAddToQuickMove'),
+    async onOk () {
+      await addScannedPath(path)
+      message.success(t('addComplete'))
+      globalEvents.emit('searchIndexExpired')
+      globalEvents.emit('updateGlobalSetting')
+    }
+  })
 }
 </script>
 <template>
@@ -67,9 +114,9 @@ const restoreRecord = () => {
       <div v-if="global.conf?.enable_access_control && global.dontShowAgain" style="margin-left: 16px;font-size: 1.5em;">
         <LockOutlined title="Access Control mode" style="vertical-align: text-bottom;" />
       </div>
-      <div flex-placeholder />     
-       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing" target="_blank"
-        class="last-record">{{ $t('document') }}</a>
+      <div flex-placeholder />
+      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing" target="_blank" class="last-record">{{
+        $t('document') }}</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/131" target="_blank"
         class="last-record">{{ $t('changlog') }}</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank"
@@ -101,6 +148,9 @@ const restoreRecord = () => {
       <div class="quick-start" v-if="global.quickMovePaths.length">
         <h2>{{ $t('launchFromQuickMove') }}</h2>
         <ul>
+          <li @click="addToSearchScanPathAndQuickMove" class="item" style="text-align: ;">
+            <span class="text line-clamp-1"> <PlusOutlined/> {{ $t('add') }}</span>
+          </li>
           <li v-for="dir in global.quickMovePaths" :key="dir.key" class="item"
             @click.prevent="openInCurrentTab('local', dir.dir)">
             <span class="text line-clamp-1">{{ dir.zh }}</span>

@@ -153,11 +153,52 @@ const zh = {
   fullscreenview: '全屏查看',
   fileName: '文件名',
   resolution: '分辨率',
-  fileSize: '文件大小'
+  fileSize: '文件大小',
+  selectAll: '全选',
+  'tauriLaunchConf.readSdWebuiConfigTitle': '读取Stable Diffusion Webui的配置',
+  'tauriLaunchConf.readSdWebuiConfigDescription':
+    '如果你已经安装sd-webui，且在sd-webui内安装了本拓展，推荐直接使用这个，将直接读取配置并且数据共享',
+  'tauriLaunchConf.selectSdWebuiFolder': '点击选择SD-webui的文件夹',
+  'tauriLaunchConf.skipThisConfigTitle': '跳过本次配置',
+  'tauriLaunchConf.skipThisConfigDescription': '所有功能仍将可用，你可以在设置页重置',
+  'tauriLaunchConf.skipButton': '跳过',
+  'tauriLaunchConfMessages.configNotFound': '找不到对应配置，检查选择的文件夹是否正确',
+  'tauriLaunchConfMessages.folderNotFound': '找不到对应文件夹，检查选择的文件夹是否正确',
+  'tauriLaunchConfMessages.configCompletedMessage': '配置完成，即将重启',
+  'tauriLaunchConfMessages.firstTimeUserTitle': '看起来你好像是第一次使用, 需要进行一些配置',
+  inputTargetFolderPath: '输入目标文件夹的绝对路径',
+  pathDoesNotExist: '路径不存在',
+  confirmToAddToQuickMove:
+    '确定添加？如果文件夹过大将会消耗过多时间建立索引。（如果不需要了你可以在文件夹右上角的更多里面移除）',
+  clientSpecificSettings: '客户端特有的设置',
+  initiateSoftwareStartupConfig: '初始化软件启动配置'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  inputTargetFolderPath: 'Enter the absolute path of the target folder',
+  pathDoesNotExist: 'Path does not exist',
+  confirmToAddToQuickMove:
+    "Are you sure you want to add? This may take a lot of time to index if the folder is large. (You can remove it from 'More' in the top right corner of the folder if you no longer need it.)",
+  clientSpecificSettings: 'Client-specific settings',
+  initiateSoftwareStartupConfig: 'Initiate software startup configuration',
+  'tauriLaunchConf.readSdWebuiConfigTitle': 'Read Stable Diffusion Webui Config',
+  'tauriLaunchConf.readSdWebuiConfigDescription':
+    'If you have installed sd-webui and this extension, it is recommended to use this option to directly read the configuration and share data.',
+  'tauriLaunchConf.selectSdWebuiFolder': 'Click to select the SD-webui folder',
+  'tauriLaunchConf.skipThisConfigTitle': 'Skip This Configuration',
+  'tauriLaunchConf.skipThisConfigDescription':
+    'All features will still be available and you can reset them in the settings page.',
+  'tauriLaunchConf.skipButton': 'Skip',
+  'tauriLaunchConfMessages.configNotFound':
+    'Cannot find the corresponding configuration. Please check if the selected folder is correct.',
+  'tauriLaunchConfMessages.folderNotFound':
+    'Cannot find the corresponding folder. Please check if the selected folder is correct.',
+  'tauriLaunchConfMessages.configCompletedMessage':
+    'Configuration completed. The application will restart shortly.',
+  'tauriLaunchConfMessages.firstTimeUserTitle':
+    'It looks like this is your first time using the application. Some configuration is required.',
+  selectAll: 'Select All',
   close: 'Close',
   fileName: 'File Name',
   resolution: 'Resolution',

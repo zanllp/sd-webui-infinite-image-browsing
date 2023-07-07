@@ -29,12 +29,13 @@
     "vue3-ts-util": "^1.0.4"
   },
   "devDependencies": {
-    "@types/sjcl": "^1.0.30",
     "@tauri-apps/cli": "^1.4.0",
     "@types/js-cookie": "^3.0.3",
     "@types/node": "^20.2.5",
     "@types/nprogress": "^0.2.0",
+    "@types/sjcl": "^1.0.30",
     "@vitejs/plugin-vue": "^4.1.0",
+    "@vitejs/plugin-vue-jsx": "^3.0.1",
     "@vue/eslint-config-typescript": "^11.0.3",
     "@vue/tsconfig": "^0.4.0",
     "antd-vue-volar": "^1.0.1",
@@ -42,6 +43,7 @@
     "eslint-plugin-vue": "^9.14.1",
     "less": "^4.1.3",
     "sass": "^1.62.1",
+    "tsx": "^3.12.7",
     "typescript": "^5.0.2",
     "unplugin-vue-components": "^0.25.0",
     "vite": "^4.3.9",
