@@ -5,6 +5,7 @@ import { useGlobalStore } from './useGlobalStore'
 export const useImgSliStore = defineStore('useImgSliStore', () => {
   const fileDragging = ref(false)
   const drawerVisible = ref(false)
+  const opened = ref(false)
   const left = ref<FileNodeInfo>()
   const right = ref<FileNodeInfo>()
   const global = useGlobalStore()
@@ -22,6 +23,7 @@ export const useImgSliStore = defineStore('useImgSliStore', () => {
     fileDragging,
     left,
     right,
-    imgSliActived
+    imgSliActived,
+    opened
   }
 })

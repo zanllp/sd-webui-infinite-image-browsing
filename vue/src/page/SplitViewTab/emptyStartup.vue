@@ -11,8 +11,10 @@ import { globalEvents } from '@/util'
 import { Input, Modal, message } from 'ant-design-vue'
 import { open } from '@tauri-apps/api/dialog'
 import { checkPathExists } from '@/api'
+import { useImgSliStore } from '@/store/useImgSli'
 
 const global = useGlobalStore()
+const imgsli = useImgSliStore()
 const props = defineProps<{ tabIdx: number; paneIdx: number }>()
 const compCnMap: Partial<Record<TabPane['type'], string>> = {
   local: t('local'),
@@ -137,7 +139,7 @@ const addToSearchScanPathAndQuickMove = async () => {
       </template>
     </a-alert>
     <div class="content">
-      <div class="quick-start" v-if="walkModeSupportedDir.length">
+      <div class="feature-item" v-if="walkModeSupportedDir.length">
         <h2>{{ $t('walkMode') }}</h2>
         <ul>
           <li v-for="item in walkModeSupportedDir" :key="item.dir" class="item">
@@ -145,7 +147,7 @@ const addToSearchScanPathAndQuickMove = async () => {
           </li>
         </ul>
       </div>
-      <div class="quick-start" v-if="global.quickMovePaths.length">
+      <div class="feature-item" v-if="global.quickMovePaths.length">
         <h2>{{ $t('launchFromQuickMove') }}</h2>
         <ul>
           <li @click="addToSearchScanPathAndQuickMove" class="item" style="text-align: ;">
@@ -157,12 +159,15 @@ const addToSearchScanPathAndQuickMove = async () => {
           </li>
         </ul>
       </div>
-      <div class="quick-start">
+      <div class="feature-item">
         <h2>{{ $t('launch') }}</h2>
         <ul>
           <li v-for="comp in Object.keys(compCnMap) as TabPane['type'][]" :key="comp" class="item"
             @click.prevent="openInCurrentTab(comp)">
             <span class="text line-clamp-1">{{ compCnMap[comp] }}</span>
+          </li>
+          <li class="item"  @click="imgsli.opened = true">
+            <span class="text line-clamp-1">{{ $t('imgCompare') }}</span>
           </li>
           <li class="item" v-if="canpreviewInNewWindow" @click="previewInNewWindow">
             <span class="text line-clamp-1">{{ $t('openInNewWindow') }}</span>
@@ -172,7 +177,7 @@ const addToSearchScanPathAndQuickMove = async () => {
           </li>
         </ul>
       </div>
-      <div class="quick-start" v-if="global.recent.length">
+      <div class="feature-item" v-if="global.recent.length">
         <h2>{{ $t('recent') }}</h2>
         <ul>
           <li v-for="item in global.recent" :key="item.key" class="item"
@@ -239,7 +244,7 @@ const addToSearchScanPathAndQuickMove = async () => {
   margin-top: 16px;
 }
 
-.quick-start {
+.feature-item {
   background-color: var(--zp-primary-background);
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -271,7 +276,7 @@ const addToSearchScanPathAndQuickMove = async () => {
   }
 }
 
-.quick-start h2 {
+.feature-item h2 {
   margin-top: 0;
   margin-bottom: 20px;
   font-size: 20px;
