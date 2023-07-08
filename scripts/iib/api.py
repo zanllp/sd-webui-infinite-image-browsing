@@ -216,9 +216,20 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     class MoveFilesReq(BaseModel):
         file_paths: List[str]
         dest: str
+        create_dest_folder: Optional[bool] = False
 
     @app.post(pre + "/move_files", dependencies=[Depends(get_token)])
     async def move_files(req: MoveFilesReq):
+        if req.create_dest_folder:
+            os.makedirs(req.dest, exist_ok=True)
+        elif not os.path.isdir(req.dest):
+            error_msg = (
+                f"Destination folder {req.dest} does not exist."
+                if locale == "en"
+                else f"目标文件夹 {req.dest} 不存在。"
+            )
+            raise HTTPException(400, detail=error_msg)
+            
         conn = DataBase.get_conn()
         for path in req.file_paths:
             check_path_trust(path)

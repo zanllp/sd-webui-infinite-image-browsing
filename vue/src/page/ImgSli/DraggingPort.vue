@@ -28,6 +28,7 @@ const onImageDrop = async (e: DragEvent, side: 'left' | 'right') => {
 const onCancel = () => {
   sliStore.left = undefined
   sliStore.right = undefined
+  sliStore.opened = false
 }
 
 const openInNewTab = () => {
@@ -45,7 +46,7 @@ const openInNewTab = () => {
 </script>
 <template>
   <Transition>
-    <div class="dragging-port-wrap" v-if="(sliStore.fileDragging || left || right) && !sliStore.imgSliActived">
+    <div class="dragging-port-wrap" v-if="(sliStore.fileDragging || left || right || sliStore.opened) && !sliStore.imgSliActived">
       <h2>{{ $t('imgCompare') }}</h2>
       <div class="content">
         <div class="left port" @dragover.prevent @drop.prevent="onImageDrop($event, 'left')">

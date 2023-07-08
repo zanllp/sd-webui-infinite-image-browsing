@@ -878,7 +878,8 @@ export function useFileItemActions(
         const selectedImg = getSelectedImg()
         await moveFiles(
           selectedImg.map((v) => v.fullpath),
-          absolutePath
+          absolutePath,
+          true
         )
         events.emit('removeFiles', {
           paths: selectedImg.map((v) => v.fullpath),

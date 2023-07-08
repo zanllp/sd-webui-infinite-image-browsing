@@ -50,14 +50,29 @@ export function useResizeAndDrag(
   const handleResizeMouseMove = (e: MouseEvent | TouchEvent) => {
     if (!elementRef.value || !resizeHandleRef.value) return
 
-    const width =
-      startWidth + ((e instanceof MouseEvent ? e.clientX : e.touches[0].clientX) - startX)
-    const height =
+    let width = startWidth + ((e instanceof MouseEvent ? e.clientX : e.touches[0].clientX) - startX)
+    let height =
       startHeight + ((e instanceof MouseEvent ? e.clientY : e.touches[0].clientY) - startY)
-    const handleX =
+    let handleX =
       resizeHandle.x + ((e instanceof MouseEvent ? e.clientX : e.touches[0].clientX) - startX)
-    const handleY =
+    let handleY =
       resizeHandle.y + ((e instanceof MouseEvent ? e.clientY : e.touches[0].clientY) - startY)
+
+    // Check if element exceeds viewport width
+    if (handleX + resizeHandleRef.value.offsetWidth > window.innerWidth) {
+      handleX = window.innerWidth - resizeHandleRef.value.offsetWidth
+    }
+    if (elementRef.value.offsetLeft + width > window.innerWidth) {
+      width = window.innerWidth - elementRef.value.offsetLeft
+    }
+
+    // Check if element exceeds viewport height
+    if (handleY + resizeHandleRef.value.offsetHeight > window.innerHeight) {
+      handleY = window.innerHeight - resizeHandleRef.value.offsetHeight
+    }
+    if (elementRef.value.offsetTop + height > window.innerHeight) {
+      height = window.innerHeight - elementRef.value.offsetTop
+    }
 
     elementRef.value.style.width = `${width}px`
     elementRef.value.style.height = `${height}px`
@@ -95,8 +110,24 @@ export function useResizeAndDrag(
     if (!elementRef.value || !dragHandleRef.value || !isDragging) return
     const left = startLeft + ((e instanceof MouseEvent ? e.clientX : e.touches[0].clientX) - startX)
     const top = startTop + ((e instanceof MouseEvent ? e.clientY : e.touches[0].clientY) - startY)
-    elementRef.value.style.left = `${left}px`
-    elementRef.value.style.top = `${top}px`
+
+    // Check if element exceeds viewport width
+    if (left < 0) {
+      elementRef.value.style.left = '0px'
+    } else if (left + elementRef.value.offsetWidth > window.innerWidth) {
+      elementRef.value.style.left = `${window.innerWidth - elementRef.value.offsetWidth}px`
+    } else {
+      elementRef.value.style.left = `${left}px`
+    }
+
+    // Check if element exceeds viewport height
+    if (top < 0) {
+      elementRef.value.style.top = '0px'
+    } else if (top + elementRef.value.offsetHeight > window.innerHeight) {
+      elementRef.value.style.top = `${window.innerHeight - elementRef.value.offsetHeight}px`
+    } else {
+      elementRef.value.style.top = `${top}px`
+    }
 
     if (options?.onDrag) {
       options.onDrag(left, top)
@@ -111,6 +142,37 @@ export function useResizeAndDrag(
     document.documentElement.removeEventListener('touchend', handleDragMouseUp)
   }
 
+  const handleWindowResize = () => {
+    if (!elementRef.value || !resizeHandleRef.value) return
+    let left = elementRef.value.offsetLeft
+    let top = elementRef.value.offsetTop
+    let width = elementRef.value.offsetWidth
+    let height = elementRef.value.offsetHeight
+
+    // Check if element exceeds viewport width
+    if (left + width > window.innerWidth) {
+      left = window.innerWidth - width
+      if (left < 0) {
+        left = 0
+        width = window.innerWidth                                 
+      }
+    }
+
+    // Check if element exceeds viewport height
+    if (top + height > window.innerHeight) {
+      top = window.innerHeight - height
+      if (top < 0) {
+        top = 0
+        height = window.innerHeight
+      }
+    }
+
+    // Update element position and size
+    elementRef.value.style.left = `${left}px`
+    elementRef.value.style.top = `${top}px`
+    elementRef.value.style.width = `${width}px`
+    elementRef.value.style.height = `${height}px`
+  }
   onMounted(() => {
     if (!elementRef.value || !options) return
     if (typeof options.width === 'number') {
@@ -125,6 +187,8 @@ export function useResizeAndDrag(
     if (typeof options.top === 'number') {
       elementRef.value.style.top = `${options.top}px`
     }
+    handleWindowResize()
+    window.addEventListener('resize', handleWindowResize)
   })
 
   onBeforeUnmount(() => {
@@ -136,6 +200,7 @@ export function useResizeAndDrag(
     document.documentElement.removeEventListener('touchmove', handleDragMouseMove)
     document.documentElement.removeEventListener('mouseup', handleDragMouseUp)
     document.documentElement.removeEventListener('touchend', handleDragMouseUp)
+    window.removeEventListener('resize', handleWindowResize)
   })
 
   watch(

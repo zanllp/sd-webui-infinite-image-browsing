@@ -22,3 +22,5 @@ export const toImageThumbnailUrl = (file: FileNodeInfo, size: string = '256x256'
   export const isFileTransferData = (v: any): v is FileTransferData => 
     typeof v === 'object' && v.__id === 'FileTransferData'
   
+
+    

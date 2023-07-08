@@ -100,7 +100,7 @@ function getParNode (p: any) {
 useWatchDocument('load', e => {
   const el = e.target as HTMLImageElement
   if (el.className === 'ant-image-preview-img') {
-    currImgResolution.value = `${el.width} x ${el.height}`
+    currImgResolution.value = `${el.naturalWidth} x ${el.naturalHeight}`
   }
 }, { capture: true })
 
