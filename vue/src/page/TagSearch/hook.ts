@@ -10,7 +10,8 @@ import {
   useFileItemActions,
   usePreview,
   type Scroller,
-  useEventListen
+  useEventListen,
+  useLocation
 } from '../fileTransfer/hook'
 
 export const useImageSearch = () => {
@@ -21,6 +22,7 @@ export const useImageSearch = () => {
   const { stackViewEl, multiSelectedIdxs, stack } = useHookShareState({ images }).toRefs()
   const { itemSize, gridItems } = useFilesDisplay(propsMock)
   const { showMenuIdx } = useMobileOptimization()
+  useLocation(propsMock)
   const { onFileDragStart,  onFileDragEnd } = useFileTransfer()
   const {
     showGenInfo,
@@ -31,7 +33,7 @@ export const useImageSearch = () => {
   } = useFileItemActions(propsMock, { openNext: identity })
   const { previewIdx, previewing, onPreviewVisibleChange, previewImgMove, canPreview } = usePreview(
     propsMock,
-    { scroller, files: images }
+    { scroller }
   )
 
   const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
@@ -42,6 +44,7 @@ export const useImageSearch = () => {
   useEventListen('removeFiles', async ({ paths }) => {
     images.value = images.value?.filter(v => !paths.includes(v.fullpath))
   })
+  
 
   return {
     scroller,
