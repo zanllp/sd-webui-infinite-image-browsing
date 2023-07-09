@@ -716,6 +716,7 @@ export function useFileTransfer() {
         h('div', `${t('moveSelectedFilesTo')}${toPath}`),
         h(
           'ol',
+          { style: 'max-height:50vh;overflow:auto;' },
           data.path.map((v) => v.split(/[/\\]/).pop()).map((v) => h('li', v))
         ),
         multiSelectTips()
