@@ -8,6 +8,7 @@ import { viewModes } from '../page/fileTransfer/hook'
 import { relaunch } from '@tauri-apps/api/process'
 import { appConfFilename } from '@/taurilaunchModal'
 import { fs, invoke } from '@tauri-apps/api'
+import { getShortcutStrFromEvent } from '@/util/shortcut'
 
 const globalStore = useGlobalStore()
 
@@ -17,15 +18,9 @@ const reload = async () => {
 }
 const langs: { text: string, value: string }[] = [{ value: 'en', text: 'English' }, { value: 'zh', text: '中文' }, { value: 'de', text: 'Deutsch' }]
 const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
-  const keys = [] as string[]
-  if (e.shiftKey) {
-    keys.push('Shift')
-  } if (e.ctrlKey) {
-    keys.push('Ctrl')
-  }
-  if (e.code.startsWith('Key') || e.code.startsWith('Digit')) {
-    keys.push(e.code)
-    globalStore.shortcut[key] = keys.join(' + ')
+  const keysStr = getShortcutStrFromEvent(e)
+  if (keysStr) {
+    globalStore.shortcut[key] = keysStr
   }
 }
 const isTauri = !!import.meta.env.TAURI_ARCH
@@ -47,7 +42,8 @@ const oninitTauriLaunchConf = async () => {
         <search-select v-model:value="globalStore.defaultSortingMethod" :conv="sortMethodConv" :options="sortMethods" />
       </a-form-item>
       <a-form-item :label="$t('defaultViewMode')">
-        <search-select v-model:value="globalStore.defaultViewMode" :conv="{ value: v => v, text: v => $t(v) }" :options="viewModes" />
+        <search-select v-model:value="globalStore.defaultViewMode" :conv="{ value: v => v, text: v => $t(v) }"
+          :options="viewModes" />
       </a-form-item>
       <a-form-item :label="$t('gridThumbnailWidth')">
         <a-input-number v-model:value="globalStore.gridThumbnailSize" :min="256" :max="1024" /> (px)
@@ -91,13 +87,13 @@ const oninitTauriLaunchConf = async () => {
       </a-form-item>
       <template v-if="isTauri">
         <h2>{{ t('clientSpecificSettings') }}</h2>
-        <a-form-item >
-        <div class="col">
-          <a-button @click="oninitTauriLaunchConf" class="clear-btn">
-            {{ $t('initiateSoftwareStartupConfig') }}
-          </a-button>
-        </div>
-      </a-form-item>
+        <a-form-item>
+          <div class="col">
+            <a-button @click="oninitTauriLaunchConf" class="clear-btn">
+              {{ $t('initiateSoftwareStartupConfig') }}
+            </a-button>
+          </div>
+        </a-form-item>
       </template>
     </a-form>
   </div>
