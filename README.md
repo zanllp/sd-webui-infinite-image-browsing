@@ -81,7 +81,7 @@ If you like this project and find it helpful, please consider giving it a ⭐️
 
 ## As a standalone program that runs using Python. (without SD-webui):
 
-Refer to [Can the extension function without the web UI?](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47.)
+Refer to [Can the extension function without the web UI?](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47)
 
 ## As a desktop application (without SD-webui and Python):
 Download and install the program from the `releases` section on the right-hand side of the repository page.
