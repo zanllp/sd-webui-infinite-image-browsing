@@ -85,7 +85,7 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 5. 等待安装完成，然后点击`应用并重启UI`。
 
 ## 作为使用Python运行的独立程序（不需要SD-webui）:
-请参考[Can the extension function without the web UI? ↗](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47.)
+请参考[Can the extension function without the web UI?](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47)
 
 ## 作为桌面应用程序（不需要SD-webui和Python）:
 从仓库页面右侧的`releases`部分下载并安装程序。
