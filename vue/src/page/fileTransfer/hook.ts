@@ -1020,7 +1020,7 @@ export function useFileItemActions(
     const keysStr = getShortcutStrFromEvent(e)
     if (previewing.value) {
       const action = Object.entries(global.shortcut).find(
-        (v) => v[1] === keysStr
+        (v) => v[1] === keysStr && v[1]
       )?.[0] as keyof Shortcut
       if (action) {
         e.stopPropagation()
