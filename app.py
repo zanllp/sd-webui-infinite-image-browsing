@@ -93,9 +93,9 @@ class AppUtils:
         update_image_index: bool = False,
         extra_paths: List[str] = [],
         sd_webui_path_relative_to_config=False,
-        allow_cors = False,
-        enable_shutdown = False,
-        sd_webui_dir: Optional[str] = None
+        allow_cors=False,
+        enable_shutdown=False,
+        sd_webui_dir: Optional[str] = None,
     ):
         """
         Parameter definitions can be found by running the `python app.py -h `command or by examining the setup_parser() function.
@@ -108,8 +108,10 @@ class AppUtils:
         self.enable_shutdown = enable_shutdown
         self.sd_webui_dir = sd_webui_dir
         if sd_webui_dir:
-            DataBase.path = os.path.join(sd_webui_dir, 'extensions/sd-webui-infinite-image-browsing/iib.db')
-            self.sd_webui_config = os.path.join(sd_webui_dir, 'config.json')
+            DataBase.path = os.path.join(
+                sd_webui_dir, "extensions/sd-webui-infinite-image-browsing/iib.db"
+            )
+            self.sd_webui_config = os.path.join(sd_webui_dir, "config.json")
             self.sd_webui_path_relative_to_config = True
 
     def set_params(self, *args, **kwargs) -> None:
@@ -149,7 +151,8 @@ class AppUtils:
             extra_paths_cli=normalize_paths(extra_paths),
             sd_webui_path_relative_to_config=self.sd_webui_path_relative_to_config,
             allow_cors=self.allow_cors,
-            enable_shutdown=self.enable_shutdown
+            enable_shutdown=self.enable_shutdown,
+            launch_mode="server",
         )
 
     def get_root_browser_app(self) -> FastAPI:
@@ -200,7 +203,7 @@ def setup_parser() -> argparse.ArgumentParser:
         "--enable_shutdown",
         action="store_true",
         help="Enable the shutdown endpoint.",
-    )    
+    )
     parser.add_argument(
         "--sd_webui_dir",
         type=str,

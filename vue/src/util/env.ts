@@ -1,0 +1,1 @@
+export const isTauri = !!import.meta.env.TAURI_ARCH

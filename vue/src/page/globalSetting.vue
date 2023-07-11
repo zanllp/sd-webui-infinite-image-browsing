@@ -9,6 +9,7 @@ import { relaunch } from '@tauri-apps/api/process'
 import { appConfFilename } from '@/taurilaunchModal'
 import { fs, invoke } from '@tauri-apps/api'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
+import { isTauri } from '@/util/env'
 
 const globalStore = useGlobalStore()
 
@@ -23,7 +24,6 @@ const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
     globalStore.shortcut[key] = keysStr
   }
 }
-const isTauri = !!import.meta.env.TAURI_ARCH
 
 const oninitTauriLaunchConf = async () => {
   await invoke('shutdown_api_server_command')
