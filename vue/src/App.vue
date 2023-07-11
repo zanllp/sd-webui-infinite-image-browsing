@@ -8,6 +8,7 @@ import { createReactiveQueue, globalEvents, useGlobalEventListen } from './util'
 import { resolveQueryActions } from './queryActions'
 import { refreshTauriConf, tauriConf } from './util/tauriAppConf'
 import { openModal } from './taurilaunchModal'
+import { isTauri } from './util/env'
 
 const globalStore = useGlobalStore()
 const queue = createReactiveQueue()
@@ -23,7 +24,7 @@ useGlobalEventListen('updateGlobalSetting', async () => {
   resolveQueryActions(globalStore)
 })
 onMounted(async () => {
-  if (import.meta.env.TAURI_ARCH) {
+  if (isTauri) {
     openModal()
   }
   globalEvents.emit('updateGlobalSetting')

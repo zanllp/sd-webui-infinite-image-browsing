@@ -35,19 +35,21 @@ const tags = computed(() => {
       <template v-if="isImageFile(file.name)">
         <a-menu-item key="viewGenInfo">{{ $t('viewGenerationInfo') }}</a-menu-item>
         <a-menu-divider />
-        <a-menu-item key="send2txt2img">{{ $t('sendToTxt2img') }}</a-menu-item>
-        <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
-        <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
-        <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
-        <a-sub-menu key="send2controlnet" :title="$t('sendToControlNet')">
-          <a-menu-item key="send2controlnet-txt2img">{{ $t('t2i') }}</a-menu-item>
-          <a-menu-item key="send2controlnet-img2img">{{ $t('i2i') }}</a-menu-item>
-        </a-sub-menu>
+        <template v-if="global.conf?.launch_mode !== 'server'">
+          <a-menu-item key="send2txt2img">{{ $t('sendToTxt2img') }}</a-menu-item>
+          <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
+          <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
+          <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
+          <a-sub-menu key="send2controlnet" :title="$t('sendToControlNet')">
+            <a-menu-item key="send2controlnet-txt2img">{{ $t('t2i') }}</a-menu-item>
+            <a-menu-item key="send2controlnet-img2img">{{ $t('i2i') }}</a-menu-item>
+          </a-sub-menu>
+        </template>
         <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
         <a-menu-divider />
         <a-sub-menu key="toggle-tag" :title="$t('toggleTag')">
-          <a-menu-item v-for="tag in tags" :key="`toggle-tag-${tag.id}`">{{ tag.name }} <star-filled v-if="tag.selected" /><star-outlined
-              v-else />
+          <a-menu-item v-for="tag in tags" :key="`toggle-tag-${tag.id}`">{{ tag.name }} <star-filled
+              v-if="tag.selected" /><star-outlined v-else />
           </a-menu-item>
         </a-sub-menu>
         <a-menu-item key="openWithLocalFileBrowser">{{ $t('openWithLocalFileBrowser') }}</a-menu-item>

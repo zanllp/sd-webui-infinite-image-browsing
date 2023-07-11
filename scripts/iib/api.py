@@ -173,6 +173,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             "all_custom_tags": all_custom_tags,
             "extra_paths": extra_paths,
             "enable_access_control": enable_access_control,
+            "launch_mode": kwargs.get("launch_mode", "sd"),
         }
 
     class DeleteFilesReq(BaseModel):
@@ -229,7 +230,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 else f"目标文件夹 {req.dest} 不存在。"
             )
             raise HTTPException(400, detail=error_msg)
-            
+
         conn = DataBase.get_conn()
         for path in req.file_paths:
             check_path_trust(path)
@@ -417,12 +418,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             raise HTTPException(status_code=403)
         open_folder(*os.path.split(req.path))
 
-
-    
     @app.post(pre + "/shutdown")
     async def shutdown_app():
         # This API endpoint is mainly used as a sidecar in Tauri applications to shut down the application
-        if not kwargs.get('enable_shutdown'):
+        if not kwargs.get("enable_shutdown"):
             raise HTTPException(status_code=403, detail="Shutdown is disabled.")
         os.kill(os.getpid(), 9)
         return {"message": "Application is shutting down."}

@@ -79,6 +79,7 @@ export interface GlobalConf {
   sd_cwd: string
   extra_paths: { path: string }[]
   enable_access_control: boolean
+  launch_mode: 'server' | 'sd'
 }
 
 export const getGlobalSetting = async () => {

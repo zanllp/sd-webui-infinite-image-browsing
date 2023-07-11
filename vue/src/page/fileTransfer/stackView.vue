@@ -25,6 +25,7 @@ import fullScreenContextMenu from './fullScreenContextMenu.vue'
 import { copy2clipboardI18n } from '@/util'
 import { openFolder } from '@/api'
 import { sortMethods } from './fileSort'
+import { isTauri } from '@/util/env'
 
 const global = useGlobalStore()
 const props = defineProps<{
@@ -138,7 +139,7 @@ watch(
         <div class="actions">
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
           <a class="opt" @click.prevent.stop="selectAll"> {{ $t('selectAll') }} </a>
-          <a class="opt" @click.prevent="share"> {{ $t('share') }} </a>
+          <a class="opt" @click.prevent="share" v-if="!isTauri"> {{ $t('share') }} </a>
           <a-dropdown>
             <a class="opt" @click.prevent>
               {{ $t('quickMove') }}
