@@ -53,6 +53,7 @@ fn shutdown_api_server_command(state: tauri::State<'_, AppState>) {
 fn main() {
     let listener = std::net::TcpListener::bind("localhost:0").expect("无法绑定到任何可用端口");
     let port = listener.local_addr().unwrap().port();
+    drop(listener);
     let port_str = port.to_string();
     let mut args = vec!["--port", &port_str, "--allow_cors", "--enable_shutdown"];
     let contents = read_config_file("app.conf.json").unwrap_or_default();

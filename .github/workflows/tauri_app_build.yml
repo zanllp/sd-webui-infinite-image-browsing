@@ -9,7 +9,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows-latest,ubuntu-20.04]
 
     runs-on: ${{ matrix.os }}
 
@@ -19,11 +19,15 @@ jobs:
       - name: Check-out repository
         uses: actions/checkout@v3
 
+      - run: echo "VERSION=$(jq -r '.package.version' vue/src-tauri/tauri.conf.json)" >> "$GITHUB_ENV"
+        if: matrix.os == 'ubuntu-20.04'
+      - run: echo "VERSION=$(jq -r '.package.version' vue/src-tauri/tauri.conf.json)" >> $env:GITHUB_ENV
+        if: matrix.os == 'windows-latest'
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+          python-version: '3.10' 
           cache: 'pip'
           cache-dependency-path: |
             **/requirements*.txt
@@ -40,16 +44,19 @@ jobs:
           output-file: iib_api_server
           output-dir: out
       
-      - name: Upload Artifacts
+      - name: Upload Server Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ runner.os }} Build
+          name: iib_api_server-${{ env.VERSION }}-${{ runner.os }}
           path: |
-            out/*.exe
-            out/*.bin
-            out/*.app/**/*
+            out/iib_api_server.exe
+            out/iib_api_server
       
       - run: mv out/iib_api_server.exe vue/src-tauri/iib_api_server-x86_64-pc-windows-msvc.exe
+        if: matrix.os == 'windows-latest'
+
+      - run: mv out/iib_api_server vue/src-tauri/iib_api_server-x86_64-unknown-linux-gnu
+        if: matrix.os == 'ubuntu-20.04'
 
       - name: Install frontend dependencies
         run: yarn install
@@ -68,27 +75,56 @@ jobs:
         with:
           workspaces: './vue/src-tauri -> target'
 
+      - name: Install dependencies (ubuntu only)
+        if: matrix.os == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libayatana-appindicator3-dev librsvg2-dev patchelf
+
       - name: Build the app
         run: |
           yarn tauri-build
         working-directory: vue
+      
+      
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: bundle-${{ env.VERSION }}-${{ runner.os }}
+          path: |
+            vue/src-tauri/target/release/bundle/nsis/Infinite Image Browsing_${{ env.VERSION }}_x64-setup.exe
+            vue/src-tauri/target/release/bundle/deb/infinite-image-browsing_${{ env.VERSION }}_amd64.deb
 
-      - name: Extract version and product name
-        id: extract
-        run: |
-          echo "::set-output name=PRODUCT_NAME::$(jq -r '.package.productName' vue/src-tauri/tauri.conf.json)"
-          echo "::set-output name=VERSION::$(jq -r '.package.version' vue/src-tauri/tauri.conf.json)"
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@v3
+      - run: echo "VERSION=$(jq -r '.package.version' vue/src-tauri/tauri.conf.json)" >> "$GITHUB_ENV"
 
       - name: Delete drafts
         uses: hugo19941994/delete-draft-releases@v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: actions/download-artifact@v3
+        with:
+          name: bundle-${{ env.VERSION }}-Windows
+          path: artifacts
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: bundle-${{ env.VERSION }}-Linux
+          path: artifacts
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           draft: true
-          tag_name: v${{ steps.extract.outputs.VERSION }}
-          files: |
-            vue/src-tauri/target/release/bundle/nsis/${{ steps.extract.outputs.PRODUCT_NAME }}_${{ steps.extract.outputs.VERSION }}_x64-setup.exe
+          tag_name: v${{ env.VERSION }}
+          files: artifacts/**/*
           
