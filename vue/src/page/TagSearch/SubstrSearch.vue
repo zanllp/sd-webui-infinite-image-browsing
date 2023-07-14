@@ -32,7 +32,8 @@ const {
   scroller,
   showMenuIdx,
   onFileDragStart,
-  onFileDragEnd
+  onFileDragEnd,
+  cellWidth
 } = useImageSearch()
 const substr = ref('')
 
@@ -71,8 +72,9 @@ useGlobalEventListen('searchIndexExpired', () => info.value && (info.value.expir
 </script>
 <template>
   <div class="container" ref="stackViewEl">
-    <div class="search-bar" v-if="info" >
-      <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder')" :disabled="!queue.isIdle" @keydown.enter="query"/>
+    <div class="search-bar" v-if="info">
+      <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder')" :disabled="!queue.isIdle"
+        @keydown.enter="query" />
       <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
         {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
       <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!substr">{{
@@ -101,9 +103,8 @@ useGlobalEventListen('searchIndexExpired', () => info.value && (info.value.expir
           <!-- idx 和file有可能丢失 -->
           <file-item-cell :idx="idx" :file="file" v-model:show-menu-idx="showMenuIdx" @file-item-click="onFileItemClick"
             :full-screen-preview-image-url="images[previewIdx] ? toRawFileUrl(images[previewIdx]) : ''"
-            :selected="multiSelectedIdxs.includes(idx)" @context-menu-click="onContextMenuClickU"
-            @dragstart="onFileDragStart" @dragend="onFileDragEnd"
-            @preview-visible-change="onPreviewVisibleChange" />
+            :cell-width="cellWidth" :selected="multiSelectedIdxs.includes(idx)" @context-menu-click="onContextMenuClickU"
+            @dragstart="onFileDragStart" @dragend="onFileDragEnd" @preview-visible-change="onPreviewVisibleChange" />
         </template>
       </RecycleScroller>
       <div v-if="previewing" class="preview-switch">

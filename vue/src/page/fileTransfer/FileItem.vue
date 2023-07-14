@@ -4,7 +4,7 @@ import { useGlobalStore } from '@/store/useGlobalStore'
 import { fallbackImage } from 'vue3-ts-util'
 import type { FileNodeInfo } from '@/api/files'
 import { createReactiveQueue, isImageFile } from '@/util'
-import { toImageThumbnailUrl, toRawFileUrl, type ViewMode } from './hook'
+import { toImageThumbnailUrl, toRawFileUrl } from './hook'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { computed, ref } from 'vue'
 import { getImageSelectedCustomTag, type Tag } from '@/api/db'
@@ -17,10 +17,10 @@ const props = withDefaults(
     idx: number
     selected?: boolean
     showMenuIdx?: number
-    viewMode?: ViewMode
+    cellWidth: number
     fullScreenPreviewImageUrl?: string
   }>(),
-  { selected: false, viewMode: 'previewGrid' }
+  { selected: false }
 )
 
 const emit = defineEmits<{
@@ -43,13 +43,9 @@ const onRightClick = () => {
 }
 
 const q = createReactiveQueue()
-const thumbnailSize = computed(() =>
-  props.viewMode === 'previewGrid'
-    ? [global.gridThumbnailSize, global.gridThumbnailSize].join('x')
-    : [global.largeGridThumbnailSize, global.largeGridThumbnailSize].join('x')
-)
 const imageSrc = computed(() => {
-  return global.enableThumbnail ? toImageThumbnailUrl(props.file, thumbnailSize.value) : toRawFileUrl(props.file)
+  const r =  global.gridThumbnailResolution
+  return global.enableThumbnail ? toImageThumbnailUrl(props.file, [r,r].join('x')) : toRawFileUrl(props.file)
 })
 </script>
 <template>
@@ -61,12 +57,10 @@ const imageSrc = computed(() => {
     @update:visible="(v: boolean) => typeof idx === 'number' && emit('update:showMenuIdx', v ? idx : -1)"
   >
     <li
-      class="file file-item-trigger"
+      class="file file-item-trigger grid"
       :class="{
         clickable: file.type === 'dir',
-        selected,
-        grid: viewMode === 'previewGrid' || viewMode === 'largePreviewGrid',
-        'large-grid': viewMode === 'largePreviewGrid'
+        selected
       }"
       :data-idx="idx"
       :key="file.name"
@@ -76,7 +70,7 @@ const imageSrc = computed(() => {
       @contextmenu="onRightClick"
       @click.capture="emit('fileItemClick', $event, file, idx)"
     >
-      <div v-if="viewMode !== 'detailList'">
+      <div >
         <a-dropdown>
           <div class="more">
             <ellipsis-outlined />
@@ -108,7 +102,7 @@ const imageSrc = computed(() => {
           <file-outlined class="icon center" v-if="file.type === 'file'" />
           <folder-open-outlined class="icon center" v-else />
         </div>
-        <div class="profile">
+        <div class="profile" v-if="cellWidth > 128">
           <div class="name line-clamp-1">
             {{ file.name }}
           </div>
@@ -122,21 +116,6 @@ const imageSrc = computed(() => {
           </div>
         </div>
       </div>
-      <template v-else>
-        <file-outlined class="icon" v-if="file.type === 'file'" />
-        <folder-open-outlined class="icon" v-else />
-        <div class="name line-clamp-1">
-          {{ file.name }}
-        </div>
-        <div class="basic-info">
-          <div>
-            {{ file.size }}
-          </div>
-          <div>
-            {{ file.date }}
-          </div>
-        </div>
-      </template>
     </li>
     <template #overlay>
       <context-menu
@@ -229,22 +208,13 @@ const imageSrc = computed(() => {
 
       img,
       .preview-icon-wrap > [role='img'] {
-        height: 256px;
-        width: 256px;
+        height: v-bind('$props.cellWidth + "px"');
+        width: v-bind('$props.cellWidth + "px"');
         object-fit: contain;
       }
     }
   }
 
-  &.large-grid {
-    :deep() {
-      img,
-      .preview-icon-wrap > [role='img'] {
-        height: 512px;
-        width: 512px;
-      }
-    }
-  }
 
   &.clickable {
     cursor: pointer;

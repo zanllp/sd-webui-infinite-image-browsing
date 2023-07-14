@@ -30,7 +30,8 @@ const {
   scroller,
   showMenuIdx,
   onFileDragStart,
-  onFileDragEnd
+  onFileDragEnd,
+  cellWidth
 } = useImageSearch()
 
 const props = defineProps<{
@@ -85,6 +86,7 @@ watch(
           <file-item-cell
             :idx="idx"
             :file="file"
+            :cell-width="cellWidth"
             v-model:show-menu-idx="showMenuIdx"
             @dragstart="onFileDragStart"
             @dragend="onFileDragEnd"
