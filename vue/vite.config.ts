@@ -27,7 +27,7 @@ export default defineConfig({
   },
   envPrefix: ['VITE_', 'TAURI_'],
   plugins: [
-    vue(),
+    vue({ script: { defineModel: true }  }),
     vueJsx(),
     Components({
       resolvers: [AntDesignVueResolver({ importStyle: 'less' })]

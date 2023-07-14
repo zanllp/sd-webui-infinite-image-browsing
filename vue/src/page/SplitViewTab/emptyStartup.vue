@@ -138,6 +138,17 @@ const addToSearchScanPathAndQuickMove = async () => {
         <LockOutlined></LockOutlined>
       </template>
     </a-alert>
+    <a-alert show-icon v-if="!global.dontShowAgainNewImgOpts">
+      <template #message>
+        <div class="access-mode-message">
+          <div>
+            {{ $t('majorUpdateCustomCellSizeTips') }}
+          </div>
+          <div flex-placeholder />
+          <a @click.prevent="global.dontShowAgainNewImgOpts = true">{{ $t('dontShowAgain') }}</a>
+        </div>
+      </template>
+    </a-alert>
     <div class="content">
       <div class="feature-item" v-if="walkModeSupportedDir.length">
         <h2>{{ $t('walkMode') }}</h2>

@@ -130,9 +130,6 @@ export interface Props {
   walkModePath?: string
 }
 
-export type ViewMode = 'detailList' | 'previewGrid' | 'largePreviewGrid'
-export const viewModes: ViewMode[] = ['detailList', 'largePreviewGrid', 'previewGrid']
-
 export interface Page {
   files: FileNodeInfo[]
   walkFiles?: FileNodeInfo[][] // 使用walk时，各个文件夹之间分散排序，避免创建时间不同的带来的干扰
@@ -143,11 +140,14 @@ export interface Page {
  * @param props
  * @returns
  */
-export function usePreview(
-  props: Props,
-  custom?: { scroller: Ref<Scroller | undefined> }
-) {
-  const { previewIdx, eventEmitter, canLoadNext, previewing, sortedFiles: files } = useHookShareState().toRefs()
+export function usePreview(props: Props, custom?: { scroller: Ref<Scroller | undefined> }) {
+  const {
+    previewIdx,
+    eventEmitter,
+    canLoadNext,
+    previewing,
+    sortedFiles: files
+  } = useHookShareState().toRefs()
   const { state } = useHookShareState()
   const scroller = computed(() => custom?.scroller.value ?? state.scroller)
   let waitScrollTo = null as number | null
@@ -523,8 +523,8 @@ export function useLocation(props: Props) {
   }
 
   const selectAll = () => {
-    console.log(`select all 0 -> ${sortedFiles.value.length}`);
-    
+    console.log(`select all 0 -> ${sortedFiles.value.length}`)
+
     multiSelectedIdxs.value = range(0, sortedFiles.value.length)
   }
 
@@ -566,26 +566,16 @@ export function useFilesDisplay(props: Props) {
   } = useHookShareState().toRefs()
   const { state } = useHookShareState()
   const moreActionsDropdownShow = ref(false)
-  const viewMode = ref(global.defaultViewMode)
-  const gridSize = 272
-  const profileHeight = 64
-  const largeGridSize = gridSize * 2
+  const cellWidth = ref(global.defaultGridCellWidth)
+  const gridSize = computed(() => cellWidth.value + 16) // margin 8
+  const profileHeight = 44
   const { width } = useElementSize(stackViewEl)
-  const gridItems = computed(() => {
-    const w = width.value
-    if (viewMode.value === 'detailList' || !w) {
-      return
-    }
-    return ~~(w / (viewMode.value === 'previewGrid' ? gridSize : largeGridSize))
-  })
+  const gridItems = computed(() => ~~(width.value / gridSize.value))
 
   const itemSize = computed(() => {
-    const mode = viewMode.value
-    if (mode === 'detailList') {
-      return { first: 80, second: undefined }
-    }
-    const second = mode === 'previewGrid' ? gridSize : largeGridSize
-    const first = second + profileHeight
+    const second = gridSize.value
+    const first = second + (cellWidth.value <= 128 ? 0 : profileHeight)
+    
     return {
       first,
       second
@@ -645,15 +635,14 @@ export function useFilesDisplay(props: Props) {
     sortedFiles,
     sortMethodConv,
     moreActionsDropdownShow,
-    viewMode,
     gridSize,
     sortMethod,
-    largeGridSize,
     onScroll,
     loadNextDir,
     loadNextDirLoading,
     canLoadNext,
-    itemSize
+    itemSize,
+    cellWidth
   }
 }
 
@@ -1014,7 +1003,6 @@ export function useFileItemActions(
   }
 
   const { isOutside } = useMouseInElement(stackViewEl)
-
 
   useWatchDocument('keydown', (e) => {
     const keysStr = getShortcutStrFromEvent(e)

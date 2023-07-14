@@ -171,11 +171,26 @@ const zh = {
   confirmToAddToQuickMove:
     '确定添加？如果文件夹过大将会消耗过多时间建立索引。（如果不需要了你可以在文件夹右上角的更多里面移除）',
   clientSpecificSettings: '客户端特有的设置',
-  initiateSoftwareStartupConfig: '初始化软件启动配置'
+  initiateSoftwareStartupConfig: '初始化软件启动配置',
+  gridCellWidth: '网格单元宽度 (px)',
+  defaultGridCellWidth: '默认网格单元宽度 (px)',
+  thumbnailResolution: '缩略图分辨率 (px)',
+  livePreview: '实时预览',
+  other: '其他',
+  
+  ImageBrowsingSettings: '图像浏览设置',
+  majorUpdateCustomCellSizeTips: `重大更新：你可以自定义网格图像的大小了，在全局设置页或者右上角的“更多”里面进行调整`
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  majorUpdateCustomCellSizeTips : `Major Update: You can now customize the size of the grid image. Adjust it in the global settings page or in the "More" menu in the upper right corner.`,
+  ImageBrowsingSettings: 'Image Browsing Settings',
+  other: 'Other',
+  livePreview: 'Live Preview',
+  gridCellWidth: 'Grid Cell Width (px)',
+  defaultGridCellWidth: 'Default Grid Cell Width (px)',
+  thumbnailResolution: 'Thumbnail Resolution (px)',
   inputTargetFolderPath: 'Enter the absolute path of the target folder',
   pathDoesNotExist: 'Path does not exist',
   confirmToAddToQuickMove:

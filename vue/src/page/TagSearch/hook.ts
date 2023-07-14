@@ -20,7 +20,7 @@ export const useImageSearch = () => {
   const scroller = ref<Scroller>()
   const propsMock = { tabIdx: -1, target: 'local', paneIdx: -1, walkMode: false } as const
   const { stackViewEl, multiSelectedIdxs, stack } = useHookShareState({ images }).toRefs()
-  const { itemSize, gridItems } = useFilesDisplay(propsMock)
+  const { itemSize, gridItems, cellWidth } = useFilesDisplay(propsMock)
   const { showMenuIdx } = useMobileOptimization()
   useLocation(propsMock)
   const { onFileDragStart,  onFileDragEnd } = useFileTransfer()
@@ -67,6 +67,7 @@ export const useImageSearch = () => {
     showMenuIdx,
     multiSelectedIdxs,
     onFileDragStart,
-    onFileDragEnd
+    onFileDragEnd,
+    cellWidth
   }
 }

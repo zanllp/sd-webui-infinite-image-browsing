@@ -17,7 +17,7 @@ const global = useGlobalStore()
 const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> = {
   local: defineAsyncComponent(() => import('@/page/fileTransfer/stackView.vue')),
   empty: defineAsyncComponent(() => import('./emptyStartup.vue')),
-  'global-setting': defineAsyncComponent(() => import('@/page/globalSetting.vue')),
+  'global-setting': defineAsyncComponent(() => import('@/page/globalSetting/globalSetting.vue')),
   'tag-search-matched-image-grid': defineAsyncComponent(
     () => import('@/page/TagSearch/MatchedImageGrid.vue')
   ),

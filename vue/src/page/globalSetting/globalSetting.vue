@@ -3,13 +3,14 @@ import { t } from '@/i18n'
 import { useGlobalStore, type Shortcut } from '@/store/useGlobalStore'
 import { ref } from 'vue'
 import { SearchSelect } from 'vue3-ts-util'
-import { sortMethodConv, sortMethods } from '../page/fileTransfer/fileSort'
-import { viewModes } from '../page/fileTransfer/hook'
+import { sortMethodConv, sortMethods } from '@/page/fileTransfer/fileSort'
 import { relaunch } from '@tauri-apps/api/process'
 import { appConfFilename } from '@/taurilaunchModal'
 import { fs, invoke } from '@tauri-apps/api'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { isTauri } from '@/util/env'
+import ImageSetting from './ImageSetting.vue'
+
 
 const globalStore = useGlobalStore()
 
@@ -34,29 +35,20 @@ const oninitTauriLaunchConf = async () => {
 <template>
   <div class="panel">
     <a-select v-if="false" />
+    
     <a-form>
-      <a-form-item :label="$t('useThumbnailPreview')">
-        <a-switch v-model:checked="globalStore.enableThumbnail" />
+        <h2 style="margin-top: 0;">{{ t('ImageBrowsingSettings') }}</h2>
+      <ImageSetting/>
+        <h2>{{ t('other') }}</h2>
+      <a-form-item :label="$t('onlyFoldersAndImages')">
+        <a-switch v-model:checked="globalStore.onlyFoldersAndImages" />
       </a-form-item>
       <a-form-item :label="$t('defaultSortingMethod')">
         <search-select v-model:value="globalStore.defaultSortingMethod" :conv="sortMethodConv" :options="sortMethods" />
       </a-form-item>
-      <a-form-item :label="$t('defaultViewMode')">
-        <search-select v-model:value="globalStore.defaultViewMode" :conv="{ value: v => v, text: v => $t(v) }"
-          :options="viewModes" />
-      </a-form-item>
-      <a-form-item :label="$t('gridThumbnailWidth')">
-        <a-input-number v-model:value="globalStore.gridThumbnailSize" :min="256" :max="1024" /> (px)
-      </a-form-item>
-      <a-form-item :label="$t('largeGridThumbnailWidth')">
-        <a-input-number v-model:value="globalStore.largeGridThumbnailSize" :min="256" :max="1024" />
-        (px)
-      </a-form-item>
+
       <a-form-item :label="$t('longPressOpenContextMenu')">
         <a-switch v-model:checked="globalStore.longPressOpenContextMenu" />
-      </a-form-item>
-      <a-form-item :label="$t('onlyFoldersAndImages')">
-        <a-switch v-model:checked="globalStore.onlyFoldersAndImages" />
       </a-form-item>
       <a-form-item :label="$t('lang')">
         <div class="lang-select-wrap">
@@ -119,7 +111,8 @@ const oninitTauriLaunchConf = async () => {
 }
 
 h2 {
-  margin: 64px 0 32px;
+  margin: 64px 0 16px;
+  font-weight: bold;
 }
 
 .row {
