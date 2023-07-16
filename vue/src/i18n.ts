@@ -27,7 +27,7 @@ const zh = {
   previewGrid: '预览网格',
   largePreviewGrid: '大尺寸预览网格',
   sortBy: '按照',
-  moveSelectedFilesTo: '下列文件移动至',
+  moveSelectedFilesTo: '下列文件 移动 / 复制 至',
   confirm: '确定',
   download: '下载',
   local: '本地',
@@ -177,14 +177,22 @@ const zh = {
   thumbnailResolution: '缩略图分辨率 (px)',
   livePreview: '实时预览',
   other: '其他',
-  
+
   ImageBrowsingSettings: '图像浏览设置',
-  majorUpdateCustomCellSizeTips: `重大更新：你可以自定义网格图像的大小了，在全局设置页或者右上角的“更多”里面进行调整`
+  majorUpdateCustomCellSizeTips: `重大更新：你可以自定义网格图像的大小了，在全局设置页或者右上角的“更多”里面进行调整`,
+  desktop: '桌面',
+  move: '移动',
+  inputFolderName: '输入文件夹名',
+  createFolder: '创建文件夹'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
-  majorUpdateCustomCellSizeTips : `Major Update: You can now customize the size of the grid image. Adjust it in the global settings page or in the "More" menu in the upper right corner.`,
+  createFolder: 'Create Folder',
+  inputFolderName: 'Input Folder Name',
+  desktop: 'Desktop',
+  move: 'Move',
+  majorUpdateCustomCellSizeTips: `Major Update: You can now customize the size of the grid image. Adjust it in the global settings page or in the "More" menu in the upper right corner.`,
   ImageBrowsingSettings: 'Image Browsing Settings',
   other: 'Other',
   livePreview: 'Live Preview',
@@ -318,7 +326,7 @@ const en: Record<keyof typeof zh, string> = {
   previewGrid: 'Preview grid',
   largePreviewGrid: 'Large preview grid',
   sortBy: 'Sort by',
-  moveSelectedFilesTo: 'Move selected files to',
+  moveSelectedFilesTo: 'Move / Copy selected files to',
   confirm: 'Confirm',
   download: 'Download',
   local: 'Local',

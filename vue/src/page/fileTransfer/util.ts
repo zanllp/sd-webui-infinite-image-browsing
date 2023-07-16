@@ -11,16 +11,18 @@ export const toImageThumbnailUrl = (file: FileNodeInfo, size: string = '256x256'
     file.date
   )}`
 
-  export type FileTransferData = {
-    path: string[]
-    loc: string
-    includeDir: boolean
-    nodes: FileNodeInfo[]
-    __id: 'FileTransferData'
-  }
-  
-  export const isFileTransferData = (v: any): v is FileTransferData => 
-    typeof v === 'object' && v.__id === 'FileTransferData'
-  
+export type FileTransferData = {
+  path: string[]
+  loc: string
+  includeDir: boolean
+  nodes: FileNodeInfo[]
+  __id: 'FileTransferData'
+}
 
-    
+export const isFileTransferData = (v: any): v is FileTransferData =>
+  typeof v === 'object' && v.__id === 'FileTransferData'
+
+export const getFileTransferDataFromDragEvent = (e: DragEvent) => {
+  const data = JSON.parse(e.dataTransfer?.getData('text') ?? '{}')
+  return isFileTransferData(data) ? data : null
+}

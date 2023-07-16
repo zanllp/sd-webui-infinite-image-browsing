@@ -25,7 +25,6 @@ import { copy2clipboardI18n } from '@/util'
 import { openFolder } from '@/api'
 import { sortMethods } from './fileSort'
 import { isTauri } from '@/util/env'
-import numInput from '@/components/numInput.vue'
 
 const global = useGlobalStore()
 const props = defineProps<{
@@ -50,7 +49,7 @@ const {
 } = useHookShareState().toRefs()
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, quickMoveTo,
   addToSearchScanPathAndQuickMove, searchPathInfo, locInputValue, isLocationEditing,
-  onLocEditEnter, onEditBtnClick, share, selectAll
+  onLocEditEnter, onEditBtnClick, share, selectAll, onCreateFloderBtnClick
 } = useLocation(props)
 const {
   gridItems,
@@ -65,7 +64,7 @@ const {
   onScroll,
   cellWidth
 } = useFilesDisplay(props)
-const { onDrop, onFileDragStart, onFileDragEnd } = useFileTransfer()
+const { onDrop, onFileDragStart,  onFileDragEnd } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions(
   props,
   { openNext }
@@ -132,8 +131,8 @@ watch(
 
           <AButton size="small" v-if="isLocationEditing" @click="onLocEditEnter" type="primary">{{ $t('go') }}</AButton>
           <div v-else style="margin-left: 8px;">
-            <a @click.prevent="copyLocation" style="margin-right: 4px;">{{ $t('copy') }}</a> <a
-              @click.prevent.stop="onEditBtnClick">{{ $t('edit') }}</a>
+            <a @click.prevent="copyLocation" style="margin-right: 4px;">{{ $t('copy') }}</a> 
+            <a @click.prevent.stop="onEditBtnClick">{{ $t('edit') }}</a>
           </div>
         </div>
         <div class="actions">
@@ -185,6 +184,9 @@ watch(
                   </div>
                   <div style="padding: 4px;">
                     <a @click.prevent="openFolder(currLocation + '/')">{{ $t('openWithLocalFileBrowser') }}</a>
+                  </div>
+                  <div style="padding: 4px;">
+                    <a @click.prevent="onCreateFloderBtnClick">{{ $t('createFolder') }}</a>
                   </div>
                 </a-form>
               </div>

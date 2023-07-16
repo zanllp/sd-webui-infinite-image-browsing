@@ -136,6 +136,9 @@ body {
   .ant-message {
     z-index: 10000;
   }
+  .hidden-antd-btns-modal .ant-modal-confirm-btns {
+    display: none;
+  }
 }
 
 @mixin line-clamp($n: 1) {
@@ -154,9 +157,8 @@ body {
   @include line-clamp(3);
 }
 
-
 .actions {
-  &>* {
+  & > * {
     margin-right: 8px;
   }
 }

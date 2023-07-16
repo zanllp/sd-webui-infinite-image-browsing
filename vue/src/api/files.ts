@@ -28,3 +28,16 @@ export const moveFiles = async (
   const resp = await axiosInst.value.post(`/move_files`, { file_paths, dest, create_dest_folder })
   return resp.data as { files: FileNodeInfo[] }
 }
+
+export const copyFiles = async (
+  file_paths: string[],
+  dest: string,
+  create_dest_folder?: boolean
+) => {
+  const resp = await axiosInst.value.post(`/copy_files`, { file_paths, dest, create_dest_folder })
+  return resp.data as { files: FileNodeInfo[] }
+}
+
+export const mkdirs = async (dest_folder: string) => {
+  await axiosInst.value.post(`/mkdirs`, { dest_folder })
+}
