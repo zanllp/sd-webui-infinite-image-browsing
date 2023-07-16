@@ -19,20 +19,21 @@ import {
   makeAsyncFunctionSingle,
   globalEvents
 } from '@/util'
-import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
+import { getTargetFolderFiles, type FileNodeInfo, deleteFiles, moveFiles, copyFiles } from '@/api/files'
 import { sortFiles, sortMethodConv } from './fileSort'
 import { cloneDeep, debounce, last, range, uniqBy, uniqueId } from 'lodash-es'
 import * as Path from '@/util/path'
 import type Progress from 'nprogress'
 // @ts-ignore
 import NProgress from 'multi-nprogress'
-import { Modal, message, notification } from 'ant-design-vue'
+import { Button, Modal, message, notification } from 'ant-design-vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
 import { addScannedPath, removeScannedPath, toggleCustomTagToImg } from '@/api/db'
-import { FileTransferData, isFileTransferData, toRawFileUrl } from './util'
+import { FileTransferData, getFileTransferDataFromDragEvent, toRawFileUrl } from './util'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
+import { openCreateFlodersModal, MultiSelectTips } from './functionalCallableComp'
 export * from './util'
 
 export const stackCache = new Map<string, Page[]>()
@@ -41,14 +42,14 @@ const global = useGlobalStore()
 const sli = useImgSliStore()
 const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
 export const { eventEmitter: events, useEventListen } = typedEventEmitter<{
-  removeFiles(_: { paths: string[]; loc: string }): void
-  addFiles(_: { files: FileNodeInfo[]; loc: string }): void
+  removeFiles (_: { paths: string[]; loc: string }): void
+  addFiles (_: { files: FileNodeInfo[]; loc: string }): void
 }>()
 
 export interface Scroller {
   $_startIndex: number
   $_endIndex: number
-  scrollToItem(idx: number): void
+  scrollToItem (idx: number): void
 }
 
 export const { useHookShareState } = createTypedShareStateHook(
@@ -114,9 +115,9 @@ export const { useHookShareState } = createTypedShareStateHook(
       props,
       getPane,
       ...typedEventEmitter<{
-        loadNextDir(isFullscreenPreview?: boolean): Promise<void>
-        refresh(): Promise<void>
-        selectAll(): void
+        loadNextDir (isFullscreenPreview?: boolean): Promise<void>
+        refresh (): Promise<void>
+        selectAll (): void
       }>()
     }
   },
@@ -140,7 +141,7 @@ export interface Page {
  * @param props
  * @returns
  */
-export function usePreview(props: Props, custom?: { scroller: Ref<Scroller | undefined> }) {
+export function usePreview (props: Props, custom?: { scroller: Ref<Scroller | undefined> }) {
   const {
     previewIdx,
     eventEmitter,
@@ -235,11 +236,11 @@ export function usePreview(props: Props, custom?: { scroller: Ref<Scroller | und
     if (previewing.value && !state.sortedFiles[previewIdx.value]) {
       message.info(t('manualExitFullScreen'), 5)
       await delay(500)
-      ;(
-        document.querySelector(
-          '.ant-image-preview-operations-operation .anticon-close'
-        ) as HTMLDivElement
-      )?.click()
+        ; (
+          document.querySelector(
+            '.ant-image-preview-operations-operation .anticon-close'
+          ) as HTMLDivElement
+        )?.click()
       previewIdx.value = -1
     }
   })
@@ -256,7 +257,7 @@ export function usePreview(props: Props, custom?: { scroller: Ref<Scroller | und
 /**
  * 路径栏相关
  */
-export function useLocation(props: Props) {
+export function useLocation (props: Props) {
   const np = ref<Progress.NProgress>()
   const {
     scroller,
@@ -530,6 +531,11 @@ export function useLocation(props: Props) {
 
   useEventListen.value('selectAll', selectAll)
 
+  const onCreateFloderBtnClick = async () => {
+    await openCreateFlodersModal(currLocation.value)
+    await refresh()
+  }
+
   return {
     locInputValue,
     isLocationEditing,
@@ -548,11 +554,12 @@ export function useLocation(props: Props) {
     scroller,
     share,
     selectAll,
-    quickMoveTo
+    quickMoveTo,
+    onCreateFloderBtnClick
   }
 }
 
-export function useFilesDisplay(props: Props) {
+export function useFilesDisplay (props: Props) {
   const {
     scroller,
     sortedFiles,
@@ -574,8 +581,8 @@ export function useFilesDisplay(props: Props) {
 
   const itemSize = computed(() => {
     const second = gridSize.value
-    const first = second + (cellWidth.value <= 128 ? 0 : profileHeight)
-    
+    const first = second + (cellWidth.value <= 160 ? 0 : profileHeight)
+
     return {
       first,
       second
@@ -646,20 +653,8 @@ export function useFilesDisplay(props: Props) {
   }
 }
 
-const multiSelectTips = () =>
-  h(
-    'p',
-    {
-      style: {
-        background: 'var(--zp-secondary-background)',
-        padding: '8px',
-        borderLeft: '4px solid var(--primary-color)'
-      }
-    },
-    `Tips: ${t('multiSelectTips')}`
-  )
 
-export function useFileTransfer() {
+export function useFileTransfer () {
   const { currLocation, sortedFiles, currPage, multiSelectedIdxs, eventEmitter } =
     useHookShareState().toRefs()
   const recover = () => {
@@ -695,32 +690,47 @@ export function useFileTransfer() {
   }
 
   const onDrop = async (e: DragEvent) => {
-    const data = JSON.parse(e.dataTransfer?.getData('text') ?? '{}')
-    if (isFileTransferData(data)) {
-      const toPath = currLocation.value
-      if (data.loc === toPath) {
-        return
-      }
-      const content = h('div', [
-        h('div', `${t('moveSelectedFilesTo')}${toPath}`),
-        h(
-          'ol',
-          { style: 'max-height:50vh;overflow:auto;' },
-          data.path.map((v) => v.split(/[/\\]/).pop()).map((v) => h('li', v))
-        ),
-        multiSelectTips()
-      ])
-      Modal.confirm({
-        title: t('confirm') + '?',
-        content,
-        maskClosable: true,
-        async onOk() {
-          await moveFiles(data.path, toPath)
-          events.emit('removeFiles', { paths: data.path, loc: data.loc })
-          await eventEmitter.value.emit('refresh')
-        }
-      })
+    const data = getFileTransferDataFromDragEvent(e)
+    if (!data) {
+      return
     }
+    const toPath = currLocation.value
+    if (data.loc === toPath) {
+      return
+    }
+    const q = createReactiveQueue()
+    const onCopyBtnClick = async () => q.pushAction(async () => {
+      await copyFiles(data.path, toPath)
+      eventEmitter.value.emit('refresh')
+      Modal.destroyAll()
+    })
+
+    const onMoveBtnClick = () => q.pushAction(async () => {
+      await moveFiles(data.path, toPath)
+      events.emit('removeFiles', { paths: data.path, loc: data.loc })
+      eventEmitter.value.emit('refresh')
+      Modal.destroyAll()
+    })
+    Modal.confirm({
+      title: t('confirm') + '?',
+      width: '60vw',
+      content: () => <div>
+        <div>
+          {`${t('moveSelectedFilesTo')}${toPath}`}
+          <ol style={{ maxHeight: '50vh', overflow: 'auto' }}>
+            {data.path.map((v) => <li>{v.split(/[/\\]/).pop()}</li>)}
+          </ol>
+        </div>
+        <MultiSelectTips />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }} class="actions">
+          <Button onClick={Modal.destroyAll}>{t('cancel')}</Button>
+          <Button type="primary" loading={!q.isIdle} onClick={onCopyBtnClick}>{t('copy')}</Button>
+          <Button type="primary" loading={!q.isIdle} onClick={onMoveBtnClick}>{t('move')}</Button>
+        </div>
+      </div>,
+      maskClosable: true,
+      wrapClassName: 'hidden-antd-btns-modal'
+    })
   }
   return {
     onFileDragStart,
@@ -730,7 +740,7 @@ export function useFileTransfer() {
   }
 }
 
-export function useFileItemActions(
+export function useFileItemActions (
   props: Props,
   { openNext }: { openNext: (file: FileNodeInfo) => Promise<void> }
 ) {
@@ -979,15 +989,15 @@ export function useFileItemActions(
           Modal.confirm({
             title: t('confirmDelete'),
             maskClosable: true,
-            content: h('div', [
-              h(
-                'ol',
-                { style: 'max-height:50vh;overflow:auto;' },
-                selectedFiles.map((v) => v.fullpath.split(/[/\\]/).pop()).map((v) => h('li', v))
-              ),
-              multiSelectTips()
-            ]),
-            async onOk() {
+            width: '60vw',
+            content:
+              <div>
+                <ol style={{ maxHeight: '50vh', overflow: 'auto' }}>
+                  {selectedFiles.map((v) => <li>{v.fullpath.split(/[/\\]/).pop()}</li>)}
+                </ol>
+                <MultiSelectTips />
+              </div>,
+            async onOk () {
               const paths = selectedFiles.map((v) => v.fullpath)
               await deleteFiles(paths)
               message.success(t('deleteSuccess'))

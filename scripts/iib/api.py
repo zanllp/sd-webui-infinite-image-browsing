@@ -214,10 +214,40 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 )
                 raise HTTPException(400, detail=error_msg)
 
+    
+    class CreateFoldersReq(BaseModel):
+        dest_folder: str
+
+    @app.post(pre + "/mkdirs", dependencies=[Depends(get_token)])
+    async def create_folders(req: CreateFoldersReq):
+        if enable_access_control:
+            if not is_path_under_parents(req.dest_folder):
+                raise HTTPException(status_code=403)
+        os.makedirs(req.dest_folder, exist_ok=True)
+
+
     class MoveFilesReq(BaseModel):
         file_paths: List[str]
         dest: str
         create_dest_folder: Optional[bool] = False
+
+
+    @app.post(pre + "/copy_files", dependencies=[Depends(get_token)])
+    async def copy_files(req: MoveFilesReq):
+        for path in req.file_paths:
+            check_path_trust(path)
+            try:
+                shutil.copy(path, req.dest)
+                txt_path = get_img_geninfo_txt_path(path)
+                if txt_path:
+                    shutil.copy(txt_path, req.dest)
+            except OSError as e:
+                error_msg = (
+                    f"Error copying file {path} to {req.dest}: {e}"
+                    if locale == "en"
+                    else f"复制文件 {path} 到 {req.dest} 时出错：{e}"
+                )
+                raise HTTPException(400, detail=error_msg)
 
     @app.post(pre + "/move_files", dependencies=[Depends(get_token)])
     async def move_files(req: MoveFilesReq):
@@ -575,6 +605,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         f"{db_pre}/scanned_paths", status_code=201, dependencies=[Depends(get_token)]
     )
     async def create_scanned_path(scanned_path: ScannedPathModel):
+        if enable_access_control:
+            if not is_path_under_parents(scanned_path.path):
+                raise HTTPException(status_code=403)
         conn = DataBase.get_conn()
         path = ExtraPath(scanned_path.path)
         try:

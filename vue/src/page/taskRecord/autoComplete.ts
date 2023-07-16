@@ -2,6 +2,7 @@ import { checkPathExists, type getGlobalSetting } from '@/api'
 import { t } from '@/i18n'
 import { pick, type ReturnTypeAsync } from '@/util'
 import { normalize } from '@/util/path'
+import { uniqBy } from 'lodash-es'
 
 export const getAutoCompletedTagList = async ({
   global_setting,
@@ -22,14 +23,13 @@ export const getAutoCompletedTagList = async ({
     'outdir_samples',
     'outdir_txt2img_grids',
     'outdir_txt2img_samples',
-    'outdir_save'
+    'outdir_save',
   )
   const pathMap = {
     ...picked,
-    // embeddings: 'embeddings',
-    // hypernetworks: 'models/hypernetworks',
     cwd: sd_cwd,
-    home
+    home,
+    desktop: `${home}/Desktop`
   }
   const exists = await checkPathExists(Object.values(pathMap).filter((v) => v))
   type Keys = keyof typeof pathMap
@@ -38,18 +38,17 @@ export const getAutoCompletedTagList = async ({
     outdir_img2img_samples: t('i2i'),
     outdir_save: t('saveButtonSavesTo'),
     outdir_extras_samples: t('extra'),
-    // additional_networks_extra_lora_path: 'LoRA',
     outdir_grids: t('gridImage'),
     outdir_img2img_grids: t('i2i-grid'),
     outdir_samples: t('image'),
     outdir_txt2img_grids: t('t2i-grid'),
-    // hypernetworks: t('hypernetworks'),
-    // embeddings: 'Embedding',
     cwd: t('workingFolder'),
-    home: 'home'
+    home: 'home',
+    desktop: t('desktop')
   }
   const pathAliasMap = {
     home: normalize(home),
+    [t('desktop')]: normalize(pathMap.desktop),
     [t('workingFolder')]: normalize(cwd),
     [t('t2i')]: picked.outdir_txt2img_samples &&  normalize(picked.outdir_txt2img_samples),
     [t('i2i')]: picked.outdir_img2img_samples && normalize(picked.outdir_img2img_samples)
@@ -64,15 +63,16 @@ export const getAutoCompletedTagList = async ({
     }
     return replacedPaths.sort((a,b) => a.length - b.length)[0]
   }
-  return Object.keys(cnMap)
-    .filter((k) => exists[pathMap[k as keyof typeof pathMap] as string])
-    .map((k) => {
-      const key = k as Keys
-      return {
-        key,
-        zh: cnMap[key],
-        dir: pathMap[key],
-        can_delete: false
-      }
-    }).concat(extra_paths.map(v => ({ key: v.path, zh: findshortest(v.path), dir: v.path, can_delete: true })) as any[])
+  const res = Object.keys(cnMap)
+  .filter((k) => exists[pathMap[k as keyof typeof pathMap] as string])
+  .map((k) => {
+    const key = k as Keys
+    return {
+      key,
+      zh: cnMap[key],
+      dir: pathMap[key],
+      can_delete: false
+    }
+  }).concat(extra_paths.map(v => ({ key: v.path, zh: findshortest(v.path), dir: v.path, can_delete: true })) as any[])
+  return uniqBy(res, 'key')
 }
