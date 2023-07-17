@@ -66,10 +66,13 @@ def update_image_data(search_dirs: List[str]):
 
                 if not parsed_params:
                     continue
-                exif, lora, pos, _ = parsed_params
+                meta = parsed_params["meta"]
+                lora = parsed_params["lora"]
+                lyco = parsed_params["lyco"]
+                pos = parsed_params["pos_prompt"]
                 size_tag = Tag.get_or_create(
                     conn,
-                    str(exif.get("Size-1", 0)) + " * " + str(exif.get("Size-2", 0)),
+                    str(meta.get("Size-1", 0)) + " * " + str(meta.get("Size-2", 0)),
                     type="size",
                 )
                 safe_save_img_tag(ImageTag(img.id, size_tag.id))
@@ -80,13 +83,16 @@ def update_image_data(search_dirs: List[str]):
                     "Postprocess upscale by",
                     "Postprocess upscaler",
                 ]:
-                    v = exif.get(k)
+                    v = meta.get(k)
                     if not v:
                         continue
                     tag = Tag.get_or_create(conn, str(v), k)
                     safe_save_img_tag(ImageTag(img.id, tag.id))
                 for i in lora:
                     tag = Tag.get_or_create(conn, i["name"], "lora")
+                    safe_save_img_tag(ImageTag(img.id, tag.id))
+                for i in lyco:
+                    tag = Tag.get_or_create(conn, i["name"], "lyco")
                     safe_save_img_tag(ImageTag(img.id, tag.id))
                 for k in pos:
                     tag = Tag.get_or_create(conn, k, "pos")
