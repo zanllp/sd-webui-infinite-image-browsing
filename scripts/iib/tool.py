@@ -221,7 +221,7 @@ def get_created_date(folder_path: str):
     return get_formatted_date(os.path.getctime(folder_path))
 
 
-def unique_by(seq, key_func = lambda x: x):
+def unique_by(seq, key_func=lambda x: x):
     seen = set()
     return [x for x in seq if not (key := key_func(x)) in seen and not seen.add(key)]
 
@@ -229,8 +229,10 @@ def unique_by(seq, key_func = lambda x: x):
 def find(lst, comparator):
     return next((item for item in lst if comparator(item)), None)
 
+
 def findIndex(lst, comparator):
     return next((i for i, item in enumerate(lst) if comparator(item)), -1)
+
 
 def get_img_geninfo_txt_path(path: str):
     txt_path = re.sub(r"\..+$", ".txt", path)
@@ -280,9 +282,10 @@ def read_info_from_image(image, path="") -> str:
 re_param_code = r'\s*([\w ]+):\s*("(?:\\"[^,]|\\"|\\|[^\"])+"|[^,]*)(?:,|$)'
 re_param = re.compile(re_param_code)
 re_imagesize = re.compile(r"^(\d+)x(\d+)$")
-re_lora_prompt = re.compile("<lora:([\w_\s.]+):([\d.]+)>")
-re_parens = re.compile(r"[\\/\[\](){}]+")
+re_lora_prompt = re.compile("<lora:([\w_\s.]+):([\d.]+)>", re.IGNORECASE)
 re_lora_extract = re.compile(r"([\w_\s.]+)(?:\d+)?")
+re_lyco_prompt = re.compile("<lyco:([\w_\s.]+):([\d.]+)>", re.IGNORECASE)
+re_parens = re.compile(r"[\\/\[\](){}]+")
 
 
 def lora_extract(lora: str):
@@ -295,28 +298,34 @@ def lora_extract(lora: str):
 
 def parse_prompt(x: str):
     x = re.sub(
-        re_parens, "", x.lower().replace("，", ",").replace("-", " ").replace("_", " ")
+        re_parens, "", x.replace("，", ",").replace("-", " ").replace("_", " ")
     )
     tag_list = [x.strip() for x in x.split(",")]
     res = []
     lora_list = []
+    lyco_list = []
     for tag in tag_list:
         if len(tag) == 0:
             continue
         idx_colon = tag.find(":")
         if idx_colon != -1:
-            lora_res = re.search(re_lora_prompt, tag)
-            if lora_res:
+            if re.search(re_lora_prompt, tag):
+                lora_res = re.search(re_lora_prompt, tag)
                 lora_list.append(
                     {"name": lora_res.group(1), "value": float(lora_res.group(2))}
+                )
+            elif re.search(re_lyco_prompt, tag):
+                lyco_res = re.search(re_lyco_prompt, tag)
+                lyco_list.append(
+                    {"name": lyco_res.group(1), "value": float(lyco_res.group(2))}
                 )
             else:
                 tag = tag[0:idx_colon]
                 if len(tag):
-                    res.append(tag)
+                    res.append(tag.lower())
         else:
-            res.append(tag)
-    return res, lora_list
+            res.append(tag.lower())
+    return {"pos_prompt": res, "lora": lora_list, "lyco": lyco_list}
 
 
 def parse_generation_parameters(x: str):
@@ -325,7 +334,7 @@ def parse_generation_parameters(x: str):
     negative_prompt = ""
     done_with_prompt = False
     if not x:
-        return {}, [], [], []
+        return {"meta": {}, "pos_prompt": [], "lora": [], "lyco": []}
     *lines, lastline = x.strip().split("\n")
     if len(re_param.findall(lastline)) < 3:
         lines.append(lastline)
@@ -354,20 +363,20 @@ def parse_generation_parameters(x: str):
             res[k + "-2"] = m.group(2)
         else:
             res[k] = v
-    pos_prompt, lora = parse_prompt(prompt)
+    prompt_parse_res = parse_prompt(prompt)
+    lora = prompt_parse_res["lora"]
     for k in res:
         k_s = str(k)
         if k_s.startswith("AddNet Module") and str(res[k]).lower() == "lora":
             model = res[k_s.replace("Module", "Model")]
             value = res.get(k_s.replace("Module", "Weight A"), "1")
             lora.append({"name": lora_extract(model), "value": float(value)})
-
-    return (
-        res,
-        unique_by(lora, lambda x: x["name"]),
-        unique_by(pos_prompt, lambda x: x),
-        [],
-    )
+    return {
+        "meta": res,
+        "pos_prompt": unique_by(prompt_parse_res["pos_prompt"]),
+        "lora": unique_by(lora, lambda x: x["name"].lower()),
+        "lyco": unique_by(prompt_parse_res["lyco"], lambda x: x["name"].lower()),
+    }
 
 
 tags_translate: Dict[str, str] = {}

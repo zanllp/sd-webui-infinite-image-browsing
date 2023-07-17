@@ -33,6 +33,7 @@ const classSort = [
   'custom',
   'Model',
   'lora',
+  'lyco',
   'pos',
   'size',
   'Postprocess upscaler',

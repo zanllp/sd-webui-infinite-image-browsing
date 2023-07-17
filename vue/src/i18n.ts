@@ -184,11 +184,13 @@ const zh = {
   move: '移动',
   inputFolderName: '输入文件夹名',
   createFolder: '创建文件夹',
-  sendToThirdPartyExtension: '发送到第三方拓展'
+  sendToThirdPartyExtension: '发送到第三方拓展',
+  lyco: 'LyCORIS'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  lyco: 'LyCORIS',
   sendToThirdPartyExtension: 'Send to third-party extension',
   createFolder: 'Create Folder',
   inputFolderName: 'Input Folder Name',
