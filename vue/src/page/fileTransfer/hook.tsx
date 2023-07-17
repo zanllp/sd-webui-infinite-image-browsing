@@ -2,7 +2,6 @@ import { useGlobalStore, type FileTransferTabPane, type Shortcut } from '@/store
 import { useImgSliStore } from '@/store/useImgSli'
 import { onLongPress, useElementSize, useMouseInElement } from '@vueuse/core'
 import { ref, computed, watch, onMounted, h, type Ref } from 'vue'
-import { gradioApp, parentWindow } from '@/util'
 import { genInfoCompleted, getImageGenerationInfo, openFolder, setImgPath } from '@/api'
 import {
   useWatchDocument,
@@ -840,7 +839,7 @@ export function useFileItemActions (
       try {
         spinning.value = true
         await setImgPath(file.fullpath) // 设置图像路径
-        imgTransferBus.postMessage('iib_hidden_img_update_trigger') // 触发图像组件更新
+        imgTransferBus.postMessage(JSON.stringify({ event: 'click_hidden_button', btnEleId: 'iib_hidden_img_update_trigger' })) // 触发图像组件更新
         const warnId = setTimeout(
           () => notification.warn({ message: t('long_loading'), duration: 20 }),
           5000
@@ -848,7 +847,8 @@ export function useFileItemActions (
         // ok(await genInfoCompleted(), 'genInfoCompleted timeout') // 等待消息生成完成
         await genInfoCompleted() // 等待消息生成完成
         clearTimeout(warnId)
-        imgTransferBus.postMessage(`iib_hidden_tab_${tab}`) // 触发粘贴
+        imgTransferBus.postMessage(
+          JSON.stringify({ event: 'click_hidden_button', btnEleId: `iib_hidden_tab_${tab}` })) // 触发粘贴
       } catch (error) {
         console.error(error)
         message.error('发送图像失败，请携带console的错误消息找开发者')
@@ -900,31 +900,22 @@ export function useFileItemActions (
       }
       case 'send2controlnet-img2img':
       case 'send2controlnet-txt2img': {
-        const appDoc = gradioApp()
-        const par = parentWindow()
         const type = e.key.split('-')[1] as 'img2img' | 'txt2img'
-        type === 'img2img' ? par.switch_to_img2img() : par.switch_to_txt2img()
-        await delay(100)
-        const cn = appDoc.querySelector(`#${type}_controlnet`) as HTMLDivElement
-        const wrap = cn.querySelector('.label-wrap') as HTMLDivElement
-        if (!wrap.className.includes('open')) {
-          wrap.click()
-          await delay(100)
-        }
-        wrap.scrollIntoView()
-        const response = await fetch(toRawFileUrl(file))
-        const imageBlob = await response.blob()
-        const imageFile = new File([imageBlob], 'image.jpg', {
-          type: imageBlob.type,
-          lastModified: Date.now()
-        })
-        const dataTransfer = new DataTransfer()
-        dataTransfer.items.add(imageFile)
-        const pasteEvent = new ClipboardEvent('paste', {
-          clipboardData: dataTransfer,
-          bubbles: true
-        })
-        wrap.dispatchEvent(pasteEvent)
+        imgTransferBus.postMessage(
+          JSON.stringify({ event: 'send_to_control_net', type, url: toRawFileUrl(file) }))
+        break
+      }
+      case 'send2outpaint': {
+
+        imageGenInfo.value = await q.pushAction(() => getImageGenerationInfo(file.fullpath)).res
+        const [prompt, negPrompt] = (imageGenInfo.value || '').split('\n')
+        imgTransferBus.postMessage(JSON.stringify({
+          event: 'send_to_outpaint',
+          url: toRawFileUrl(file),
+          prompt,
+          negPrompt: negPrompt.slice('Negative prompt: '.length)
+        }))
+
         break
       }
       case 'openWithWalkMode': {

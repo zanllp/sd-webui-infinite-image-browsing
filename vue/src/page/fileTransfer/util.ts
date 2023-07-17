@@ -6,7 +6,7 @@ export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
   `${apiBase.value}/file?path=${encode(file.fullpath)}&t=${encode(file.date)}${
     download ? `&disposition=${encode(file.name)}` : ''
   }`
-export const toImageThumbnailUrl = (file: FileNodeInfo, size: string = '256x256') =>
+export const toImageThumbnailUrl = (file: FileNodeInfo, size: string = '512x512') =>
   `${apiBase.value}/image-thumbnail?path=${encode(file.fullpath)}&size=${size}&t=${encode(
     file.date
   )}`
