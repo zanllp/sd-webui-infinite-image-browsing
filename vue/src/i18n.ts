@@ -183,11 +183,13 @@ const zh = {
   desktop: '桌面',
   move: '移动',
   inputFolderName: '输入文件夹名',
-  createFolder: '创建文件夹'
+  createFolder: '创建文件夹',
+  sendToThirdPartyExtension: '发送到第三方拓展'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  sendToThirdPartyExtension: 'Send to third-party extension',
   createFolder: 'Create Folder',
   inputFolderName: 'Input Folder Name',
   desktop: 'Desktop',

@@ -155,9 +155,10 @@ const baseInfoTags = computed(() => {
                   <a-menu-item key="send2img2img">{{ $t('sendToImg2img') }}</a-menu-item>
                   <a-menu-item key="send2inpaint">{{ $t('sendToInpaint') }}</a-menu-item>
                   <a-menu-item key="send2extras">{{ $t('sendToExtraFeatures') }}</a-menu-item>
-                  <a-sub-menu key="send2controlnet" :title="$t('sendToControlNet')">
-                    <a-menu-item key="send2controlnet-txt2img">{{ $t('t2i') }}</a-menu-item>
-                    <a-menu-item key="send2controlnet-img2img">{{ $t('i2i') }}</a-menu-item>
+                  <a-sub-menu key="sendToThirdPartyExtension" :title="$t('sendToThirdPartyExtension')">
+                    <a-menu-item key="send2controlnet-txt2img">ControlNet - {{ $t('t2i') }}</a-menu-item>
+                    <a-menu-item key="send2controlnet-img2img">ControlNet - {{ $t('i2i') }}</a-menu-item>
+                    <a-menu-item key="send2outpaint">Outpaint</a-menu-item>
                   </a-sub-menu>
                 </template>
                 <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
