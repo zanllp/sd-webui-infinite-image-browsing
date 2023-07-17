@@ -221,7 +221,7 @@ def get_created_date(folder_path: str):
     return get_formatted_date(os.path.getctime(folder_path))
 
 
-def unique_by(seq, key_func = lambda x: x):
+def unique_by(seq, key_func=lambda x: x):
     seen = set()
     return [x for x in seq if not (key := key_func(x)) in seen and not seen.add(key)]
 
@@ -229,8 +229,10 @@ def unique_by(seq, key_func = lambda x: x):
 def find(lst, comparator):
     return next((item for item in lst if comparator(item)), None)
 
+
 def findIndex(lst, comparator):
     return next((i for i, item in enumerate(lst) if comparator(item)), -1)
+
 
 def get_img_geninfo_txt_path(path: str):
     txt_path = re.sub(r"\..+$", ".txt", path)
@@ -280,9 +282,9 @@ def read_info_from_image(image, path="") -> str:
 re_param_code = r'\s*([\w ]+):\s*("(?:\\"[^,]|\\"|\\|[^\"])+"|[^,]*)(?:,|$)'
 re_param = re.compile(re_param_code)
 re_imagesize = re.compile(r"^(\d+)x(\d+)$")
-re_lora_prompt = re.compile("<lora:([\w_\s.]+):([\d.]+)>")
+re_lora_prompt = re.compile("<lora:([\w_\s.]+):([\d.]+)>", re.IGNORECASE)
 re_lora_extract = re.compile(r"([\w_\s.]+)(?:\d+)?")
-re_lyco_prompt = re.compile("<lyco:([\w_\s.]+):([\d.]+)>")
+re_lyco_prompt = re.compile("<lyco:([\w_\s.]+):([\d.]+)>", re.IGNORECASE)
 re_parens = re.compile(r"[\\/\[\](){}]+")
 
 
@@ -296,7 +298,7 @@ def lora_extract(lora: str):
 
 def parse_prompt(x: str):
     x = re.sub(
-        re_parens, "", x.lower().replace("，", ",").replace("-", " ").replace("_", " ")
+        re_parens, "", x.replace("，", ",").replace("-", " ").replace("_", " ")
     )
     tag_list = [x.strip() for x in x.split(",")]
     res = []
@@ -320,10 +322,10 @@ def parse_prompt(x: str):
             else:
                 tag = tag[0:idx_colon]
                 if len(tag):
-                    res.append(tag)
+                    res.append(tag.lower())
         else:
-            res.append(tag)
-    return { "pos_prompt": res, "lora": lora_list, "lyco": lyco_list }
+            res.append(tag.lower())
+    return {"pos_prompt": res, "lora": lora_list, "lyco": lyco_list}
 
 
 def parse_generation_parameters(x: str):
@@ -332,7 +334,7 @@ def parse_generation_parameters(x: str):
     negative_prompt = ""
     done_with_prompt = False
     if not x:
-        return {}, [], [], []
+        return {"meta": {}, "pos_prompt": [], "lora": [], "lyco": []}
     *lines, lastline = x.strip().split("\n")
     if len(re_param.findall(lastline)) < 3:
         lines.append(lastline)
@@ -372,8 +374,8 @@ def parse_generation_parameters(x: str):
     return {
         "meta": res,
         "pos_prompt": unique_by(prompt_parse_res["pos_prompt"]),
-        "lora": unique_by(lora, lambda x: x["name"]),
-        "lyco": unique_by(prompt_parse_res["lyco"], lambda x: x["name"])
+        "lora": unique_by(lora, lambda x: x["name"].lower()),
+        "lyco": unique_by(prompt_parse_res["lyco"], lambda x: x["name"].lower()),
     }
 
 
