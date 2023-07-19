@@ -9,21 +9,22 @@ import {
   useFileTransfer,
   useFileItemActions,
   usePreview,
-  type Scroller,
   useEventListen,
   useLocation
 } from '../fileTransfer/hook'
+import { useTagStore } from '@/store/useTagStore'
+import { debounce } from 'lodash-es'
 
 export const useImageSearch = () => {
   const images = ref<FileNodeInfo[]>()
   const queue = createReactiveQueue()
-  const scroller = ref<Scroller>()
+  const tagStore = useTagStore()
   const propsMock = { tabIdx: -1, target: 'local', paneIdx: -1, walkMode: false } as const
-  const { stackViewEl, multiSelectedIdxs, stack } = useHookShareState({ images }).toRefs()
+  const { stackViewEl, multiSelectedIdxs, stack, scroller } = useHookShareState({ images }).toRefs()
   const { itemSize, gridItems, cellWidth } = useFilesDisplay(propsMock)
   const { showMenuIdx } = useMobileOptimization()
   useLocation(propsMock)
-  const { onFileDragStart,  onFileDragEnd } = useFileTransfer()
+  const { onFileDragStart, onFileDragEnd } = useFileTransfer()
   const {
     showGenInfo,
     imageGenInfo,
@@ -31,10 +32,7 @@ export const useImageSearch = () => {
     onContextMenuClick,
     onFileItemClick
   } = useFileItemActions(propsMock, { openNext: identity })
-  const { previewIdx, previewing, onPreviewVisibleChange, previewImgMove, canPreview } = usePreview(
-    propsMock,
-    { scroller }
-  )
+  const { previewIdx, previewing, onPreviewVisibleChange, previewImgMove, canPreview } = usePreview(propsMock)
 
   const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
     stack.value = [{ curr: '', files: images.value! }] // hack，for delete multi files
@@ -42,9 +40,20 @@ export const useImageSearch = () => {
   }
 
   useEventListen('removeFiles', async ({ paths }) => {
-    images.value = images.value?.filter(v => !paths.includes(v.fullpath))
+    images.value = images.value?.filter((v) => !paths.includes(v.fullpath))
   })
-  
+
+  const updateImageTag = () => {
+    const s = scroller.value
+    if (s && images.value) {
+      const paths = images.value
+        .slice(Math.max(s.$_startIndex - 10, 0), s.$_endIndex + 10)
+        .map((v) => v.fullpath)
+      tagStore.fetchImageTags(paths)
+    }
+  }
+
+  const onScroll = debounce(updateImageTag, 300)
 
   return {
     scroller,
@@ -68,6 +77,8 @@ export const useImageSearch = () => {
     multiSelectedIdxs,
     onFileDragStart,
     onFileDragEnd,
-    cellWidth
+    cellWidth,
+    onScroll,
+    updateImageTag
   }
 }

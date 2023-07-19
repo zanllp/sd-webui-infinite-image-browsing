@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import fileItemCell from '@/page/fileTransfer/FileItem.vue'
 import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 // @ts-ignore
@@ -33,7 +33,9 @@ const {
   showMenuIdx,
   onFileDragStart,
   onFileDragEnd,
-  cellWidth
+  cellWidth,
+  onScroll,
+  updateImageTag
 } = useImageSearch()
 const substr = ref('')
 
@@ -56,7 +58,9 @@ const onUpdateBtnClick = makeAsyncFunctionSingle(
 )
 const query = async () => {
   images.value = await queue.pushAction(() => getImagesBySubstr(substr.value)).res
-  scroller.value?.scrollToItem(0)
+  await nextTick()
+  updateImageTag()
+  scroller.value!.scrollToItem(0)
   if (!images.value.length) {
     message.info(t('fuzzy-search-noResults'))
   }
@@ -98,7 +102,7 @@ useGlobalEventListen('searchIndexExpired', () => info.value && (info.value.expir
         </ASkeleton>
       </AModal>
       <RecycleScroller ref="scroller" class="file-list" v-if="images" :items="images" :item-size="itemSize.first"
-        key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems">
+        key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems" @scroll="onScroll">
         <template v-slot="{ item: file, index: idx }">
           <!-- idx 和file有可能丢失 -->
           <file-item-cell :idx="idx" :file="file" v-model:show-menu-idx="showMenuIdx" @file-item-click="onFileItemClick"

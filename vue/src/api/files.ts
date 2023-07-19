@@ -8,6 +8,7 @@ export interface FileNodeInfo {
   date: string
   bytes: number
   fullpath: string
+  is_under_scanned_path: boolean
 }
 
 export const getTargetFolderFiles = async (folder_path: string) => {

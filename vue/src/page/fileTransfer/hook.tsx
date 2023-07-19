@@ -1,7 +1,7 @@
 import { useGlobalStore, type FileTransferTabPane, type Shortcut } from '@/store/useGlobalStore'
 import { useImgSliStore } from '@/store/useImgSli'
 import { onLongPress, useElementSize, useMouseInElement } from '@vueuse/core'
-import { ref, computed, watch, onMounted, h, type Ref } from 'vue'
+import { ref, computed, watch, onMounted, h } from 'vue'
 import { genInfoCompleted, getImageGenerationInfo, openFolder, setImgPath } from '@/api'
 import {
   useWatchDocument,
@@ -33,11 +33,14 @@ import { addScannedPath, removeScannedPath, toggleCustomTagToImg } from '@/api/d
 import { FileTransferData, getFileTransferDataFromDragEvent, toRawFileUrl } from './util'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { openCreateFlodersModal, MultiSelectTips } from './functionalCallableComp'
+import { useTagStore } from '@/store/useTagStore'
 export * from './util'
 
 export const stackCache = new Map<string, Page[]>()
 
 const global = useGlobalStore()
+
+const tagStore = useTagStore()
 const sli = useImgSliStore()
 const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
 export const { eventEmitter: events, useEventListen } = typedEventEmitter<{
@@ -95,7 +98,7 @@ export const { useHookShareState } = createTypedShareStateHook(
     const previewing = ref(false)
 
     const getPane = () => {
-      return global.tabList[props.value.tabIdx].panes[props.value.paneIdx] as FileTransferTabPane
+      return global.tabList?.[props.value.tabIdx]?.panes?.[props.value.paneIdx] as FileTransferTabPane
     }
     return {
       previewing,
@@ -140,16 +143,16 @@ export interface Page {
  * @param props
  * @returns
  */
-export function usePreview (props: Props, custom?: { scroller: Ref<Scroller | undefined> }) {
+export function usePreview (props: Props) {
   const {
     previewIdx,
     eventEmitter,
     canLoadNext,
     previewing,
-    sortedFiles: files
+    sortedFiles: files,
+    scroller
   } = useHookShareState().toRefs()
   const { state } = useHookShareState()
-  const scroller = computed(() => custom?.scroller.value ?? state.scroller)
   let waitScrollTo = null as number | null
   const onPreviewVisibleChange = (v: boolean, lv: boolean) => {
     previewing.value = v
@@ -317,6 +320,9 @@ export function useLocation (props: Props) {
     currLocation,
     debounce((loc) => {
       const pane = getPane.value()
+      if (!pane) {
+        return
+      }
       pane.path = loc
       const filename = pane.path!.split('/').pop()
       const getTitle = () => {
@@ -634,7 +640,23 @@ export function useFilesDisplay (props: Props) {
 
   state.useEventListen('loadNextDir', fill)
 
-  const onScroll = debounce(() => fill(), 300)
+
+  const onViewedImagesChange = () => {
+    const s = scroller.value
+    if (s) {
+      const paths = sortedFiles.value.slice(Math.max(s.$_startIndex - 10, 0), s.$_endIndex + 10)
+        .filter(v => v.is_under_scanned_path && isImageFile(v.name))
+        .map(v => v.fullpath)
+      tagStore.fetchImageTags(paths)
+    }
+  }
+
+  watch(currLocation, debounce(onViewedImagesChange, 150))
+
+  const onScroll = debounce(() => {
+    fill()
+    onViewedImagesChange()
+  }, 300)
 
   return {
     gridItems,
@@ -648,7 +670,8 @@ export function useFilesDisplay (props: Props) {
     loadNextDirLoading,
     canLoadNext,
     itemSize,
-    cellWidth
+    cellWidth,
+    onViewedImagesChange
   }
 }
 
@@ -715,7 +738,7 @@ export function useFileTransfer () {
       width: '60vw',
       content: () => <div>
         <div>
-          {`${t('moveSelectedFilesTo')}${toPath}`}
+          {`${t('moveSelectedFilesTo')} ${toPath}`}
           <ol style={{ maxHeight: '50vh', overflow: 'auto' }}>
             {data.path.map((v) => <li>{v.split(/[/\\]/).pop()}</li>)}
           </ol>
@@ -860,6 +883,7 @@ export function useFileItemActions (
       const tagId = +`${e.key}`.split('toggle-tag-')[1]
       const { is_remove } = await toggleCustomTagToImg({ tag_id: tagId, img_path: file.fullpath })
       const tag = global.conf?.all_custom_tags.find((v) => v.id === tagId)?.name!
+      tagStore.refreshTags([file.fullpath])
       message.success(t(is_remove ? 'removedTagFromImage' : 'addedTagToImage', { tag }))
       return
     }

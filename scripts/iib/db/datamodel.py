@@ -1,5 +1,5 @@
 from sqlite3 import Connection, connect
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from scripts.iib.tool import (
     cwd,
     get_modified_date,
@@ -78,6 +78,14 @@ class Image:
                 (self.path, self.exif, self.size, self.date),
             )
             self.id = cur.lastrowid
+
+    def update_path(self, conn: Connection, new_path: str):
+        self.path = os.path.normpath(new_path)
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                "UPDATE image SET path = ? WHERE id = ?",
+                (self.path, self.id)
+            )
 
     @classmethod
     def get(cls, conn: Connection, id_or_path):
@@ -174,7 +182,7 @@ class Image:
                 deleted_ids.append(img.id)
         cls.safe_batch_remove(conn, deleted_ids)
         return images
-
+    
 
 class Tag:
     def __init__(self, name: str, score: int, type: str, count=0):
@@ -270,6 +278,8 @@ class Tag:
                 VALUES ("like", 0, "custom", 0);
                 """
             )
+    
+
 
 
 class ImageTag:
@@ -399,7 +409,31 @@ class ImageTag:
                     deleted_ids.append(img.id)
             Image.safe_batch_remove(conn, deleted_ids)
             return images
-
+        
+    @classmethod
+    def batch_get_tags_by_path(cls, conn: Connection, paths: List[str], type = "custom") -> Dict[str, List[Tag]]:
+        if not paths:
+            return {}
+        tag_dict = {}
+        with closing(conn.cursor()) as cur:
+            placeholders = ",".join("?" * len(paths))
+            query = f"""
+                SELECT image.path, tag.* FROM image_tag
+                INNER JOIN image ON image_tag.image_id = image.id
+                INNER JOIN tag ON image_tag.tag_id = tag.id
+                WHERE tag.type = '{type}' AND image.path IN ({placeholders})
+            """
+            cur.execute(query, paths)
+            rows = cur.fetchall()
+            for row in rows:
+                path = row[0]
+                tag = Tag.from_row(row[1:])
+                if path in tag_dict:
+                    tag_dict[path].append(tag)
+                else:
+                    tag_dict[path] = [tag]
+        return tag_dict
+    
     @classmethod
     def remove(
         cls,
