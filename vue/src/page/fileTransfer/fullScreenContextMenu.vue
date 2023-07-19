@@ -105,6 +105,7 @@ const baseInfoTags = computed(() => {
   }
   return tags
 })
+
 </script>
 
 <template>
@@ -130,7 +131,7 @@ const baseInfoTags = computed(() => {
         </a-dropdown>
         <div flex-placeholder v-if="state.expanded" />
         <div v-if="state.expanded" class="action-bar">
-          <a-dropdown :trigger="['hover']" :get-popup-container="getParNode" >
+          <a-dropdown :trigger="['hover']" :get-popup-container="getParNode">
             <a-button>{{ $t('toggleTag') }}</a-button>
             <template #overlay>
               <a-menu @click="emit('contextMenuClick', $event, file, idx)">
@@ -181,6 +182,11 @@ const baseInfoTags = computed(() => {
             </span>
           </span>
         </div>
+        <div class="tags-container" v-if="selectedTag">
+          <a-tag v-for="tag in selectedTag" :key="tag.id" :color="tagStore.getColor(tag.name)">
+            {{ tag.name }}
+          </a-tag>
+        </div>
         {{ imageGenInfo }}
       </div>
     </div>
@@ -199,6 +205,14 @@ const baseInfoTags = computed(() => {
   padding: 8px 16px;
   box-shadow: 0px 0px 4px var(--zp-secondary);
   border-radius: 4px;
+
+  .tags-container {
+    &>* {
+      margin-right: 4px;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+  }
 
   .container {
     height: 100%;
