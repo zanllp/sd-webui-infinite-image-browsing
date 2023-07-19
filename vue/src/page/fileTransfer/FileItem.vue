@@ -119,7 +119,7 @@ const imageSrc = computed(() => {
   &>* {
     margin: 0 0 4px 4px;
     font-size: 14px;
-    line-height: 1.8;
+    line-height: 1.6;
   }
 }
 
