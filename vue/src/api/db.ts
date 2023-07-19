@@ -1,3 +1,4 @@
+import { Dict } from '@/util'
 import type { FileNodeInfo } from './files'
 import { axiosInst } from './index'
 
@@ -84,4 +85,9 @@ export const addScannedPath = async (path: string) => {
 }
 export const removeScannedPath = async (path: string) => {
   await axiosInst.value.delete(scannedPaths, { data: { path } })
+}
+
+export const batchGetTagsByPath = async (paths: string[]) => {
+  const resp = await axiosInst.value.post('/db/get_image_tags', { paths })
+  return resp.data as Dict<Tag[]>
 }

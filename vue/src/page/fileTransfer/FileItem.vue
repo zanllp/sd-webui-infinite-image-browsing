@@ -3,14 +3,15 @@ import { FileOutlined, FolderOpenOutlined, EllipsisOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { fallbackImage } from 'vue3-ts-util'
 import type { FileNodeInfo } from '@/api/files'
-import { createReactiveQueue, isImageFile } from '@/util'
+import { isImageFile } from '@/util'
 import { toImageThumbnailUrl, toRawFileUrl } from './hook'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
-import { computed, ref } from 'vue'
-import { getImageSelectedCustomTag, type Tag } from '@/api/db'
+import { computed } from 'vue'
 import ContextMenu from './ContextMenu.vue'
+import { useTagStore } from '@/store/useTagStore'
 
 const global = useGlobalStore()
+const tagStore = useTagStore()
 const props = withDefaults(
   defineProps<{
     file: FileNodeInfo
@@ -32,72 +33,48 @@ const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
 }>()
 
-const selectedTag = ref([] as Tag[])
-const onRightClick = () => {
-  if (props?.file?.type !== 'file') {
-    return
-  }
-  q.pushAction(() => getImageSelectedCustomTag(props.file.fullpath)).res.then((res) => {
-    selectedTag.value = res
-  })
-}
+const customTags = computed(() => {
+  return tagStore.tagMap.get(props.file.fullpath) ?? []
+})
 
-const q = createReactiveQueue()
 const imageSrc = computed(() => {
-  const r =  global.gridThumbnailResolution
-  return global.enableThumbnail ? toImageThumbnailUrl(props.file, [r,r].join('x')) : toRawFileUrl(props.file)
+  const r = global.gridThumbnailResolution
+  return global.enableThumbnail ? toImageThumbnailUrl(props.file, [r, r].join('x')) : toRawFileUrl(props.file)
 })
 </script>
 <template>
-  <a-dropdown
-    :trigger="['contextmenu']"
-    :visible="
-      !global.longPressOpenContextMenu ? undefined : typeof idx === 'number' && showMenuIdx === idx
-    "
-    @update:visible="(v: boolean) => typeof idx === 'number' && emit('update:showMenuIdx', v ? idx : -1)"
-  >
-    <li
-      class="file file-item-trigger grid"
-      :class="{
-        clickable: file.type === 'dir',
-        selected
-      }"
-      :data-idx="idx"
-      :key="file.name"
-      draggable="true"
-      @dragstart="emit('dragstart', $event, idx)"
-      @dragend="emit('dragend', $event, idx)"
-      @contextmenu="onRightClick"
-      @click.capture="emit('fileItemClick', $event, file, idx)"
-    >
-      <div >
+  <a-dropdown :trigger="['contextmenu']" :visible="!global.longPressOpenContextMenu ? undefined : typeof idx === 'number' && showMenuIdx === idx
+    " @update:visible="(v: boolean) => typeof idx === 'number' && emit('update:showMenuIdx', v ? idx : -1)">
+    <li class="file file-item-trigger grid" :class="{
+      clickable: file.type === 'dir',
+      selected
+    }" :data-idx="idx" :key="file.name" draggable="true" @dragstart="emit('dragstart', $event, idx)"
+      @dragend="emit('dragend', $event, idx)" @click.capture="emit('fileItemClick', $event, file, idx)">
+
+      <div>
         <a-dropdown>
           <div class="more">
             <ellipsis-outlined />
           </div>
           <template #overlay>
-            <context-menu
-              :file="file"
-              :idx="idx"
-              :selected-tag="selectedTag"
-              @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)"
-            />
+            <context-menu :file="file" :idx="idx" :selected-tag="customTags"
+              @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)" />
           </template>
         </a-dropdown>
         <!-- :key="fullScreenPreviewImageUrl ? undefined : file.fullpath" 
           这么复杂是因为再全屏预览时可能因为直接删除导致fullpath变化，然后整个预览直接退出-->
-        <a-image
-          :key="file.fullpath"
-          :class="`idx-${idx}`"
-          v-if="isImageFile(file.name) "
-          :src="imageSrc"
-          :fallback="fallbackImage"
-          :preview="{
+        <div style="position: relative;" :key="file.fullpath" :class="`idx-${idx}`" v-if="isImageFile(file.name)">
+
+          <a-image :src="imageSrc" :fallback="fallbackImage" :preview="{
             src: fullScreenPreviewImageUrl,
             onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
-          }"
-        >
-        </a-image>
+          }" />
+          <div class="tags-container" v-if="customTags && cellWidth > 128">
+            <a-tag v-for="tag in customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
+              {{ tag.name }}
+            </a-tag>
+          </div>
+        </div>
         <div v-else class="preview-icon-wrap">
           <file-outlined class="icon center" v-if="file.type === 'file'" />
           <folder-open-outlined class="icon center" v-else />
@@ -118,12 +95,8 @@ const imageSrc = computed(() => {
       </div>
     </li>
     <template #overlay>
-      <context-menu
-        :file="file"
-        :idx="idx"
-        :selected-tag="selectedTag"
-        @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)"
-      />
+      <context-menu :file="file" :idx="idx" :selected-tag="customTags"
+        @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)" />
     </template>
   </a-dropdown>
 </template>
@@ -132,6 +105,20 @@ const imageSrc = computed(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.tags-container {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  width: calc(100% - 16px);
+  flex-wrap: wrap-reverse;
+  flex-direction: row-reverse;
+
+  &>* {
+    margin: 0 0 4px 4px;
+  }
 }
 
 .file {
@@ -207,7 +194,7 @@ const imageSrc = computed(() => {
       }
 
       img,
-      .preview-icon-wrap > [role='img'] {
+      .preview-icon-wrap>[role='img'] {
         height: v-bind('$props.cellWidth + "px"');
         width: v-bind('$props.cellWidth + "px"');
         object-fit: contain;

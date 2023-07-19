@@ -5,7 +5,7 @@ import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
 import { toRawFileUrl } from '@/page/fileTransfer/hook'
 import { getImagesByTags, type MatchImageByTagsReq } from '@/api/db'
-import { watch } from 'vue'
+import { nextTick, watch } from 'vue'
 import { copy2clipboardI18n } from '@/util'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
 import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
@@ -31,7 +31,9 @@ const {
   showMenuIdx,
   onFileDragStart,
   onFileDragEnd,
-  cellWidth
+  cellWidth,
+  onScroll,
+  updateImageTag
 } = useImageSearch()
 
 const props = defineProps<{
@@ -46,7 +48,9 @@ watch(
   async () => {
     const { res } = queue.pushAction(() => getImagesByTags(props.selectedTagIds))
     images.value = await res
-    scroller.value?.scrollToItem(0)
+    await nextTick()
+    updateImageTag()
+    scroller.value!.scrollToItem(0)
   },
   { immediate: true }
 )
@@ -81,6 +85,7 @@ watch(
         key-field="fullpath"
         :item-secondary-size="itemSize.second"
         :gridItems="gridItems"
+        @scroll="onScroll"
       >
         <template v-slot="{ item: file, index: idx }">
           <file-item-cell
