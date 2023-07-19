@@ -210,7 +210,7 @@ const baseInfoTags = computed(() => {
     &>* {
       margin-right: 4px;
       font-size: 14px;
-      line-height: 1.8;
+      line-height: 1.6;
     }
   }
 
