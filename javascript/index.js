@@ -1,4 +1,3 @@
-
 Promise.resolve().then(async () => {
   /**
    * This is a file generated using `yarn build`.
@@ -13,7 +12,7 @@ Promise.resolve().then(async () => {
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Infinite Image Browsing</title>
-    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-1da1c976.js"></script>
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-23e5bc7c.js"></script>
     <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-618900f2.css">
   </head>
 
@@ -25,18 +24,26 @@ Promise.resolve().then(async () => {
   </body>
 </html>
 `
-  const delay = (timeout = 0) => new Promise(resolve => setTimeout(resolve, timeout))
+  let containerSelector = '#infinite_image_browsing_container_wrapper'
+  let shouldMaximize = true
+
+  try {
+    containerSelector = __iib_root_container__
+    shouldMaximize = __iib_should_maximize__
+  } catch (e) {}
+
+  const delay = (timeout = 0) => new Promise((resolve) => setTimeout(resolve, timeout))
   const asyncCheck = async (getter, checkSize = 100, timeout = 1000) => {
     let target = getter()
     let num = 0
-    while ((checkSize * num < timeout) && (target === undefined || target === null)) {
+    while (checkSize * num < timeout && (target === undefined || target === null)) {
       await delay(checkSize)
       target = getter()
       num++
     }
     return target
   }
- const getTabIdxById = (id) => {
+  const getTabIdxById = (id) => {
     const tabList = gradioApp().querySelectorAll('#tabs > .tabitem[id^=tab_]')
     return Array.from(tabList).findIndex((v) => v.id.includes(id))
   }
@@ -50,22 +57,37 @@ Promise.resolve().then(async () => {
   }
 
   /**
-     * @type {HTMLDivElement}
-     */
-  const wrap = await asyncCheck(
-    () => gradioApp().querySelector('#infinite_image_browsing_container_wrapper'),
-    500,
-    Infinity
-  )
+   * @type {HTMLDivElement}
+   */
+  const wrap = await asyncCheck(() => gradioApp().querySelector(containerSelector), 500, Infinity)
   wrap.childNodes.forEach((v) => wrap.removeChild(v))
   const iframe = document.createElement('iframe')
   iframe.srcdoc = html
   iframe.style = `width: 100%;height:100vh`
   wrap.appendChild(iframe)
 
-  const imgTransferBus = new BroadcastChannel("iib-image-transfer-bus");
-  imgTransferBus.addEventListener("message", async (ev) => {
-    const data = JSON.parse(ev.data);
+  if (shouldMaximize) {
+    onUiTabChange(() => {
+      const el = get_uiCurrentTabContent()
+      if (el?.id.includes('infinite-image-browsing')) {
+        const topRect = gradioApp().querySelector('#iib_top').getBoundingClientRect()
+        wrap.style = `
+        top:${Math.max(48, topRect.top) - 10}px;
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        z-index: 100;
+        width: unset;
+        bottom: 10px;`
+      }
+    })
+
+    iframe.style = `width: 100%;height:100%`
+  }
+
+  const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
+  imgTransferBus.addEventListener('message', async (ev) => {
+    const data = JSON.parse(ev.data)
     if (typeof data !== 'object') {
       return
     }
@@ -73,12 +95,11 @@ Promise.resolve().then(async () => {
     const appDoc = gradioApp()
     switch (data.event) {
       case 'click_hidden_button': {
-        const btn = gradioApp().querySelector(`#${data.btnEleId}`);
+        const btn = gradioApp().querySelector(`#${data.btnEleId}`)
         btn.click()
         break
       }
-      case 'send_to_control_net':
-      {
+      case 'send_to_control_net': {
         data.type === 'img2img' ? window.switch_to_img2img() : window.switch_to_txt2img()
         await delay(100)
         const cn = appDoc.querySelector(`#${data.type}_controlnet`)
@@ -92,34 +113,34 @@ Promise.resolve().then(async () => {
         break
       }
       case 'send_to_outpaint': {
-        switch2targetTab(getTabIdxById("openOutpaint"))
+        switch2targetTab(getTabIdxById('openOutpaint'))
         await delay(100)
         const iframe = appDoc.querySelector('#openoutpaint-iframe')
         openoutpaint_send_image(await imgUrl2DataUrl(data.url))
         iframe.contentWindow.postMessage({
-					key: appDoc.querySelector('#openoutpaint-key').value,
-					type: "openoutpaint/set-prompt",
-					prompt: data.prompt,
-					negPrompt: data.negPrompt,
-				})
-        break;
+          key: appDoc.querySelector('#openoutpaint-key').value,
+          type: 'openoutpaint/set-prompt',
+          prompt: data.prompt,
+          negPrompt: data.negPrompt
+        })
+        break
       }
     }
 
     function imgUrl2DataUrl(imgUrl) {
       return new Promise((resolve, reject) => {
         fetch(imgUrl)
-          .then(response => response.blob())
-          .then(blob => {
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = function() {
-              const dataURL = reader.result;
-              resolve(dataURL);
-            };
+          .then((response) => response.blob())
+          .then((blob) => {
+            const reader = new FileReader()
+            reader.readAsDataURL(blob)
+            reader.onloadend = function () {
+              const dataURL = reader.result
+              resolve(dataURL)
+            }
           })
-          .catch(error => reject(error));
-      });
+          .catch((error) => reject(error))
+      })
     }
 
     async function createPasteEvent(imgUrl) {
