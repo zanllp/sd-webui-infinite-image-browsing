@@ -74,10 +74,11 @@ Promise.resolve().then(async () => {
         wrap.style = `
         top:${Math.max(48, topRect.top) - 10}px;
         position: fixed;
-        left: 0;
-        right: 0;
+        left: 10px;
+        right: 10px;
         z-index: 100;
-        bottom: 0;`
+        width: unset;
+        bottom: 10px;`
       }
     })
 
