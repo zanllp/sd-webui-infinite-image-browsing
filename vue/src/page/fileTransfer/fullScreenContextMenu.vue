@@ -153,7 +153,7 @@ const baseInfoTags = computed(() => {
                   <a-sub-menu key="sendToThirdPartyExtension" :title="$t('sendToThirdPartyExtension')">
                     <a-menu-item key="send2controlnet-txt2img">ControlNet - {{ $t('t2i') }}</a-menu-item>
                     <a-menu-item key="send2controlnet-img2img">ControlNet - {{ $t('i2i') }}</a-menu-item>
-                    <a-menu-item key="send2outpaint">Outpaint</a-menu-item>
+                    <a-menu-item key="send2outpaint">openOutpaint</a-menu-item>
                   </a-sub-menu>
                 </template>
                 <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>

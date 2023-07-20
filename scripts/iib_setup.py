@@ -18,6 +18,7 @@ def on_ui_tabs():
     with gr.Blocks(analytics_enabled=False) as view:
         with gr.Row():
             with gr.Column():
+                gr.HTML("", elem_id="iib_top")
                 gr.HTML("error", elem_id="infinite_image_browsing_container_wrapper")
                 # 以下是使用2个组件模拟粘贴过程
                 img = gr.Image(
