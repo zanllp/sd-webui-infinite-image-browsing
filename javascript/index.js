@@ -70,19 +70,28 @@ Promise.resolve().then(async () => {
     onUiTabChange(() => {
       const el = get_uiCurrentTabContent()
       if (el?.id.includes('infinite-image-browsing')) {
-        const topRect = gradioApp().querySelector('#iib_top').getBoundingClientRect()
-        wrap.style = `
-        top:${Math.max(48, topRect.top) - 10}px;
-        position: fixed;
-        left: 10px;
-        right: 10px;
-        z-index: 100;
-        width: unset;
-        bottom: 10px;`
+        try {
+          const iibTop = gradioApp().querySelector('#iib_top')
+          if (!iibTop) {
+            throw new Error("element '#iib_top' is not found")
+          }
+          const topRect = iibTop.getBoundingClientRect()
+          wrap.style = `
+            top:${Math.max(48, topRect.top) - 10}px;
+            position: fixed;
+            left: 10px;
+            right: 10px;
+            z-index: 100;
+            width: unset;
+            bottom: 10px;`
+          iframe.style = `width: 100%;height:100%`
+        } catch (error) {
+          console.error('Error mounting IIB. Running fallback.', error);
+          wrap.style = ''
+          iframe.style = `width: 100%;height:100vh`
+        }
       }
     })
-
-    iframe.style = `width: 100%;height:100%`
   }
 
   const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
