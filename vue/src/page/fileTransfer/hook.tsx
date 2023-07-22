@@ -30,16 +30,16 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
 import { addScannedPath, removeScannedPath, toggleCustomTagToImg } from '@/api/db'
-import { FileTransferData, getFileTransferDataFromDragEvent, toRawFileUrl } from './util'
+import { FileTransferData, getFileTransferDataFromDragEvent, toRawFileUrl } from '../../util/file'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { openCreateFlodersModal, MultiSelectTips } from './functionalCallableComp'
 import { useTagStore } from '@/store/useTagStore'
-export * from './util'
+import { useBatchDownloadStore } from '@/store/useBatchDownloadStore'
 
 export const stackCache = new Map<string, Page[]>()
 
 const global = useGlobalStore()
-
+const batchDownload = useBatchDownloadStore()
 const tagStore = useTagStore()
 const sli = useImgSliStore()
 const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
@@ -143,14 +143,15 @@ export interface Page {
  * @param props
  * @returns
  */
-export function usePreview (props: Props) {
+export function usePreview () {
   const {
     previewIdx,
     eventEmitter,
     canLoadNext,
     previewing,
     sortedFiles: files,
-    scroller
+    scroller,
+    props
   } = useHookShareState().toRefs()
   const { state } = useHookShareState()
   let waitScrollTo = null as number | null
@@ -164,7 +165,7 @@ export function usePreview (props: Props) {
   }
 
   const loadNextIfNeeded = () => {
-    if (props.walkModePath) {
+    if (props.value.walkModePath) {
       if (!canPreview('next') && canLoadNext) {
         message.info(t('loadingNextFolder'))
         eventEmitter.value.emit('loadNextDir', true) // 如果在全屏预览时外面scroller可能还停留在很久之前，使用全屏预览的索引
@@ -259,7 +260,7 @@ export function usePreview (props: Props) {
 /**
  * 路径栏相关
  */
-export function useLocation (props: Props) {
+export function useLocation () {
   const np = ref<Progress.NProgress>()
   const {
     scroller,
@@ -272,7 +273,8 @@ export function useLocation (props: Props) {
     eventEmitter,
     getPane,
     multiSelectedIdxs,
-    sortedFiles
+    sortedFiles,
+    props
   } = useHookShareState().toRefs()
 
   watch(
@@ -286,7 +288,7 @@ export function useLocation (props: Props) {
 
   const handleWalkModeTo = async (path: string) => {
     await to(path)
-    if (props.walkModePath) {
+    if (props.value.walkModePath) {
       await delay()
       const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
         (v) => v.type === 'dir'
@@ -309,8 +311,8 @@ export function useLocation (props: Props) {
     }
     np.value = new NProgress()
     np.value!.configure({ parent: stackViewEl.value as any })
-    if (props.path && props.path !== '/') {
-      await handleWalkModeTo(props.walkModePath ?? props.path)
+    if (props.value.path && props.value.path !== '/') {
+      await handleWalkModeTo(props.value.walkModePath ?? props.value.path)
     } else {
       global.conf?.home && to(global.conf.home)
     }
@@ -326,7 +328,7 @@ export function useLocation (props: Props) {
       pane.path = loc
       const filename = pane.path!.split('/').pop()
       const getTitle = () => {
-        if (!props.walkModePath) {
+        if (!props.value.walkModePath) {
           const np = Path.normalize(loc)
           for (const [k, v] of Object.entries(global.pathAliasMap)) {
             if (np.startsWith(v)) {
@@ -430,9 +432,9 @@ export function useLocation (props: Props) {
   const refresh = makeAsyncFunctionSingle(async () => {
     try {
       np.value?.start()
-      if (props.walkModePath) {
+      if (props.value.walkModePath) {
         back(0)
-        await handleWalkModeTo(props.walkModePath)
+        await handleWalkModeTo(props.value.walkModePath)
       } else {
         const { files } = await getTargetFolderFiles(
           stack.value.length === 1 ? '/' : currLocation.value
@@ -449,7 +451,7 @@ export function useLocation (props: Props) {
   useGlobalEventListen(
     'returnToIIB',
     makeAsyncFunctionSingle(async () => {
-      if (!props.walkModePath) {
+      if (!props.value.walkModePath) {
         try {
           np.value?.start()
           const { files } = await getTargetFolderFiles(
@@ -470,7 +472,7 @@ export function useLocation (props: Props) {
   useEventListen.value('refresh', refresh)
 
   const quickMoveTo = (path: string) => {
-    if (props.walkModePath) {
+    if (props.value.walkModePath) {
       getPane.value().walkModePath = path
     }
     handleWalkModeTo(path)
@@ -564,7 +566,7 @@ export function useLocation (props: Props) {
   }
 }
 
-export function useFilesDisplay (props: Props) {
+export function useFilesDisplay () {
   const {
     scroller,
     sortedFiles,
@@ -574,7 +576,8 @@ export function useFilesDisplay (props: Props) {
     currPage,
     stackViewEl,
     canLoadNext,
-    previewIdx
+    previewIdx,
+    props
   } = useHookShareState().toRefs()
   const { state } = useHookShareState()
   const moreActionsDropdownShow = ref(false)
@@ -597,7 +600,7 @@ export function useFilesDisplay (props: Props) {
   const loadNextDirLoading = ref(false)
 
   const loadNextDir = async () => {
-    if (loadNextDirLoading.value || !props.walkModePath || !canLoadNext.value) {
+    if (loadNextDirLoading.value || !props.value.walkModePath || !canLoadNext.value) {
       return
     }
     try {
@@ -763,7 +766,6 @@ export function useFileTransfer () {
 }
 
 export function useFileItemActions (
-  props: Props,
   { openNext }: { openNext: (file: FileNodeInfo) => Promise<void> }
 ) {
   const showGenInfo = ref(false)
@@ -777,7 +779,8 @@ export function useFileItemActions (
     spinning,
     previewing,
     stackViewEl,
-    eventEmitter
+    eventEmitter,
+    props
   } = useHookShareState().toRefs()
   const nor = Path.normalize
   useEventListen('removeFiles', ({ paths, loc }) => {
@@ -944,7 +947,7 @@ export function useFileItemActions (
       }
       case 'openWithWalkMode': {
         stackCache.set(path, stack.value)
-        const tab = global.tabList[props.tabIdx]
+        const tab = global.tabList[props.value.tabIdx]
         const pane: FileTransferTabPane = {
           type: 'local',
           key: uniqueId(),
@@ -959,7 +962,7 @@ export function useFileItemActions (
       }
       case 'openInNewTab': {
         stackCache.set(path, stack.value)
-        const tab = global.tabList[props.tabIdx]
+        const tab = global.tabList[props.value.tabIdx]
         const pane: FileTransferTabPane = {
           type: 'local',
           key: uniqueId(),
@@ -973,10 +976,10 @@ export function useFileItemActions (
       }
       case 'openOnTheRight': {
         stackCache.set(path, stack.value)
-        let tab = global.tabList[props.tabIdx + 1]
+        let tab = global.tabList[props.value.tabIdx + 1]
         if (!tab) {
           tab = { panes: [], key: '', id: uniqueId() }
-          global.tabList[props.tabIdx + 1] = tab
+          global.tabList[props.value.tabIdx + 1] = tab
         }
         const pane: FileTransferTabPane = {
           type: 'local',
@@ -987,6 +990,10 @@ export function useFileItemActions (
         }
         tab.panes.push(pane)
         tab.key = pane.key
+        break
+      }
+      case 'send2BatchDownload': {
+        batchDownload.addFiles(getSelectedImg())
         break
       }
       case 'viewGenInfo': {

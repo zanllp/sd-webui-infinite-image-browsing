@@ -19,7 +19,7 @@ interface TabPaneBase {
 }
 
 interface OtherTabPane extends TabPaneBase {
-  type: 'empty' | 'global-setting' | 'tag-search' | 'fuzzy-search'
+  type: 'empty' | 'global-setting' | 'tag-search' | 'fuzzy-search' | 'batch-download'
 }
 // logDetailId
 

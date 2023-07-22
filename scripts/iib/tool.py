@@ -5,11 +5,12 @@ import re
 import tempfile
 import imghdr
 import subprocess
-from typing import Dict
+from typing import Dict, List
 import sys
 import piexif
 import piexif.helper
 import json
+import zipfile
 
 sd_img_dirs = [
     "outdir_txt2img_samples",
@@ -144,6 +145,28 @@ def is_valid_image_path(path):
         return False
     return True
 
+
+
+def create_zip_file(file_paths: List[str], zip_file_name: str):
+    """
+    将文件打包成一个压缩包
+
+    Args:
+        file_paths: 文件路径的列表
+        zip_file_name: 压缩包的文件名
+
+    Returns:
+        无返回值
+    """
+    with zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for file_path in file_paths:
+            if os.path.isfile(file_path):
+                zip_file.write(file_path, os.path.basename(file_path))
+            elif os.path.isdir(file_path):
+                for root, _, files in os.walk(file_path):
+                    for file in files:
+                        full_path = os.path.join(root, file)
+                        zip_file.write(full_path, os.path.relpath(full_path, file_path))
 
 def get_temp_path():
     """获取跨平台的临时文件目录路径"""

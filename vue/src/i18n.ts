@@ -51,6 +51,7 @@ const zh = {
   sendToImg2img: '发送到图生图',
   sendToInpaint: '发送到局部重绘',
   sendToControlNet: '发送到ControlNet',
+  sendToBatchDownload: '发送到批量下载',
   sendToExtraFeatures: '发送到附加功能',
   loadNextPage: '加载下一页',
   localFile: '本地文件',
@@ -185,11 +186,21 @@ const zh = {
   inputFolderName: '输入文件夹名',
   createFolder: '创建文件夹',
   sendToThirdPartyExtension: '发送到第三方拓展',
-  lyco: 'LyCORIS'
+  lyco: 'LyCORIS',
+  batchDownloaDDragAndDropHint:
+    '使用拖拽或者右键菜单中的“发送到批量下载”将其他页面的图片添加到这里，支持多选',
+  zipDownload: '打包成zip下载',
+  archive: '归档',
+  batchDownload: '批量下载'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  batchDownload: 'Batch Download',
+  archive: 'Archive',
+  zipDownload: 'Download as ZIP',
+  batchDownloaDDragAndDropHint:
+    "Use drag and drop or the 'Send to Batch Download' option in the right-click menu to add images from other pages here. Multiple selections are supported.",
   lyco: 'LyCORIS',
   sendToThirdPartyExtension: 'Send to third-party extension',
   createFolder: 'Create Folder',
@@ -354,6 +365,7 @@ const en: Record<keyof typeof zh, string> = {
   sendToTxt2img: 'Send to txt2img',
   sendToImg2img: 'Send to img2img',
   sendToInpaint: 'Send to Inpaint',
+  sendToBatchDownload: 'Send to BatchDownload',
   sendToExtraFeatures: 'Send to Extra',
   sendToControlNet: 'Send to ControlNet',
   loadNextPage: 'Load next page',

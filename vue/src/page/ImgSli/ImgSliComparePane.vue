@@ -5,7 +5,7 @@ import ImgSliSide from './ImgSliSide.vue'
 import { asyncComputed, useElementSize } from '@vueuse/core'
 import { ref } from 'vue'
 import { FileNodeInfo } from '@/api/files'
-import { toRawFileUrl } from '../fileTransfer/util'
+import { toRawFileUrl } from '@/util/file'
 import { createImage } from '@/util'
 
 const props = defineProps<{

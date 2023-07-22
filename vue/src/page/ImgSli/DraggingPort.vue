@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useImgSliStore } from '@/store/useImgSli'
-import { isFileTransferData, toImageThumbnailUrl, toRawFileUrl } from '@/page/fileTransfer/util'
+import { toImageThumbnailUrl, toRawFileUrl, getFileTransferDataFromDragEvent } from '@/util/file'
 import { CloseCircleOutlined } from '@/icon'
 import { isImageFile } from '@/util'
 import { storeToRefs } from 'pinia'
@@ -14,8 +14,8 @@ const g = useGlobalStore()
 const { left, right } = storeToRefs(sliStore)
 
 const onImageDrop = async (e: DragEvent, side: 'left' | 'right') => {
-  const data = JSON.parse(e.dataTransfer?.getData('text') ?? '{}')
-  if (isFileTransferData(data)) {
+  const data = getFileTransferDataFromDragEvent(e)
+  if (data) {
     const img = data.nodes[0]
     if (!isImageFile(img.name)) {
       return

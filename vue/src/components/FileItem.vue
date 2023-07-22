@@ -4,11 +4,12 @@ import { useGlobalStore } from '@/store/useGlobalStore'
 import { fallbackImage } from 'vue3-ts-util'
 import type { FileNodeInfo } from '@/api/files'
 import { isImageFile } from '@/util'
-import { toImageThumbnailUrl, toRawFileUrl } from './hook'
+import { toImageThumbnailUrl, toRawFileUrl } from '@/util/file'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { computed } from 'vue'
 import ContextMenu from './ContextMenu.vue'
 import { useTagStore } from '@/store/useTagStore'
+import { CloseCircleOutlined } from '@/icon'
 
 const global = useGlobalStore()
 const tagStore = useTagStore()
@@ -20,17 +21,20 @@ const props = withDefaults(
     showMenuIdx?: number
     cellWidth: number
     fullScreenPreviewImageUrl?: string
+    enableRightClickMenu: boolean,
+    enableCloseIcon: boolean
   }>(),
-  { selected: false }
+  { selected: false, enableRightClickMenu: true, enableCloseIcon: false }
 )
 
 const emit = defineEmits<{
-  (type: 'update:showMenuIdx', v: number): void
-  (type: 'fileItemClick', event: MouseEvent, file: FileNodeInfo, idx: number): void
-  (type: 'dragstart', event: DragEvent, idx: number): void
-  (type: 'dragend', event: DragEvent, idx: number): void
-  (type: 'previewVisibleChange', value: boolean, last: boolean): void
-  (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
+  'update:showMenuIdx': [v: number],
+  'fileItemClick': [event: MouseEvent, file: FileNodeInfo, idx: number],
+  'dragstart': [event: DragEvent, idx: number],
+  'dragend': [event: DragEvent, idx: number],
+  'previewVisibleChange': [value: boolean, last: boolean],
+  'contextMenuClick': [e: MenuInfo, file: FileNodeInfo, idx: number],
+  'close-icon-click': []
 }>()
 
 const customTags = computed(() => {
@@ -52,7 +56,10 @@ const imageSrc = computed(() => {
       @dragend="emit('dragend', $event, idx)" @click.capture="emit('fileItemClick', $event, file, idx)">
 
       <div>
-        <a-dropdown>
+        <div class="close-icon" v-if="enableCloseIcon" @click="emit('close-icon-click')">
+          <close-circle-outlined />
+        </div>
+        <a-dropdown v-if="enableRightClickMenu">
           <div class="more">
             <ellipsis-outlined />
           </div>
@@ -95,7 +102,7 @@ const imageSrc = computed(() => {
       </div>
     </li>
     <template #overlay>
-      <context-menu :file="file" :idx="idx" :selected-tag="customTags"
+      <context-menu :file="file" :idx="idx" :selected-tag="customTags" v-if="enableRightClickMenu"
         @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)" />
     </template>
   </a-dropdown>
@@ -123,6 +130,19 @@ const imageSrc = computed(() => {
   }
 }
 
+.close-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%) scale(1.5);
+  cursor: pointer;
+  z-index: 100;
+  border-radius: 100%;
+  overflow: hidden;
+  line-height: 1;
+  background-color: var(--zp-primary-background);
+}
+
 .file {
   padding: 8px 16px;
   margin: 8px;
@@ -132,7 +152,6 @@ const imageSrc = computed(() => {
   border-radius: 8px;
   box-shadow: 0 0 4px var(--zp-secondary-variant-background);
   position: relative;
-  overflow: hidden;
 
   &:hover .more {
     opacity: 1;
@@ -220,6 +239,7 @@ const imageSrc = computed(() => {
   }
 
   .basic-info {
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: flex-end;

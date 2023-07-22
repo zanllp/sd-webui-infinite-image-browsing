@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { nextTick, onMounted, ref } from 'vue'
-import fileItemCell from '@/page/fileTransfer/FileItem.vue'
+import fileItemCell from '@/components/FileItem.vue'
 import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 // @ts-ignore
 import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
-import { toRawFileUrl } from '@/page/fileTransfer/hook'
+import { toRawFileUrl } from '@/util/file'
 import { getDbBasicInfo, getExpiredDirs, getImagesBySubstr, updateImageData, type DataBaseBasicInfo } from '@/api/db'
 import { copy2clipboardI18n, makeAsyncFunctionSingle, useGlobalEventListen } from '@/util'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'

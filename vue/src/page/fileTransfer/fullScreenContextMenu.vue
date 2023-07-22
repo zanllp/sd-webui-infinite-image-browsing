@@ -21,8 +21,8 @@ import {
 import { t } from '@/i18n'
 import { type Tag } from '@/api/db'
 import { createReactiveQueue } from '@/util'
-import { toRawFileUrl } from './hook'
-import ContextMenu from './ContextMenu.vue'
+import { toRawFileUrl } from '@/util/file'
+import ContextMenu from '@/components/ContextMenu.vue'
 import { useWatchDocument } from 'vue3-ts-util'
 import { useTagStore } from '@/store/useTagStore'
 
@@ -156,6 +156,7 @@ const baseInfoTags = computed(() => {
                     <a-menu-item key="send2outpaint">openOutpaint</a-menu-item>
                   </a-sub-menu>
                 </template>
+                <a-menu-item key="send2BatchDownload">{{ $t('sendToBatchDownload') }}</a-menu-item>
                 <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
                 <a-menu-item key="deleteFiles" :disabled="toRawFileUrl(file) === global.fullscreenPreviewInitialUrl">
                   {{ $t('deleteSelected') }}
