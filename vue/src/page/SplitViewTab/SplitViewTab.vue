@@ -24,6 +24,7 @@ const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> 
   'tag-search': defineAsyncComponent(() => import('@/page/TagSearch/TagSearch.vue')),
   'fuzzy-search': defineAsyncComponent(() => import('@/page/TagSearch/SubstrSearch.vue')),
   'img-sli': defineAsyncComponent(() => import('@/page/ImgSli/ImgSliPagePane.vue')),
+  'batch-download': defineAsyncComponent(() => import('@/page/batchDownload/batchDownload.vue'))
 }
 const onEdit = (idx: number, targetKey: any, action: string) => {
   const tab = global.tabList[idx]

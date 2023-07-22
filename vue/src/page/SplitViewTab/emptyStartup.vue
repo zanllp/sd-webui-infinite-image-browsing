@@ -20,7 +20,8 @@ const compCnMap: Partial<Record<TabPane['type'], string>> = {
   local: t('local'),
   'tag-search': t('imgSearch'),
   'fuzzy-search': t('fuzzy-search'),
-  'global-setting': t('globalSettings')
+  'global-setting': t('globalSettings'),
+  'batch-download': t('batchDownload') + ' / ' + t('archive')
 }
 const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false) => {
   let pane: TabPane
@@ -30,6 +31,7 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
       return
     case 'global-setting':
     case 'tag-search':
+    case 'batch-download':
     case 'fuzzy-search':
     case 'empty':
       pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId() }
@@ -162,7 +164,9 @@ const addToSearchScanPathAndQuickMove = async () => {
         <h2>{{ $t('launchFromQuickMove') }}</h2>
         <ul>
           <li @click="addToSearchScanPathAndQuickMove" class="item" style="text-align: ;">
-            <span class="text line-clamp-1"> <PlusOutlined/> {{ $t('add') }}</span>
+            <span class="text line-clamp-1">
+              <PlusOutlined /> {{ $t('add') }}
+            </span>
           </li>
           <li v-for="dir in global.quickMovePaths" :key="dir.key" class="item"
             @click.prevent="openInCurrentTab('local', dir.dir)">
@@ -177,7 +181,7 @@ const addToSearchScanPathAndQuickMove = async () => {
             @click.prevent="openInCurrentTab(comp)">
             <span class="text line-clamp-1">{{ compCnMap[comp] }}</span>
           </li>
-          <li class="item"  @click="imgsli.opened = true">
+          <li class="item" @click="imgsli.opened = true">
             <span class="text line-clamp-1">{{ $t('imgCompare') }}</span>
           </li>
           <li class="item" v-if="canpreviewInNewWindow" @click="previewInNewWindow">

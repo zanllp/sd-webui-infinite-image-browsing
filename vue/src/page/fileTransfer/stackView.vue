@@ -8,18 +8,18 @@ import {
   useLocation,
   usePreview,
   useFileItemActions,
-  toRawFileUrl,
   stackCache,
   useMobileOptimization
 } from './hook'
 import { SearchSelect } from 'vue3-ts-util'
+import { toRawFileUrl } from '@/util/file'
 
 import 'multi-nprogress/nprogress.css'
 // @ts-ignore
 import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
 import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { watch } from 'vue'
-import FileItem from './FileItem.vue'
+import FileItem from '@/components/FileItem.vue'
 import fullScreenContextMenu from './fullScreenContextMenu.vue'
 import { copy2clipboardI18n } from '@/util'
 import { openFolder } from '@/api'
@@ -50,7 +50,7 @@ const {
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, quickMoveTo,
   addToSearchScanPathAndQuickMove, searchPathInfo, locInputValue, isLocationEditing,
   onLocEditEnter, onEditBtnClick, share, selectAll, onCreateFloderBtnClick
-} = useLocation(props)
+} = useLocation()
 const {
   gridItems,
   sortMethodConv,
@@ -63,14 +63,10 @@ const {
   canLoadNext,
   onScroll,
   cellWidth
-} = useFilesDisplay(props)
+} = useFilesDisplay()
 const { onDrop, onFileDragStart,  onFileDragEnd } = useFileTransfer()
-const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions(
-  props,
-  { openNext }
-)
-const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } =
-  usePreview(props)
+const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions({ openNext })
+const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } = usePreview()
 const { showMenuIdx } = useMobileOptimization()
 
 watch(

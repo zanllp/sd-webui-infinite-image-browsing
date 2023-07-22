@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toRawFileUrl } from '../fileTransfer/util'
+import { toRawFileUrl } from '@/util/file'
 import { computed } from 'vue'
 import { FileNodeInfo } from '@/api/files'
 const props = defineProps<{ side: 'left' | 'right', containerWidth: number, img: FileNodeInfo, maxEdge: 'width' | 'height', percent: number }>()

@@ -18,6 +18,7 @@ from scripts.iib.tool import (
     open_folder,
     get_img_geninfo_txt_path,
     unique_by,
+    create_zip_file
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -442,6 +443,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     def index_bd():
         return FileResponse(index_html_path)
 
+
+    class PathsReq(BaseModel):
+        paths: List[str]
+
     class OpenFolderReq(BaseModel):
         path: str
 
@@ -458,6 +463,16 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             raise HTTPException(status_code=403, detail="Shutdown is disabled.")
         os.kill(os.getpid(), 9)
         return {"message": "Application is shutting down."}
+    
+    @app.post(pre + "/zip", dependencies=[Depends(get_token)])
+    def zip_files(req: PathsReq):
+        now = datetime.now()
+        timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
+        zip_temp_dir = os.path.join(cwd, "zip_temp")
+        os.makedirs(zip_temp_dir, exist_ok=True)
+        file_path = os.path.join(zip_temp_dir, f"iib_batch_download_{timestamp}.zip")
+        create_zip_file(req.paths, file_path)
+        return FileResponse(file_path, media_type="application/zip")
 
     db_pre = pre + "/db"
 
@@ -531,9 +546,6 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         assert img
         # tags = Tag.get_all_custom_tag()
         return ImageTag.get_tags_for_image(conn, img.id, type="custom")
-
-    class PathsReq(BaseModel):
-        paths: List[str]
 
     @app.post(db_pre + "/get_image_tags", dependencies=[Depends(get_token)])
     async def get_img_tags(req: PathsReq):

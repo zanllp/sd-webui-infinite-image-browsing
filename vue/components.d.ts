@@ -37,6 +37,8 @@ declare module '@vue/runtime-core' {
     ATabs: typeof import('ant-design-vue/es')['Tabs']
     ATag: typeof import('ant-design-vue/es')['Tag']
     ATooltip: typeof import('ant-design-vue/es')['Tooltip']
+    ContextMenu: typeof import('./src/components/ContextMenu.vue')['default']
+    FileItem: typeof import('./src/components/FileItem.vue')['default']
     NumInput: typeof import('./src/components/numInput.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

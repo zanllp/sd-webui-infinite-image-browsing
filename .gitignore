@@ -14,3 +14,4 @@ dist/**/*
 *.spec
 out/**/*
 venv/**/*
+zip_temp/*.zip

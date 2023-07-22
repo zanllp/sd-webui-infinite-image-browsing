@@ -19,11 +19,10 @@ export const useImageSearch = () => {
   const images = ref<FileNodeInfo[]>()
   const queue = createReactiveQueue()
   const tagStore = useTagStore()
-  const propsMock = { tabIdx: -1, target: 'local', paneIdx: -1, walkMode: false } as const
   const { stackViewEl, multiSelectedIdxs, stack, scroller } = useHookShareState({ images }).toRefs()
-  const { itemSize, gridItems, cellWidth } = useFilesDisplay(propsMock)
+  const { itemSize, gridItems, cellWidth } = useFilesDisplay()
   const { showMenuIdx } = useMobileOptimization()
-  useLocation(propsMock)
+  useLocation()
   const { onFileDragStart, onFileDragEnd } = useFileTransfer()
   const {
     showGenInfo,
@@ -31,8 +30,8 @@ export const useImageSearch = () => {
     q: genInfoQueue,
     onContextMenuClick,
     onFileItemClick
-  } = useFileItemActions(propsMock, { openNext: identity })
-  const { previewIdx, previewing, onPreviewVisibleChange, previewImgMove, canPreview } = usePreview(propsMock)
+  } = useFileItemActions({ openNext: identity })
+  const { previewIdx, previewing, onPreviewVisibleChange, previewImgMove, canPreview } = usePreview()
 
   const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
     stack.value = [{ curr: '', files: images.value! }] // hack，for delete multi files

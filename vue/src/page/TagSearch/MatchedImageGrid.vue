@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import fileItemCell from '@/page/fileTransfer/FileItem.vue'
+import fileItemCell from '@/components/FileItem.vue'
 import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 // @ts-ignore
 import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
-import { toRawFileUrl } from '@/page/fileTransfer/hook'
+import { toRawFileUrl } from '@/util/file'
 import { getImagesByTags, type MatchImageByTagsReq } from '@/api/db'
 import { nextTick, watch } from 'vue'
 import { copy2clipboardI18n } from '@/util'
