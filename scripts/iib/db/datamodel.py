@@ -1,5 +1,5 @@
 from sqlite3 import Connection, connect
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TypedDict
 from scripts.iib.tool import (
     cwd,
     get_modified_date,
@@ -13,7 +13,15 @@ from contextlib import closing
 import os
 import threading
 
-
+class FileInfoDict(TypedDict):
+    type: str
+    date: float
+    size: int
+    name: str
+    bytes: bytes
+    created_time: float
+    fullpath: str
+    
 class DataBase:
     local = threading.local()
 
@@ -59,7 +67,7 @@ class Image:
         self.size = size
         self.date = date
 
-    def to_file_info(self):
+    def to_file_info(self) -> FileInfoDict:
         return {
             "type": "file",
             "id": self.id,
