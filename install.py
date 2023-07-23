@@ -4,12 +4,14 @@ import pkg_resources
 
 req_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "requirements.txt")
 
-def dist2package(dist: str):
-    return ({
-        "pyfunctional": "functional",
-        "python-dotenv": "dotenv",
-        "Pillow": "PIL"
-    }).get(dist, dist)
+def dist2package(dist):
+    if dist == "python-dotenv":
+        package = "dotenv"
+    elif dist == "Pillow":
+        package = "PIL"
+    else:
+        package = dist
+    return package
 
 # copy from controlnet, thanks
 with open(req_file) as file:

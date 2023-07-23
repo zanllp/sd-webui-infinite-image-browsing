@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse
 import uvicorn
 import os
 from scripts.iib.api import infinite_image_browsing_api, index_html_path
-from scripts.iib.tool import get_sd_webui_conf, get_valid_img_dirs, sd_img_dirs, normalize_paths
+from scripts.iib.tool import get_sd_webui_conf, get_valid_img_dirs, sd_img_dirs
 from scripts.iib.db.datamodel import DataBase, Image
 from scripts.iib.db.update_image_data import update_image_data
 import argparse
@@ -15,6 +15,33 @@ tag = "\033[31m[warn]\033[0m"
 
 default_port = 8000
 default_host = "127.0.0.1"
+
+
+def normalize_paths(paths: List[str]):
+    """
+    Normalize a list of paths, ensuring that each path is an absolute path with no redundant components.
+
+    Args:
+        paths (List[str]): A list of paths to be normalized.
+
+    Returns:
+        List[str]: A list of normalized paths.
+    """
+    res: List[str] = []
+    for path in paths:
+        # Skip empty or blank paths
+        if not path or len(path.strip()) == 0:
+            continue
+        # If the path is already an absolute path, use it as is
+        if os.path.isabs(path):
+            abs_path = path
+        # Otherwise, make the path absolute by joining it with the current working directory
+        else:
+            abs_path = os.path.join(os.getcwd(), path)
+        # If the absolute path exists, add it to the result after normalizing it
+        if os.path.exists(abs_path):
+            res.append(os.path.normpath(abs_path))
+    return res
 
 
 def sd_webui_paths_check(sd_webui_config: str, relative_to_config: bool):
@@ -121,7 +148,7 @@ class AppUtils:
         infinite_image_browsing_api(
             app,
             sd_webui_config=sd_webui_config,
-            extra_paths_cli=normalize_paths(extra_paths, os.getcwd()),
+            extra_paths_cli=normalize_paths(extra_paths),
             sd_webui_path_relative_to_config=self.sd_webui_path_relative_to_config,
             allow_cors=self.allow_cors,
             enable_shutdown=self.enable_shutdown,
