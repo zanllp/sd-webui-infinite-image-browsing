@@ -165,6 +165,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     def is_path_trusted(path: str):
         if not enable_access_control:
             return True
+        if not os.path.isabs(path):
+            path = os.path.normpath(os.path.join(os.getcwd(), path))
         try:
             parent_paths = mem["all_scanned_paths"]
             path = os.path.normpath(path)
