@@ -95,11 +95,12 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             allow_headers=["*"],
         )
 
-    img_search_dirs = []
-    try:
-        img_search_dirs = get_valid_img_dirs(get_sd_webui_conf(**kwargs))
-    except:
-        pass
+    def get_img_search_dirs():
+        try:
+            return get_valid_img_dirs(get_sd_webui_conf(**kwargs))
+        except Exception as e:
+            print(e) 
+            return []
 
     def update_all_scanned_paths():
         allowed_paths = os.getenv("IIB_ACCESS_CONTROL_ALLOWED_PATHS")
@@ -126,7 +127,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             )
         else:
             paths = (
-                img_search_dirs + mem["extra_paths"] + kwargs.get("extra_paths_cli", [])
+                get_img_search_dirs() + mem["extra_paths"] + kwargs.get("extra_paths_cli", [])
             )
         mem["all_scanned_paths"] = unique_by(paths)
 
@@ -485,6 +486,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
 
     @app.post(pre + "/check_path_exists", dependencies=[Depends(verify_secret)])
     async def check_path_exists(req: CheckPathExistsReq):
+        update_all_scanned_paths()
         res = {}
         for path in req.paths:
             res[path] = os.path.exists(path) and is_path_trusted(path)
@@ -565,7 +567,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             img_count = DbImg.count(conn)
             update_extra_paths(conn)
             dirs = (
-                img_search_dirs if img_count == 0 else Floder.get_expired_dirs(conn)
+                get_img_search_dirs() if img_count == 0 else Floder.get_expired_dirs(conn)
             ) + mem["extra_paths"]
 
             update_image_data(dirs)
