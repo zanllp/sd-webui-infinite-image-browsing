@@ -100,6 +100,16 @@ export const { useHookShareState } = createTypedShareStateHook(
     const getPane = () => {
       return global.tabList?.[props.value.tabIdx]?.panes?.[props.value.paneIdx] as FileTransferTabPane
     }
+
+    const events = typedEventEmitter<{
+      loadNextDir (isFullscreenPreview?: boolean): Promise<void>
+      refresh (): Promise<void>
+      selectAll (): void
+    }>()
+    events.useEventListen('selectAll', () => {
+      console.log(`select all 0 -> ${sortedFiles.value.length}`)
+      multiSelectedIdxs.value = range(0, sortedFiles.value.length)
+    })
     return {
       previewing,
       spinning,
@@ -116,11 +126,7 @@ export const { useHookShareState } = createTypedShareStateHook(
       stackViewEl: ref<HTMLDivElement>(),
       props,
       getPane,
-      ...typedEventEmitter<{
-        loadNextDir (isFullscreenPreview?: boolean): Promise<void>
-        refresh (): Promise<void>
-        selectAll (): void
-      }>()
+      ...events
     }
   },
   () => ({ images: ref<FileNodeInfo[]>() })
@@ -272,8 +278,6 @@ export function useLocation () {
     useEventListen,
     eventEmitter,
     getPane,
-    multiSelectedIdxs,
-    sortedFiles,
     props
   } = useHookShareState().toRefs()
 
@@ -529,14 +533,7 @@ export function useLocation () {
     const url = `${baseUrl}?${params.toString()}`
     copy2clipboardI18n(url, t('copyLocationUrlSuccessMsg'))
   }
-
-  const selectAll = () => {
-    console.log(`select all 0 -> ${sortedFiles.value.length}`)
-
-    multiSelectedIdxs.value = range(0, sortedFiles.value.length)
-  }
-
-  useEventListen.value('selectAll', selectAll)
+   const selectAll = () => eventEmitter.value.emit('selectAll')
 
   const onCreateFloderBtnClick = async () => {
     await openCreateFlodersModal(currLocation.value)

@@ -9,8 +9,7 @@ import {
   useFileTransfer,
   useFileItemActions,
   usePreview,
-  useEventListen,
-  useLocation
+  useEventListen
 } from '../fileTransfer/hook'
 import { useTagStore } from '@/store/useTagStore'
 import { debounce } from 'lodash-es'
@@ -22,7 +21,6 @@ export const useImageSearch = () => {
   const { stackViewEl, multiSelectedIdxs, stack, scroller } = useHookShareState({ images }).toRefs()
   const { itemSize, gridItems, cellWidth } = useFilesDisplay()
   const { showMenuIdx } = useMobileOptimization()
-  useLocation()
   const { onFileDragStart, onFileDragEnd } = useFileTransfer()
   const {
     showGenInfo,
