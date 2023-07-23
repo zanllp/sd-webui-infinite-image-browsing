@@ -60,32 +60,6 @@ def get_sd_webui_conf(**kwargs):
         pass
     return {}
 
-def normalize_paths(paths: List[str], base = cwd):
-    """
-    Normalize a list of paths, ensuring that each path is an absolute path with no redundant components.
-
-    Args:
-        paths (List[str]): A list of paths to be normalized.
-
-    Returns:
-        List[str]: A list of normalized paths.
-    """
-    res: List[str] = []
-    for path in paths:
-        # Skip empty or blank paths
-        if not path or len(path.strip()) == 0:
-            continue
-        # If the path is already an absolute path, use it as is
-        if os.path.isabs(path):
-            abs_path = path
-        # Otherwise, make the path absolute by joining it with the current working directory
-        else:
-            abs_path = os.path.join(base, path)
-        # If the absolute path exists, add it to the result after normalizing it
-        if os.path.exists(abs_path):
-            res.append(os.path.normpath(abs_path))
-    return res
-
 
 def get_valid_img_dirs(
     conf,
@@ -458,5 +432,3 @@ def open_folder(folder_path, file_path=None):
             subprocess.run(["open", folder])
         elif os.name == "posix":
             subprocess.run(["xdg-open", folder])
-
-
