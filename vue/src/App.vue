@@ -23,6 +23,17 @@ useGlobalEventListen('updateGlobalSetting', async () => {
 
   resolveQueryActions(globalStore)
 })
+
+useGlobalEventListen('returnToIIB', async () => {
+  const conf = globalStore.conf
+  const mainFeaturePathKey = ['outdir_txt2img_samples', 'outdir_img2img_samples'] as const
+  const set = new Set(globalStore.quickMovePaths.map(v => v.key))
+  if (!conf || (set.has(mainFeaturePathKey[0]) && set.has(mainFeaturePathKey[1]))) {
+    return
+  }
+  const r = await getAutoCompletedTagList(conf)
+  globalStore.quickMovePaths = r.filter((v) => v?.dir?.trim?.())
+})
 onMounted(async () => {
   if (isTauri) {
     openModal()
