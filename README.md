@@ -4,14 +4,15 @@
 
 #  Stable Diffusion webui Infinite Image Browsing
 
-<p style="text-align:center;margin:0 32px;">Not just an image browser, it is also a powerful image manager. Accurate image search combined with multi-select operations greatly improves efficiency. It also supports running in independent mode without SD-Webui.</p>
+<p style="text-align:center;margin:0 32px;">It's not just an image browser, but also a powerful image manager. Precise image search combined with multi-selection operations allows for filtering/archiving/packaging, greatly increasing efficiency. It also supports running in standalone mode, without the need for SD-Webui.</p>
 
 https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b890b-7be8-4816-abba-f3ad340a2232
 ## Key Features
 
 ### 🔥 Excellent Performance
 - Once caching is generated, images can be displayed in just a few milliseconds.
-- Images are displayed by default using thumbnails with a default size of 256 pixels. You can adjust the size of the thumbnails in the global settings page.
+- Images are displayed with thumbnails by default, with a default size of 512 pixels. You can adjust the thumbnail resolution on the global settings page.
+- You can also control the width of the grid images, allowing them to be displayed in widths ranging from 64px to 1024px.
 
 ### 🔍 Image Search & Favorite
 - The prompt, model, Lora, and other information will be converted into tags and sorted by frequency of use for precise searching.
@@ -23,7 +24,7 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 
 ### 🖼️ View Image & `Send To`
 - Supports viewing image generation information. Also supported in full-screen preview mode.
-- Supports sending images to other tabs and third-party extensions such as ControlNet openOutpaint.
+- Supports sending images to other tabs and third-party extensions such as ControlNet , openOutpaint.
 - Support full-screen preview and enable custom shortcut key operations while in full-screen preview mode.
 - Support navigating to the previous or next image in full-screen preview mode by pressing arrow keys or clicking buttons.
 
@@ -34,16 +35,15 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - The desktop app version is also available.
 
 
-### "Walk" Mode
+### 🚶‍♀️ Walk Mode
 - Automatically load the next folder `(similar to os.walk)`, allowing you to browse all images without paging.
 - Tested to work properly with over 27,000 files.
 
 ### 🌳 Preview based on File Tree Structure & File operations
-- Supports preview based on the file tree structure.
-- Supports basic file operations as well as multi-select deletion/moving.
-- Press and hold Ctrl, Shift, or Cmd to select multiple items.
-- Supports sending files directly to other folders via context menu.
-- Support for automatic refresh
+- Supports file tree-based preview.
+- Supports automatic refreshing.
+- Supports basic file operations, such as multiple selection for deleting/moving/copying, and creating new folders.
+- Hold down the Ctrl, Shift, or Cmd key to select multiple items.
 
 ### 🆚 image comparison (similar to Imgsli)
 - Provides a side-by-side comparison of two images.
@@ -53,10 +53,16 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - If you would like to add a new language, please refer to [i18n.ts](https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/vue/src/i18n.ts) and submit the relevant code.
 
 ### 🔐 Privacy and Security
-- Support configuring a key for authentication.
-- Support configuring access control for the file system. By default, it will be enabled when the service allows public access.
+- Supports custom secret key for authentication.
+- Supports configuring access control for the file system, which will be enabled by default when the service allows public access.
+- Supports customizing the allowed paths for access control.
+- Supports controlling access permissions. You can run IIB in read-only mode.
 - [Click here to see details](.env.example)
 
+
+### 📦 Packaging/Batch Download
+- Allows you to download multiple images at once.
+- The data source can be search results, a regular image grid view page, walk mode, etc. Images can be added to the processing list through drag-and-drop or "Send To".
 ### ⌨️ Keyboard Shortcuts
 - Allows for deleting and adding/removing tags, with customizable trigger buttons in the global settings page.
 

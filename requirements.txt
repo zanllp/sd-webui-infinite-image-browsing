@@ -3,3 +3,4 @@ uvicorn
 piexif
 python-dotenv
 Pillow
+pyfunctional
