@@ -1,7 +1,7 @@
 import { useGlobalStore, type FileTransferTabPane, type Shortcut } from '@/store/useGlobalStore'
 import { useImgSliStore } from '@/store/useImgSli'
 import { onLongPress, useElementSize, useMouseInElement } from '@vueuse/core'
-import { ref, computed, watch, onMounted, h } from 'vue'
+import { ref, computed, watch, onMounted, h, reactive } from 'vue'
 import { genInfoCompleted, getImageGenerationInfo, openFolder, setImgPath } from '@/api'
 import {
   useWatchDocument,
@@ -35,6 +35,7 @@ import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { openCreateFlodersModal, MultiSelectTips } from './functionalCallableComp'
 import { useTagStore } from '@/store/useTagStore'
 import { useBatchDownloadStore } from '@/store/useBatchDownloadStore'
+import { Walker } from './walker'
 
 export const stackCache = new Map<string, Page[]>()
 
@@ -64,29 +65,33 @@ export const { useHookShareState } = createTypedShareStateHook(
     )
     const currLocation = computed(() => Path.join(...basePath.value))
     const sortMethod = ref(global.defaultSortingMethod)
+    const walker = ref(props.value.walkModePath ? new Walker(props.value.walkModePath, sortMethod.value) : undefined)
+    watch([() => props.value.walkModePath, sortMethod], () => {
+      walker.value =  props.value.walkModePath ? new Walker(props.value.walkModePath, sortMethod.value) : undefined
+    })
+    const walkerTrigger = ref(0)
+    watch(walker, () => walkerTrigger.value++, { deep: true })
+    const deletedFiles = reactive(new Set<string>())
+    
     const sortedFiles = computed(() => {
       if (images.value) {
         return images.value
+      }
+      
+      if (walker.value) {
+        walkerTrigger.value
+        return walker.value.images.filter(v => !deletedFiles.has(v.fullpath))
       }
       if (!currPage.value) {
         return []
       }
       const files = currPage.value?.files ?? []
       const method = sortMethod.value
-      const { walkFiles } = currPage.value!
       const filter = (files: FileNodeInfo[]) =>
         global.onlyFoldersAndImages
           ? files.filter((file) => file.type === 'dir' || isImageFile(file.name))
           : files
-      if (props.value.walkModePath) {
-        /**
-         * @see Page
-         */
-        return walkFiles
-          ? walkFiles.map((dir) => sortFiles(filter(dir), method)).flat()
-          : sortFiles(filter(files), method)
-      }
-      return sortFiles(filter(files), method)
+      return sortFiles(filter(files), method).filter(v => !deletedFiles.has(v.fullpath))
     })
     const multiSelectedIdxs = ref([] as number[])
     const previewIdx = ref(-1)
@@ -126,6 +131,8 @@ export const { useHookShareState } = createTypedShareStateHook(
       stackViewEl: ref<HTMLDivElement>(),
       props,
       getPane,
+      walker,
+      deletedFiles,
       ...events
     }
   },
@@ -141,7 +148,6 @@ export interface Props {
 
 export interface Page {
   files: FileNodeInfo[]
-  walkFiles?: FileNodeInfo[][] // 使用walk时，各个文件夹之间分散排序，避免创建时间不同的带来的干扰
   curr: string
 }
 /**
@@ -274,11 +280,11 @@ export function useLocation () {
     stack,
     currPage,
     currLocation,
-    sortMethod,
     useEventListen,
     eventEmitter,
     getPane,
-    props
+    props,
+    deletedFiles
   } = useHookShareState().toRefs()
 
   watch(
@@ -294,12 +300,6 @@ export function useLocation () {
     await to(path)
     if (props.value.walkModePath) {
       await delay()
-      const [firstDir] = sortFiles(currPage.value!.files, sortMethod.value).filter(
-        (v) => v.type === 'dir'
-      )
-      if (firstDir) {
-        await to(firstDir.fullpath)
-      }
       await eventEmitter.value.emit('loadNextDir')
     }
   }
@@ -445,6 +445,8 @@ export function useLocation () {
         )
         last(stack.value)!.files = files
       }
+
+      deletedFiles.value.clear()
       scroller.value?.scrollToItem(0)
       message.success(t('refreshCompleted'))
     } finally {
@@ -533,7 +535,7 @@ export function useLocation () {
     const url = `${baseUrl}?${params.toString()}`
     copy2clipboardI18n(url, t('copyLocationUrlSuccessMsg'))
   }
-   const selectAll = () => eventEmitter.value.emit('selectAll')
+  const selectAll = () => eventEmitter.value.emit('selectAll')
 
   const onCreateFloderBtnClick = async () => {
     await openCreateFlodersModal(currLocation.value)
@@ -567,14 +569,13 @@ export function useFilesDisplay () {
   const {
     scroller,
     sortedFiles,
-    stack,
     sortMethod,
     currLocation,
-    currPage,
     stackViewEl,
     canLoadNext,
     previewIdx,
-    props
+    props,
+    walker
   } = useHookShareState().toRefs()
   const { state } = useHookShareState()
   const moreActionsDropdownShow = ref(false)
@@ -602,21 +603,8 @@ export function useFilesDisplay () {
     }
     try {
       loadNextDirLoading.value = true
-      const par = stack.value[stack.value.length - 2]
-      const parFilesSorted = sortFiles(par.files, sortMethod.value)
-      const currIdx = parFilesSorted.findIndex((v) => v.name === currPage.value?.curr)
-      if (currIdx !== -1) {
-        const next = parFilesSorted[currIdx + 1]
-        const p = Path.join(currLocation.value, '../', next.name)
-        const r = await getTargetFolderFiles(p)
-        const page = currPage.value!
-        page.curr = next.name
-        if (!page.walkFiles) {
-          page.walkFiles = [page.files]
-        }
-        page.walkFiles.push(r.files)
-        console.log('curr page files length', currPage.value?.files.length)
-      }
+      console.log(sortedFiles.value, walker.value?.images)
+      await walker.value?.next()
     } catch (e) {
       console.error('loadNextDir', e)
       canLoadNext.value = false
@@ -777,7 +765,8 @@ export function useFileItemActions (
     previewing,
     stackViewEl,
     eventEmitter,
-    props
+    props,
+    deletedFiles
   } = useHookShareState().toRefs()
   const nor = Path.normalize
   useEventListen('removeFiles', ({ paths, loc }) => {
@@ -788,12 +777,7 @@ export function useFileItemActions (
     if (!top) {
       return
     }
-    top.files = top.files.filter((v) => !paths.includes(v.fullpath))
-    if (top.walkFiles) {
-      top.walkFiles = top.walkFiles.map((files) =>
-        files.filter((file) => !paths.includes(file.fullpath))
-      )
-    }
+    paths.forEach(path => deletedFiles.value.add(path))
   })
 
   useEventListen('addFiles', ({ files, loc }) => {
