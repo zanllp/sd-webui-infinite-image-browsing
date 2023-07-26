@@ -62,13 +62,18 @@ watch(
 
 const resizeHandle = ref<HTMLElement>()
 const dragHandle = ref<HTMLElement>()
-const state = useLocalStorage('fullScreenContextMenu.vue-drag', {
+const dragInitParams = {
   left: 100,
   top: 100,
   width: 512,
   height: 384,
   expanded: true
-})
+}
+const state = useLocalStorage('fullScreenContextMenu.vue-drag', dragInitParams)
+if (state.value && (state.value.left < 0 || state.value.top < 0)) {
+  state.value = { ...dragInitParams }
+}
+
 useResizeAndDrag(el, resizeHandle, dragHandle, {
   ...state.value,
   onDrag: debounce(function (left, top) {

@@ -4,7 +4,7 @@ import { pick, type ReturnTypeAsync } from '@/util'
 import { normalize } from '@/util/path'
 import { uniqBy } from 'lodash-es'
 
-export const getAutoCompletedTagList = async ({
+export const getQuickMovePaths = async ({
   global_setting,
   sd_cwd,
   home,
@@ -13,7 +13,6 @@ export const getAutoCompletedTagList = async ({
 }: ReturnTypeAsync<typeof getGlobalSetting>) => {
   const picked = pick(
     global_setting,
-    // 'additional_networks_extra_lora_path',
     'outdir_grids',
     'outdir_extras_samples',
     'outdir_img2img_grids',
