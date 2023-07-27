@@ -69,17 +69,15 @@ export const { useHookShareState } = createTypedShareStateHook(
     watch([() => props.value.walkModePath, sortMethod], () => {
       walker.value =  props.value.walkModePath ? new Walker(props.value.walkModePath, sortMethod.value) : undefined
     })
-    const walkerTrigger = ref(0)
-    watch(walker, () => walkerTrigger.value++, { deep: true })
+
     const deletedFiles = reactive(new Set<string>())
-    
+    watch(currPage, () => deletedFiles.clear())
     const sortedFiles = computed(() => {
       if (images.value) {
         return images.value
       }
       
       if (walker.value) {
-        walkerTrigger.value
         return walker.value.images.filter(v => !deletedFiles.has(v.fullpath))
       }
       if (!currPage.value) {
@@ -96,7 +94,7 @@ export const { useHookShareState } = createTypedShareStateHook(
     const multiSelectedIdxs = ref([] as number[])
     const previewIdx = ref(-1)
 
-    const canLoadNext = ref(true)
+    const canLoadNext = computed(() => walker.value ? !walker.value.isCompleted : false)
 
     const spinning = ref(false)
 
@@ -284,7 +282,8 @@ export function useLocation () {
     eventEmitter,
     getPane,
     props,
-    deletedFiles
+    deletedFiles,
+    walker
   } = useHookShareState().toRefs()
 
   watch(
@@ -300,7 +299,8 @@ export function useLocation () {
     await to(path)
     if (props.value.walkModePath) {
       await delay()
-      await eventEmitter.value.emit('loadNextDir')
+      await walker.value?.reset()
+      eventEmitter.value.emit('loadNextDir')
     }
   }
 
@@ -436,9 +436,9 @@ export function useLocation () {
   const refresh = makeAsyncFunctionSingle(async () => {
     try {
       np.value?.start()
-      if (props.value.walkModePath) {
-        back(0)
-        await handleWalkModeTo(props.value.walkModePath)
+      if (walker.value) {
+        await walker.value.reset()
+        eventEmitter.value.emit('loadNextDir')
       } else {
         const { files } = await getTargetFolderFiles(
           stack.value.length === 1 ? '/' : currLocation.value
@@ -603,11 +603,7 @@ export function useFilesDisplay () {
     }
     try {
       loadNextDirLoading.value = true
-      console.log(sortedFiles.value, walker.value?.images)
       await walker.value?.next()
-    } catch (e) {
-      console.error('loadNextDir', e)
-      canLoadNext.value = false
     } finally {
       loadNextDirLoading.value = false
     }
@@ -621,7 +617,7 @@ export function useFilesDisplay () {
       !sortedFiles.value.length ||
       (currIdx() > sortedFiles.value.length - 20 && canLoadNext.value)
     ) {
-      await delay(100)
+      await delay(30)
       await loadNextDir()
     }
   }
@@ -665,7 +661,7 @@ export function useFilesDisplay () {
 
 
 export function useFileTransfer () {
-  const { currLocation, sortedFiles, currPage, multiSelectedIdxs, eventEmitter } =
+  const { currLocation, sortedFiles, currPage, multiSelectedIdxs, eventEmitter, walker } =
     useHookShareState().toRefs()
   const recover = () => {
     multiSelectedIdxs.value = []
@@ -700,6 +696,9 @@ export function useFileTransfer () {
   }
 
   const onDrop = async (e: DragEvent) => {
+    if (walker.value) {
+      return
+    }
     const data = getFileTransferDataFromDragEvent(e)
     if (!data) {
       return
@@ -778,6 +777,7 @@ export function useFileItemActions (
       return
     }
     paths.forEach(path => deletedFiles.value.add(path))
+    paths.filter(isImageFile).forEach(path => deletedFiles.value.add(path.replace(/\.\w+$/, '.txt')))
   })
 
   useEventListen('addFiles', ({ files, loc }) => {

@@ -8,8 +8,8 @@ import {
   useLocation,
   usePreview,
   useFileItemActions,
-  stackCache,
-  useMobileOptimization
+  useMobileOptimization,
+  stackCache
 } from './hook'
 import { SearchSelect } from 'vue3-ts-util'
 import { toRawFileUrl } from '@/util/file'
@@ -64,7 +64,7 @@ const {
   onScroll,
   cellWidth
 } = useFilesDisplay()
-const { onDrop, onFileDragStart,  onFileDragEnd } = useFileTransfer()
+const { onDrop, onFileDragStart, onFileDragEnd } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions({ openNext })
 const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } = usePreview()
 const { showMenuIdx } = useMobileOptimization()
@@ -127,7 +127,7 @@ watch(
 
           <AButton size="small" v-if="isLocationEditing" @click="onLocEditEnter" type="primary">{{ $t('go') }}</AButton>
           <div v-else style="margin-left: 8px;">
-            <a @click.prevent="copyLocation" style="margin-right: 4px;">{{ $t('copy') }}</a> 
+            <a @click.prevent="copyLocation" style="margin-right: 4px;">{{ $t('copy') }}</a>
             <a @click.prevent.stop="onEditBtnClick">{{ $t('edit') }}</a>
           </div>
         </div>

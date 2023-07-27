@@ -284,7 +284,7 @@ def findIndex(lst, comparator):
 
 
 def get_img_geninfo_txt_path(path: str):
-    txt_path = re.sub(r"\..+$", ".txt", path)
+    txt_path = re.sub(r"\.\w+$", ".txt", path)
     if os.path.exists(txt_path):
         return txt_path
 

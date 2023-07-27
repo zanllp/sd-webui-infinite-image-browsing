@@ -10,8 +10,8 @@ interface TreeNode {
 
 export class Walker {
   root: TreeNode
-  fnQueue: (() => Promise<TreeNode>)[] = []
-  constructor(entryPath: string, private sortMethod: SortMethod) {
+  execQueue: { fn: () => Promise<TreeNode>; info: FileNodeInfo }[] = []
+  constructor(entryPath: string, private sortMethod = SortMethod.CREATED_TIME_DESC) {
     this.root = {
       children: [],
       info: {
@@ -26,6 +26,12 @@ export class Walker {
       }
     }
     this.fetchChildren(this.root)
+  }
+
+
+  reset () {
+    this.root.children = []
+    return this.fetchChildren(this.root)
   }
 
   get images() {
@@ -45,22 +51,36 @@ export class Walker {
     return getImg(this.root)
   }
 
+  get isCompleted() {
+    return this.execQueue.length === 0
+  }
+
   private async fetchChildren(par: TreeNode): Promise<TreeNode> {
+    // console.log('fetch', par.info.fullpath)
     const { files } = await getTargetFolderFiles(par.info.fullpath)
     par.children = sortFiles(files, this.sortMethod).map((v) => ({
       info: v,
       children: []
     }))
-    this.fnQueue.unshift(
-      ...par.children.filter((v) => v.info.type === 'dir').map((v) => () => this.fetchChildren(v))
+    this.execQueue.shift()
+    this.execQueue.unshift(
+      ...par.children
+        .filter((v) => v.info.type === 'dir')
+        .map((v) => ({
+          fn: () => this.fetchChildren(v),
+          ...v
+        }))
     ) // 用队列来实现dfs
     return par
   }
-
   async next() {
-    const fn = first(this.fnQueue)!
-    const res = await fn()
-    this.fnQueue.shift()
+    const pkg = first(this.execQueue)
+    if (!pkg) {
+      return null
+    }
+    const res = await pkg.fn() // 这边调用时vue响应式没工作
+    this.execQueue = this.execQueue.slice()
+    this.root = { ...this.root }
     return res
   }
 }
