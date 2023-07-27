@@ -4,7 +4,7 @@ import { FileNodeInfo } from '@/api/files'
 import { i18n, t } from '@/i18n'
 import { getPreferredLang } from '@/i18n'
 import { SortMethod } from '@/page/fileTransfer/fileSort'
-import type { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
+import type { getQuickMovePaths } from '@/page/taskRecord/autoComplete'
 import type { Dict, ReturnTypeAsync } from '@/util'
 import { isAbsolute, join, normalize } from '@/util/path'
 import { cloneDeep, uniqueId } from 'lodash-es'
@@ -83,7 +83,7 @@ export const useGlobalStore = defineStore(
   'useGlobalStore',
   () => {
     const conf = ref<GlobalConf>()
-    const quickMovePaths = ref([] as ReturnTypeAsync<typeof getAutoCompletedTagList>)
+    const quickMovePaths = ref([] as ReturnTypeAsync<typeof getQuickMovePaths>)
     
     const enableThumbnail = ref(true)
     const gridThumbnailResolution = ref(512)

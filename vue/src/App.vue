@@ -2,7 +2,7 @@
 import { onMounted } from 'vue'
 import { getGlobalSetting } from './api'
 import { useGlobalStore } from './store/useGlobalStore'
-import { getAutoCompletedTagList } from '@/page/taskRecord/autoComplete'
+import { getQuickMovePaths } from '@/page/taskRecord/autoComplete'
 import SplitViewTab from '@/page/SplitViewTab/SplitViewTab.vue'
 import { createReactiveQueue, globalEvents, useGlobalEventListen } from './util'
 import { resolveQueryActions } from './queryActions'
@@ -18,20 +18,25 @@ useGlobalEventListen('updateGlobalSetting', async () => {
   console.log(tauriConf.value)
   const resp = await getGlobalSetting()
   globalStore.conf = resp
-  const r = await getAutoCompletedTagList(resp)
+  const r = await getQuickMovePaths(resp)
   globalStore.quickMovePaths = r.filter((v) => v?.dir?.trim?.())
-
   resolveQueryActions(globalStore)
 })
 
 useGlobalEventListen('returnToIIB', async () => {
   const conf = globalStore.conf
-  const mainFeaturePathKey = ['outdir_txt2img_samples', 'outdir_img2img_samples'] as const
-  const set = new Set(globalStore.quickMovePaths.map(v => v.key))
-  if (!conf || (set.has(mainFeaturePathKey[0]) && set.has(mainFeaturePathKey[1]))) {
+  if (!conf) {
     return
   }
-  const r = await getAutoCompletedTagList(conf)
+  const gs = conf.global_setting
+  if (!gs.outdir_txt2img_samples && !gs.outdir_img2img_samples) {
+    return
+  }
+  const set = new Set(globalStore.quickMovePaths.map(v => v.key))
+  if (set.has('outdir_txt2img_samples') && set.has('outdir_img2img_samples')) {
+    return
+  }
+  const r = await getQuickMovePaths(conf)
   globalStore.quickMovePaths = r.filter((v) => v?.dir?.trim?.())
 })
 onMounted(async () => {
