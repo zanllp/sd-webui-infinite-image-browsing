@@ -3,11 +3,14 @@ from scripts.iib.db.datamodel import Image as DbImg, Tag, ImageTag, DataBase, Fl
 import os
 from PIL import Image
 from scripts.iib.tool import (
-    read_info_from_image,
+    read_sd_webui_gen_info_from_image,
     parse_generation_parameters,
     is_valid_image_path,
     get_modified_date,
     is_dev,
+    get_comfyui_exif_data,
+    comfyui_exif_data_to_str,
+    is_img_created_by_comfyui
 )
 
 from scripts.iib.logger import logger
@@ -19,8 +22,12 @@ def get_exif_data(file_path):
     params = None
     try:
         with Image.open(file_path) as img:
-            info = read_info_from_image(img, file_path)
-            params = parse_generation_parameters(info)
+            if is_img_created_by_comfyui(img):
+                params = get_comfyui_exif_data(img)
+                info = comfyui_exif_data_to_str(params)
+            else:
+                info = read_sd_webui_gen_info_from_image(img, file_path)
+                params = parse_generation_parameters(info)
     except Exception as e:
         if is_dev:
             logger.error("get_exif_data %s", e)
@@ -66,9 +73,9 @@ def update_image_data(search_dirs: List[str]):
 
                 if not parsed_params:
                     continue
-                meta = parsed_params["meta"]
-                lora = parsed_params["lora"]
-                lyco = parsed_params["lyco"]
+                meta = parsed_params.get("meta", {})
+                lora = parsed_params.get("lora", [])
+                lyco = parsed_params.get("lyco", [])
                 pos = parsed_params["pos_prompt"]
                 size_tag = Tag.get_or_create(
                     conn,

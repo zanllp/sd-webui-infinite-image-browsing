@@ -11,6 +11,7 @@ import piexif
 import piexif.helper
 import json
 import zipfile
+from PIL import Image
 
 sd_img_dirs = [
     "outdir_txt2img_samples",
@@ -30,6 +31,8 @@ cwd = os.getcwd() if is_nuitka else os.path.normpath(os.path.join(__file__, "../
 is_win = platform.system().lower().find("windows") != -1
 
 
+
+    
 try:
     from dotenv import load_dotenv
 
@@ -288,8 +291,37 @@ def get_img_geninfo_txt_path(path: str):
     if os.path.exists(txt_path):
         return txt_path
 
+def is_img_created_by_comfyui(img: Image):
+    return img.info.get('prompt') and img.info.get('workflow')
 
-def read_info_from_image(image, path="") -> str:
+def get_comfyui_exif_data(img: Image):
+    prompt = img.info.get('prompt')
+    if not prompt:
+        return {}
+    META_KEY = '3'
+    data: Dict[str, any] = json.loads(prompt)
+    meta = {}
+    raw_prompt_data = data[META_KEY]["inputs"]
+    meta["Sampler"] = data[META_KEY]["inputs"]["sampler_name"]
+    meta["Model"] = data[raw_prompt_data["model"][0]]["inputs"]["ckpt_name"]
+    pos_prompt = data[raw_prompt_data["positive"][0]]["inputs"]["text"].strip()
+    neg_prompt = data[raw_prompt_data["negative"][0]]["inputs"]["text"].strip()
+    pos_prompt_arr = unique_by(parse_prompt(pos_prompt)["pos_prompt"])
+    return {
+        "meta": meta,
+        "pos_prompt": pos_prompt_arr,
+        "pos_prompt_raw": pos_prompt,
+        "neg_prompt_raw" : neg_prompt
+    }
+
+def comfyui_exif_data_to_str(data):
+    res = data["pos_prompt_raw"] + "\nNegative prompt: " + data["neg_prompt_raw"] + "\n"
+    meta_arr = []
+    for k,v in data["meta"].items():
+        meta_arr.append(f'{k}:{v}')
+    return res + ",".join(meta_arr)
+
+def read_sd_webui_gen_info_from_image(image: Image, path="") -> str:
     """
     Reads metadata from an image file.
 

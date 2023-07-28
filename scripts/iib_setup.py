@@ -1,7 +1,7 @@
 from scripts.iib.api import infinite_image_browsing_api, send_img_path
 from modules import script_callbacks, generation_parameters_copypaste as send
 from scripts.iib.tool import locale
-from scripts.iib.tool import read_info_from_image
+from scripts.iib.tool import read_sd_webui_gen_info_from_image
 from PIL import Image
 from scripts.iib.logger import logger
 
@@ -42,7 +42,7 @@ def on_ui_tabs():
                         path = send_img_path.get("value")
                         logger.info("img_update_func %s", path)
                         img = Image.open(path)
-                        info = read_info_from_image(img, path)
+                        info = read_sd_webui_gen_info_from_image(img, path)
                         return img, info
                     except Exception as e:
                         logger.error("img_update_func err %s",e)
