@@ -92,13 +92,13 @@ class AppUtils:
         self.__init__(*args, **kwargs)
 
     @staticmethod
-    def async_run(app: FastAPI, port: int = default_port) -> Coroutine:
+    def async_run(app: FastAPI, port: int = default_port, host = default_host) -> Coroutine:
         """
         用于从异步运行的 FastAPI，在 Jupyter Notebook 环境中非常有用
         """
         # 不建议改成 async def，并且用 await 替换 return，
         # 因为这样会失去对 server.serve() 的控制。
-        config = uvicorn.Config(app, host=default_host, port=port)
+        config = uvicorn.Config(app, host=host, port=port)
         server = uvicorn.Server(config)
         return server.serve()
 
