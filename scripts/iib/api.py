@@ -23,6 +23,7 @@ from scripts.iib.tool import (
     unique_by,
     create_zip_file,
     normalize_paths,
+    to_abs_path
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -158,7 +159,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         try:
             if not parent_paths:
                 parent_paths = mem["all_scanned_paths"]
-            path = os.path.normpath(path)
+            path = to_abs_path(path)
             for parent_path in parent_paths:
                 if safe_commonpath([path, parent_path]) == parent_path:
                     return True
@@ -169,11 +170,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     def is_path_trusted(path: str):
         if not enable_access_control:
             return True
-        if not os.path.isabs(path):
-            path = os.path.normpath(os.path.join(os.getcwd(), path))
         try:
             parent_paths = mem["all_scanned_paths"]
-            path = os.path.normpath(path)
+            path = to_abs_path(path)
             for parent_path in parent_paths:
                 if len(path) <= len(parent_path):
                     if parent_path.startswith(path):
@@ -357,6 +356,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             else:
                 if not os.path.exists(folder_path):
                     return {"files": []}
+                folder_path = to_abs_path(folder_path)
                 check_path_trust(folder_path)
                 folder_listing: List[os.DirEntry] = os.scandir(folder_path)
                 is_under_scanned_path = is_path_under_parents(folder_path)
@@ -737,5 +737,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
     async def delete_scanned_path(scanned_path: ScannedPathModel):
+        path = to_abs_path(scanned_path.path)
+        if path in get_img_search_dirs():
+            raise HTTPException(400)
         conn = DataBase.get_conn()
-        ExtraPath.remove(conn, scanned_path.path)
+        ExtraPath.remove(conn, path)

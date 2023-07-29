@@ -5,8 +5,7 @@ import { i18n, t } from '@/i18n'
 import { getPreferredLang } from '@/i18n'
 import { SortMethod } from '@/page/fileTransfer/fileSort'
 import type { getQuickMovePaths } from '@/page/taskRecord/autoComplete'
-import type { Dict, ReturnTypeAsync } from '@/util'
-import { isAbsolute, join, normalize } from '@/util/path'
+import { type Dict, type ReturnTypeAsync } from '@/util'
 import { cloneDeep, uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { VNode, computed, onMounted, toRaw, watch } from 'vue'
@@ -158,20 +157,9 @@ export const useGlobalStore = defineStore(
     })
 
     const pathAliasMap = computed((): Dict<string> => {
-      if (!conf.value) return {}
-      const { global_setting: paths, sd_cwd } = conf.value
-      const map = {
-        [t('extra')]: paths.outdir_extras_samples,
-        [t('saveButtonSavesTo')]: paths.outdir_save,
-        [t('t2i')]: paths.outdir_txt2img_samples,
-        [t('i2i')]: paths.outdir_img2img_samples,
-        [t('i2i-grid')]: paths.outdir_img2img_grids,
-        [t('t2i-grid')]: paths.outdir_txt2img_grids
-      }
-      const existPaths = quickMovePaths.value.map((v) => v.dir)
-      const res = Object.keys(map)
-        .filter((v) => existPaths.includes(map[v]))
-        .map((v) => [v, isAbsolute(map[v]) ? normalize(map[v]) : join(sd_cwd, map[v])])
+      const keys = ['outdir_extras_samples','outdir_save','outdir_txt2img_samples',
+      'outdir_img2img_samples','outdir_img2img_grids','outdir_txt2img_grids']
+      const res = quickMovePaths.value.filter((v) => keys.includes(v.key)).map(v => [v.zh, v.dir])
       return Object.fromEntries(res)
     })
     return {

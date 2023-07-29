@@ -89,6 +89,11 @@ def normalize_paths(paths: List[str], base = cwd):
             res.append(os.path.normpath(abs_path))
     return res
 
+def to_abs_path(path):
+    if not os.path.isabs(path):
+        path = os.path.join(os.getcwd(), path)
+    return os.path.normpath(path)
+
 
 def get_valid_img_dirs(
     conf,
