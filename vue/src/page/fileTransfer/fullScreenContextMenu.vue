@@ -111,6 +111,10 @@ const baseInfoTags = computed(() => {
   return tags
 })
 
+const copyPositivePrompt = () => {
+  copy2clipboardI18n(imageGenInfo.value.split('\n')[0])
+}
+
 </script>
 
 <template>
@@ -174,6 +178,9 @@ const baseInfoTags = computed(() => {
           </a-dropdown>
           <a-button @click="copy2clipboardI18n(imageGenInfo)">{{
             $t('copyPrompt')
+          }}</a-button>
+            <a-button @click="copyPositivePrompt">{{
+            $t('copyPositivePrompt')
           }}</a-button>
         </div>
       </div>

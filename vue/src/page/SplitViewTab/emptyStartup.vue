@@ -6,13 +6,12 @@ import { ok } from 'vue3-ts-util'
 import { FileDoneOutlined, LockOutlined, PlusOutlined } from '@/icon'
 import { t } from '@/i18n'
 import { cloneDeep } from 'lodash-es'
-import { addScannedPath } from '@/api/db'
+import { addScannedPath, removeScannedPath } from '@/api/db'
 import { globalEvents } from '@/util'
 import { Input, Modal, message } from 'ant-design-vue'
 import { open } from '@tauri-apps/api/dialog'
 import { checkPathExists } from '@/api'
 import { useImgSliStore } from '@/store/useImgSli'
-
 const global = useGlobalStore()
 const imgsli = useImgSliStore()
 const props = defineProps<{ tabIdx: number; paneIdx: number }>()
@@ -104,7 +103,20 @@ const addToSearchScanPathAndQuickMove = async () => {
     content: t('confirmToAddToQuickMove'),
     async onOk () {
       await addScannedPath(path)
-      message.success(t('addComplete'))
+      message.success(t('addCompleted'))
+      globalEvents.emit('searchIndexExpired')
+      globalEvents.emit('updateGlobalSetting')
+    }
+  })
+}
+
+const onRemoveQuickPathClick = (path: string) => {
+  Modal.confirm({
+    content: t('confirmDelete'),
+    closable: true, 
+    async onOk () {
+      await removeScannedPath(path)
+      message.success(t('removeCompleted'))
       globalEvents.emit('searchIndexExpired')
       globalEvents.emit('updateGlobalSetting')
     }
@@ -168,9 +180,11 @@ const addToSearchScanPathAndQuickMove = async () => {
               <PlusOutlined /> {{ $t('add') }}
             </span>
           </li>
-          <li v-for="dir in global.quickMovePaths" :key="dir.key" class="item"
+          <li v-for="dir in global.quickMovePaths" :key="dir.key" class="item rem"
             @click.prevent="openInCurrentTab('local', dir.dir)">
             <span class="text line-clamp-1">{{ dir.zh }}</span>
+            <AButton v-if="dir.can_delete" type="link" @click.stop="onRemoveQuickPathClick(dir.dir)">{{ $t('remove') }}
+            </AButton>
           </li>
         </ul>
       </div>
@@ -192,8 +206,11 @@ const addToSearchScanPathAndQuickMove = async () => {
           </li>
         </ul>
       </div>
-      <div class="feature-item" v-if="global.recent.length">
-        <h2>{{ $t('recent') }}</h2>
+      <div class="feature-item recent" v-if="global.recent.length">
+        <div class="title">
+          <h2>{{ $t('recent') }}</h2>
+          <AButton @click="global.recent = []" type="link">{{ $t('clear') }}</AButton>
+        </div>
         <ul>
           <li v-for="item in global.recent" :key="item.key" class="item"
             @click.prevent="openInCurrentTab('local', item.path)">
@@ -272,11 +289,30 @@ const addToSearchScanPathAndQuickMove = async () => {
     overflow-y: auto;
   }
 
+  &.recent {
+    .title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+
+      h2 {
+        margin: 0;
+      }
+    }
+  }
+
   .item {
     margin-bottom: 10px;
     padding: 4px 8px;
     display: flex;
     align-items: center;
+
+    &.rem {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
     &:hover {
       background: var(--zp-secondary-background);

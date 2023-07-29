@@ -67,7 +67,7 @@ export const { useHookShareState } = createTypedShareStateHook(
     const sortMethod = ref(global.defaultSortingMethod)
     const walker = ref(props.value.walkModePath ? new Walker(props.value.walkModePath, sortMethod.value) : undefined)
     watch([() => props.value.walkModePath, sortMethod], () => {
-      walker.value =  props.value.walkModePath ? new Walker(props.value.walkModePath, sortMethod.value) : undefined
+      walker.value = props.value.walkModePath ? new Walker(props.value.walkModePath, sortMethod.value) : undefined
     })
 
     const deletedFiles = reactive(new Set<string>())
@@ -76,7 +76,7 @@ export const { useHookShareState } = createTypedShareStateHook(
       if (images.value) {
         return images.value
       }
-      
+
       if (walker.value) {
         return walker.value.images.filter(v => !deletedFiles.has(v.fullpath))
       }
@@ -283,7 +283,8 @@ export function useLocation () {
     getPane,
     props,
     deletedFiles,
-    walker
+    walker,
+    sortedFiles
   } = useHookShareState().toRefs()
 
   watch(
@@ -501,10 +502,10 @@ export function useLocation () {
         return
       }
       await removeScannedPath(currLocation.value)
-      message.success(t('removeComplete'))
+      message.success(t('removeCompleted'))
     } else {
       await addScannedPath(currLocation.value)
-      message.success(t('addComplete'))
+      message.success(t('addCompleted'))
     }
     globalEvents.emit('searchIndexExpired')
     globalEvents.emit('updateGlobalSetting')
@@ -531,6 +532,9 @@ export function useLocation () {
     const baseUrl = loc.href.substring(0, loc.href.length - loc.search.length)
     const params = new URLSearchParams(loc.search)
     params.set('action', 'open')
+    if (walker.value) {
+      params.set('walk', '1')
+    }
     params.set('path', currLocation.value)
     const url = `${baseUrl}?${params.toString()}`
     copy2clipboardI18n(url, t('copyLocationUrlSuccessMsg'))
@@ -541,6 +545,24 @@ export function useLocation () {
     await openCreateFlodersModal(currLocation.value)
     await refresh()
   }
+
+  const onWalkBtnClick = () => {
+    const path = currLocation.value
+    stackCache.set(path, stack.value)
+    const tab = global.tabList[props.value.tabIdx]
+    const pane: FileTransferTabPane = {
+      type: 'local',
+      key: uniqueId(),
+      path: path,
+      name: t('local'),
+      stackKey: path,
+      walkModePath: path
+    }
+    tab.panes.push(pane)
+    tab.key = pane.key
+  }
+
+  const showWalkButton = computed(() => !walker.value && sortedFiles.value.some(v => v.type === 'dir'))
 
   return {
     locInputValue,
@@ -561,7 +583,9 @@ export function useLocation () {
     share,
     selectAll,
     quickMoveTo,
-    onCreateFloderBtnClick
+    onCreateFloderBtnClick,
+    onWalkBtnClick,
+    showWalkButton
   }
 }
 
