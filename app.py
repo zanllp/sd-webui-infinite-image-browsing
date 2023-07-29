@@ -148,7 +148,7 @@ def setup_parser() -> argparse.ArgumentParser:
         description="A fast and powerful image browser for Stable Diffusion webui."
     )
     parser.add_argument(
-        "--host", type=str, default="127.0.0.1", help="The host to use"
+        "--host", type=str, default=default_host, help="The host to use"
     )
     parser.add_argument(
         "--port", type=int, help="The port to use", default=default_port
@@ -189,7 +189,7 @@ def setup_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def launch_app(host: str = default_host, port: int = default_port, *args, **kwargs: dict) -> None:
+def launch_app(port: int = default_port, host: str = default_host, *args, **kwargs: dict) -> None:
     """
     Launches the application on the specified port.
 
@@ -202,7 +202,7 @@ def launch_app(host: str = default_host, port: int = default_port, *args, **kwar
     uvicorn.run(app, host=host, port=port)
 
 
-async def async_launch_app(host: str = default_host, port: int = default_port, *args, **kwargs: dict) -> None:
+async def async_launch_app(port: int = default_port, host: str = default_host, *args, **kwargs: dict) -> None:
     """
     Asynchronously launches the application on the specified port.
 
