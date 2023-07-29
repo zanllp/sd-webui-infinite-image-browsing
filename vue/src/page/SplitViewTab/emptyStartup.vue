@@ -103,7 +103,7 @@ const addToSearchScanPathAndQuickMove = async () => {
     content: t('confirmToAddToQuickMove'),
     async onOk () {
       await addScannedPath(path)
-      message.success(t('addCompletd'))
+      message.success(t('addCompleted'))
       globalEvents.emit('searchIndexExpired')
       globalEvents.emit('updateGlobalSetting')
     }

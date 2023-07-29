@@ -505,7 +505,7 @@ export function useLocation () {
       message.success(t('removeCompleted'))
     } else {
       await addScannedPath(currLocation.value)
-      message.success(t('addCompletd'))
+      message.success(t('addCompleted'))
     }
     globalEvents.emit('searchIndexExpired')
     globalEvents.emit('updateGlobalSetting')
