@@ -639,12 +639,16 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             )
         img = DbImg.get(conn, path)
         if not img:
-            raise HTTPException(
-                400,
-                "你需要先通过图像搜索页生成索引"
-                if locale == "zh"
-                else "You need to generate an index through the image search page first.",
-            )
+            if  DbImg.count(conn):
+                update_image_data([os.path.dirname(path)])
+                img = DbImg.get(conn, path)
+            else: 
+                raise HTTPException(
+                    400,
+                    "你需要先通过图像搜索页生成索引"
+                    if locale == "zh"
+                    else "You need to generate an index through the image search page first.",
+                )
         tags = ImageTag.get_tags_for_image(
             conn=conn, image_id=img.id, type="custom", tag_id=req.tag_id
         )

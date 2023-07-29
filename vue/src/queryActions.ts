@@ -8,13 +8,13 @@ export const resolveQueryActions = async (g: ReturnType<typeof useGlobalStore>) 
   switch (params.get('action')) {
     case 'open': {
       let path = params.get('path')
-      
-      if (!path || !paths ) return
+
+      if (!path || !paths) return
       const map: Dict<string> = {
         extra: paths.outdir_extras_samples,
         save: paths.outdir_save,
         txt2img: paths.outdir_txt2img_samples,
-        img2img: paths.outdir_img2img_samples,
+        img2img: paths.outdir_img2img_samples
       }
       if (map[path]) {
         path = map[path]
@@ -24,13 +24,14 @@ export const resolveQueryActions = async (g: ReturnType<typeof useGlobalStore>) 
         type: 'local',
         path,
         key: uniqueId(),
-        name: ''
+        name: '',
+        walkModePath: params.get('walk') ? path : undefined
       }
       tab.panes.unshift(pane)
       tab.key = pane.key
       switch2IBB()
-      removeQueryParams(['action', 'path'])
+      removeQueryParams(['action', 'path', 'walk'])
       break
-    };
+    }
   }
 }
