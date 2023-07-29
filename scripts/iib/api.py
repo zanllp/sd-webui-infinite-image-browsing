@@ -3,10 +3,13 @@ import os
 import shutil
 import sqlite3
 from scripts.iib.tool import (
+    comfyui_exif_data_to_str,
+    get_comfyui_exif_data,
     human_readable_size,
+    is_img_created_by_comfyui,
     is_valid_image_path,
     temp_path,
-    read_info_from_image,
+    read_sd_webui_gen_info_from_image,
     get_formatted_date,
     is_win,
     cwd,
@@ -479,7 +482,11 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     @app.get(pre + "/image_geninfo", dependencies=[Depends(verify_secret)])
     async def image_geninfo(path: str):
         with Image.open(path) as img:
-            return read_info_from_image(img, path)
+            if is_img_created_by_comfyui(img):
+                params = get_comfyui_exif_data(img)
+                return comfyui_exif_data_to_str(params)
+            else:
+                return read_sd_webui_gen_info_from_image(img, path)
 
     class CheckPathExistsReq(BaseModel):
         paths: List[str]
