@@ -13,13 +13,10 @@ import {
   DragOutlined,
   FullscreenExitOutlined,
   FullscreenOutlined,
-  StarFilled,
-  StarOutlined,
   ArrowsAltOutlined,
   EllipsisOutlined
 } from '@/icon'
 import { t } from '@/i18n'
-import { type Tag } from '@/api/db'
 import { createReactiveQueue } from '@/util'
 import { toRawFileUrl } from '@/util/file'
 import ContextMenu from '@/components/ContextMenu.vue'
@@ -27,6 +24,7 @@ import { useWatchDocument } from 'vue3-ts-util'
 import { useTagStore } from '@/store/useTagStore'
 
 const global = useGlobalStore()
+
 const tagStore = useTagStore()
 const el = ref<HTMLElement>()
 const props = defineProps<{
@@ -34,11 +32,6 @@ const props = defineProps<{
   idx: number
 }>()
 const selectedTag = computed(() => tagStore.tagMap.get(props.file.fullpath) ?? [])
-const tags = computed(() => {
-  return (global.conf?.all_custom_tags ?? []).reduce((p, c) => {
-    return [...p, { ...c, selected: !!selectedTag.value.find((v) => v.id === c.id) }]
-  }, [] as (Tag & { selected: boolean })[])
-})
 const currImgResolution = ref('')
 const q = createReactiveQueue()
 const imageGenInfo = ref('')
@@ -140,16 +133,7 @@ const copyPositivePrompt = () => {
         </a-dropdown>
         <div flex-placeholder v-if="state.expanded" />
         <div v-if="state.expanded" class="action-bar">
-          <a-dropdown :trigger="['hover']" :get-popup-container="getParNode">
-            <a-button>{{ $t('toggleTag') }}</a-button>
-            <template #overlay>
-              <a-menu @click="emit('contextMenuClick', $event, file, idx)">
-                <a-menu-item v-for="tag in tags" :key="`toggle-tag-${tag.id}`">{{ tag.name }} <star-filled
-                    v-if="tag.selected" /><star-outlined v-else />
-                </a-menu-item>
-              </a-menu>
-            </template>
-          </a-dropdown>
+
           <a-dropdown :trigger="['hover']" :get-popup-container="getParNode">
             <a-button>{{ t('openContextMenu') }}</a-button>
             <template #overlay>
@@ -179,14 +163,14 @@ const copyPositivePrompt = () => {
           <a-button @click="copy2clipboardI18n(imageGenInfo)">{{
             $t('copyPrompt')
           }}</a-button>
-            <a-button @click="copyPositivePrompt">{{
+          <a-button @click="copyPositivePrompt">{{
             $t('copyPositivePrompt')
           }}</a-button>
         </div>
       </div>
       <div class="gen-info" v-if="state.expanded">
-        <div class="tags">
-          <span class="tag" v-for="tag in baseInfoTags" :key="tag.name">
+        <div class="info-tags">
+          <span class="info-tag" v-for="tag in baseInfoTags" :key="tag.name">
             <span class="name">
               {{ tag.name }}
             </span>
@@ -195,10 +179,13 @@ const copyPositivePrompt = () => {
             </span>
           </span>
         </div>
-        <div class="tags-container" v-if="selectedTag">
-          <a-tag v-for="tag in selectedTag" :key="tag.id" :color="tagStore.getColor(tag.name)">
+        <div class="tags-container" v-if="global.conf?.all_custom_tags">
+          <div class="tag" v-for="tag in global.conf.all_custom_tags"
+            @click="emit('contextMenuClick', { key: `toggle-tag-${tag.id}` } as any, file, idx)"
+            :class="{ selected: selectedTag.some(v => v.id === tag.id) }" :key="tag.id"
+            :style="{ '--tag-color': tagStore.getColor(tag.name) }">
             {{ tag.name }}
-          </a-tag>
+          </div>
         </div>
         {{ imageGenInfo }}
       </div>
@@ -220,10 +207,25 @@ const copyPositivePrompt = () => {
   border-radius: 4px;
 
   .tags-container {
-    &>* {
+    margin: 4px 0;
+
+    .tag {
       margin-right: 4px;
-      font-size: 14px;
-      line-height: 1.6;
+      padding: 2px 16px;
+      border-radius: 4px;
+      display: inline-block;
+      cursor: pointer;
+      font-weight: bold;
+      transition: .5s all ease;
+      border: 2px solid var(--tag-color);
+      color: var(--tag-color);
+      background: var(--zp-primary-background);
+      user-select: none;
+
+      &.selected {
+        background: var(--tag-color);
+        color: white;
+      }
     }
   }
 
@@ -244,8 +246,8 @@ const copyPositivePrompt = () => {
     padding-top: 4px;
     position: relative;
 
-    .tags {
-      .tag {
+    .info-tags {
+      .info-tag {
         display: inline-block;
         overflow: hidden;
         border-radius: 4px;
@@ -311,5 +313,4 @@ const copyPositivePrompt = () => {
       }
     }
   }
-}
-</style>
+}</style>
