@@ -2,23 +2,21 @@ import { Tag, batchGetTagsByPath } from '@/api/db'
 import { defineStore } from 'pinia'
 import sjcl from 'sjcl'
 import { reactive } from 'vue'
+function generateColors() {
+  const colors = []
+  const saturation = 90
+  const lightness = 35
+  const interval = 360 / 50
 
-const tagColors = [
-  'blue',
-  'cyan',
-  'gold',
-  'green',
-  'lime',
-  'magenta',
-  'orange',
-  'pink',
-  'purple',
-  'red',
-  'yellow',
-  'geekblue',
-  'volcano'
-]
+  for (let i = 0; i < 72; i++) {
+    const hue = i * interval
+    const hslColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`
+    colors.push(hslColor)
+  }
 
+  return colors
+}
+const tagColors = generateColors()
 export const useTagStore = defineStore('useTagStore', () => {
   const tagMap = reactive(new Map<string, Tag[]>())
   const fetchImageTags = async (paths: string[]) => {
