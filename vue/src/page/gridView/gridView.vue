@@ -4,7 +4,7 @@ import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
 import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import FileItem from '@/components/FileItem.vue'
 import { useFilesDisplay, useHookShareState } from '@/page/fileTransfer/hook'
-import { getFileTransferDataFromDragEvent, toRawFileUrl } from '@/util/file'
+import { getFileTransferDataFromDragEvent, toRawFileUrl, uniqueFile } from '@/util/file'
 import { ref, watchEffect, toRaw } from 'vue'
 import { GridViewFile, useGlobalStore } from '@/store/useGlobalStore'
 import { useTagStore } from '@/store/useTagStore'
@@ -29,7 +29,7 @@ const files = ref(props.files ?? [])
 const onDrop = async (e: DragEvent) => {
   const data = getFileTransferDataFromDragEvent(e)
   if (props.allowDragAndDrop && data) {
-    files.value.push(...data.nodes)
+    files.value = uniqueFile([...files.value, ...data.nodes])
   }
 }
 

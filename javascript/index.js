@@ -16,6 +16,7 @@ Promise.resolve().then(async () => {
     <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-4cc43e92.css">
     <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-8897613b.js"></script>
     <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-7af0768f.js"></script>
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-872ef657.js"></script>
     <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-6369b2e2.css">
   </head>
 
