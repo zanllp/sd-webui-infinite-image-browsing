@@ -36,7 +36,7 @@ const onEdit = (idx: number, targetKey: any, action: string) => {
     const paneIdx = tab.panes.findIndex((v) => v.key === targetKey)
     if (tab.key === targetKey) {
       // 只有在前台时才跳过去
-      tab.key = tab.panes[paneIdx - 1]?.key ?? tab.panes[0]?.key
+      tab.key = tab.panes[paneIdx - 1]?.key ?? tab.panes[1]?.key
     }
     tab.panes.splice(paneIdx, 1)
     if (tab.panes.length === 0) {
