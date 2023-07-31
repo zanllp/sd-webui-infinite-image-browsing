@@ -205,6 +205,7 @@ def setup_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--export_fe_fn",
+        default=True,
         action="store_true",
         help="Export front-end functions to enable external access through iframe.",
     )

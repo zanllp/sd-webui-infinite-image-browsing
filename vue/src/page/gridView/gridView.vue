@@ -6,12 +6,13 @@ import FileItem from '@/components/FileItem.vue'
 import { useFilesDisplay, useHookShareState } from '@/page/fileTransfer/hook'
 import { getFileTransferDataFromDragEvent, toRawFileUrl } from '@/util/file'
 import { ref, watchEffect, toRaw } from 'vue'
-import { GridViewFile, GridViewFileTag, useGlobalStore } from '@/store/useGlobalStore'
-import { Tag } from '@/api/db'
+import { GridViewFile, useGlobalStore } from '@/store/useGlobalStore'
+import { useTagStore } from '@/store/useTagStore'
 
 const g = useGlobalStore()
 const { stackViewEl } = useHookShareState().toRefs()
 const { itemSize, gridItems, cellWidth } = useFilesDisplay()
+const tag = useTagStore()
 
 const props = defineProps<{
   tabIdx: number
@@ -36,7 +37,6 @@ const onDeleteClick = (idx: number) => {
   files.value.splice(idx, 1)
 }
 
-const tagConvert = (tag: GridViewFileTag): Tag => ({ id: tag.name, count: 0, display_name: null, type: 'temp', ...tag })
 
 watchEffect(() => {
   g.pageFuncExportMap.set(props.paneKey, {
@@ -53,7 +53,7 @@ watchEffect(() => {
       <template v-slot="{ item: file, index: idx }">
         <file-item :idx="idx" :file="file" :cell-width="cellWidth" :enable-close-icon="props.removable"
           @close-icon-click="onDeleteClick(idx)" :full-screen-preview-image-url="toRawFileUrl(file)"
-          :tags="file?.tags.map(tagConvert)" :enable-right-click-menu="false" />
+          :tags="file?.tags?.map(tag.tagConvert)" :enable-right-click-menu="false" />
       </template>
     </RecycleScroller>
   </div>

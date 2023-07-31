@@ -31,7 +31,7 @@ export const getTabIdxInSDWebui = () => {
   return Array.from(tabList).findIndex((v) => v.id.includes('infinite-image-browsing'))
 }
 
-export const switch2IBB = () => {
+export const switch2IIB = () => {
   try {
     gradioApp().querySelector('#tabs')!.querySelectorAll('button')[getTabIdxInSDWebui()].click()
   } catch (error) {
