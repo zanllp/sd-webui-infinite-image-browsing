@@ -38,10 +38,10 @@ export const exportFn = async (g: ReturnType<typeof useGlobalStore>) => {
     setTagColor(name: string, color: string) {
       tag.colorCache.set(name, color)
     },
-    setTag(path: string, tags: string[]) {
+    setTags(path: string, tags: string[]) {
       tag.set(path, tags)
     },
-    getTag(path: string) {
+    getTags(path: string) {
       return tag.tagMap.get(path)
     },
     createGridViewFile(path: string, tags?: string[]): GridViewFile {
