@@ -5,7 +5,7 @@ import { PageCursor } from 'vue3-ts-util'
 
 export interface Tag {
   name: string
-  id: number
+  id: number | string
   display_name: string | null
   type: string
   count: number
@@ -31,12 +31,12 @@ export const getExpiredDirs = async () => {
 export const updateImageData = async () => {
   await axiosInst.value.post('/db/update_image_data', {}, { timeout: Infinity })
 }
-
+type TagId = number | string
 export interface MatchImageByTagsReq {
-  and_tags: number[]
-  or_tags: number[]
-  not_tags: number[]
   folder_paths_str?: string
+  and_tags: TagId[]
+  or_tags: TagId[]
+  not_tags: TagId[]
 }
 
 export const getImagesByTags = async (req: MatchImageByTagsReq, cursor: string) => {
@@ -56,16 +56,16 @@ export const addCustomTag = async (req: { tag_name: string }) => {
   return resp.data as Tag
 }
 
-export const toggleCustomTagToImg = async (req: { tag_id: number; img_path: string }) => {
+export const toggleCustomTagToImg = async (req: { tag_id: TagId; img_path: string }) => {
   const resp = await axiosInst.value.post('/db/toggle_custom_tag_to_img', req)
   return resp.data as { is_remove: boolean }
 }
 
-export const removeCustomTag = async (req: { tag_id: number }) => {
+export const removeCustomTag = async (req: { tag_id: TagId }) => {
   await axiosInst.value.post('/db/remove_custom_tag', req)
 }
 
-export const removeCustomTagToImg = async (req: { tag_id: number; img_id: number }) => {
+export const removeCustomTagToImg = async (req: { tag_id: TagId; img_id: TagId }) => {
   await axiosInst.value.post('/db/add_custom_tag_from_img', req)
 }
 

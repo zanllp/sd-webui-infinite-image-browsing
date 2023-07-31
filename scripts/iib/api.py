@@ -27,7 +27,7 @@ from scripts.iib.tool import (
     to_abs_path,
     is_secret_key_required
 )
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.staticfiles import StaticFiles
 import asyncio
 from typing import List, Optional
@@ -94,7 +94,7 @@ async def verify_secret(request: Request):
     if mem["secret_key_hash"] != token:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-
+DEFAULT_BASE = "/infinite_image_browsing"
 def infinite_image_browsing_api(app: FastAPI, **kwargs):
     pre = "/infinite_image_browsing"
 
@@ -133,6 +133,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     f"An exception occurred while processing {request.method} {request.url}: {exc}"
                 )
 
+    pre = kwargs.get("base") or DEFAULT_BASE
     if kwargs.get("allow_cors"):
         app.add_middleware(
             CORSMiddleware,
@@ -145,7 +146,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         try:
             return get_valid_img_dirs(get_sd_webui_conf(**kwargs))
         except Exception as e:
-            print(e) 
+            print(e)
             return []
 
     def update_all_scanned_paths():
@@ -174,7 +175,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             )
         else:
             paths = (
-                get_img_search_dirs() + mem["extra_paths"] + kwargs.get("extra_paths_cli", [])
+                get_img_search_dirs()
+                + mem["extra_paths"]
+                + kwargs.get("extra_paths_cli", [])
             )
         mem["all_scanned_paths"] = unique_by(paths)
 
@@ -235,12 +238,15 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         return [x for x in files if is_path_trusted(x["fullpath"])]
 
     static_dir = f"{cwd}/vue/dist"
-    if os.path.exists(static_dir):
-        app.mount(
-            f"{pre}/fe-static",
-            StaticFiles(directory=static_dir),
-            name="infinite_image_browsing-fe-static",
-        )
+    @app.get(pre + "/fe-static/{file_path:path}")
+    async def serve_static_file(file_path: str):
+        file_full_path = f"{static_dir}/{file_path}"
+        if file_path.endswith(".js"):
+            with open(file_full_path, "r", encoding="utf-8") as file:
+                content = file.read().replace(DEFAULT_BASE, pre)
+            return Response(content=content, media_type="text/javascript")
+        else:
+            return FileResponse(file_full_path)
 
     @app.get(f"{pre}/hello")
     async def greeting():
@@ -271,6 +277,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             "extra_paths": extra_paths,
             "enable_access_control": enable_access_control,
             "launch_mode": kwargs.get("launch_mode", "sd"),
+            "export_fe_fn": bool(kwargs.get("export_fe_fn")),
         }
 
     class DeleteFilesReq(BaseModel):
@@ -565,6 +572,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
 
     @app.get(pre)
     def index_bd():
+        if pre != DEFAULT_BASE:
+            with open(index_html_path, "r", encoding="utf-8") as file:
+                content = file.read().replace(DEFAULT_BASE, pre)
+                return Response(content=content, media_type="text/html")
         return FileResponse(index_html_path)
 
     class PathsReq(BaseModel):
@@ -638,7 +649,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             img_count = DbImg.count(conn)
             update_extra_paths(conn)
             dirs = (
-                get_img_search_dirs() if img_count == 0 else Folder.get_expired_dirs(conn)
+                get_img_search_dirs()
+                if img_count == 0
+                else Floder.get_expired_dirs(conn)
             ) + mem["extra_paths"]
 
             update_image_data(dirs)
@@ -746,10 +759,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             )
         img = DbImg.get(conn, path)
         if not img:
-            if  DbImg.count(conn):
+            if DbImg.count(conn):
                 update_image_data([os.path.dirname(path)])
                 img = DbImg.get(conn, path)
-            else: 
+            else:
                 raise HTTPException(
                     400,
                     "你需要先通过图像搜索页生成索引"
