@@ -303,11 +303,19 @@ def get_comfyui_exif_data(img: Image):
     prompt = img.info.get('prompt')
     if not prompt:
         return {}
-    META_KEY = '3'
+    meta_key = '3'
     data: Dict[str, any] = json.loads(prompt)
+    for i in range(3, 32):
+        try:
+            i = str(i)
+            if data[i]["class_type"] == "KSampler":
+                meta_key = i
+                break
+        except:
+            pass
     meta = {}
-    raw_prompt_data = data[META_KEY]["inputs"]
-    meta["Sampler"] = data[META_KEY]["inputs"]["sampler_name"]
+    raw_prompt_data = data[meta_key]["inputs"]
+    meta["Sampler"] = data[meta_key]["inputs"]["sampler_name"]
     meta["Model"] = data[raw_prompt_data["model"][0]]["inputs"]["ckpt_name"]
     pos_prompt = data[raw_prompt_data["positive"][0]]["inputs"]["text"].strip()
     neg_prompt = data[raw_prompt_data["negative"][0]]["inputs"]["text"].strip()
