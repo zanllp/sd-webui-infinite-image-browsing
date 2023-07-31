@@ -10,6 +10,7 @@ import { computed } from 'vue'
 import ContextMenu from './ContextMenu.vue'
 import { useTagStore } from '@/store/useTagStore'
 import { CloseCircleOutlined } from '@/icon'
+import { Tag } from '@/api/db'
 
 const global = useGlobalStore()
 const tagStore = useTagStore()
@@ -22,7 +23,8 @@ const props = withDefaults(
     cellWidth: number
     fullScreenPreviewImageUrl?: string
     enableRightClickMenu: boolean,
-    enableCloseIcon: boolean
+    enableCloseIcon: boolean,
+    tags?: Tag[]
   }>(),
   { selected: false, enableRightClickMenu: true, enableCloseIcon: false }
 )
@@ -77,7 +79,7 @@ const imageSrc = computed(() => {
             onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
           }" />
           <div class="tags-container" v-if="customTags && cellWidth > 128">
-            <a-tag v-for="tag in customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
+            <a-tag v-for="tag in tags ?? customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
               {{ tag.name }}
             </a-tag>
           </div>

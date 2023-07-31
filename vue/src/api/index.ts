@@ -80,6 +80,7 @@ export interface GlobalConf {
   extra_paths: { path: string }[]
   enable_access_control: boolean
   launch_mode: 'server' | 'sd'
+  export_fe_fn: boolean
 }
 
 export const getGlobalSetting = async () => {
@@ -101,7 +102,8 @@ export const genInfoCompleted = async () => {
 }
 
 export const getImageGenerationInfo = async (path: string) => {
-  return (await axiosInst.value.get(`/image_geninfo?path=${encodeURIComponent(path)}`)).data as string
+  return (await axiosInst.value.get(`/image_geninfo?path=${encodeURIComponent(path)}`))
+    .data as string
 }
 
 export const openFolder = async (path: string) => {
