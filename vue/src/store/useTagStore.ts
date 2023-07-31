@@ -2,6 +2,7 @@ import { Tag, batchGetTagsByPath } from '@/api/db'
 import { defineStore } from 'pinia'
 import sjcl from 'sjcl'
 import { reactive } from 'vue'
+import type { GridViewFileTag } from './useGlobalStore'
 function generateColors() {
   const colors = []
   const saturation = 90
@@ -17,6 +18,7 @@ function generateColors() {
   return colors
 }
 const tagColors = generateColors()
+
 export const useTagStore = defineStore('useTagStore', () => {
   const tagMap = reactive(new Map<string, Tag[]>())
   const fetchImageTags = async (paths: string[]) => {
@@ -49,10 +51,24 @@ export const useTagStore = defineStore('useTagStore', () => {
     paths.forEach((v) => tagMap.delete(v))
     await fetchImageTags(paths)
   }
+  const tagConvert = (tag: GridViewFileTag): Tag => ({
+    id: tag.name,
+    count: 0,
+    display_name: null,
+    type: 'temp',
+    ...tag
+  })
+  const set = (path: string, tags: (string|Tag| GridViewFileTag)[]) => {
+    const normalizedTags = tags.map(v => tagConvert(typeof v === 'string' ? { name: v } : v))
+    tagMap.set(path, normalizedTags)
+  }
   return {
+    set,
+    colorCache,
     tagMap,
     getColor,
     fetchImageTags,
-    refreshTags
+    refreshTags,
+    tagConvert
   }
 })

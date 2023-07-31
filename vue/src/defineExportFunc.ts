@@ -1,12 +1,13 @@
 import { GridViewFile, TabPane, useGlobalStore } from './store/useGlobalStore'
-import { Dict, globalEvents } from './util'
+import { useTagStore } from './store/useTagStore'
+import { Dict, globalEvents, switch2IIB } from './util'
 import { uniqueId } from 'lodash-es'
 
-
-export const exportFn = async (g: ReturnType<typeof useGlobalStore>)  => {
+export const exportFn = async (g: ReturnType<typeof useGlobalStore>) => {
   if (!g.conf?.export_fe_fn) {
     return
   }
+  const tag = useTagStore()
   const insertTabPane = ({
     tabIdx = 0,
     paneIdx = 0,
@@ -32,7 +33,18 @@ export const exportFn = async (g: ReturnType<typeof useGlobalStore>)  => {
     insertTabPane,
     getTabList: () => g.tabList,
     getPageRef,
-    createGridViewFile(path: string, tags:string[] = []): GridViewFile {
+    switch2IIB,
+    openIIBInNewTab: () => window.parent.open('/infinite_image_browsing'),
+    setTagColor(name: string, color: string) {
+      tag.colorCache.set(name, color)
+    },
+    setTag(path: string, tags: string[]) {
+      tag.set(path, tags)
+    },
+    getTag(path: string) {
+      return tag.tagMap.get(path)
+    },
+    createGridViewFile(path: string, tags?: string[]): GridViewFile {
       return {
         name: path.split(/[/\\]/).pop() ?? '',
         size: '-',
@@ -41,26 +53,27 @@ export const exportFn = async (g: ReturnType<typeof useGlobalStore>)  => {
         created_time: '',
         date: '',
         fullpath: path,
-        tags: tags.map(v => ({ name: v })),
+        tags: tags?.map((v) => ({ name: v })),
         is_under_scanned_path: true
       }
     }
   })
 
-  
-  function getPageRef (key: string) {
-    return new Proxy({}, {
-      get(_target, p, _receiver) {
-        if (p === 'close') {
-          const tabIdx = g.tabList.findIndex(v => v.panes.some(v => v.key === key))
-          return () => globalEvents.emit('closeTabPane', tabIdx , key)
+  function getPageRef(key: string) {
+    return new Proxy(
+      {},
+      {
+        get(_target, p, _receiver) {
+          if (p === 'close') {
+            const tabIdx = g.tabList.findIndex((v) => v.panes.some((v) => v.key === key))
+            return () => globalEvents.emit('closeTabPane', tabIdx, key)
+          }
+          return g.pageFuncExportMap.get(key)?.[p as string]
         }
-        return g.pageFuncExportMap.get(key)?.[p as string]
-      },
-    })
+      }
+    )
   }
 
-  
   function define(funcs: Dict<(...args: any[]) => any>) {
     const w = window as any
     for (const key in funcs) {
@@ -69,5 +82,4 @@ export const exportFn = async (g: ReturnType<typeof useGlobalStore>)  => {
       }
     }
   }
-  
 }
