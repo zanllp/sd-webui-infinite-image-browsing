@@ -308,7 +308,7 @@ def get_comfyui_exif_data(img: Image):
     for i in range(3, 32):
         try:
             i = str(i)
-            if data[i]["class_type"] == "KSampler":
+            if data[i]["class_type"].startswith("KSampler"):
                 meta_key = i
                 break
         except:
