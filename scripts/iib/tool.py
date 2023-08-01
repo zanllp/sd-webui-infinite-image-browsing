@@ -314,11 +314,16 @@ def get_comfyui_exif_data(img: Image):
         except:
             pass
     meta = {}
-    raw_prompt_data = data[meta_key]["inputs"]
-    meta["Sampler"] = data[meta_key]["inputs"]["sampler_name"]
-    meta["Model"] = data[raw_prompt_data["model"][0]]["inputs"]["ckpt_name"]
-    pos_prompt = data[raw_prompt_data["positive"][0]]["inputs"]["text"].strip()
-    neg_prompt = data[raw_prompt_data["negative"][0]]["inputs"]["text"].strip()
+    KSampler_entry = data[meta_key]["inputs"]
+    meta["Sampler"] = KSampler_entry["sampler_name"]
+    meta["Model"] = data[KSampler_entry["model"][0]]["inputs"]["ckpt_name"]
+    def get_text_from_clip(idx: str) :
+        text = data[idx]["inputs"]["text"]
+        if isinstance(text, list): # type:CLIPTextEncode (NSP) mode:Wildcards
+            text = data[text[0]]["inputs"]["text"]
+        return text.strip()
+    pos_prompt = get_text_from_clip(KSampler_entry["positive"][0])
+    neg_prompt = get_text_from_clip(KSampler_entry["negative"][0])
     pos_prompt_arr = unique_by(parse_prompt(pos_prompt)["pos_prompt"])
     return {
         "meta": meta,
@@ -331,8 +336,8 @@ def comfyui_exif_data_to_str(data):
     res = data["pos_prompt_raw"] + "\nNegative prompt: " + data["neg_prompt_raw"] + "\n"
     meta_arr = []
     for k,v in data["meta"].items():
-        meta_arr.append(f'{k}:{v}')
-    return res + ",".join(meta_arr)
+        meta_arr.append(f'{k}: {v}')
+    return res + ", ".join(meta_arr)
 
 def read_sd_webui_gen_info_from_image(image: Image, path="") -> str:
     """

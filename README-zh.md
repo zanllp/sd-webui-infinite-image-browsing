@@ -71,8 +71,6 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - 允许你一次性打包下载多个图像
 - 数据来源可以是搜索结果/普通的图像网格查看页面/walk模式等。使用拖拽或者“发送到”都可将图片添加待处理列表
 
-强烈推荐使用在`在新页面打开`，比塞在gradio里舒服太多。
-
 
 如果您喜欢这个项目并且觉得它对您有帮助，请考虑给我点个⭐️。这将对我持续开发和维护这个项目非常重要。如果您有任何建议或者想法，请随时在issue中提出，我会尽快回复。再次感谢您的支持！
 
@@ -93,7 +91,10 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 ## 作为使用Python运行的独立程序（不需要SD-webui）:
 请参考[Can the extension function without the web UI?](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47)
 
+如果需要查看ComfyUI生成的图片相关，请先参考 https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/202
+
 ## 作为桌面应用程序（不需要SD-webui和Python）:
+
 从仓库页面右侧的`releases`部分下载并安装程序。
 # 预览
 
