@@ -127,7 +127,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 seq(allowed_paths.split(","))
                 .map(path_map)
                 .filter(lambda x: x)
-                .to_list()
+                .to_list(),
+                os.getcwd()
             )
         else:
             paths = (
