@@ -1,6 +1,6 @@
 [中文文档](./README-zh.md)
 
-[View recent updates (Change log)](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/131)
+[View recent updates (Change log)](https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log)
 
 #  Stable Diffusion webui Infinite Image Browsing
 
