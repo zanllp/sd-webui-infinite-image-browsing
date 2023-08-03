@@ -4,7 +4,7 @@
 
 > 百度云部分已独立，如果你有需要请[点此单独安装](https://github.com/zanllp/sd-webui-baidu-netdisk)
 
-[查看近期更新](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/131)
+[查看近期更新](https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log)
 
 <p style="text-align:center;margin:0 32px">不仅仅是图像浏览器，更是一个强大的图像管理器。精确的图像搜索配合多选操作进行筛选/归档/打包，成倍提高效率。更是支持以独立模式运行，无需SD-Webui</p>
 
