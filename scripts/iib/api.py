@@ -23,7 +23,8 @@ from scripts.iib.tool import (
     unique_by,
     create_zip_file,
     normalize_paths,
-    to_abs_path
+    to_abs_path,
+    is_secret_key_required
 )
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -76,6 +77,8 @@ async def write_permission_required():
 
 async def verify_secret(request: Request):
     if not secret_key:
+        if is_secret_key_required:
+            raise HTTPException(status_code=400, detail={ "type": "secret_key_required" })
         return
     token = request.cookies.get("IIB_S")
     if not token:

@@ -49,6 +49,16 @@ const addInterceptor = (axiosInst: AxiosInstance) => {
           await delay(100)
           location.reload()
         }
+      
+        switch (err.response?.data?.detail?.type) {
+          case "secret_key_required":
+            Modal.error({
+              width: '60vw',
+              title: t('secretKeyMustBeConfigured'),
+              content: () => h('p', { style: `white-space: pre-line;` } , t('secretKeyRequiredWarnMsg'))
+            })
+            throw new Error(t('secretKeyRequiredWarnMsg'))
+        }
         const errmsg = err.response?.data?.detail ?? t('errorOccurred')
         message.error(errmsg)
         throw new Error(errmsg)

@@ -232,6 +232,14 @@ def get_temp_path():
 
 temp_path = get_temp_path()
 
+def get_secret_key_required():
+    try:
+        from modules.shared import cmd_opts
+        return bool(cmd_opts.gradio_auth)
+    except:        
+        return False
+
+is_secret_key_required = get_secret_key_required()
 
 def get_enable_access_control():
     ctrl = os.getenv("IIB_ACCESS_CONTROL")
