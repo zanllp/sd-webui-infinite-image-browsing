@@ -193,11 +193,17 @@ const zh = {
   zipDownload: '打包成zip下载',
   archive: '归档',
   batchDownload: '批量下载',
-  remove: '移除'
+  remove: '移除',
+  secretKeyRequiredWarnMsg: `为了安全考虑,你必须为本拓展单独配置Secret Key,具体参考本拓展根目录下的.env.example文件内的IIB_SECRET_KEY。
+  这项警告只会在配置了gradio-auth时出现`,
+  "secretKeyMustBeConfigured": "必须配置Secret Key"
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  "secretKeyMustBeConfigured": "Secret Key must be configured",
+  secretKeyRequiredWarnMsg: `For security reasons, you must separately configure Secret Key for this extension, refer to the IIB_SECRET_KEY in the .env.example file under the root directory of this extension. 
+  This error only appears when gradio-auth is configured.`,
   remove: 'Remove',
   batchDownload: 'Batch Download',
   archive: 'Archive',
