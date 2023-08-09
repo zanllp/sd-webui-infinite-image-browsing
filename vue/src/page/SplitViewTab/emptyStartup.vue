@@ -60,7 +60,7 @@ const walkModeSupportedDir = computed(() =>
   )
 )
 const canpreviewInNewWindow = window.parent !== window
-const previewInNewWindow = () => window.parent.open('/infinite_image_browsing' + (location.href.includes('theme=dark') ? '?__theme=dark' : ''))
+const previewInNewWindow = () => window.parent.open('/infinite_image_browsing' + (window.parent.location.href.includes('theme=dark') ? '?__theme=dark' : ''))
 
 const restoreRecord = () => {
   ok(lastRecord.value)
