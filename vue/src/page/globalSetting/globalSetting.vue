@@ -58,6 +58,9 @@ const oninitTauriLaunchConf = async () => {
           t('langChangeReload')
         }}</a-button>
       </a-form-item>
+      <a-form-item :label="$t(key + 'SkipConfirm')" v-for="_,key in globalStore.ignoredConfirmActions" :key="key">
+        <ACheckbox v-model:checked="globalStore.ignoredConfirmActions[key]"></ACheckbox>
+      </a-form-item>
       <h2>{{ t('shortcutKey') }}</h2>
       <a-form-item :label="$t('deleteSelected')">
         <div class="col">

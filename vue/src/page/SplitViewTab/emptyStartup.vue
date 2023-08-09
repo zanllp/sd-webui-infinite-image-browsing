@@ -60,7 +60,7 @@ const walkModeSupportedDir = computed(() =>
   )
 )
 const canpreviewInNewWindow = window.parent !== window
-const previewInNewWindow = () => window.parent.open('/infinite_image_browsing')
+const previewInNewWindow = () => window.parent.open('/infinite_image_browsing' + (window.parent.location.href.includes('theme=dark') ? '?__theme=dark' : ''))
 
 const restoreRecord = () => {
   ok(lastRecord.value)
@@ -113,7 +113,7 @@ const addToSearchScanPathAndQuickMove = async () => {
 const onRemoveQuickPathClick = (path: string) => {
   Modal.confirm({
     content: t('confirmDelete'),
-    closable: true, 
+    closable: true,
     async onOk () {
       await removeScannedPath(path)
       message.success(t('removeCompleted'))

@@ -8,7 +8,7 @@ import type { getQuickMovePaths } from '@/page/taskRecord/autoComplete'
 import { type Dict, type ReturnTypeAsync } from '@/util'
 import { cloneDeep, uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
-import { VNode, computed, onMounted, toRaw, watch } from 'vue'
+import { VNode, computed, onMounted, reactive, toRaw, watch } from 'vue'
 import { ref } from 'vue'
 
 interface TabPaneBase {
@@ -77,6 +77,8 @@ export const copyTab = (tab: Tab) => {
     panes: tab.panes.map(copyPane)
   }
 }
+
+export type ActionConfirmRequired = 'deleteOneOnly'
 
 export const useGlobalStore = defineStore(
   'useGlobalStore',
@@ -162,6 +164,9 @@ export const useGlobalStore = defineStore(
       const res = quickMovePaths.value.filter((v) => keys.includes(v.key)).map(v => [v.zh, v.dir])
       return Object.fromEntries(res)
     })
+
+    const ignoredConfirmActions = reactive<Record<ActionConfirmRequired, boolean>>({ deleteOneOnly: false })
+
     return {
       defaultSortingMethod,
       defaultGridCellWidth,
@@ -183,7 +188,8 @@ export const useGlobalStore = defineStore(
       fullscreenPreviewInitialUrl: ref(''),
       shortcut,
       dontShowAgain: ref(false),
-      dontShowAgainNewImgOpts: ref(false)
+      dontShowAgainNewImgOpts: ref(false),
+      ignoredConfirmActions
     }
   },
   {
@@ -201,7 +207,8 @@ export const useGlobalStore = defineStore(
         'gridThumbnailResolution',
         'longPressOpenContextMenu',
         'onlyFoldersAndImages',
-        'shortcut'
+        'shortcut',
+        'ignoredConfirmActions'
       ]
     }
   }
