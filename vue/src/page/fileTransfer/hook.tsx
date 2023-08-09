@@ -25,7 +25,7 @@ import * as Path from '@/util/path'
 import type Progress from 'nprogress'
 // @ts-ignore
 import NProgress from 'multi-nprogress'
-import { Button, Modal, message, notification } from 'ant-design-vue'
+import { Button, Checkbox, Modal, message, notification } from 'ant-design-vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
@@ -1012,23 +1012,30 @@ export function useFileItemActions (
       }
       case 'deleteFiles': {
         const selectedFiles = getSelectedImg()
+        const removeFile = async () => {
+            const paths = selectedFiles.map((v) => v.fullpath)
+            await deleteFiles(paths)
+            message.success(t('deleteSuccess'))
+            events.emit('removeFiles', { paths: paths, loc: currLocation.value })
+        }
+        if (selectedFiles.length === 1 && global.ignoredConfirmActions.deleteOneOnly) {
+          return removeFile()
+        }
         await new Promise<void>((resolve) => {
           Modal.confirm({
             title: t('confirmDelete'),
             maskClosable: true,
             width: '60vw',
-            content:
+            content:() =>
               <div>
                 <ol style={{ maxHeight: '50vh', overflow: 'auto' }}>
                   {selectedFiles.map((v) => <li>{v.fullpath.split(/[/\\]/).pop()}</li>)}
                 </ol>
                 <MultiSelectTips />
+                <Checkbox v-model:checked={global.ignoredConfirmActions.deleteOneOnly}>{t('deleteOneOnlySkipConfirm')} ({t('resetOnGlobalSettingsPage')})</Checkbox>
               </div>,
             async onOk () {
-              const paths = selectedFiles.map((v) => v.fullpath)
-              await deleteFiles(paths)
-              message.success(t('deleteSuccess'))
-              events.emit('removeFiles', { paths: paths, loc: currLocation.value })
+              await removeFile()
               resolve()
             }
           })

@@ -487,8 +487,13 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def image_geninfo(path: str):
         with Image.open(path) as img:
             if is_img_created_by_comfyui(img):
-                params = get_comfyui_exif_data(img)
-                return comfyui_exif_data_to_str(params)
+                try:                    
+                    params = get_comfyui_exif_data(img)
+                    return comfyui_exif_data_to_str(params)
+                except:
+                    logger.error('parse comfyui image failed. prompt:')
+                    logger.error(img.info.get('prompt'))
+                    return ''
             else:
                 return read_sd_webui_gen_info_from_image(img, path)
 
