@@ -898,8 +898,24 @@ export function useFileItemActions (
     switch (e.key) {
       case 'previewInNewWindow':
         return window.open(url)
-      case 'download':
-        return window.open(toRawFileUrl(file, true))
+      case 'download':{
+        const selectedFiles = getSelectedImg()
+        const baseURL = window.location.origin
+        const downloadImage = function (file: FileNodeInfo) {
+          const url = baseURL + toRawFileUrl(file, true)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = file.name
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+        }
+
+        selectedFiles.forEach((file) => {
+          downloadImage(file)
+        })
+        break
+      }
       case 'copyPreviewUrl': {
         return copy2clipboardI18n(parent.document.location.origin + url)
       }
