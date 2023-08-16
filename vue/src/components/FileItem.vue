@@ -21,19 +21,19 @@ const props = withDefaults(
     showMenuIdx?: number
     cellWidth: number
     fullScreenPreviewImageUrl?: string
-    enableRightClickMenu: boolean,
-    enableCloseIcon: boolean
+    enableRightClickMenu?: boolean
+    enableCloseIcon?: boolean
   }>(),
   { selected: false, enableRightClickMenu: true, enableCloseIcon: false }
 )
 
 const emit = defineEmits<{
-  'update:showMenuIdx': [v: number],
-  'fileItemClick': [event: MouseEvent, file: FileNodeInfo, idx: number],
-  'dragstart': [event: DragEvent, idx: number],
-  'dragend': [event: DragEvent, idx: number],
-  'previewVisibleChange': [value: boolean, last: boolean],
-  'contextMenuClick': [e: MenuInfo, file: FileNodeInfo, idx: number],
+  'update:showMenuIdx': [v: number]
+  fileItemClick: [event: MouseEvent, file: FileNodeInfo, idx: number]
+  dragstart: [event: DragEvent, idx: number]
+  dragend: [event: DragEvent, idx: number]
+  previewVisibleChange: [value: boolean, last: boolean]
+  contextMenuClick: [e: MenuInfo, file: FileNodeInfo, idx: number]
   'close-icon-click': []
 }>()
 
@@ -43,18 +43,32 @@ const customTags = computed(() => {
 
 const imageSrc = computed(() => {
   const r = global.gridThumbnailResolution
-  return global.enableThumbnail ? toImageThumbnailUrl(props.file, [r, r].join('x')) : toRawFileUrl(props.file)
+  return global.enableThumbnail
+    ? toImageThumbnailUrl(props.file, [r, r].join('x'))
+    : toRawFileUrl(props.file)
 })
 </script>
 <template>
-  <a-dropdown :trigger="['contextmenu']" :visible="!global.longPressOpenContextMenu ? undefined : typeof idx === 'number' && showMenuIdx === idx
-    " @update:visible="(v: boolean) => typeof idx === 'number' && emit('update:showMenuIdx', v ? idx : -1)">
-    <li class="file file-item-trigger grid" :class="{
-      clickable: file.type === 'dir',
-      selected
-    }" :data-idx="idx" :key="file.name" draggable="true" @dragstart="emit('dragstart', $event, idx)"
-      @dragend="emit('dragend', $event, idx)" @click.capture="emit('fileItemClick', $event, file, idx)">
-
+  <a-dropdown
+    :trigger="['contextmenu']"
+    :visible="
+      !global.longPressOpenContextMenu ? undefined : typeof idx === 'number' && showMenuIdx === idx
+    "
+    @update:visible="(v: boolean) => typeof idx === 'number' && emit('update:showMenuIdx', v ? idx : -1)"
+  >
+    <li
+      class="file file-item-trigger grid"
+      :class="{
+        clickable: file.type === 'dir',
+        selected
+      }"
+      :data-idx="idx"
+      :key="file.name"
+      draggable="true"
+      @dragstart="emit('dragstart', $event, idx)"
+      @dragend="emit('dragend', $event, idx)"
+      @click.capture="emit('fileItemClick', $event, file, idx)"
+    >
       <div>
         <div class="close-icon" v-if="enableCloseIcon" @click="emit('close-icon-click')">
           <close-circle-outlined />
@@ -64,18 +78,30 @@ const imageSrc = computed(() => {
             <ellipsis-outlined />
           </div>
           <template #overlay>
-            <context-menu :file="file" :idx="idx" :selected-tag="customTags"
-              @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)" />
+            <context-menu
+              :file="file"
+              :idx="idx"
+              :selected-tag="customTags"
+              @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)"
+            />
           </template>
         </a-dropdown>
         <!-- :key="fullScreenPreviewImageUrl ? undefined : file.fullpath" 
           这么复杂是因为再全屏预览时可能因为直接删除导致fullpath变化，然后整个预览直接退出-->
-        <div style="position: relative;" :key="file.fullpath" :class="`idx-${idx}`" v-if="isImageFile(file.name)">
-
-          <a-image :src="imageSrc" :fallback="fallbackImage" :preview="{
+        <div
+          style="position: relative"
+          :key="file.fullpath"
+          :class="`idx-${idx}`"
+          v-if="isImageFile(file.name)"
+        >
+          <a-image
+            :src="imageSrc"
+            :fallback="fallbackImage"
+            :preview="{
             src: fullScreenPreviewImageUrl,
             onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
-          }" />
+          }"
+          />
           <div class="tags-container" v-if="customTags && cellWidth > 128">
             <a-tag v-for="tag in customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
               {{ tag.name }}
@@ -102,8 +128,13 @@ const imageSrc = computed(() => {
       </div>
     </li>
     <template #overlay>
-      <context-menu :file="file" :idx="idx" :selected-tag="customTags" v-if="enableRightClickMenu"
-        @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)" />
+      <context-menu
+        :file="file"
+        :idx="idx"
+        :selected-tag="customTags"
+        v-if="enableRightClickMenu"
+        @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)"
+      />
     </template>
   </a-dropdown>
 </template>
@@ -123,7 +154,7 @@ const imageSrc = computed(() => {
   flex-wrap: wrap-reverse;
   flex-direction: row-reverse;
 
-  &>* {
+  & > * {
     margin: 0 0 4px 4px;
     font-size: 14px;
     line-height: 1.6;
@@ -215,14 +246,13 @@ const imageSrc = computed(() => {
       }
 
       img,
-      .preview-icon-wrap>[role='img'] {
+      .preview-icon-wrap > [role='img'] {
         height: v-bind('$props.cellWidth + "px"');
         width: v-bind('$props.cellWidth + "px"');
         object-fit: contain;
       }
     }
   }
-
 
   &.clickable {
     cursor: pointer;
