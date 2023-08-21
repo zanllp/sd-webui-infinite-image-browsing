@@ -7,6 +7,7 @@ from scripts.iib.tool import (
     get_comfyui_exif_data,
     human_readable_size,
     is_img_created_by_comfyui,
+    is_img_created_by_comfyui_with_webui_gen_info,
     is_valid_image_path,
     temp_path,
     read_sd_webui_gen_info_from_image,
@@ -487,13 +488,16 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def image_geninfo(path: str):
         with Image.open(path) as img:
             if is_img_created_by_comfyui(img):
-                try:                    
-                    params = get_comfyui_exif_data(img)
-                    return comfyui_exif_data_to_str(params)
-                except:
-                    logger.error('parse comfyui image failed. prompt:')
-                    logger.error(img.info.get('prompt'))
-                    return ''
+                if is_img_created_by_comfyui_with_webui_gen_info(img):
+                    return read_sd_webui_gen_info_from_image(img, path)
+                else:
+                    try:                    
+                        params = get_comfyui_exif_data(img)
+                        return comfyui_exif_data_to_str(params)
+                    except:
+                        logger.error('parse comfyui image failed. prompt:')
+                        logger.error(img.info.get('prompt'))
+                        return ''
             else:
                 return read_sd_webui_gen_info_from_image(img, path)
 
