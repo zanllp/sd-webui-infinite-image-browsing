@@ -10,7 +10,8 @@ from scripts.iib.tool import (
     is_dev,
     get_comfyui_exif_data,
     comfyui_exif_data_to_str,
-    is_img_created_by_comfyui
+    is_img_created_by_comfyui,
+    is_img_created_by_comfyui_with_webui_gen_info
 )
 
 from scripts.iib.logger import logger
@@ -23,8 +24,12 @@ def get_exif_data(file_path):
     try:
         with Image.open(file_path) as img:
             if is_img_created_by_comfyui(img):
-                params = get_comfyui_exif_data(img)
-                info = comfyui_exif_data_to_str(params)
+                if is_img_created_by_comfyui_with_webui_gen_info(img):
+                    info = read_sd_webui_gen_info_from_image(img, file_path)
+                    params = parse_generation_parameters(info)
+                else:
+                    params = get_comfyui_exif_data(img)
+                    info = comfyui_exif_data_to_str(params)
             else:
                 info = read_sd_webui_gen_info_from_image(img, file_path)
                 params = parse_generation_parameters(info)
