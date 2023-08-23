@@ -21,8 +21,8 @@ const props = withDefaults(
     showMenuIdx?: number
     cellWidth: number
     fullScreenPreviewImageUrl?: string
-    enableRightClickMenu: boolean,
-    enableCloseIcon: boolean
+    enableRightClickMenu?: boolean,
+    enableCloseIcon?: boolean
   }>(),
   { selected: false, enableRightClickMenu: true, enableCloseIcon: false }
 )
