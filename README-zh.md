@@ -93,6 +93,8 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 
 如果需要查看ComfyUI生成的图片相关，请先参考 https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/202
 
+如果你需要dockerfile 参考  https://github.com/zanllp/sd-webui-infinite-image-browsing/discussions/366
+
 ## 作为桌面应用程序（不需要SD-webui和Python）:
 
 从仓库页面右侧的`releases`部分下载并安装程序。
