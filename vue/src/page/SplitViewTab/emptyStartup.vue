@@ -131,9 +131,9 @@ const onRemoveQuickPathClick = (path: string) => {
         <LockOutlined title="Access Control mode" style="vertical-align: text-bottom;" />
       </div>
       <div flex-placeholder />
-      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing" target="_blank" class="last-record">{{
-        $t('document') }}</a>
-      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/131" target="_blank"
+      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing" target="_blank" class="last-record">Github</a>
+      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/.env.example" target="_blank" class="last-record">{{ $t('privacyAndSecurity') }}</a>
+      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log" target="_blank"
         class="last-record">{{ $t('changlog') }}</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank"
         class="last-record">{{ $t('faq') }}</a>
@@ -182,7 +182,7 @@ const onRemoveQuickPathClick = (path: string) => {
           </li>
           <li v-for="dir in global.quickMovePaths" :key="dir.key" class="item rem"
             @click.prevent="openInCurrentTab('local', dir.dir)">
-            <span class="text line-clamp-1">{{ dir.zh }}</span>
+            <span class="text line-clamp-2">{{ dir.zh }}</span>
             <AButton v-if="dir.can_delete" type="link" @click.stop="onRemoveQuickPathClick(dir.dir)">{{ $t('remove') }}
             </AButton>
           </li>
@@ -339,5 +339,6 @@ const onRemoveQuickPathClick = (path: string) => {
 .text {
   flex: 1;
   font-size: 16px;
+  word-break: break-all;
 }
 </style>

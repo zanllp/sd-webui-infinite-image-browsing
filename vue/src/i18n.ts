@@ -198,11 +198,13 @@ const zh = {
   这项警告只会在配置了gradio-auth时出现`,
   secretKeyMustBeConfigured: '必须配置Secret Key',
   deleteOneOnlySkipConfirm: '删除单个文件时不进行确认',
-  resetOnGlobalSettingsPage: '你可以在全局设置页重置'
+  resetOnGlobalSettingsPage: '你可以在全局设置页重置',
+  privacyAndSecurity: '安全与隐私'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  privacyAndSecurity: 'Security & Privacy',
   deleteOneOnlySkipConfirm: 'Do not confirm when deleting a single file',
   resetOnGlobalSettingsPage: 'You can reset on the global settings page',
   secretKeyMustBeConfigured: 'Secret Key must be configured',
