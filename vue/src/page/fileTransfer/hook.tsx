@@ -847,6 +847,7 @@ export function useFileItemActions (
   const onContextMenuClick = async (e: MenuInfo, file: FileNodeInfo, idx: number) => {
     const url = toRawFileUrl(file)
     const path = currLocation.value
+    const preset = { IIB_container_id: parent.IIB_container_id } 
 
     /**
      * 获取选中的图片信息
@@ -870,7 +871,7 @@ export function useFileItemActions (
       try {
         spinning.value = true
         await setImgPath(file.fullpath) // 设置图像路径
-        imgTransferBus.postMessage(JSON.stringify({ event: 'click_hidden_button', btnEleId: 'iib_hidden_img_update_trigger' })) // 触发图像组件更新
+        imgTransferBus.postMessage({ ...preset, event: 'click_hidden_button', btnEleId: 'iib_hidden_img_update_trigger' }) // 触发图像组件更新
         const warnId = setTimeout(
           () => notification.warn({ message: t('long_loading'), duration: 20 }),
           5000
@@ -878,8 +879,7 @@ export function useFileItemActions (
         // ok(await genInfoCompleted(), 'genInfoCompleted timeout') // 等待消息生成完成
         await genInfoCompleted() // 等待消息生成完成
         clearTimeout(warnId)
-        imgTransferBus.postMessage(
-          JSON.stringify({ event: 'click_hidden_button', btnEleId: `iib_hidden_tab_${tab}` })) // 触发粘贴
+        imgTransferBus.postMessage({ ...preset, event: 'click_hidden_button', btnEleId: `iib_hidden_tab_${tab}` }) // 触发粘贴
       } catch (error) {
         console.error(error)
         message.error('发送图像失败，请携带console的错误消息找开发者')
@@ -933,20 +933,20 @@ export function useFileItemActions (
       case 'send2controlnet-img2img':
       case 'send2controlnet-txt2img': {
         const type = e.key.split('-')[1] as 'img2img' | 'txt2img'
-        imgTransferBus.postMessage(
-          JSON.stringify({ event: 'send_to_control_net', type, url: toRawFileUrl(file) }))
+        imgTransferBus.postMessage({ ...preset, event: 'send_to_control_net', type, url: toRawFileUrl(file) })
         break
       }
       case 'send2outpaint': {
 
         imageGenInfo.value = await q.pushAction(() => getImageGenerationInfo(file.fullpath)).res
         const [prompt, negPrompt] = (imageGenInfo.value || '').split('\n')
-        imgTransferBus.postMessage(JSON.stringify({
+        imgTransferBus.postMessage({
+          ...preset,
           event: 'send_to_outpaint',
           url: toRawFileUrl(file),
           prompt,
           negPrompt: negPrompt.slice('Negative prompt: '.length)
-        }))
+        })
 
         break
       }
