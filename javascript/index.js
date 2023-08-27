@@ -12,7 +12,7 @@ Promise.resolve().then(async () => {
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Infinite Image Browsing</title>
-    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-a4883aca.js"></script>
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-a94d1da1.js"></script>
     <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-758e2aef.css">
   </head>
 
@@ -86,7 +86,7 @@ Promise.resolve().then(async () => {
             bottom: 10px;`
           iframe.style = `width: 100%;height:100%`
         } catch (error) {
-          console.error('Error mounting IIB. Running fallback.', error);
+          console.error('Error mounting IIB. Running fallback.', error)
           wrap.style = ''
           iframe.style = `width: 100%;height:100vh`
         }
@@ -94,10 +94,15 @@ Promise.resolve().then(async () => {
     })
   }
 
+  const IIB_container_id = [Date.now(), Math.random()].join()
+  window.IIB_container_id = IIB_container_id
   const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
   imgTransferBus.addEventListener('message', async (ev) => {
-    const data = JSON.parse(ev.data)
-    if (typeof data !== 'object') {
+    const data = ev.data
+    if (
+      typeof data !== 'object' ||
+      (typeof data.IIB_container_id === 'string' && data.IIB_container_id !== IIB_container_id)
+    ) {
       return
     }
     console.log(`iib-message:`, data)

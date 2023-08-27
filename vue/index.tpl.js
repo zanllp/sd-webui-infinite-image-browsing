@@ -66,7 +66,7 @@ Promise.resolve().then(async () => {
             bottom: 10px;`
           iframe.style = `width: 100%;height:100%`
         } catch (error) {
-          console.error('Error mounting IIB. Running fallback.', error);
+          console.error('Error mounting IIB. Running fallback.', error)
           wrap.style = ''
           iframe.style = `width: 100%;height:100vh`
         }
@@ -74,10 +74,15 @@ Promise.resolve().then(async () => {
     })
   }
 
+  const IIB_container_id = [Date.now(), Math.random()].join()
+  window.IIB_container_id = IIB_container_id
   const imgTransferBus = new BroadcastChannel('iib-image-transfer-bus')
   imgTransferBus.addEventListener('message', async (ev) => {
-    const data = JSON.parse(ev.data)
-    if (typeof data !== 'object') {
+    const data = ev.data
+    if (
+      typeof data !== 'object' ||
+      (typeof data.IIB_container_id === 'string' && data.IIB_container_id !== IIB_container_id)
+    ) {
       return
     }
     console.log(`iib-message:`, data)
