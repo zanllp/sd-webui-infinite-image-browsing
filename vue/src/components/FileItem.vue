@@ -84,7 +84,7 @@ const taggleLikeTag = () => {
                 @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)" />
             </template>
           </a-dropdown>
-          <a-dropdown>
+          <a-dropdown v-if="file.type === 'file'">
             <div class="float-btn-wrap" :class="{ 'like-selected': likeTag?.selected }" @click="taggleLikeTag">
               <HeartFilled v-if="likeTag?.selected" />
               <HeartOutlined v-else />
