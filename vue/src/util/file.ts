@@ -38,3 +38,17 @@ export function isImageFile(filename: string): boolean {
   const extension = filename.split('.').pop()?.toLowerCase()
   return extension !== undefined && imageExtensions.includes(`.${extension}`)
 }
+
+export function downloadFiles(urls: string[]) {
+  const link = document.createElement('a');
+  link.style.display = 'none';
+  document.body.appendChild(link);
+
+  urls.forEach((url) => {
+    link.href = url;
+    link.download = ''
+    link.click();
+  });
+
+  document.body.removeChild(link);
+}

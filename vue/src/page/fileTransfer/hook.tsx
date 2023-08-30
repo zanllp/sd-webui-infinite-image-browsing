@@ -30,7 +30,7 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
 import { addScannedPath, removeScannedPath, toggleCustomTagToImg } from '@/api/db'
-import { FileTransferData, getFileTransferDataFromDragEvent, toRawFileUrl } from '../../util/file'
+import { FileTransferData, downloadFiles, getFileTransferDataFromDragEvent, toRawFileUrl } from '../../util/file'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { openCreateFlodersModal, MultiSelectTips } from './functionalCallableComp'
 import { useTagStore } from '@/store/useTagStore'
@@ -900,20 +900,7 @@ export function useFileItemActions (
         return window.open(url)
       case 'download':{
         const selectedFiles = getSelectedImg()
-        const baseURL = window.location.origin
-        const downloadImage = function (file: FileNodeInfo) {
-          const url = baseURL + toRawFileUrl(file, true)
-          const link = document.createElement('a')
-          link.href = url
-          link.download = file.name
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-        }
-
-        selectedFiles.forEach((file) => {
-          downloadImage(file)
-        })
+        downloadFiles(selectedFiles.map(file => toRawFileUrl(file, true)))
         break
       }
       case 'copyPreviewUrl': {
