@@ -30,7 +30,7 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
 import { addScannedPath, removeScannedPath, toggleCustomTagToImg } from '@/api/db'
-import { FileTransferData, getFileTransferDataFromDragEvent, toRawFileUrl } from '../../util/file'
+import { FileTransferData, downloadFiles, getFileTransferDataFromDragEvent, toRawFileUrl } from '../../util/file'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { openCreateFlodersModal, MultiSelectTips } from './functionalCallableComp'
 import { useTagStore } from '@/store/useTagStore'
@@ -898,8 +898,11 @@ export function useFileItemActions (
     switch (e.key) {
       case 'previewInNewWindow':
         return window.open(url)
-      case 'download':
-        return window.open(toRawFileUrl(file, true))
+      case 'download':{
+        const selectedFiles = getSelectedImg()
+        downloadFiles(selectedFiles.map(file => toRawFileUrl(file, true)))
+        break
+      }
       case 'copyPreviewUrl': {
         return copy2clipboardI18n(parent.document.location.origin + url)
       }
