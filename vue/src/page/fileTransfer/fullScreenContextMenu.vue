@@ -114,10 +114,10 @@ const copyPositivePrompt = () => {
   <div ref="el" class="full-screen-menu" @wheel.capture.stop :class="{ 'unset-size': !state.expanded }">
     <div class="container">
       <div class="action-bar">
-        <div ref="dragHandle" class="icon" style="cursor: grab">
+        <div ref="dragHandle" class="icon" style="cursor: grab" :title="t('dragToMovePanel')">
           <DragOutlined />
         </div>
-        <div class="icon" style="cursor: pointer" @click="state.expanded = !state.expanded">
+        <div class="icon" style="cursor: pointer" @click="state.expanded = !state.expanded" :title="t('clickToToggleMaximizeMinimize')">
           <FullscreenExitOutlined v-if="state.expanded" />
           <FullscreenOutlined v-else />
         </div>
@@ -191,7 +191,7 @@ const copyPositivePrompt = () => {
       </div>
     </div>
 
-    <div class="mouse-sensor" ref="resizeHandle" v-if="state.expanded">
+    <div class="mouse-sensor" ref="resizeHandle" v-if="state.expanded" :title="t('dragToResizePanel')">
       <ArrowsAltOutlined />
     </div>
   </div>

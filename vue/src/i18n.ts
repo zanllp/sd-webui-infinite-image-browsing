@@ -199,11 +199,19 @@ const zh = {
   secretKeyMustBeConfigured: '必须配置Secret Key',
   deleteOneOnlySkipConfirm: '删除单个文件时不进行确认',
   resetOnGlobalSettingsPage: '你可以在全局设置页重置',
-  privacyAndSecurity: '安全与隐私'
+  privacyAndSecurity: '安全与隐私',
+  dragToResizePanel: '按住并拖动来调整面板的大小',
+  clickToToggleMaximizeMinimize: '单击切换最大化/最小化',
+  dragToMovePanel: '按住并拖动来移动面板',
+  imageCompareTips: '拖拽文件时也会出现这个面板，可以不需要打开 “图像对比” 功能'
 }
 const en: Record<keyof typeof zh, string> = {
   //! MissingTranslations: "Mark missing translations like this""shortcutKey": "Keyboard Shortcuts",
   //! MissingTranslations
+  imageCompareTips: 'When dragging files, this panel will also appear, so you don\'t need to open the "Image Comparison" feature separately.',
+  dragToResizePanel: 'Drag to resize the panel',
+  clickToToggleMaximizeMinimize: 'Click to toggle maximize/minimize',
+  dragToMovePanel: 'Drag to move the panel',
   privacyAndSecurity: 'Security & Privacy',
   deleteOneOnlySkipConfirm: 'Do not confirm when deleting a single file',
   resetOnGlobalSettingsPage: 'You can reset on the global settings page',

@@ -69,7 +69,10 @@ const openInNewTab = () => {
           </div>
         </div>
       </div>
-      <div class="actions">
+      <p class="tips" v-if="sliStore.opened" style="max-width: 30vw;">
+        Tips: {{ $t('imageCompareTips') }}
+      </p>
+      <div class="actions" >
         <AButton v-if="left && right" type="primary" @click="sliStore.drawerVisible = true">{{ $t('confirm') }}</AButton>
         <AButton v-if="left && right" type="primary" @click="openInNewTab">{{ $t('confirm') }}({{$t('openInNewTab')}})</AButton>
         <AButton style="margin-left: 16px;" @click="onCancel">{{ $t('close') }}</AButton>
