@@ -9,7 +9,16 @@ import { nextTick, watch } from 'vue'
 import { copy2clipboardI18n } from '@/util'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
 import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
-import { useImageSearch } from './hook'
+import { useImageSearch, createImageSearchIter } from './hook'
+
+const props = defineProps<{
+  tabIdx: number
+  paneIdx: number
+  selectedTagIds: MatchImageByTagsReq
+  id: string
+}>()
+
+const iter = createImageSearchIter(cursor => getImagesByTags(props.selectedTagIds, cursor))
 const {
   queue,
   images,
@@ -33,24 +42,15 @@ const {
   onFileDragEnd,
   cellWidth,
   onScroll,
-  updateImageTag
-} = useImageSearch()
-
-const props = defineProps<{
-  tabIdx: number
-  paneIdx: number
-  selectedTagIds: MatchImageByTagsReq
-  id: string
-}>()
+} = useImageSearch(iter)
 
 watch(
   () => props.selectedTagIds,
   async () => {
-    const { res } = queue.pushAction(() => getImagesByTags(props.selectedTagIds))
-    images.value = await res
+    await iter.reset()
     await nextTick()
-    updateImageTag()
     scroller.value!.scrollToItem(0)
+    onScroll() // 重新获取
   },
   { immediate: true }
 )

@@ -11,7 +11,10 @@ import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue
 import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 import { message } from 'ant-design-vue'
 import { t } from '@/i18n'
-import { useImageSearch } from './hook'
+import { createImageSearchIter, useImageSearch } from './hook'
+
+const substr = ref('')
+const iter = createImageSearchIter(cursor => getImagesBySubstr(substr.value, cursor))
 const {
   queue,
   images,
@@ -34,10 +37,8 @@ const {
   onFileDragStart,
   onFileDragEnd,
   cellWidth,
-  onScroll,
-  updateImageTag
-} = useImageSearch()
-const substr = ref('')
+  onScroll
+} = useImageSearch(iter)
 
 const info = ref<DataBaseBasicInfo>()
 
@@ -57,9 +58,9 @@ const onUpdateBtnClick = makeAsyncFunctionSingle(
     }).res
 )
 const query = async () => {
-  images.value = await queue.pushAction(() => getImagesBySubstr(substr.value)).res
+  await iter.reset({ refetch: true })
   await nextTick()
-  updateImageTag()
+  onScroll()
   scroller.value!.scrollToItem(0)
   if (!images.value.length) {
     message.info(t('fuzzy-search-noResults'))

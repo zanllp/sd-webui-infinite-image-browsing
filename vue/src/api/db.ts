@@ -1,6 +1,7 @@
 import { Dict } from '@/util'
 import type { FileNodeInfo } from './files'
 import { axiosInst } from './index'
+import { PageCursor } from 'vue3-ts-util'
 
 export interface Tag {
   name: string
@@ -37,9 +38,15 @@ export interface MatchImageByTagsReq {
   not_tags: number[]
 }
 
-export const getImagesByTags = async (req: MatchImageByTagsReq) => {
-  const resp = await axiosInst.value.post('/db/match_images_by_tags', req)
-  return resp.data as FileNodeInfo[]
+export const getImagesByTags = async (req: MatchImageByTagsReq, cursor: string) => {
+  const resp = await axiosInst.value.post('/db/match_images_by_tags', {
+    ...req,
+    cursor
+  })
+  return resp.data as {
+    files: FileNodeInfo[],
+    cursor: PageCursor
+  }
 }
 
 export const addCustomTag = async (req: { tag_name: string }) => {
@@ -65,9 +72,12 @@ export const getImageSelectedCustomTag = async (path: string) => {
   return resp.data as Tag[]
 }
 
-export const getImagesBySubstr = async (substr: string) => {
-  const resp = await axiosInst.value.get('/db/search_by_substr', { params: { substr } })
-  return resp.data as FileNodeInfo[]
+export const getImagesBySubstr = async (substr: string, cursor: string) => {
+  const resp = await axiosInst.value.get('/db/search_by_substr', { params: { substr,cursor } })
+  return resp.data as {
+    files: FileNodeInfo[],
+    cursor: PageCursor
+  }
 }
 
 const scannedPaths = `/db/scanned_paths`

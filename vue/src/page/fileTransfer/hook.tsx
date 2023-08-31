@@ -589,7 +589,7 @@ export function useLocation () {
   }
 }
 
-export function useFilesDisplay () {
+export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>} = {  }) {
   const {
     scroller,
     sortedFiles,
@@ -633,23 +633,33 @@ export function useFilesDisplay () {
     }
   }
 
-  const fill = async (isFullScreenPreview = false) => {
-    const s = scroller.value
     // 填充够一页，直到不行为止
+  const fetchDataUntilViewFilled = async (isFullScreenPreview = false) => {
+    const s = scroller.value
     const currIdx = () => (isFullScreenPreview ? previewIdx.value : s?.$_endIndex ?? 0)
-    while (
-      !sortedFiles.value.length ||
-      (currIdx() > sortedFiles.value.length - 20 && canLoadNext.value)
-    ) {
+    const needLoad = () => {
+      const len = sortedFiles.value.length
+      if (!len) {
+        return true
+      }
+      if (fetchNext) {
+        return currIdx() > len - 20
+      }
+      return currIdx() > len - 20 && canLoadNext.value // canLoadNext 是walker的，表示加载完成
+    }
+    while (needLoad()) {
+      const ret = await (fetchNext ?? loadNextDir)()
+      if (typeof ret === 'boolean' && !ret) {
+        return // 返回false同样表示加载完成
+      }
       await delay(30)
-      await loadNextDir()
     }
   }
 
-  state.useEventListen('loadNextDir', fill)
+  state.useEventListen('loadNextDir', fetchDataUntilViewFilled)
 
 
-  const onViewedImagesChange = () => {
+  const updateViewingImagesTag = () => {
     const s = scroller.value
     if (s) {
       const paths = sortedFiles.value.slice(Math.max(s.$_startIndex - 10, 0), s.$_endIndex + 10)
@@ -659,12 +669,12 @@ export function useFilesDisplay () {
     }
   }
 
-  watch(currLocation, debounce(onViewedImagesChange, 150))
+  watch(currLocation, debounce(updateViewingImagesTag, 150))
 
-  const onScroll = debounce(() => {
-    fill()
-    onViewedImagesChange()
-  }, 300)
+  const onScroll = debounce(async () => {
+    await fetchDataUntilViewFilled()
+    updateViewingImagesTag()
+  }, 150)
 
   return {
     gridItems,
@@ -678,8 +688,7 @@ export function useFilesDisplay () {
     loadNextDirLoading,
     canLoadNext,
     itemSize,
-    cellWidth,
-    onViewedImagesChange
+    cellWidth
   }
 }
 
