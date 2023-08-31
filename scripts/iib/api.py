@@ -598,14 +598,22 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         and_tags: List[int]
         or_tags: List[int]
         not_tags: List[int]
+        cursor: str
+        size = 200
 
     @app.post(db_pre + "/match_images_by_tags", dependencies=[Depends(verify_secret)])
     async def match_image_by_tags(req: MatchImagesByTagsReq):
         conn = DataBase.get_conn()
-        imgs = ImageTag.get_images_by_tags(
-            conn, {"and": req.and_tags, "or": req.or_tags, "not": req.not_tags}
+        imgs, next_cursor = ImageTag.get_images_by_tags(
+            conn=conn,
+            tag_dict={"and": req.and_tags, "or": req.or_tags, "not": req.not_tags},
+            cursor=req.cursor,
+            limit=req.size
         )
-        return filter_allowed_files([x.to_file_info() for x in imgs])
+        return {
+            "files": filter_allowed_files([x.to_file_info() for x in imgs]),
+            "cursor": next_cursor
+        }
 
     @app.get(db_pre + "/img_selected_custom_tag", dependencies=[Depends(verify_secret)])
     async def get_img_selected_custom_tag(path: str):
@@ -711,10 +719,13 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         ImageTag.remove(conn, image_id=req.img_id, tag_id=req.tag_id)
 
     @app.get(db_pre + "/search_by_substr", dependencies=[Depends(verify_secret)])
-    async def search_by_substr(substr: str):
+    async def search_by_substr(substr: str, cursor: str = '', size = 200):
         conn = DataBase.get_conn()
-        imgs = DbImg.find_by_substring(conn=conn, substring=substr)
-        return filter_allowed_files([x.to_file_info() for x in imgs])
+        imgs, next_cursor = DbImg.find_by_substring(conn=conn, substring=substr, cursor=cursor, limit=size)
+        return {
+            "files": filter_allowed_files([x.to_file_info() for x in imgs]),
+            "cursor": next_cursor
+        }
 
     class ScannedPathModel(BaseModel):
         path: str
