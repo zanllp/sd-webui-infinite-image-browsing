@@ -599,7 +599,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         or_tags: List[int]
         not_tags: List[int]
         cursor: str
-        size = 200
+        size: Optional[int] = 200
 
     @app.post(db_pre + "/match_images_by_tags", dependencies=[Depends(verify_secret)])
     async def match_image_by_tags(req: MatchImagesByTagsReq):
