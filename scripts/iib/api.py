@@ -151,7 +151,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         try:
             return os.path.commonpath(seq)
         except Exception as e:
-            logger.error(e)
+            # logger.error(e)
             return ""
 
     def is_path_under_parents(path, parent_paths: List[str] = []):
