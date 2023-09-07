@@ -49,8 +49,8 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - Provides a side-by-side comparison of two images.
 
 ### 🌐 Multilingual Support
-- Currently supports Simplified Chinese/English/German.
-- If you would like to add a new language, please refer to [i18n.ts](https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/vue/src/i18n.ts) and submit the relevant code.
+- Currently supports Simplified Chinese/Traditional Chinese/English/German.
+- If you would like to add a new language, please refer to [i18n.ts](https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/vue/src/i18n/zh-hans.ts) and submit the relevant code.
 
 ### 🔐 Privacy and Security
 - Supports custom secret key for authentication.

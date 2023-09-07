@@ -53,8 +53,8 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - 提供两张图片的并排比较
 
 ### 🌐 多语言支持
-- 目前支持简体中文/英文/德语。
-- 如果您希望添加新的语言，请参考 [i18n.ts](https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/vue/src/i18n.ts) 并提交相关的代码。
+- 目前支持简体中文/繁体中文/英文/德语。
+- 如果您希望添加新的语言，请参考 [i18n.ts](https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/vue/src/i18n/zh-hans.ts) 并提交相关的代码。
 
 
 ### 🔐 隐私和安全
