@@ -28,7 +28,7 @@ export const sortMethods = Object.values(SortMethod) as SortMethod[]
 
 export const sortMethodConv: SearchSelectConv<SortMethod> = {
   value: (v) => v,
-  text: (v) => t('sortBy') + ' ' + sortMethodMap()[v].toLocaleLowerCase()
+  text: (v) => sortMethodMap()[v].toLocaleLowerCase()
 }
 type FileList = FileNodeInfo[]
 

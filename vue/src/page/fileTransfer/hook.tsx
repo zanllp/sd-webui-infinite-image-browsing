@@ -25,7 +25,7 @@ import * as Path from '@/util/path'
 import type Progress from 'nprogress'
 // @ts-ignore
 import NProgress from 'multi-nprogress'
-import { Button, Checkbox, Modal, message, notification } from 'ant-design-vue'
+import { Button, Checkbox, Modal, message } from 'ant-design-vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
@@ -149,7 +149,7 @@ export interface Page {
   curr: string
 }
 /**
- * 全屏预览
+ * 全屏查看
  * @param props
  * @returns
  */
@@ -178,7 +178,7 @@ export function usePreview () {
     if (props.value.walkModePath) {
       if (!canPreview('next') && canLoadNext) {
         message.info(t('loadingNextFolder'))
-        eventEmitter.value.emit('loadNextDir', true) // 如果在全屏预览时外面scroller可能还停留在很久之前，使用全屏预览的索引
+        eventEmitter.value.emit('loadNextDir', true) // 如果在全屏查看时外面scroller可能还停留在很久之前，使用全屏查看的索引
       }
     }
   }
@@ -523,8 +523,10 @@ export function useLocation () {
     isLocationEditing.value = false
   }
 
-  useWatchDocument('click', () => {
-    isLocationEditing.value = false
+  useWatchDocument('click', (e) => {
+    if (!(e.target as HTMLElement)?.className.includes('ant-input')) {
+      isLocationEditing.value = false
+    }
   })
 
   const share = () => {
@@ -881,13 +883,8 @@ export function useFileItemActions (
         spinning.value = true
         await setImgPath(file.fullpath) // 设置图像路径
         imgTransferBus.postMessage({ ...preset, event: 'click_hidden_button', btnEleId: 'iib_hidden_img_update_trigger' }) // 触发图像组件更新
-        const warnId = setTimeout(
-          () => notification.warn({ message: t('long_loading'), duration: 20 }),
-          5000
-        )
         // ok(await genInfoCompleted(), 'genInfoCompleted timeout') // 等待消息生成完成
         await genInfoCompleted() // 等待消息生成完成
-        clearTimeout(warnId)
         imgTransferBus.postMessage({ ...preset, event: 'click_hidden_button', btnEleId: `iib_hidden_tab_${tab}` }) // 触发粘贴
       } catch (error) {
         console.error(error)

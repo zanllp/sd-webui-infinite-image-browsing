@@ -18,7 +18,12 @@ const langChanged = ref(false)
 const reload = async () => {
   window.location.reload()
 }
-const langs: { text: string, value: string }[] = [{ value: 'en', text: 'English' }, { value: 'zh', text: '中文' }, { value: 'de', text: 'Deutsch' }]
+const langs: { text: string, value: string }[] = [
+  { value: 'en', text: 'English' },
+  { value: 'zhHans', text: '简体中文' },
+  { value: 'zhHant', text: '繁體中文' },
+  { value: 'de', text: 'Deutsch' }
+]
 const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
   const keysStr = getShortcutStrFromEvent(e)
   if (keysStr) {
@@ -35,11 +40,11 @@ const oninitTauriLaunchConf = async () => {
 <template>
   <div class="panel">
     <a-select v-if="false" />
-    
+
     <a-form>
-        <h2 style="margin-top: 0;">{{ t('ImageBrowsingSettings') }}</h2>
-      <ImageSetting/>
-        <h2>{{ t('other') }}</h2>
+      <h2 style="margin-top: 0;">{{ t('ImageBrowsingSettings') }}</h2>
+      <ImageSetting />
+      <h2>{{ t('other') }}</h2>
       <a-form-item :label="$t('onlyFoldersAndImages')">
         <a-switch v-model:checked="globalStore.onlyFoldersAndImages" />
       </a-form-item>
@@ -58,7 +63,7 @@ const oninitTauriLaunchConf = async () => {
           t('langChangeReload')
         }}</a-button>
       </a-form-item>
-      <a-form-item :label="$t(key + 'SkipConfirm')" v-for="_,key in globalStore.ignoredConfirmActions" :key="key">
+      <a-form-item :label="$t(key + 'SkipConfirm')" v-for="_, key in globalStore.ignoredConfirmActions" :key="key">
         <ACheckbox v-model:checked="globalStore.ignoredConfirmActions[key]"></ACheckbox>
       </a-form-item>
       <h2>{{ t('shortcutKey') }}</h2>
