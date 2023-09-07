@@ -118,7 +118,7 @@ watch(
         </div>
         <div class="breadcrumb" :style="{ flex: isLocationEditing ? 1 : '' }" v-else>
           <AInput v-if="isLocationEditing" style="flex: 1" v-model:value="locInputValue" @click.stop
-            @press-enter="onLocEditEnter"></AInput>
+            @press-enter="onLocEditEnter" allow-clear></AInput>
           <a-breadcrumb style="flex: 1" v-else>
             <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx">
               <a @click.prevent="back(idx)">{{ item.curr === '/' ? $t('root') : item.curr.replace(/:\/$/, $t('drive'))

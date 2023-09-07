@@ -79,7 +79,7 @@ useGlobalEventListen('searchIndexExpired', () => info.value && (info.value.expir
   <div class="container" ref="stackViewEl">
     <div class="search-bar" v-if="info">
       <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder')" :disabled="!queue.isIdle"
-        @keydown.enter="query" />
+        @keydown.enter="query" allow-clear />
       <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
         {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
       <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!substr">{{

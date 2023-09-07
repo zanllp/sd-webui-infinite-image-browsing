@@ -99,7 +99,7 @@ const taggleLikeTag = () => {
           </a-dropdown>
         </div>
         <!-- :key="fullScreenPreviewImageUrl ? undefined : file.fullpath" 
-          这么复杂是因为再全屏预览时可能因为直接删除导致fullpath变化，然后整个预览直接退出-->
+          这么复杂是因为再全屏查看时可能因为直接删除导致fullpath变化，然后整个预览直接退出-->
         <div style="position: relative;" :key="file.fullpath" :class="`idx-${idx}`" v-if="isImageFile(file.name)">
 
           <a-image :src="imageSrc" :fallback="fallbackImage" :preview="{
