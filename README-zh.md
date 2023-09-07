@@ -97,7 +97,7 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 
 ## 作为桌面应用程序（不需要SD-webui和Python）:
 
-从仓库页面右侧的`releases`部分下载并安装程序。
+从仓库页面右侧的`releases`部分下载并安装程序。如果提升检测到病毒忽略即可这是误报。
 # 预览
 
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/230064374-47ba209e-562b-47b8-a2ce-d867e3afe204.png">

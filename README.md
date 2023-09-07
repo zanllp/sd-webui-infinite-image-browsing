@@ -92,6 +92,7 @@ If you need a Dockerfile, you can refer to this link.  https://github.com/zanllp
 
 ## As a desktop application (without SD-webui and Python):
 Download and install the program from the `releases` section on the right-hand side of the repository page.
+If the antivirus detects a virus, it can be ignored as a false positive.
 # Preview
 
 <img width="1920" alt="image" src="https://user-images.githubusercontent.com/25872019/232167682-67f83b00-4391-4394-a7f6-6e4c9d11f252.png">
