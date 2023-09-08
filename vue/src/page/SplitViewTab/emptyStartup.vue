@@ -56,7 +56,9 @@ const walkModeSupportedDir = computed(() =>
   global.quickMovePaths.filter(
     ({ key: k }) =>
       k === 'outdir_txt2img_samples' ||
-      k === 'outdir_img2img_samples'
+      k === 'outdir_img2img_samples' || 
+      k === 'outdir_txt2img_grids' || 
+      k === 'outdir_img2img_grids'
   )
 )
 const canpreviewInNewWindow = window.parent !== window
