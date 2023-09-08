@@ -1,9 +1,5 @@
 export function isAbsolute (path: string): boolean {
-  if (/^(?:\/|[a-z]:\/)/i.test(normalize(path))) {
-    return true
-  } else {
-    return false
-  }
+  return /^(?:\/|[a-z]:)/i.test(normalize(path))
 }
 
 export function normalize (path: string): string {

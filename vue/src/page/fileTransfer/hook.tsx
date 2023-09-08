@@ -524,7 +524,7 @@ export function useLocation () {
   }
 
   useWatchDocument('click', (e) => {
-    if (!(e.target as HTMLElement)?.className.includes('ant-input')) {
+    if (!(e.target as HTMLElement)?.className?.includes?.('ant-input')) {
       isLocationEditing.value = false
     }
   })
@@ -650,11 +650,11 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
       return currIdx() > len - 20 && canLoadNext.value // canLoadNext 是walker的，表示加载完成
     }
     while (needLoad()) {
+      await delay(30)
       const ret = await (fetchNext ?? loadNextDir)()
       if (typeof ret === 'boolean' && !ret) {
         return // 返回false同样表示加载完成
       }
-      await delay(30)
     }
   }
 
