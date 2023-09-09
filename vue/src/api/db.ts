@@ -80,21 +80,24 @@ export const getImagesBySubstr = async (substr: string, cursor: string) => {
   }
 }
 
-const scannedPaths = `/db/scanned_paths`
-interface ScannedPathModel {
+const extraPaths = `/db/extra_paths`
+export type ExtraPathType =  'scanned' | 'walk' | 'cli_access_only' | ''
+
+export interface ExtraPathModel {
   path: string
+  type: ExtraPathType
 }
 
-export const getScannedPath = async () => {
-  const resp = await axiosInst.value.get(scannedPaths)
-  return resp.data as ScannedPathModel[]
+export const getExtraPath = async () => {
+  const resp = await axiosInst.value.get(extraPaths)
+  return resp.data as ExtraPathModel[]
 }
 
-export const addScannedPath = async (path: string) => {
-  await axiosInst.value.post(scannedPaths, { path })
+export const addExtraPath = async (model: ExtraPathModel) => {
+  await axiosInst.value.post(extraPaths, model)
 }
-export const removeScannedPath = async (path: string) => {
-  await axiosInst.value.delete(scannedPaths, { data: { path } })
+export const removeExtraPath = async (req: ExtraPathModel) => {
+  await axiosInst.value.delete(extraPaths, { data: req })
 }
 
 export const batchGetTagsByPath = async (paths: string[]) => {

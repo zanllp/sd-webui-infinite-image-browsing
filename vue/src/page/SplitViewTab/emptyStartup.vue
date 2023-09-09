@@ -1,17 +1,14 @@
 <script lang="ts" setup>
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { uniqueId } from 'lodash-es'
-import { computed, h, ref } from 'vue'
+import { computed } from 'vue'
 import { ok } from 'vue3-ts-util'
 import { FileDoneOutlined, LockOutlined, PlusOutlined } from '@/icon'
 import { t } from '@/i18n'
 import { cloneDeep } from 'lodash-es'
-import { addScannedPath, removeScannedPath } from '@/api/db'
-import { globalEvents } from '@/util'
-import { Input, Modal, message } from 'ant-design-vue'
-import { open } from '@tauri-apps/api/dialog'
-import { checkPathExists } from '@/api'
 import { useImgSliStore } from '@/store/useImgSli'
+import { addToExtraPath, onRemoveExtraPathClick } from './extraPathControlFunc'
+
 const global = useGlobalStore()
 const imgsli = useImgSliStore()
 const props = defineProps<{ tabIdx: number; paneIdx: number }>()
@@ -54,11 +51,12 @@ const lastRecord = computed(() => global.tabListHistoryRecord?.[1])
 
 const walkModeSupportedDir = computed(() =>
   global.quickMovePaths.filter(
-    ({ key: k }) =>
+    ({ key: k, type }) =>
       k === 'outdir_txt2img_samples' ||
-      k === 'outdir_img2img_samples' || 
-      k === 'outdir_txt2img_grids' || 
-      k === 'outdir_img2img_grids'
+      k === 'outdir_img2img_samples' ||
+      k === 'outdir_txt2img_grids' ||
+      k === 'outdir_img2img_grids' ||
+      type === 'walk'
   )
 )
 const canpreviewInNewWindow = window.parent !== window
@@ -69,61 +67,7 @@ const restoreRecord = () => {
   global.tabList = cloneDeep(lastRecord.value.tabs)
 }
 
-const addToSearchScanPathAndQuickMove = async () => {
-  let path: string
-  if (import.meta.env.TAURI_ARCH) {
-    const ret = await open({ directory: true })
-    if (typeof ret === 'string') {
-      path = ret
-    } else {
-      return
-    }
-  } else {
-    path = await new Promise<string>((resolve) => {
-      const key = ref('')
-      Modal.confirm({
-        title: t('inputTargetFolderPath'),
-        content: () => {
-          return h(Input, {
-            value: key.value,
-            'onUpdate:value': (v: string) => (key.value = v)
-          })
-        },
-        async onOk () {
-          const path = key.value
-          const res = await checkPathExists([path])
-          if (res[path]) {
-            resolve(key.value)
-          } else {
-            message.error(t('pathDoesNotExist'))
-          }
-        }
-      })
-    })
-  }
-  Modal.confirm({
-    content: t('confirmToAddToQuickMove'),
-    async onOk () {
-      await addScannedPath(path)
-      message.success(t('addCompleted'))
-      globalEvents.emit('searchIndexExpired')
-      globalEvents.emit('updateGlobalSetting')
-    }
-  })
-}
 
-const onRemoveQuickPathClick = (path: string) => {
-  Modal.confirm({
-    content: t('confirmDelete'),
-    closable: true,
-    async onOk () {
-      await removeScannedPath(path)
-      message.success(t('removeCompleted'))
-      globalEvents.emit('searchIndexExpired')
-      globalEvents.emit('updateGlobalSetting')
-    }
-  })
-}
 </script>
 <template>
   <div class="container">
@@ -134,7 +78,8 @@ const onRemoveQuickPathClick = (path: string) => {
       </div>
       <div flex-placeholder />
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing" target="_blank" class="last-record">Github</a>
-      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/.env.example" target="_blank" class="last-record">{{ $t('privacyAndSecurity') }}</a>
+      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/.env.example" target="_blank"
+        class="last-record">{{ $t('privacyAndSecurity') }}</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log" target="_blank"
         class="last-record">{{ $t('changlog') }}</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank"
@@ -169,23 +114,33 @@ const onRemoveQuickPathClick = (path: string) => {
       <div class="feature-item" v-if="walkModeSupportedDir.length">
         <h2>{{ $t('walkMode') }}</h2>
         <ul>
-          <li v-for="item in walkModeSupportedDir" :key="item.dir" class="item">
-            <AButton @click="openInCurrentTab('local', item.dir, true)" ghost type="primary" block>{{ item.zh }}</AButton>
+          <li @click="addToExtraPath('walk')" class="item" style="text-align: ;">
+            <span class="text line-clamp-1">
+              <PlusOutlined /> {{ $t('add') }}
+            </span>
+          </li>
+          <li v-for="dir in walkModeSupportedDir" :key="dir.key" class="item rem"
+            @click.prevent="openInCurrentTab('local', dir.dir, true)">
+            <span class="text line-clamp-2">{{ dir.zh }}</span>
+            <AButton v-if="dir.can_delete" type="link" @click.stop="onRemoveExtraPathClick(dir.dir, 'walk')">{{
+              $t('remove') }}
+            </AButton>
           </li>
         </ul>
       </div>
       <div class="feature-item" v-if="global.quickMovePaths.length">
         <h2>{{ $t('launchFromQuickMove') }}</h2>
         <ul>
-          <li @click="addToSearchScanPathAndQuickMove" class="item" style="text-align: ;">
+          <li @click="addToExtraPath('scanned')" class="item" style="text-align: ;">
             <span class="text line-clamp-1">
               <PlusOutlined /> {{ $t('add') }}
             </span>
           </li>
-          <li v-for="dir in global.quickMovePaths" :key="dir.key" class="item rem"
+          <li v-for="dir in global.quickMovePaths.filter(v => v.type !== 'walk')" :key="dir.key" class="item rem"
             @click.prevent="openInCurrentTab('local', dir.dir)">
             <span class="text line-clamp-2">{{ dir.zh }}</span>
-            <AButton v-if="dir.can_delete" type="link" @click.stop="onRemoveQuickPathClick(dir.dir)">{{ $t('remove') }}
+            <AButton v-if="dir.can_delete && dir.type == 'scanned'" type="link"
+              @click.stop="onRemoveExtraPathClick(dir.dir, 'scanned')">{{ $t('remove') }}
             </AButton>
           </li>
         </ul>
@@ -342,5 +297,4 @@ const onRemoveQuickPathClick = (path: string) => {
   flex: 1;
   font-size: 16px;
   word-break: break-all;
-}
-</style>
+}</style>

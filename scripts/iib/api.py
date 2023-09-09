@@ -39,6 +39,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import hashlib
 from scripts.iib.db.datamodel import (
     DataBase,
+    ExtraPathType,
     Image as DbImg,
     Tag,
     Floder,
@@ -143,7 +144,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     update_all_scanned_paths()
 
     def update_extra_paths(conn: sqlite3.Connection):
-        r = ExtraPath.get_extra_paths(conn, "scanned")
+        r = ExtraPath.get_extra_paths(conn)
         mem["extra_paths"] = [x.path for x in r]
         update_all_scanned_paths()
 
@@ -217,7 +218,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             conn = DataBase.get_conn()
             all_custom_tags = Tag.get_all_custom_tag(conn)
             extra_paths = ExtraPath.get_extra_paths(conn) + [
-                ExtraPath(path, "cli_access_only")
+                ExtraPath(path, ExtraPathType.cli_only)
                 for path in kwargs.get("extra_paths_cli", [])
             ]
             update_extra_paths(conn)
@@ -727,42 +728,41 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             "cursor": next_cursor
         }
 
-    class ScannedPathModel(BaseModel):
+
+    class ExtraPathModel(BaseModel):
         path: str
+        type: Optional[ExtraPathType]
 
     @app.post(
-        f"{db_pre}/scanned_paths",
-        status_code=201,
+        f"{db_pre}/extra_paths",
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
-    async def create_scanned_path(scanned_path: ScannedPathModel):
+    async def create_extra_path(extra_path: ExtraPathModel):
         if enable_access_control:
-            if not is_path_under_parents(scanned_path.path):
+            if not is_path_under_parents(extra_path.path):
                 raise HTTPException(status_code=403)
         conn = DataBase.get_conn()
-        path = ExtraPath(scanned_path.path)
+        path = ExtraPath(extra_path.path, extra_path.type)
         try:
             path.save(conn)
         finally:
             conn.commit()
 
     @app.get(
-        f"{db_pre}/scanned_paths",
-        response_model=List[ScannedPathModel],
+        f"{db_pre}/extra_paths",
         dependencies=[Depends(verify_secret)],
     )
-    async def read_scanned_paths():
+    async def read_extra_paths():
         conn = DataBase.get_conn()
-        paths = ExtraPath.get_extra_paths(conn, "scanned")
-        return [{"path": path.path} for path in paths]
+        return ExtraPath.get_extra_paths(conn)
 
     @app.delete(
-        f"{db_pre}/scanned_paths",
+        f"{db_pre}/extra_paths",
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
-    async def delete_scanned_path(scanned_path: ScannedPathModel):
-        path = to_abs_path(scanned_path.path)
+    async def delete_extra_path(extra_path: ExtraPathModel):
+        path = to_abs_path(extra_path.path)
         if path in get_img_search_dirs():
             raise HTTPException(400)
         conn = DataBase.get_conn()
-        ExtraPath.remove(conn, path)
+        ExtraPath.remove(conn, path, extra_path.type)
