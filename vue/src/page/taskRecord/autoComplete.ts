@@ -1,4 +1,5 @@
 import { checkPathExists, type getGlobalSetting } from '@/api'
+import type { ExtraPathType } from '@/api/db'
 import { t } from '@/i18n'
 import { pick, type ReturnTypeAsync } from '@/util'
 import { normalize, normalizeRelativePathToAbsolute } from '@/util/path'
@@ -80,8 +81,9 @@ export const getQuickMovePaths = async ({
       key,
       zh: cnMap[key],
       dir: pathMap[key],
-      can_delete: false
+      can_delete: false,
+      type: 'preset' as 'preset' | ExtraPathType
     }
-  }).concat(extra_paths.map(v => ({ key: v.path, zh: findshortest(v.path), dir: v.path, can_delete: true })) as any[])
-  return uniqBy(res, 'key')
+  }).concat(extra_paths.map(v => ({ key: v.path, zh: findshortest(v.path), dir: v.path, can_delete: true, type: v.type })) as any[])
+  return uniqBy(res, v => v.key + v.type)
 }

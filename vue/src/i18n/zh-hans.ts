@@ -159,8 +159,8 @@ export const zhHans = {
   'tauriLaunchConfMessages.firstTimeUserTitle': '看起来你好像是第一次使用, 需要进行一些配置',
   inputTargetFolderPath: '输入目标文件夹的绝对路径',
   pathDoesNotExist: '路径不存在',
-  confirmToAddToQuickMove:
-    '确定添加？如果文件夹过大将会消耗过多时间建立索引。（如果不需要了你可以在文件夹右上角的更多里面移除）',
+  confirmToAddToExtraPath:
+    '确定添加？如果文件夹过大将会消耗过多时间建立索引。',
   clientSpecificSettings: '客户端特有的设置',
   initiateSoftwareStartupConfig: '初始化软件启动配置',
   gridCellWidth: '网格单元宽度 (px)',

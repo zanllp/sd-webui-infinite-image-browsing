@@ -1,4 +1,5 @@
 from sqlite3 import Connection, connect
+from enum import Enum
 from typing import Dict, List, Optional, TypedDict
 from scripts.iib.tool import (
     cwd,
@@ -558,27 +559,32 @@ class Floder:
         with closing(conn.cursor()) as cur:
             cur.execute("DELETE FROM folders WHERE path = ?", (folder_path,))
 
+class ExtraPathType(Enum):
+    scanned = 'scanned'
+    walk = 'walk'
+    cli_only = 'cli_access_only'
 
-# Define the ScannedPath class
 class ExtraPath:
-    def __init__(self, path: str, type: str = "scanned"):
+    def __init__(self, path: str, type: Optional[ExtraPathType] = None):
+        assert type
         self.path = os.path.normpath(path)
         self.type = type
 
     def save(self, conn):
+        assert self.type in [ExtraPathType.walk, ExtraPathType.scanned]
         with closing(conn.cursor()) as cur:
             cur.execute(
                 "INSERT INTO extra_path (path, type) VALUES (?, ?) ON CONFLICT (path) DO UPDATE SET type = ?",
-                (self.path, self.type, self.type),
+                (self.path, self.type.value, self.type.value),
             )
 
     @classmethod
-    def get_extra_paths(cls, conn, type: str = "scanned") -> List['ExtraPath']:
+    def get_extra_paths(cls, conn, type: Optional[ExtraPathType] = None) -> List['ExtraPath']:
         query = "SELECT * FROM extra_path"
         params = ()
         if type:
             query += " WHERE type = ?"
-            params = (type,)
+            params = (type.value,)
         with closing(conn.cursor()) as cur:
             cur.execute(query, params)
             rows = cur.fetchall()
@@ -586,18 +592,20 @@ class ExtraPath:
             for row in rows:
                 path = row[0]
                 if os.path.exists(path):
-                    paths.append(ExtraPath(path, row[1]))
+                    paths.append(ExtraPath(path, ExtraPathType(row[1])))
                 else:
                     cls.remove(conn, path)
             return paths
 
     @classmethod
-    def remove(cls, conn, path: str):
+    def remove(cls, conn, path: str, type: Optional[ExtraPathType] = None):
         with closing(conn.cursor()) as cur:
-            cur.execute(
-                "DELETE FROM extra_path WHERE path = ?",
-                (os.path.normpath(path),),
-            )
+            sql = "DELETE FROM extra_path WHERE path = ?"
+            path = os.path.normpath(path)
+            if type:
+                cur.execute(sql, (path,))
+            else:
+                cur.execute(sql + "AND type = ?", (path, type.value))
             Floder.remove_folder(conn, path)
             conn.commit()
 

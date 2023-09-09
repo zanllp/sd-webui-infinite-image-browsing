@@ -29,7 +29,7 @@ import { Button, Checkbox, Modal, message } from 'ant-design-vue'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
-import { addScannedPath, removeScannedPath, toggleCustomTagToImg } from '@/api/db'
+import { addExtraPath, removeExtraPath, toggleCustomTagToImg } from '@/api/db'
 import { FileTransferData, downloadFiles, getFileTransferDataFromDragEvent, toRawFileUrl } from '../../util/file'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { openCreateFlodersModal, MultiSelectTips } from './functionalCallableComp'
@@ -501,10 +501,10 @@ export function useLocation () {
       if (!path.can_delete) {
         return
       }
-      await removeScannedPath(currLocation.value)
+      await removeExtraPath({ path: currLocation.value, type: 'scanned' })
       message.success(t('removeCompleted'))
     } else {
-      await addScannedPath(currLocation.value)
+      await addExtraPath({ path: currLocation.value, type: 'scanned' })
       message.success(t('addCompleted'))
     }
     globalEvents.emit('searchIndexExpired')

@@ -161,8 +161,8 @@ export const zhHant: IIBI18nMap = {
   'tauriLaunchConfMessages.firstTimeUserTitle': '看起來你好像是第一次使用,需要進行一些配置',
   inputTargetFolderPath: '輸入目標文件夾的絕對路徑',
   pathDoesNotExist: '路徑不存在',
-  confirmToAddToQuickMove:
-    '確定添加?如果文件夾過大將會消耗過多時間建立索引。(如果不需要了你可以在文件夾右上角的更多裡面移除)',
+  confirmToAddToExtraPath:
+    '確定添加?如果文件夾過大將會消耗過多時間建立索引。',
   clientSpecificSettings: '客戶端特有的設置',
   initiateSoftwareStartupConfig: '初始化軟件啟動配置',
   gridCellWidth: '網格單元寬度 (px)',

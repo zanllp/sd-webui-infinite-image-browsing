@@ -33,8 +33,8 @@ export const en: IIBI18nMap = {
   thumbnailResolution: 'Thumbnail Resolution (px)',
   inputTargetFolderPath: 'Enter the absolute path of the target folder',
   pathDoesNotExist: 'Path does not exist',
-  confirmToAddToQuickMove:
-    "Are you sure you want to add? This may take a lot of time to index if the folder is large. (You can remove it from 'More' in the top right corner of the folder if you no longer need it.)",
+  confirmToAddToExtraPath:
+    "Are you sure you want to add? This may take a lot of time to index if the folder is large. ",
   clientSpecificSettings: 'Client-specific settings',
   initiateSoftwareStartupConfig: 'Initiate software startup configuration',
   'tauriLaunchConf.readSdWebuiConfigTitle': 'Read Stable Diffusion Webui Config',

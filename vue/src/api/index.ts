@@ -2,7 +2,7 @@ import { Input, Modal, message } from 'ant-design-vue'
 import axios, { AxiosInstance, isAxiosError } from 'axios'
 import type { GlobalSettingPart } from './type'
 import { t } from '@/i18n'
-import type { Tag } from './db'
+import type { ExtraPathModel, Tag } from './db'
 import cookie from 'js-cookie'
 import { delay } from 'vue3-ts-util'
 import { computed, h, ref } from 'vue'
@@ -87,7 +87,7 @@ export interface GlobalConf {
   cwd: string
   home: string
   sd_cwd: string
-  extra_paths: { path: string }[]
+  extra_paths: ExtraPathModel[]
   enable_access_control: boolean
   launch_mode: 'server' | 'sd'
 }
