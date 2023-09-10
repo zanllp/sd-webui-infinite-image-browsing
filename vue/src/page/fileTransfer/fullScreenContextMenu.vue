@@ -249,10 +249,6 @@ const copyPositivePrompt = () => copy2clipboardI18n(geninfoFrags.value[0] ?? '')
     padding-top: 4px;
     position: relative;
 
-    .gen-info-frag {
-      margin-bottom: .5em;
-    }
-
     .info-tags {
       .info-tag {
         display: inline-block;
