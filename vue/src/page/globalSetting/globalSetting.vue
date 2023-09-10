@@ -66,7 +66,14 @@ const oninitTauriLaunchConf = async () => {
       <a-form-item :label="$t(key + 'SkipConfirm')" v-for="_, key in globalStore.ignoredConfirmActions" :key="key">
         <ACheckbox v-model:checked="globalStore.ignoredConfirmActions[key]"></ACheckbox>
       </a-form-item>
-      <h2>{{ t('shortcutKey') }}</h2>
+      <h2>{{ t('shortcutKey') }}</h2> 
+      <a-form-item :label="$t('download')">
+        <div class="col">
+          <a-input :value="globalStore.shortcut.download" @keydown.stop.prevent="onShortcutKeyDown($event, 'download')"
+            :placeholder="$t('shortcutKeyDescription')" />
+          <a-button @click="globalStore.shortcut.download = ''" class="clear-btn">{{ $t('clear') }}</a-button>
+        </div>
+      </a-form-item>
       <a-form-item :label="$t('deleteSelected')">
         <div class="col">
           <a-input :value="globalStore.shortcut.delete" @keydown.stop.prevent="onShortcutKeyDown($event, 'delete')"

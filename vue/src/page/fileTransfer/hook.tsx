@@ -1075,6 +1075,9 @@ export function useFileItemActions (
             }
             return onContextMenuClick({ key: 'deleteFiles' } as MenuInfo, file, idx)
           }
+          case 'download': {
+            return onContextMenuClick({ key: 'download' } as MenuInfo, file, idx)
+          }
           default: {
             const name = /^toggle_tag_(.*)$/.exec(action)?.[1]
             const tag = global.conf?.all_custom_tags.find((v) => v.name === name)

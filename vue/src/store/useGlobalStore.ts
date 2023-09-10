@@ -60,9 +60,7 @@ export interface Tab {
   key: string
 }
 
-export interface Shortcut extends Record<`toggle_tag_${string}`, string | undefined> {
-  delete: string
-}
+export type Shortcut = Record<`toggle_tag_${string}` | 'delete' | 'download', string | undefined> 
 
 export const copyPane = (pane: TabPane) => {
   return cloneDeep({
@@ -155,7 +153,8 @@ export const useGlobalStore = defineStore(
     const longPressOpenContextMenu = ref(false)
 
     const shortcut = ref<Shortcut>({
-      delete: ''
+      delete: '',
+      download: ''
     })
 
     const pathAliasMap = computed((): Dict<string> => {
