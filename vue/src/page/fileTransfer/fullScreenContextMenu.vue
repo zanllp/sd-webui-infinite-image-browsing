@@ -35,6 +35,7 @@ const selectedTag = computed(() => tagStore.tagMap.get(props.file.fullpath) ?? [
 const currImgResolution = ref('')
 const q = createReactiveQueue()
 const imageGenInfo = ref('')
+const geninfoFrags = computed(() => imageGenInfo.value.split('\n'))
 const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
 }>()
@@ -104,9 +105,7 @@ const baseInfoTags = computed(() => {
   return tags
 })
 
-const copyPositivePrompt = () => {
-  copy2clipboardI18n(imageGenInfo.value.split('\n')[0])
-}
+const copyPositivePrompt = () => copy2clipboardI18n(geninfoFrags.value[0] ?? '')
 
 </script>
 
@@ -117,7 +116,8 @@ const copyPositivePrompt = () => {
         <div ref="dragHandle" class="icon" style="cursor: grab" :title="t('dragToMovePanel')">
           <DragOutlined />
         </div>
-        <div class="icon" style="cursor: pointer" @click="state.expanded = !state.expanded" :title="t('clickToToggleMaximizeMinimize')">
+        <div class="icon" style="cursor: pointer" @click="state.expanded = !state.expanded"
+          :title="t('clickToToggleMaximizeMinimize')">
           <FullscreenExitOutlined v-if="state.expanded" />
           <FullscreenOutlined v-else />
         </div>
@@ -155,15 +155,16 @@ const copyPositivePrompt = () => {
                   {{ $t('deleteSelected') }}
                 </a-menu-item>
                 <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
-                <a-menu-item key="download">{{ $t('download') }}</a-menu-item>
                 <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
-          <a-button @click="copy2clipboardI18n(imageGenInfo)">{{
+          <AButton @click="emit('contextMenuClick', { key: 'download' } as MenuInfo, props.file, props.idx)" >{{
+            $t('download') }}</AButton>
+          <a-button @click="copy2clipboardI18n(imageGenInfo)" v-if="imageGenInfo">{{
             $t('copyPrompt')
           }}</a-button>
-          <a-button @click="copyPositivePrompt">{{
+          <a-button @click="copyPositivePrompt" v-if="imageGenInfo">{{
             $t('copyPositivePrompt')
           }}</a-button>
         </div>
@@ -187,7 +188,9 @@ const copyPositivePrompt = () => {
             {{ tag.name }}
           </div>
         </div>
-        {{ imageGenInfo }}
+        <p v-for="txt in geninfoFrags" :key="txt" class="gen-info-frag">
+          {{ txt }}
+        </p>
       </div>
     </div>
 
@@ -246,6 +249,10 @@ const copyPositivePrompt = () => {
     padding-top: 4px;
     position: relative;
 
+    .gen-info-frag {
+      margin-bottom: .5em;
+    }
+
     .info-tags {
       .info-tag {
         display: inline-block;
@@ -294,6 +301,7 @@ const copyPositivePrompt = () => {
     display: flex;
     align-items: center;
     user-select: none;
+    gap: 4px;
 
     .icon {
       font-size: 1.5em;
@@ -307,10 +315,6 @@ const copyPositivePrompt = () => {
 
     &>* {
       flex-wrap: wrap;
-
-      &:not(:last-child) {
-        margin-right: 8px;
-      }
     }
   }
 }</style>
