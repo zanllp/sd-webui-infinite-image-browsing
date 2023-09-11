@@ -34,10 +34,21 @@ export function isImageFile(filename: string): boolean {
   if (typeof filename !== 'string') {
     return false
   }
-  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+  const exts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
   const extension = filename.split('.').pop()?.toLowerCase()
-  return extension !== undefined && imageExtensions.includes(`.${extension}`)
+  return extension !== undefined && exts.includes(`.${extension}`)
 }
+
+export function isVideoFile(filename: string): boolean {
+  if (typeof filename !== 'string') {
+    return false
+  }
+  const exts = ['.mp4', '.avi', '.mov', '.mkv']
+  const extension = filename.split('.').pop()?.toLowerCase()
+  return extension !== undefined && exts.includes(`.${extension}`)
+}
+
+export const isMediaFile = (file: string) => isImageFile(file) || isVideoFile(file)
 
 export function downloadFiles(urls: string[]) {
   const link = document.createElement('a');

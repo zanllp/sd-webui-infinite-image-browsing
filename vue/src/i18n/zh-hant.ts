@@ -75,7 +75,7 @@ export const zhHant: IIBI18nMap = {
   longPressOpenContextMenu: '支持使用長按打開右鍵功能表',
   searchResults: '搜尋結果',
   imgSearch: '圖片搜尋',
-  onlyFoldersAndImages: '只顯示文件夾和圖片',
+  onlyFoldersAndImages: '只顯示文件夾/圖片/視頻',
   send2savedDir: '發送到儲存的文件夾',
   unknownSavedDir: '找不到儲存的文件夾(配置文件中的outdir_save欄位)',
   Model: '模型',

@@ -30,9 +30,9 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
 import { addExtraPath, removeExtraPath, toggleCustomTagToImg } from '@/api/db'
-import { FileTransferData, downloadFiles, getFileTransferDataFromDragEvent, toRawFileUrl } from '../../util/file'
+import { FileTransferData, downloadFiles, getFileTransferDataFromDragEvent, isMediaFile, toRawFileUrl } from '@/util/file'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
-import { openCreateFlodersModal, MultiSelectTips } from './functionalCallableComp'
+import { openCreateFlodersModal, MultiSelectTips } from '@/components/functionalCallableComp'
 import { useTagStore } from '@/store/useTagStore'
 import { useBatchDownloadStore } from '@/store/useBatchDownloadStore'
 import { Walker } from './walker'
@@ -87,7 +87,7 @@ export const { useHookShareState } = createTypedShareStateHook(
       const method = sortMethod.value
       const filter = (files: FileNodeInfo[]) =>
         global.onlyFoldersAndImages
-          ? files.filter((file) => file.type === 'dir' || isImageFile(file.name))
+          ? files.filter((file) => file.type === 'dir' || isMediaFile(file.name))
           : files
       return sortFiles(filter(files), method).filter(v => !deletedFiles.has(v.fullpath))
     })

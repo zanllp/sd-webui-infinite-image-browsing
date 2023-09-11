@@ -1,8 +1,9 @@
 import { Input, Modal } from 'ant-design-vue'
 import { ref } from 'vue'
 import * as Path from '@/util/path'
-import { mkdirs } from '@/api/files'
+import { FileNodeInfo, mkdirs } from '@/api/files'
 import { t } from '@/i18n'
+import { toRawFileUrl } from '@/util'
 
 export const openCreateFlodersModal = (base: string) => {
   const floderName = ref('')
@@ -34,3 +35,21 @@ export const MultiSelectTips = () => (
   </p>
 )
 
+
+
+export const openVideoModal = (file: FileNodeInfo) => {
+  Modal.confirm({
+    width: '80vw',
+    title: file.name,
+    icon: null,
+    content: () => <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <video style={{ maxHeight: '80vh' }} src={toRawFileUrl(file)} controls autoplay></video>
+    </div>,
+    maskClosable: true,
+    wrapClassName: 'hidden-antd-btns-modal'
+  })
+}

@@ -207,6 +207,6 @@ export const en: IIBI18nMap = {
   longPressOpenContextMenu: 'Support long press to open right-click menu',
   searchResults: 'Search Results',
   imgSearch: 'Image Search',
-  onlyFoldersAndImages: 'Only show folders and images',
+  onlyFoldersAndImages: 'Only show folders/images/videos',
   send2savedDir: 'Send to saved folder'
 }

@@ -73,7 +73,7 @@ export const zhHans = {
   longPressOpenContextMenu: '支持使用长按打开右键菜单',
   searchResults: '搜索结果',
   imgSearch: '图像搜索',
-  onlyFoldersAndImages: '只显示文件夹和图像',
+  onlyFoldersAndImages: '只显示文件夹/图像/视频',
   send2savedDir: '发送到保存的文件夹',
   unknownSavedDir: '找不到保存的文件夹（配置文件中的outdir_save字段）',
   Model: '模型',
