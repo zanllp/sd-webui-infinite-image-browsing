@@ -50,7 +50,7 @@ from scripts.iib.db.datamodel import (
 from scripts.iib.db.update_image_data import update_image_data
 from scripts.iib.logger import logger
 from functional import seq
-
+import urllib.parse
 
 index_html_path = os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 
@@ -453,7 +453,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         media_type, _ = mimetypes.guess_type(filename)
         headers = {}
         if disposition:
-            headers["Content-Disposition"] = f'attachment; filename="{disposition}"'
+            encoded_filename = urllib.parse.quote(disposition.encode('utf-8'))
+            headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{encoded_filename}"
+
         if is_path_under_parents(filename) and is_valid_image_path(
             filename
         ):  # 认为永远不变,不要协商缓存了试试

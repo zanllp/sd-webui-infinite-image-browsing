@@ -641,13 +641,14 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
     const currIdx = () => (isFullScreenPreview ? previewIdx.value : s?.$_endIndex ?? 0)
     const needLoad = () => {
       const len = sortedFiles.value.length
+      const preload = 50
       if (!len) {
         return true
       }
       if (fetchNext) {
-        return currIdx() > len - 20
+        return currIdx() > len - preload
       }
-      return currIdx() > len - 20 && canLoadNext.value // canLoadNext 是walker的，表示加载完成
+      return currIdx() > len - preload && canLoadNext.value // canLoadNext 是walker的，表示加载完成
     }
     while (needLoad()) {
       await delay(30)
