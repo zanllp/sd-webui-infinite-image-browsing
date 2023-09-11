@@ -22,12 +22,12 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - Also supports fuzzy search, you can search by a part of the filename or generated information.
 - Support adding custom search paths for easy management of folders created by the user.
 
-### 🖼️ View Image & `Send To`
+### 🖼️ View Images/Videos & `Send To`
 - Supports viewing image generation information. Also supported in full-screen preview mode.
 - Supports sending images to other tabs and third-party extensions such as ControlNet , openOutpaint.
 - Support full-screen preview and enable custom shortcut key operations while in full-screen preview mode.
 - Support navigating to the previous or next image in full-screen preview mode by pressing arrow keys or clicking buttons.
-
+- Support playing video files from a remote server.
 
 ### 💻 Multiple Usage Methods
 - You can install it as an extension on SD-webui. 
