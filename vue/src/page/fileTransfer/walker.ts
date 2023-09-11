@@ -1,7 +1,7 @@
 import { FileNodeInfo, getTargetFolderFiles } from '@/api/files'
 import { first } from 'lodash-es'
 import { SortMethod, sortFiles } from './fileSort'
-import { isImageFile } from '@/util'
+import { isMediaFile } from '@/util'
 
 interface TreeNode {
   children: TreeNode[]
@@ -41,7 +41,7 @@ export class Walker {
           if (child.info.type === 'dir') {
             return getImg(child)
           }
-          if (isImageFile(child.info.name)) {
+          if (isMediaFile(child.info.name)) {
             return child.info
           }
         })

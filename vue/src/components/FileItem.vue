@@ -3,14 +3,15 @@ import { FileOutlined, FolderOpenOutlined, EllipsisOutlined, HeartOutlined, Hear
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { fallbackImage, ok } from 'vue3-ts-util'
 import type { FileNodeInfo } from '@/api/files'
-import { isImageFile } from '@/util'
+import { isImageFile, isVideoFile } from '@/util'
 import { toImageThumbnailUrl, toRawFileUrl } from '@/util/file'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { computed } from 'vue'
 import ContextMenu from './ContextMenu.vue'
 import { useTagStore } from '@/store/useTagStore'
-import { CloseCircleOutlined, StarFilled, StarOutlined } from '@/icon'
+import { CloseCircleOutlined, StarFilled, StarOutlined, PlayCircleFilled } from '@/icon'
 import { Tag } from '@/api/db'
+import { openVideoModal } from './functionalCallableComp'
 
 const global = useGlobalStore()
 const tagStore = useTagStore()
@@ -100,12 +101,22 @@ const taggleLikeTag = () => {
         </div>
         <!-- :key="fullScreenPreviewImageUrl ? undefined : file.fullpath" 
           这么复杂是因为再全屏查看时可能因为直接删除导致fullpath变化，然后整个预览直接退出-->
-        <div style="position: relative;" :key="file.fullpath" :class="`idx-${idx}`" v-if="isImageFile(file.name)">
+        <div :key="file.fullpath" :class="`idx-${idx} item-content`" v-if="isImageFile(file.name)">
 
           <a-image :src="imageSrc" :fallback="fallbackImage" :preview="{
             src: fullScreenPreviewImageUrl,
             onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
           }" />
+          <div class="tags-container" v-if="customTags && cellWidth > 128">
+            <a-tag v-for="tag in customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
+              {{ tag.name }}
+            </a-tag>
+          </div>
+        </div>
+        <div :class="`idx-${idx} item-content video`" v-else-if="isVideoFile(file.name)" @click="openVideoModal(file)">
+          <div class="play-icon">
+            <PlayCircleFilled />
+          </div>
           <div class="tags-container" v-if="customTags && cellWidth > 128">
             <a-tag v-for="tag in customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
               {{ tag.name }}
@@ -144,21 +155,44 @@ const taggleLikeTag = () => {
   align-items: center;
 }
 
-.tags-container {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  display: flex;
-  width: calc(100% - 16px);
-  flex-wrap: wrap-reverse;
-  flex-direction: row-reverse;
+.item-content {
+  position: relative;
 
-  &>* {
-    margin: 0 0 4px 4px;
-    font-size: 14px;
-    line-height: 1.6;
+  &.video {
+    background-color: var(--zp-border);
+    border-radius: 8px;
+    overflow: hidden;
+    width: v-bind('$props.cellWidth + "px"');
+    height: v-bind('$props.cellWidth + "px"');
+    cursor: pointer;
+  }
+
+  .play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 3em;
+    transform: translate(-50%, -50%);
+  }
+
+  .tags-container {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    display: flex;
+    width: calc(100% - 16px);
+    flex-wrap: wrap-reverse;
+    flex-direction: row-reverse;
+
+    &>* {
+      margin: 0 0 4px 4px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
   }
 }
+
+
 
 .close-icon {
   position: absolute;
