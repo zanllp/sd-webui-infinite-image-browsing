@@ -40,7 +40,7 @@ def on_ui_tabs():
                 def img_update_func():
                     try:
                         path = send_img_path.get("value")
-                        logger.info("img_update_func %s", path)
+                        # logger.info("img_update_func %s", path)
                         img = Image.open(path)
                         info = read_sd_webui_gen_info_from_image(img, path)
                         return img, info
