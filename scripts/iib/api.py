@@ -401,7 +401,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                             }
                         )
         except Exception as e:
-            logger.error(e)
+            # logger.error(e)
             raise HTTPException(status_code=400, detail=str(e))
 
         return {"files": filter_allowed_files(files)}
@@ -483,7 +483,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             if send_img_path["value"] == "":  # 等待setup里面生成完成
                 return True
             v = send_img_path["value"]
-            logger.info("gen_info_completed %s %s", _, v)
+            # is_dev and logger.info("gen_info_completed %s %s", _, v)
             await asyncio.sleep(0.1)
         return send_img_path["value"] == ""
 
