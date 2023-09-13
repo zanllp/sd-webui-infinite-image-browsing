@@ -598,7 +598,7 @@ class ExtraPath:
             return paths
 
     @classmethod
-    def remove(cls, conn, path: str, type: Optional[ExtraPathType] = None):
+    def remove(cls, conn, path: str, type: Optional[ExtraPathType] = None, img_search_dirs: Optional[List[str]] = []):
         with closing(conn.cursor()) as cur:
             sql = "DELETE FROM extra_path WHERE path = ?"
             path = os.path.normpath(path)
@@ -606,7 +606,8 @@ class ExtraPath:
                 cur.execute(sql, (path,))
             else:
                 cur.execute(sql + "AND type = ?", (path, type.value))
-            Floder.remove_folder(conn, path)
+            if path not in img_search_dirs:
+                Floder.remove_folder(conn, path)
             conn.commit()
 
     @classmethod

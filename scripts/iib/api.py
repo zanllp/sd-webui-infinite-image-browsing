@@ -764,7 +764,5 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     )
     async def delete_extra_path(extra_path: ExtraPathModel):
         path = to_abs_path(extra_path.path)
-        if path in get_img_search_dirs():
-            raise HTTPException(400)
         conn = DataBase.get_conn()
-        ExtraPath.remove(conn, path, extra_path.type)
+        ExtraPath.remove(conn, path, extra_path.type, img_search_dirs=get_img_search_dirs())
