@@ -111,7 +111,7 @@ const restoreRecord = () => {
       </template>
     </a-alert>
     <div class="content">
-      <div class="feature-item" v-if="walkModeSupportedDir.length">
+      <div class="feature-item" >
         <h2>{{ $t('walkMode') }}</h2>
         <ul>
           <li @click="addToExtraPath('walk')" class="item" style="text-align: ;">
