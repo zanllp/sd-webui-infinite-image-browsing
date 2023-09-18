@@ -53,31 +53,19 @@ export function useResizeAndDrag(
     let width = startWidth + ((e instanceof MouseEvent ? e.clientX : e.touches[0].clientX) - startX)
     let height =
       startHeight + ((e instanceof MouseEvent ? e.clientY : e.touches[0].clientY) - startY)
-    let handleX =
-      resizeHandle.x + ((e instanceof MouseEvent ? e.clientX : e.touches[0].clientX) - startX)
-    let handleY =
-      resizeHandle.y + ((e instanceof MouseEvent ? e.clientY : e.touches[0].clientY) - startY)
 
     // Check if element exceeds viewport width
-    if (handleX + resizeHandleRef.value.offsetWidth > window.innerWidth) {
-      handleX = window.innerWidth - resizeHandleRef.value.offsetWidth
-    }
     if (elementRef.value.offsetLeft + width > window.innerWidth) {
       width = window.innerWidth - elementRef.value.offsetLeft
     }
 
     // Check if element exceeds viewport height
-    if (handleY + resizeHandleRef.value.offsetHeight > window.innerHeight) {
-      handleY = window.innerHeight - resizeHandleRef.value.offsetHeight
-    }
     if (elementRef.value.offsetTop + height > window.innerHeight) {
       height = window.innerHeight - elementRef.value.offsetTop
     }
 
     elementRef.value.style.width = `${width}px`
     elementRef.value.style.height = `${height}px`
-    resizeHandleRef.value.style.left = `${handleX}px`
-    resizeHandleRef.value.style.top = `${handleY}px`
 
     if (options?.onResize) {
       options.onResize(width, height)
@@ -154,7 +142,7 @@ export function useResizeAndDrag(
       left = window.innerWidth - width
       if (left < 0) {
         left = 0
-        width = window.innerWidth                                 
+        width = window.innerWidth
       }
     }
 
