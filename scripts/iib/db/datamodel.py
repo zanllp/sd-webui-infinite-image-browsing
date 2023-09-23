@@ -58,7 +58,7 @@ class DataBase:
         def regexp(expr, item):
             if not isinstance(item, str):
                 return False
-            reg = re.compile(expr, flags=re.IGNORECASE)
+            reg = re.compile(expr, flags=re.IGNORECASE | re.MULTILINE | re.DOTALL)
             return reg.search(item) is not None
         
         conn.create_function('regexp', 2, regexp)
