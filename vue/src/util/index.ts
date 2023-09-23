@@ -159,3 +159,10 @@ export const createImage = (src: string) => {
     img.src = src
   })
 }
+export const safeJsonParse = <T>(str: string) => {
+  try {
+    return JSON.parse(str) as T
+  } catch (error) {
+    return null
+  }
+}

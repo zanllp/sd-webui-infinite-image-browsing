@@ -8,13 +8,14 @@ import { toRawFileUrl } from '@/util/file'
 import { getDbBasicInfo, getExpiredDirs, getImagesBySubstr, updateImageData, type DataBaseBasicInfo } from '@/api/db'
 import { copy2clipboardI18n, makeAsyncFunctionSingle, useGlobalEventListen } from '@/util'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
-import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
+import { LeftCircleOutlined, RightCircleOutlined, regex } from '@/icon'
 import { message } from 'ant-design-vue'
 import { t } from '@/i18n'
 import { createImageSearchIter, useImageSearch } from './hook'
 
+const isRegex = ref(false)
 const substr = ref('')
-const iter = createImageSearchIter(cursor => getImagesBySubstr(substr.value, cursor))
+const iter = createImageSearchIter(cursor => isRegex.value ? getImagesBySubstr('', cursor, substr.value) : getImagesBySubstr(substr.value, cursor))
 const {
   queue,
   images,
@@ -74,13 +75,18 @@ useGlobalEventListen('returnToIIB', async () => {
 
 useGlobalEventListen('searchIndexExpired', () => info.value && (info.value.expired = true))
 
+const onRegexpClick = () => {
+  isRegex.value = !isRegex.value
+}
+
 </script>
 <template>
   <div class="container" ref="stackViewEl">
-    <div class="search-bar" v-if="info">
-      <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder')" :disabled="!queue.isIdle"
-        @keydown.enter="query" allow-clear />
-      <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
+    <div class="search-bar" v-if="info" @keydown.stop>
+      <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder') + ' ' + $t('regexSearchEnabledHint')" :disabled="!queue.isIdle"
+        @keydown.enter="query" allow-clear  />
+       <div class="regex-icon" :class="{ selected: isRegex }" @keydown.stop @click="onRegexpClick" title="Use Regular Expression"> <img :src="regex" ></div>  
+        <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
         {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
       <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!substr">{{
         $t('search') }}
@@ -122,6 +128,25 @@ useGlobalEventListen('searchIndexExpired', () => info.value && (info.value.expir
   </div>
 </template>
 <style scoped lang="scss">
+
+.regex-icon {
+  img {
+    height: 1.5em;
+  }
+  user-select: none;
+  padding: 4px;
+  margin: 0 4px;
+  cursor: pointer;
+  border: 1px solid var(--zp-border);
+  border-radius: 4px;
+  &:hover {
+    background: var(--zp-border);
+  }
+  &.selected {
+    background: var(--primary-color-1);
+    border: 1px solid var(--primary-color);
+  }
+}
 .search-bar {
   padding: 8px;
   display: flex;

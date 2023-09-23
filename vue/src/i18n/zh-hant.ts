@@ -195,5 +195,6 @@ export const zhHant: IIBI18nMap = {
   dragToResizePanel: '按住並拖動來調整面板的大小',
   clickToToggleMaximizeMinimize: '單擊切換最大化/最小化',
   dragToMovePanel: '按住並拖動來移動面板',
-  imageCompareTips: '拖拽文件時也會出現這個面板,可以不需要打開 “圖片對比” 功能'
+  imageCompareTips: '拖拽文件時也會出現這個面板,可以不需要打開 “圖片對比” 功能',
+  regexSearchEnabledHint: "（你也可以通過點擊右側的正則式圖標來啟用正則式搜索）"
 }

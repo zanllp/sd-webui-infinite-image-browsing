@@ -13,6 +13,7 @@ from scripts.iib.tool import (
 from contextlib import closing
 import os
 import threading
+import re
 
 class FileInfoDict(TypedDict):
     type: str
@@ -46,12 +47,21 @@ class DataBase:
         else:
             conn = clz.init()
             clz.local.conn = conn
+            
             return conn
-
+    
     @classmethod
     def init(clz):
         # 创建连接并打开数据库
         conn = connect(clz.path if os.path.isabs(clz.path) else os.path.join(cwd, clz.path))
+        
+        def regexp(expr, item):
+            if not isinstance(item, str):
+                return False
+            reg = re.compile(expr, flags=re.IGNORECASE)
+            return reg.search(item) is not None
+        
+        conn.create_function('regexp', 2, regexp)
         try:            
             Floder.create_table(conn)
             ImageTag.create_table(conn)
@@ -184,15 +194,25 @@ class Image:
                 conn.commit()
 
     @classmethod
-    def find_by_substring(cls, conn: Connection, substring: str, limit: int = 500, cursor = '') -> tuple[List["Image"], Cursor]:
+    def find_by_substring(cls, conn: Connection, substring: str, limit: int = 500, cursor = '', regexp = '') -> tuple[List["Image"], Cursor]:
         api_cur = Cursor()
         with closing(conn.cursor()) as cur:
-            if cursor:
-                sql = f"SELECT * FROM image WHERE (path LIKE ? OR exif LIKE ?) AND (date < ?) ORDER BY date DESC LIMIT ?"
-                cur.execute(sql, (f"%{substring}%", f"%{substring}%", cursor, limit))
+            if regexp:
+                if cursor:
+                    sql = f"SELECT * FROM image WHERE (exif REGEXP ?) and (date < ?) ORDER BY date DESC LIMIT ?"
+                    cur.execute(sql, (regexp, cursor, limit))
+                else:
+                    sql = "SELECT * FROM image WHERE (exif REGEXP ?) ORDER BY date DESC LIMIT ?"
+                    cur.execute(sql, (regexp, limit,))
             else:
-                sql = "SELECT * FROM image WHERE path LIKE ? OR exif LIKE ? ORDER BY date DESC LIMIT ?"
-                cur.execute(sql, (f"%{substring}%", f"%{substring}%", limit))
+                if cursor:
+                    sql = f"SELECT * FROM image WHERE (path LIKE ? OR exif LIKE ?) AND (date < ?) ORDER BY date DESC LIMIT ?"
+                    cur.execute(sql, (f"%{substring}%", f"%{substring}%", cursor, limit))
+                else:
+                    sql = "SELECT * FROM image WHERE path LIKE ? OR exif LIKE ? ORDER BY date DESC LIMIT ?"
+                    cur.execute(sql, (f"%{substring}%", f"%{substring}%", limit))
+
+                
             rows = cur.fetchall()
         
         api_cur.has_next = len(rows) >= limit
