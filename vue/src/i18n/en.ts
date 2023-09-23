@@ -208,5 +208,6 @@ export const en: IIBI18nMap = {
   searchResults: 'Search Results',
   imgSearch: 'Image Search',
   onlyFoldersAndImages: 'Only show folders/images/videos',
-  send2savedDir: 'Send to saved folder'
+  send2savedDir: 'Send to saved folder',
+  regexSearchEnabledHint: '(You can also enable regex search by clicking the regex icon on the right)'
 }

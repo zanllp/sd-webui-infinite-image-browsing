@@ -191,5 +191,6 @@ export const zhHans = {
   dragToResizePanel: '按住并拖动来调整面板的大小',
   clickToToggleMaximizeMinimize: '单击切换最大化/最小化',
   dragToMovePanel: '按住并拖动来移动面板',
-  imageCompareTips: '拖拽文件时也会出现这个面板，可以不需要打开 “图像对比” 功能'
+  imageCompareTips: '拖拽文件时也会出现这个面板，可以不需要打开 “图像对比” 功能',
+  regexSearchEnabledHint: "（你也可以通过点击右侧的正则式图标来启用正则式搜索）"
 }

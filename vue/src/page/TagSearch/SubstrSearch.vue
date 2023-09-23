@@ -83,7 +83,7 @@ const onRegexpClick = () => {
 <template>
   <div class="container" ref="stackViewEl">
     <div class="search-bar" v-if="info" @keydown.stop>
-      <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder')" :disabled="!queue.isIdle"
+      <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder') + ' ' + $t('regexSearchEnabledHint')" :disabled="!queue.isIdle"
         @keydown.enter="query" allow-clear  />
        <div class="regex-icon" :class="{ selected: isRegex }" @keydown.stop @click="onRegexpClick" title="Use Regular Expression"> <img :src="regex" ></div>  
         <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
