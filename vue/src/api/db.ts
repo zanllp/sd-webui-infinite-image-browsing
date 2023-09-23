@@ -72,8 +72,8 @@ export const getImageSelectedCustomTag = async (path: string) => {
   return resp.data as Tag[]
 }
 
-export const getImagesBySubstr = async (substr: string, cursor: string) => {
-  const resp = await axiosInst.value.get('/db/search_by_substr', { params: { substr,cursor } })
+export const getImagesBySubstr = async (substr: string, cursor: string, regexp?: string) => {
+  const resp = await axiosInst.value.get('/db/search_by_substr', { params: { substr,cursor,regexp } })
   return resp.data as {
     files: FileNodeInfo[],
     cursor: PageCursor
