@@ -9,7 +9,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest,ubuntu-20.04]
+        os: [macos-latest,windows-latest,ubuntu-20.04]
 
     runs-on: ${{ matrix.os }}
 
@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v3
 
       - run: echo "VERSION=$(jq -r '.package.version' vue/src-tauri/tauri.conf.json)" >> "$GITHUB_ENV"
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-20.04' || matrix.os == 'macos-latest'
       - run: echo "VERSION=$(jq -r '.package.version' vue/src-tauri/tauri.conf.json)" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
 
@@ -51,12 +51,14 @@ jobs:
           path: |
             out/iib_api_server.exe
             out/iib_api_server
-      
       - run: mv out/iib_api_server.exe vue/src-tauri/iib_api_server-x86_64-pc-windows-msvc.exe
         if: matrix.os == 'windows-latest'
 
       - run: mv out/iib_api_server vue/src-tauri/iib_api_server-x86_64-unknown-linux-gnu
         if: matrix.os == 'ubuntu-20.04'
+
+      - run: mv out/iib_api_server vue/src-tauri/iib_api_server-x86_64-apple-darwin
+        if: matrix.os == 'macos-latest'
 
       - name: Install frontend dependencies
         run: yarn install
@@ -94,6 +96,7 @@ jobs:
           path: |
             vue/src-tauri/target/release/bundle/nsis/Infinite Image Browsing_${{ env.VERSION }}_x64-setup.exe
             vue/src-tauri/target/release/bundle/deb/infinite-image-browsing_${{ env.VERSION }}_amd64.deb
+            vue/src-tauri/target/release/bundle/dmg/Infinite Image Browsing_${{ env.VERSION }}_x64.dmg
 
   release:
     needs: build
@@ -119,6 +122,11 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: bundle-${{ env.VERSION }}-Linux
+          path: artifacts
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: bundle-${{ env.VERSION }}-macOS
           path: artifacts
 
       - name: Release
