@@ -622,10 +622,7 @@ class ExtraPath:
         with closing(conn.cursor()) as cur:
             sql = "DELETE FROM extra_path WHERE path = ?"
             path = os.path.normpath(path)
-            if type:
-                cur.execute(sql, (path,))
-            else:
-                cur.execute(sql + "AND type = ?", (path, type.value))
+            cur.execute(sql, (path,))
             if path not in img_search_dirs:
                 Floder.remove_folder(conn, path)
             conn.commit()
