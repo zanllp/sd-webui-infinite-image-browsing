@@ -1,11 +1,12 @@
-import { Button, Input, Modal } from 'ant-design-vue'
+import { Button, Input, Modal, message } from 'ant-design-vue'
 import { ref } from 'vue'
 import * as Path from '@/util/path'
 import { FileNodeInfo, mkdirs } from '@/api/files'
 import { t } from '@/i18n'
-import { downloadFiles, toRawFileUrl } from '@/util'
+import { downloadFiles, globalEvents, toRawFileUrl } from '@/util'
 import { DownloadOutlined } from '@/icon'
 import { isStandalone } from '@/util/env'
+import { rebuildImageIndex } from '@/api/db'
 
 export const openCreateFlodersModal = (base: string) => {
   const floderName = ref('')
@@ -64,5 +65,16 @@ export const openVideoModal = (file: FileNodeInfo) => {
     ),
     maskClosable: true,
     wrapClassName: 'hidden-antd-btns-modal'
+  })
+}
+
+export const openRebuildImageIndexModal = () => {
+  Modal.confirm({
+    title: t('confirmRebuildImageIndex'),
+    onOk: async () => {
+      await rebuildImageIndex()
+      globalEvents.emit('searchIndexExpired')
+      message.success(t('rebuildComplete'))
+    }
   })
 }

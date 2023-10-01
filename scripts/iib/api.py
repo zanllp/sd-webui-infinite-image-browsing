@@ -47,11 +47,10 @@ from scripts.iib.db.datamodel import (
     ExtraPath,
     FileInfoDict,
 )
-from scripts.iib.db.update_image_data import update_image_data
+from scripts.iib.db.update_image_data import update_image_data, rebuild_image_index
 from scripts.iib.logger import logger
 from functional import seq
 import urllib.parse
-import re
 
 index_html_path = os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 
@@ -773,3 +772,12 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         path = to_abs_path(extra_path.path)
         conn = DataBase.get_conn()
         ExtraPath.remove(conn, path, extra_path.type, img_search_dirs=get_img_search_dirs())
+
+    
+    @app.post(
+        f"{db_pre}/rebuild_index",
+        dependencies=[Depends(verify_secret), Depends(write_permission_required)],
+    )
+    async def rebuild_index():
+        rebuild_image_index(search_dirs=get_img_search_dirs())
+
