@@ -10,6 +10,7 @@ import { copy2clipboardI18n } from '@/util'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
 import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 import { useImageSearch, createImageSearchIter } from './hook'
+import { openRebuildImageIndexModal } from '@/components/functionalCallableComp'
 
 const props = defineProps<{
   tabIdx: number
@@ -49,7 +50,7 @@ watch(
   async () => {
     await iter.reset()
     await nextTick()
-    scroller.value!.scrollToItem(0)
+    scroller.value?.scrollToItem(0)
     onScroll() // 重新获取
   },
   { immediate: true }
@@ -79,7 +80,7 @@ watch(
       <RecycleScroller
         ref="scroller"
         class="file-list"
-        v-if="images"
+        v-if="images?.length"
         :items="images"
         :item-size="itemSize.first"
         key-field="fullpath"
@@ -105,6 +106,12 @@ watch(
           />
         </template>
       </RecycleScroller>
+      <div v-else-if="!iter.loading">
+        <div class="no-res-hint">
+          <p class="hint">{{ $t('tagSearchNoResultsMessage') }}</p>
+          <AButton @click="openRebuildImageIndexModal()" type="primary">{{ $t('rebuildImageIndex') }}</AButton>
+        </div>
+      </div>
       <div v-if="previewing" class="preview-switch">
         <LeftCircleOutlined
           @click="previewImgMove('prev')"
@@ -162,6 +169,18 @@ watch(
     overflow: auto;
     height: var(--pane-max-height);
     width: 100%;
+  }
+  .no-res-hint {
+    height: var(--pane-max-height);
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    .hint {
+      font-size: 1.6em;
+      margin-bottom: 2em;
+      text-align: center;
+    }
   }
 }
 </style>

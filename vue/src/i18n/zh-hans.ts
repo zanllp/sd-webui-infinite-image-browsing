@@ -159,8 +159,7 @@ export const zhHans = {
   'tauriLaunchConfMessages.firstTimeUserTitle': '看起来你好像是第一次使用, 需要进行一些配置',
   inputTargetFolderPath: '输入目标文件夹的绝对路径',
   pathDoesNotExist: '路径不存在',
-  confirmToAddToExtraPath:
-    '确定添加？如果文件夹过大将会消耗过多时间建立索引。',
+  confirmToAddToExtraPath: '确定添加？如果文件夹过大将会消耗过多时间建立索引。',
   clientSpecificSettings: '客户端特有的设置',
   initiateSoftwareStartupConfig: '初始化软件启动配置',
   gridCellWidth: '网格单元宽度 (px)',
@@ -192,5 +191,9 @@ export const zhHans = {
   clickToToggleMaximizeMinimize: '单击切换最大化/最小化',
   dragToMovePanel: '按住并拖动来移动面板',
   imageCompareTips: '拖拽文件时也会出现这个面板，可以不需要打开 “图像对比” 功能',
-  regexSearchEnabledHint: "（你也可以通过点击右侧的正则式图标来启用正则式搜索）"
+  regexSearchEnabledHint: '（你也可以通过点击右侧的正则式图标来启用正则式搜索）',
+  confirmRebuildImageIndex: '确认重建图像索引？',
+  rebuildComplete: '重新构建完成',
+  rebuildImageIndex: '重新构建图像索引',
+  tagSearchNoResultsMessage: '看起来没匹配到任何结果，尝试通过重新构建索引来去掉无用的tag？'
 }

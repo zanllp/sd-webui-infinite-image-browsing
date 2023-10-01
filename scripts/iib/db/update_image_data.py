@@ -1,3 +1,4 @@
+from contextlib import closing
 from typing import Dict, List
 from scripts.iib.db.datamodel import Image as DbImg, Tag, ImageTag, DataBase, Floder
 import os
@@ -39,7 +40,7 @@ def get_exif_data(file_path):
     return params, info
 
 
-def update_image_data(search_dirs: List[str]):
+def update_image_data(search_dirs: List[str], is_rebuild = False):
     conn = DataBase.get_conn()
     tag_incr_count_rec: Dict[int, int] = {}
 
@@ -51,7 +52,7 @@ def update_image_data(search_dirs: List[str]):
 
     # 递归处理每个文件夹
     def process_folder(folder_path: str):
-        if not Floder.check_need_update(conn, folder_path):
+        if not is_rebuild and not Floder.check_need_update(conn, folder_path):
             return
         print(f"Processing folder: {folder_path}")
         for filename in os.listdir(folder_path):
@@ -62,19 +63,30 @@ def update_image_data(search_dirs: List[str]):
 
             elif is_valid_image_path(file_path):
                 img = DbImg.get(conn, file_path)
-                if img:  # 已存在的跳过
-                    if img.date == get_modified_date(img.path):
-                        continue
-                    else:
-                        DbImg.safe_batch_remove(conn=conn, image_ids=[img.id])
-                parsed_params, info = get_exif_data(file_path)
-                img = DbImg(
-                    file_path,
-                    info,
-                    os.path.getsize(file_path),
-                    get_modified_date(file_path),
-                )
-                img.save(conn)
+                if is_rebuild:
+                    parsed_params, info = get_exif_data(file_path)
+                    if not img:
+                        img = DbImg(
+                            file_path,
+                            info,
+                            os.path.getsize(file_path),
+                            get_modified_date(file_path),
+                        )
+                        img.save(conn)
+                else:
+                    if img:  # 已存在的跳过
+                        if img.date == get_modified_date(img.path):
+                            continue
+                        else:
+                            DbImg.safe_batch_remove(conn=conn, image_ids=[img.id])
+                    parsed_params, info = get_exif_data(file_path)
+                    img = DbImg(
+                        file_path,
+                        info,
+                        os.path.getsize(file_path),
+                        get_modified_date(file_path),
+                    )
+                    img.save(conn)
 
                 if not parsed_params:
                     continue
@@ -123,3 +135,17 @@ def update_image_data(search_dirs: List[str]):
         tag.count += tag_incr_count_rec[tag_id]
         tag.save(conn)
     conn.commit()
+
+def rebuild_image_index(search_dirs: List[str]):
+    conn = DataBase.get_conn()
+    with closing(conn.cursor()) as cur:
+        cur.execute(
+            """DELETE FROM image_tag
+            WHERE image_tag.tag_id IN (
+                SELECT tag.id FROM tag WHERE tag.type <> 'custom'
+            )
+            """
+        )
+        cur.execute("""DELETE FROM tag WHERE tag.type <> 'custom'""")
+        conn.commit()
+        update_image_data(search_dirs=search_dirs, is_rebuild=True)

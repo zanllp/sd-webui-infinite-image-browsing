@@ -10,6 +10,7 @@ import { fs, invoke } from '@tauri-apps/api'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { isTauri } from '@/util/env'
 import ImageSetting from './ImageSetting.vue'
+import { openRebuildImageIndexModal } from '@/components/functionalCallableComp'
 
 
 const globalStore = useGlobalStore()
@@ -44,6 +45,10 @@ const oninitTauriLaunchConf = async () => {
     <a-form>
       <h2 style="margin-top: 0;">{{ t('ImageBrowsingSettings') }}</h2>
       <ImageSetting />
+      <h2>{{ t('imgSearch') }}</h2>
+      <a-form-item :label="$t('rebuildImageIndex')">
+        <AButton @click="openRebuildImageIndexModal" >{{ $t('start') }}</AButton>
+      </a-form-item>
       <h2>{{ t('other') }}</h2>
       <a-form-item :label="$t('onlyFoldersAndImages')">
         <a-switch v-model:checked="globalStore.onlyFoldersAndImages" />

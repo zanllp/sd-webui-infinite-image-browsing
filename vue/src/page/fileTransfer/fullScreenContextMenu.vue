@@ -105,7 +105,11 @@ const baseInfoTags = computed(() => {
   return tags
 })
 
-const copyPositivePrompt = () => copy2clipboardI18n(geninfoFrags.value[0] ?? '')
+const copyPositivePrompt = () => {
+  const neg = 'Negative prompt:'
+  const text = imageGenInfo.value.includes(neg) ? imageGenInfo.value.split(neg)[0] : geninfoFrags.value[0] ?? ''
+  copy2clipboardI18n(text.trim())
+}
 
 </script>
 
