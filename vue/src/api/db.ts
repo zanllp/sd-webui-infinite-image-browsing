@@ -104,3 +104,5 @@ export const batchGetTagsByPath = async (paths: string[]) => {
   const resp = await axiosInst.value.post('/db/get_image_tags', { paths })
   return resp.data as Dict<Tag[]>
 }
+
+export const rebuildImageIndex = () => axiosInst.value.post('/db/rebuild_index')

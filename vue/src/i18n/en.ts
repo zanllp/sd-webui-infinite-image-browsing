@@ -1,8 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
-  
-  imageCompareTips: 'When dragging files, this panel will also appear, so you don\'t need to open the "Image Comparison" feature separately.',
+  imageCompareTips:
+    'When dragging files, this panel will also appear, so you don\'t need to open the "Image Comparison" feature separately.',
   dragToResizePanel: 'Drag to resize the panel',
   clickToToggleMaximizeMinimize: 'Click to toggle maximize/minimize',
   dragToMovePanel: 'Drag to move the panel',
@@ -34,7 +34,7 @@ export const en: IIBI18nMap = {
   inputTargetFolderPath: 'Enter the absolute path of the target folder',
   pathDoesNotExist: 'Path does not exist',
   confirmToAddToExtraPath:
-    "Are you sure you want to add? This may take a lot of time to index if the folder is large. ",
+    'Are you sure you want to add? This may take a lot of time to index if the folder is large. ',
   clientSpecificSettings: 'Client-specific settings',
   initiateSoftwareStartupConfig: 'Initiate software startup configuration',
   'tauriLaunchConf.readSdWebuiConfigTitle': 'Read Stable Diffusion Webui Config',
@@ -209,5 +209,11 @@ export const en: IIBI18nMap = {
   imgSearch: 'Image Search',
   onlyFoldersAndImages: 'Only show folders/images/videos',
   send2savedDir: 'Send to saved folder',
-  regexSearchEnabledHint: '(You can also enable regex search by clicking the regex icon on the right)'
+  regexSearchEnabledHint:
+    '(You can also enable regex search by clicking the regex icon on the right)',
+  rebuildImageIndex: 'Rebuild image index',
+  confirmRebuildImageIndex: 'Confirm rebuilding image index?',
+  rebuildComplete: 'Rebuild complete',
+  tagSearchNoResultsMessage:
+    'It seems like no results were found. Try rebuilding the index to remove unused tags?'
 }

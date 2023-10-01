@@ -161,8 +161,7 @@ export const zhHant: IIBI18nMap = {
   'tauriLaunchConfMessages.firstTimeUserTitle': '看起來你好像是第一次使用,需要進行一些配置',
   inputTargetFolderPath: '輸入目標文件夾的絕對路徑',
   pathDoesNotExist: '路徑不存在',
-  confirmToAddToExtraPath:
-    '確定添加?如果文件夾過大將會消耗過多時間建立索引。',
+  confirmToAddToExtraPath: '確定添加?如果文件夾過大將會消耗過多時間建立索引。',
   clientSpecificSettings: '客戶端特有的設置',
   initiateSoftwareStartupConfig: '初始化軟件啟動配置',
   gridCellWidth: '網格單元寬度 (px)',
@@ -196,5 +195,9 @@ export const zhHant: IIBI18nMap = {
   clickToToggleMaximizeMinimize: '單擊切換最大化/最小化',
   dragToMovePanel: '按住並拖動來移動面板',
   imageCompareTips: '拖拽文件時也會出現這個面板,可以不需要打開 “圖片對比” 功能',
-  regexSearchEnabledHint: "（你也可以通過點擊右側的正則式圖標來啟用正則式搜索）"
+  regexSearchEnabledHint: '（你也可以通過點擊右側的正則式圖標來啟用正則式搜索）',
+  confirmRebuildImageIndex: '確認重建圖像索引？',
+  rebuildImageIndex: '重新構建圖像索引',
+  rebuildComplete: '重新構建完成',
+  tagSearchNoResultsMessage: "看起來沒有匹配到任何結果，嘗試通過重新構建索引來去除無用的標籤？"
 }
