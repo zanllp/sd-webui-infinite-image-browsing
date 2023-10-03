@@ -106,7 +106,7 @@ watch(
           />
         </template>
       </RecycleScroller>
-      <div v-else-if="!iter.loading">
+      <div v-else-if="iter.load && selectedTagIds.and_tags.length === 1">
         <div class="no-res-hint">
           <p class="hint">{{ $t('tagSearchNoResultsMessage') }}</p>
           <AButton @click="openRebuildImageIndexModal()" type="primary">{{ $t('rebuildImageIndex') }}</AButton>
