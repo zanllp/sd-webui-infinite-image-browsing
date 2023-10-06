@@ -779,6 +779,6 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
     async def rebuild_index():
-        update_all_scanned_paths()
-        rebuild_image_index(search_dirs=mem["all_scanned_paths"])
+        update_extra_paths(conn = DataBase.get_conn())
+        rebuild_image_index(search_dirs = get_img_search_dirs() + mem["extra_paths"])
 
