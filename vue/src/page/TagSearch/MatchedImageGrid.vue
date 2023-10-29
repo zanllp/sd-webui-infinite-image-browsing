@@ -103,6 +103,7 @@ watch(
             :selected="multiSelectedIdxs.includes(idx)"
             @context-menu-click="onContextMenuClickU"
             @preview-visible-change="onPreviewVisibleChange"
+            :is-selected-mutil-files="multiSelectedIdxs.length > 1"
           />
         </template>
       </RecycleScroller>
