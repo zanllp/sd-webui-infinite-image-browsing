@@ -895,7 +895,6 @@ export function useFileItemActions (
       }
     }
     const key = `${e.key}`
-    console.log(111, e, file, idx);
     
     if (key.startsWith('toggle-tag-')) {
       const tagId = +key.split('toggle-tag-')[1]
