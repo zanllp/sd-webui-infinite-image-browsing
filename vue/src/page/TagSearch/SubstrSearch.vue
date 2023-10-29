@@ -83,10 +83,11 @@ const onRegexpClick = () => {
 <template>
   <div class="container" ref="stackViewEl">
     <div class="search-bar" v-if="info" @keydown.stop>
-      <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder') + ' ' + $t('regexSearchEnabledHint')" :disabled="!queue.isIdle"
-        @keydown.enter="query" allow-clear  />
-       <div class="regex-icon" :class="{ selected: isRegex }" @keydown.stop @click="onRegexpClick" title="Use Regular Expression"> <img :src="regex" ></div>  
-        <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
+      <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder') + ' ' + $t('regexSearchEnabledHint')"
+        :disabled="!queue.isIdle" @keydown.enter="query" allow-clear />
+      <div class="regex-icon" :class="{ selected: isRegex }" @keydown.stop @click="onRegexpClick"
+        title="Use Regular Expression"> <img :src="regex"></div>
+      <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
         {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
       <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!substr">{{
         $t('search') }}
@@ -115,7 +116,8 @@ const onRegexpClick = () => {
           <file-item-cell :idx="idx" :file="file" v-model:show-menu-idx="showMenuIdx" @file-item-click="onFileItemClick"
             :full-screen-preview-image-url="images[previewIdx] ? toRawFileUrl(images[previewIdx]) : ''"
             :cell-width="cellWidth" :selected="multiSelectedIdxs.includes(idx)" @context-menu-click="onContextMenuClickU"
-            @dragstart="onFileDragStart" @dragend="onFileDragEnd" @preview-visible-change="onPreviewVisibleChange" />
+            @dragstart="onFileDragStart" @dragend="onFileDragEnd" :is-selected-mutil-files="multiSelectedIdxs.length > 1"
+            @preview-visible-change="onPreviewVisibleChange" />
         </template>
       </RecycleScroller>
       <div v-if="previewing" class="preview-switch">
@@ -128,25 +130,28 @@ const onRegexpClick = () => {
   </div>
 </template>
 <style scoped lang="scss">
-
 .regex-icon {
   img {
     height: 1.5em;
   }
+
   user-select: none;
   padding: 4px;
   margin: 0 4px;
   cursor: pointer;
   border: 1px solid var(--zp-border);
   border-radius: 4px;
+
   &:hover {
     background: var(--zp-border);
   }
+
   &.selected {
     background: var(--primary-color-1);
     border: 1px solid var(--primary-color);
   }
 }
+
 .search-bar {
   padding: 8px;
   display: flex;
@@ -190,5 +195,4 @@ const onRegexpClick = () => {
     height: var(--pane-max-height);
     width: 100%;
   }
-}
-</style>
+}</style>
