@@ -106,3 +106,13 @@ export const batchGetTagsByPath = async (paths: string[]) => {
 }
 
 export const rebuildImageIndex = () => axiosInst.value.post('/db/rebuild_index')
+
+export interface BatchUpdateTagParams {
+  img_paths: string[]
+  action: 'add' | 'remove'
+  tag_id: number
+}
+
+export const batchUpdateImageTag = (data: BatchUpdateTagParams) => {
+  return axiosInst.value.post('/db/batch_update_image_tag', data)
+}

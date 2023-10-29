@@ -684,6 +684,50 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         conn.commit()
         return {"is_remove": is_remove}
 
+    class BatchUpdateImageReq(BaseModel):
+        img_paths: List[str]
+        action: str
+        tag_id: int
+
+    @app.post(
+        db_pre + "/batch_update_image_tag",
+        dependencies=[Depends(verify_secret), Depends(write_permission_required)],
+    )
+    async def batch_update_image_tag(req: BatchUpdateImageReq):
+        assert req.action in ["add", "remove"]
+        conn = DataBase.get_conn()
+        paths: List[str] = seq(req.img_paths).map(os.path.normpath).to_list()
+        update_extra_paths(conn)
+        for path in paths:
+            if not is_path_under_parents(path):
+                raise HTTPException(
+                    400,
+                    '当前文件不在搜索路径内，你可以将它添加到扫描路径再尝试。在右上角的"更多"里面'
+                    if locale == "zh"
+                    else 'The current file is not within the scan path. You can add it to the scan path and try again. In the top right corner, click on "More".',
+                )
+            img = DbImg.get(conn, path)
+            if not img:
+                if  DbImg.count(conn):
+                    update_image_data([os.path.dirname(path)])
+                    img = DbImg.get(conn, path)
+                else: 
+                    raise HTTPException(
+                        400,
+                        "你需要先通过图像搜索页生成索引"
+                        if locale == "zh"
+                        else "You need to generate an index through the image search page first.",
+                    )
+        try:            
+            for path in paths:
+                img = DbImg.get(conn, path)
+                if req.action == "add":
+                    ImageTag(img.id, req.tag_id).save_or_ignore(conn)
+                else:
+                    ImageTag.remove(conn, img.id, req.tag_id)
+        finally:
+            conn.commit()
+
     class AddCustomTagReq(BaseModel):
         tag_name: str
 

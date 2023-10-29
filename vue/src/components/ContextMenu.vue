@@ -12,6 +12,7 @@ const props = defineProps<{
   idx: number,
   selectedTag: Tag[],
   disableDelete?: boolean
+  isSelectedMutilFiles?: boolean
 }>()
 const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
@@ -49,7 +50,17 @@ const tags = computed(() => {
         <a-menu-item key="send2BatchDownload">{{ $t('sendToBatchDownload') }}</a-menu-item>
         <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
         <a-menu-divider />
-        <a-sub-menu key="toggle-tag" :title="$t('toggleTag')">
+        <template v-if="isSelectedMutilFiles">
+          <a-sub-menu key="batch-add-tag" :title="$t('batchAddTag')">
+            <a-menu-item v-for="tag in tags" :key="`batch-add-tag-${tag.id}`">{{ tag.name }}
+            </a-menu-item>
+          </a-sub-menu>
+          <a-sub-menu key="batch-remove-tag" :title="$t('batchRemoveTag')">
+            <a-menu-item v-for="tag in tags" :key="`batch-remove-tag-${tag.id}`">{{ tag.name }}
+            </a-menu-item>
+          </a-sub-menu>
+        </template>
+        <a-sub-menu v-else key="toggle-tag" :title="$t('toggleTag')">
           <a-menu-item v-for="tag in tags" :key="`toggle-tag-${tag.id}`">{{ tag.name }} <star-filled
               v-if="tag.selected" /><star-outlined v-else />
           </a-menu-item>

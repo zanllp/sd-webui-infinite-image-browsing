@@ -340,6 +340,14 @@ class ImageTag:
                 "INSERT INTO image_tag (image_id, tag_id) VALUES (?, ?)",
                 (self.image_id, self.tag_id),
             )
+    
+
+    def save_or_ignore(self, conn):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                "INSERT OR IGNORE INTO image_tag (image_id, tag_id) VALUES (?, ?)",
+                (self.image_id, self.tag_id),
+            )
 
     @classmethod
     def get_tags_for_image(
