@@ -201,7 +201,8 @@ watch(
               :full-screen-preview-image-url="sortedFiles[previewIdx] ? toRawFileUrl(sortedFiles[previewIdx]) : ''"
               v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :cell-width="cellWidth"
               @file-item-click="onFileItemClick" @dragstart="onFileDragStart" @dragend="onFileDragEnd"
-              @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick" />
+              @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick"
+              :is-selected-mutil-files="multiSelectedIdxs.length > 1" />
           </template>
           <template v-if="props.walkModePath" #after>
             <div style="padding: 16px 0 32px;">

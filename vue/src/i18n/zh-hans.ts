@@ -1,4 +1,6 @@
 export const zhHans = {
+  batchAddTag: '批量添加Tag',
+  batchRemoveTag: '批量移除Tag',
   errorOccurred: '发生了个错误',
   useThumbnailPreview: '使用缩略图预览',
   gridThumbnailWidth: '网格缩略图宽度',

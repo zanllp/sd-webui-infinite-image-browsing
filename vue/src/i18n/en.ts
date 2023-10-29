@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  batchAddTag: 'Batch Add Tag',
+  batchRemoveTag: 'Batch Remove Tag',
   imageCompareTips:
     'When dragging files, this panel will also appear, so you don\'t need to open the "Image Comparison" feature separately.',
   dragToResizePanel: 'Drag to resize the panel',

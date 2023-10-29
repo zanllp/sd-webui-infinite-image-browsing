@@ -25,6 +25,7 @@ const props = withDefaults(
     fullScreenPreviewImageUrl?: string
     enableRightClickMenu?: boolean,
     enableCloseIcon?: boolean
+    isSelectedMutilFiles?: boolean
   }>(),
   { selected: false, enableRightClickMenu: true, enableCloseIcon: false }
 )
@@ -82,7 +83,8 @@ const taggleLikeTag = () => {
             </div>
             <template #overlay>
               <context-menu :file="file" :idx="idx" :selected-tag="customTags"
-                @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)" />
+                @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)"
+                :is-selected-mutil-files="isSelectedMutilFiles" />
             </template>
           </a-dropdown>
           <a-dropdown v-if="file.type === 'file'">
@@ -144,7 +146,8 @@ const taggleLikeTag = () => {
     </li>
     <template #overlay>
       <context-menu :file="file" :idx="idx" :selected-tag="customTags" v-if="enableRightClickMenu"
-        @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)" />
+        @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)"
+        :is-selected-mutil-files="isSelectedMutilFiles" />
     </template>
   </a-dropdown>
 </template>
