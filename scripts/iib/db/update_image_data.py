@@ -48,7 +48,7 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
         tag_incr_count_rec[img_tag.tag_id] = (
             tag_incr_count_rec.get(img_tag.tag_id, 0) + 1
         )
-        img_tag.save(conn)  # 原先用来处理一些意外，但是写的正确完全没问题,去掉了try catch
+        img_tag.save_or_ignore(conn)  # 原先用来处理一些意外，但是写的正确完全没问题,去掉了try catch
 
     # 递归处理每个文件夹
     def process_folder(folder_path: str):
