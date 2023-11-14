@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: IIBI18nMap = {
+  searchScope: '搜尋範圍',
+  specifiedSearchFolder: '指定搜尋的資料夾，使用逗號或換行分割多個',
   batchAddTag: '批量添加Tag',
   batchRemoveTag: '批量移除Tag',
   errorOccurred: '發生了個錯誤',

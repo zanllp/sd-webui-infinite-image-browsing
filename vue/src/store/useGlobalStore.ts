@@ -40,7 +40,12 @@ export interface FileTransferTabPane extends TabPaneBase {
   stackKey?: string
 }
 
-export type TabPane = FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane | ImgSliTabPane
+export interface TagSearchTabPane extends TabPaneBase {
+  type: 'tag-search'
+  searchScope?: string
+}
+
+export type TabPane = FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane | ImgSliTabPane | TagSearchTabPane
 
 /**
  * This interface represents a tab, which contains an array of panes, an ID, and a key

@@ -1,4 +1,4 @@
-import { useGlobalStore, type FileTransferTabPane, type Shortcut } from '@/store/useGlobalStore'
+import { useGlobalStore, type FileTransferTabPane, type Shortcut, type TagSearchTabPane  } from '@/store/useGlobalStore'
 import { useImgSliStore } from '@/store/useImgSli'
 import { onLongPress, useElementSize, useMouseInElement } from '@vueuse/core'
 import { ref, computed, watch, onMounted, h, reactive } from 'vue'
@@ -541,6 +541,19 @@ export function useLocation () {
     const url = `${baseUrl}?${params.toString()}`
     copy2clipboardI18n(url, t('copyLocationUrlSuccessMsg'))
   }
+
+  const searchInCurrentDir = () => {
+    const tab = global.tabList[props.value.tabIdx]
+    const pane: TagSearchTabPane  = {
+      type: 'tag-search',
+      key: uniqueId(),
+      searchScope: currLocation.value,
+      name: t('imgSearch'),
+    }
+    tab.panes.push(pane)
+    tab.key = pane.key
+  }
+
   const selectAll = () => eventEmitter.value.emit('selectAll')
 
   const onCreateFloderBtnClick = async () => {
@@ -587,7 +600,8 @@ export function useLocation () {
     quickMoveTo,
     onCreateFloderBtnClick,
     onWalkBtnClick,
-    showWalkButton
+    showWalkButton,
+    searchInCurrentDir
   }
 }
 

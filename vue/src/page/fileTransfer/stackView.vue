@@ -50,7 +50,7 @@ const {
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, quickMoveTo,
   addToSearchScanPathAndQuickMove, searchPathInfo, locInputValue, isLocationEditing,
   onLocEditEnter, onEditBtnClick, share, selectAll, onCreateFloderBtnClick, onWalkBtnClick,
-  showWalkButton
+  showWalkButton, searchInCurrentDir
 } = useLocation()
 const {
   gridItems,
@@ -134,6 +134,7 @@ watch(
         </div>
         <div class="actions">
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
+          <a class="opt" @click.prevent="searchInCurrentDir"> {{ $t('search') }} </a>
           <a class="opt" @click.prevent="onWalkBtnClick" v-if="showWalkButton"> Walk </a>
           <a class="opt" @click.prevent.stop="selectAll"> {{ $t('selectAll') }} </a>
           <a class="opt" @click.prevent="share" v-if="!isTauri"> {{ $t('share') }} </a>

@@ -1,6 +1,6 @@
 from contextlib import closing
 from typing import Dict, List
-from scripts.iib.db.datamodel import Image as DbImg, Tag, ImageTag, DataBase, Floder
+from scripts.iib.db.datamodel import Image as DbImg, Tag, ImageTag, DataBase, Folder
 import os
 from PIL import Image
 from scripts.iib.tool import (
@@ -52,7 +52,7 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
 
     # 递归处理每个文件夹
     def process_folder(folder_path: str):
-        if not is_rebuild and not Floder.check_need_update(conn, folder_path):
+        if not is_rebuild and not Folder.check_need_update(conn, folder_path):
             return
         print(f"Processing folder: {folder_path}")
         for filename in os.listdir(folder_path):
@@ -124,7 +124,7 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
                 # neg暂时跳过感觉个没人会搜索这个
 
         # 提交对数据库的更改
-        Floder.update_modified_date_or_create(conn, folder_path)
+        Folder.update_modified_date_or_create(conn, folder_path)
         conn.commit()
 
     for dir in search_dirs:

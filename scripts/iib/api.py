@@ -42,7 +42,7 @@ from scripts.iib.db.datamodel import (
     ExtraPathType,
     Image as DbImg,
     Tag,
-    Floder,
+    Folder,
     ImageTag,
     ExtraPath,
     FileInfoDict,
@@ -351,7 +351,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 raise HTTPException(400, detail=error_msg)
 
     @app.get(pre + "/files", dependencies=[Depends(verify_secret)])
-    async def get_target_floder_files(folder_path: str):
+    async def get_target_folder_files(folder_path: str):
         files: List[FileInfoDict] = []
         try:
             if is_win and folder_path == "/":
@@ -562,7 +562,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         conn = DataBase.get_conn()
         img_count = DbImg.count(conn)
         tags = Tag.get_all(conn)
-        expired_dirs = Floder.get_expired_dirs(conn)
+        expired_dirs = Folder.get_expired_dirs(conn)
         return {
             "img_count": img_count,
             "tags": tags,
@@ -573,7 +573,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     @app.get(db_pre + "/expired_dirs", dependencies=[Depends(verify_secret)])
     async def get_db_expired():
         conn = DataBase.get_conn()
-        expired_dirs = Floder.get_expired_dirs(conn)
+        expired_dirs = Folder.get_expired_dirs(conn)
         return {
             "expired": len(expired_dirs) != 0,
             "expired_dirs": expired_dirs,
@@ -590,7 +590,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             img_count = DbImg.count(conn)
             update_extra_paths(conn)
             dirs = (
-                get_img_search_dirs() if img_count == 0 else Floder.get_expired_dirs(conn)
+                get_img_search_dirs() if img_count == 0 else Folder.get_expired_dirs(conn)
             ) + mem["extra_paths"]
 
             update_image_data(dirs)
@@ -602,6 +602,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         or_tags: List[int]
         not_tags: List[int]
         cursor: str
+        folder_paths: List[str] = None, 
         size: Optional[int] = 200
 
     @app.post(db_pre + "/match_images_by_tags", dependencies=[Depends(verify_secret)])
@@ -611,6 +612,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             conn=conn,
             tag_dict={"and": req.and_tags, "or": req.or_tags, "not": req.not_tags},
             cursor=req.cursor,
+            folder_paths=normalize_paths(req.folder_paths, os.getcwd()),
             limit=req.size
         )
         return {
