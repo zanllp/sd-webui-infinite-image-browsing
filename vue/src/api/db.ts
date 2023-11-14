@@ -36,11 +36,13 @@ export interface MatchImageByTagsReq {
   and_tags: number[]
   or_tags: number[]
   not_tags: number[]
+  folder_paths_str?: string
 }
 
 export const getImagesByTags = async (req: MatchImageByTagsReq, cursor: string) => {
   const resp = await axiosInst.value.post('/db/match_images_by_tags', {
     ...req,
+    folder_paths: (req.folder_paths_str ?? '').split(/,|\n/).map(v => v.trim()).filter(v => v),
     cursor
   })
   return resp.data as {

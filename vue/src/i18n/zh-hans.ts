@@ -1,4 +1,6 @@
 export const zhHans = {
+  searchScope: '搜索范围',
+  specifiedSearchFolder: '指定搜索的文件夹，使用逗号或者换行分割多个',
   batchAddTag: '批量添加Tag',
   batchRemoveTag: '批量移除Tag',
   errorOccurred: '发生了个错误',

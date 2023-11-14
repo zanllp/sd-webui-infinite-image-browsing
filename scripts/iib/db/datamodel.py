@@ -8,12 +8,13 @@ from scripts.iib.tool import (
     tags_translate,
     is_dev,
     find,
-    unique_by
+    unique_by,
 )
 from contextlib import closing
 import os
 import threading
 import re
+
 
 class FileInfoDict(TypedDict):
     type: str
@@ -24,12 +25,13 @@ class FileInfoDict(TypedDict):
     created_time: float
     fullpath: str
 
+
 class Cursor:
-    def __init__(self, has_next = True, next = ''):
+    def __init__(self, has_next=True, next=""):
         self.has_next = has_next
         self.next = next
 
-    
+
 class DataBase:
     local = threading.local()
 
@@ -47,23 +49,25 @@ class DataBase:
         else:
             conn = clz.init()
             clz.local.conn = conn
-            
+
             return conn
-    
+
     @classmethod
     def init(clz):
         # 创建连接并打开数据库
-        conn = connect(clz.path if os.path.isabs(clz.path) else os.path.join(cwd, clz.path))
-        
+        conn = connect(
+            clz.path if os.path.isabs(clz.path) else os.path.join(cwd, clz.path)
+        )
+
         def regexp(expr, item):
             if not isinstance(item, str):
                 return False
             reg = re.compile(expr, flags=re.IGNORECASE | re.MULTILINE | re.DOTALL)
             return reg.search(item) is not None
-        
-        conn.create_function('regexp', 2, regexp)
-        try:            
-            Floder.create_table(conn)
+
+        conn.create_function("regexp", 2, regexp)
+        try:
+            Folder.create_table(conn)
             ImageTag.create_table(conn)
             Tag.create_table(conn)
             Image.create_table(conn)
@@ -108,10 +112,7 @@ class Image:
     def update_path(self, conn: Connection, new_path: str):
         self.path = os.path.normpath(new_path)
         with closing(conn.cursor()) as cur:
-            cur.execute(
-                "UPDATE image SET path = ? WHERE id = ?",
-                (self.path, self.id)
-            )
+            cur.execute("UPDATE image SET path = ? WHERE id = ?", (self.path, self.id))
 
     @classmethod
     def get(cls, conn: Connection, id_or_path):
@@ -181,20 +182,27 @@ class Image:
 
     @classmethod
     def safe_batch_remove(cls, conn: Connection, image_ids: List[int]) -> None:
-        if not(image_ids):
+        if not (image_ids):
             return
         with closing(conn.cursor()) as cur:
             try:
                 placeholders = ",".join("?" * len(image_ids))
-                cur.execute(f"DELETE FROM image_tag WHERE image_id IN ({placeholders})", image_ids)
-                cur.execute(f"DELETE FROM image WHERE id IN ({placeholders})", image_ids)
+                cur.execute(
+                    f"DELETE FROM image_tag WHERE image_id IN ({placeholders})",
+                    image_ids,
+                )
+                cur.execute(
+                    f"DELETE FROM image WHERE id IN ({placeholders})", image_ids
+                )
             except BaseException as e:
                 print(e)
             finally:
                 conn.commit()
 
     @classmethod
-    def find_by_substring(cls, conn: Connection, substring: str, limit: int = 500, cursor = '', regexp = '') -> tuple[List["Image"], Cursor]:
+    def find_by_substring(
+        cls, conn: Connection, substring: str, limit: int = 500, cursor="", regexp=""
+    ) -> tuple[List["Image"], Cursor]:
         api_cur = Cursor()
         with closing(conn.cursor()) as cur:
             if regexp:
@@ -203,18 +211,25 @@ class Image:
                     cur.execute(sql, (regexp, cursor, limit))
                 else:
                     sql = "SELECT * FROM image WHERE (exif REGEXP ?) ORDER BY date DESC LIMIT ?"
-                    cur.execute(sql, (regexp, limit,))
+                    cur.execute(
+                        sql,
+                        (
+                            regexp,
+                            limit,
+                        ),
+                    )
             else:
                 if cursor:
                     sql = f"SELECT * FROM image WHERE (path LIKE ? OR exif LIKE ?) AND (date < ?) ORDER BY date DESC LIMIT ?"
-                    cur.execute(sql, (f"%{substring}%", f"%{substring}%", cursor, limit))
+                    cur.execute(
+                        sql, (f"%{substring}%", f"%{substring}%", cursor, limit)
+                    )
                 else:
                     sql = "SELECT * FROM image WHERE path LIKE ? OR exif LIKE ? ORDER BY date DESC LIMIT ?"
                     cur.execute(sql, (f"%{substring}%", f"%{substring}%", limit))
 
-                
             rows = cur.fetchall()
-        
+
         api_cur.has_next = len(rows) >= limit
         images = []
         deleted_ids = []
@@ -222,13 +237,13 @@ class Image:
             img = cls.from_row(row)
             if os.path.exists(img.path):
                 images.append(img)
-            else: 
+            else:
                 deleted_ids.append(img.id)
-        cls.safe_batch_remove(conn, deleted_ids)        
+        cls.safe_batch_remove(conn, deleted_ids)
         if images:
             api_cur.next = str(images[-1].date)
         return images, api_cur
-    
+
 
 class Tag:
     def __init__(self, name: str, score: int, type: str, count=0):
@@ -324,8 +339,6 @@ class Tag:
                 VALUES ("like", 0, "custom", 0);
                 """
             )
-    
-
 
 
 class ImageTag:
@@ -340,7 +353,6 @@ class ImageTag:
                 "INSERT INTO image_tag (image_id, tag_id) VALUES (?, ?)",
                 (self.image_id, self.tag_id),
             )
-    
 
     def save_or_ignore(self, conn):
         with closing(conn.cursor()) as cur:
@@ -398,7 +410,12 @@ class ImageTag:
 
     @classmethod
     def get_images_by_tags(
-        cls, conn: Connection, tag_dict: Dict[str, List[int]], limit: int = 500, cursor = ''
+        cls,
+        conn: Connection,
+        tag_dict: Dict[str, List[int]],
+        limit: int = 500,
+        cursor="",
+        folder_paths: List[str] = None,
     ) -> tuple[List[Image], Cursor]:
         query = """
             SELECT image.id, image.path, image.size,image.date
@@ -410,7 +427,7 @@ class ImageTag:
         params = []
 
         for operator, tag_ids in tag_dict.items():
-            if operator == "and":
+            if operator == "and" and tag_dict["and"]:
                 where_clauses.append(
                     "tag_id IN ({})".format(",".join("?" * len(tag_ids)))
                 )
@@ -435,19 +452,27 @@ class ImageTag:
   GROUP BY image_id
   HAVING COUNT(DISTINCT tag_id) >= 1
 )
-)""".format(",".join("?" * len(tag_ids)))
+)""".format(
+                        ",".join("?" * len(tag_ids))
+                    )
                 )
-                params.extend(tag_ids)
+                params.extend(tag_ids)    
+
+        if folder_paths:
+            folder_clauses = []
+            for folder_path in folder_paths:
+                folder_clauses.append("(image.path LIKE ?)")
+                params.append(os.path.join(folder_path, "%"))
+                print(folder_path)
+            where_clauses.append("(" + " OR ".join(folder_clauses) + ")")
+
         if cursor:
             where_clauses.append("(image.date < ?)")
             params.append(cursor)
-
         if where_clauses:
             query += " WHERE " + " AND ".join(where_clauses)
-
         query += " GROUP BY image.id"
-
-        if "and" in tag_dict:
+        if "and" in tag_dict and tag_dict['and']:
             query += " HAVING COUNT(DISTINCT tag_id) = ?"
             params.append(len(tag_dict["and"]))
 
@@ -457,22 +482,24 @@ class ImageTag:
         with closing(conn.cursor()) as cur:
             cur.execute(query, params)
             rows = cur.fetchall()
-            images = []            
+            images = []
             deleted_ids = []
             for row in rows:
                 img = Image(id=row[0], path=row[1], size=row[2], date=row[3])
                 if os.path.exists(img.path):
                     images.append(img)
-                else: 
+                else:
                     deleted_ids.append(img.id)
             Image.safe_batch_remove(conn, deleted_ids)
             api_cur.has_next = len(rows) >= limit
             if images:
                 api_cur.next = str(images[-1].date)
             return images, api_cur
-        
+
     @classmethod
-    def batch_get_tags_by_path(cls, conn: Connection, paths: List[str], type = "custom") -> Dict[str, List[Tag]]:
+    def batch_get_tags_by_path(
+        cls, conn: Connection, paths: List[str], type="custom"
+    ) -> Dict[str, List[Tag]]:
         if not paths:
             return {}
         tag_dict = {}
@@ -494,7 +521,7 @@ class ImageTag:
                 else:
                     tag_dict[path] = [tag]
         return tag_dict
-    
+
     @classmethod
     def remove(
         cls,
@@ -516,7 +543,7 @@ class ImageTag:
             conn.commit()
 
 
-class Floder:
+class Folder:
     def __init__(self, id: int, path: str, modified_date: str):
         self.id = id
         self.path = path
@@ -570,7 +597,7 @@ class Floder:
             result_set = cur.fetchall()
             extra_paths = ExtraPath.get_extra_paths(conn)
             for ep in extra_paths:
-                if not find(result_set, lambda x : x[1] == ep.path):
+                if not find(result_set, lambda x: x[1] == ep.path):
                     dirs.append(ep.path)
             for row in result_set:
                 folder_path = row[1]
@@ -580,17 +607,19 @@ class Floder:
                 ):
                     dirs.append(folder_path)
             return unique_by(dirs, os.path.normpath)
-        
+
     @classmethod
     def remove_folder(cls, conn: Connection, folder_path: str):
         folder_path = os.path.normpath(folder_path)
         with closing(conn.cursor()) as cur:
             cur.execute("DELETE FROM folders WHERE path = ?", (folder_path,))
 
+
 class ExtraPathType(Enum):
-    scanned = 'scanned'
-    walk = 'walk'
-    cli_only = 'cli_access_only'
+    scanned = "scanned"
+    walk = "walk"
+    cli_only = "cli_access_only"
+
 
 class ExtraPath:
     def __init__(self, path: str, type: Optional[ExtraPathType] = None):
@@ -607,7 +636,9 @@ class ExtraPath:
             )
 
     @classmethod
-    def get_extra_paths(cls, conn, type: Optional[ExtraPathType] = None) -> List['ExtraPath']:
+    def get_extra_paths(
+        cls, conn, type: Optional[ExtraPathType] = None
+    ) -> List["ExtraPath"]:
         query = "SELECT * FROM extra_path"
         params = ()
         if type:
@@ -626,13 +657,19 @@ class ExtraPath:
             return paths
 
     @classmethod
-    def remove(cls, conn, path: str, type: Optional[ExtraPathType] = None, img_search_dirs: Optional[List[str]] = []):
+    def remove(
+        cls,
+        conn,
+        path: str,
+        type: Optional[ExtraPathType] = None,
+        img_search_dirs: Optional[List[str]] = [],
+    ):
         with closing(conn.cursor()) as cur:
             sql = "DELETE FROM extra_path WHERE path = ?"
             path = os.path.normpath(path)
             cur.execute(sql, (path,))
             if path not in img_search_dirs:
-                Floder.remove_folder(conn, path)
+                Folder.remove_folder(conn, path)
             conn.commit()
 
     @classmethod

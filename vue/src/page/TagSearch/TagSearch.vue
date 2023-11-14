@@ -19,13 +19,13 @@ import { Modal, message } from 'ant-design-vue'
 import { t } from '@/i18n'
 import { makeAsyncFunctionSingle } from '@/util'
 
-const props = defineProps<{ tabIdx: number; paneIdx: number }>()
+const props = defineProps<{ tabIdx: number; paneIdx: number, searchScope?: string }>()
 const global = useGlobalStore()
 const queue = createReactiveQueue()
 const loading = computed(() => !queue.isIdle)
 const info = ref<DataBaseBasicInfo>()
 
-const matchIds = ref<MatchImageByTagsReq>({ and_tags: [], or_tags: [], not_tags: [] })
+const matchIds = ref<MatchImageByTagsReq>({ and_tags: [], or_tags: [], not_tags: [], folder_paths_str: props.searchScope })
 const tags = computed(() =>
   info.value ? info.value.tags.slice().sort((a, b) => b.count - a.count) : []
 )
@@ -55,7 +55,10 @@ onMounted(async () => {
   info.value = await getDbBasicInfo()
   openedKeys.value = (classifyTags.value.map(v => v[0]))
   if (info.value.img_count && info.value.expired) {
-    onUpdateBtnClick()
+    await onUpdateBtnClick()
+  }
+  if (props.searchScope) {
+    query()
   }
 })
 
@@ -147,7 +150,7 @@ const conv = {
           <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary"
             v-if="info.expired || !info.img_count">
             {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
-          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!matchIds.and_tags.length">{{
+          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" >{{
             $t('search') }}
           </AButton>
         </div>
@@ -160,6 +163,10 @@ const conv = {
           <div class="form-name">{{ $t('exclude') }}</div>
           <SearchSelect :conv="conv" mode="multiple" style="width: 100%" :options="tags" v-model:value="matchIds.not_tags"
             :disabled="!tags.length" :placeholder="$t('selectExcludeTag')" />
+        </div>
+        <div class="search-bar">
+          <div class="form-name">{{ $t('searchScope') }}</div>
+          <ATextarea auto-size v-model:value="matchIds.folder_paths_str" :placeholder="$t('specifiedSearchFolder')"/>
         </div>
       </div>
 

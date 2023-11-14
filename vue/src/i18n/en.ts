@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  searchScope: 'Search Scope',
+  specifiedSearchFolder: 'Specify the folders to search, separate multiple folders with commas or line breaks',
   batchAddTag: 'Batch Add Tag',
   batchRemoveTag: 'Batch Remove Tag',
   imageCompareTips:
