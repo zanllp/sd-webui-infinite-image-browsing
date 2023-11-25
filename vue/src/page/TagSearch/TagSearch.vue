@@ -166,7 +166,7 @@ const conv = {
         </div>
         <div class="search-bar">
           <div class="form-name">{{ $t('searchScope') }}</div>
-          <ATextarea auto-size v-model:value="matchIds.folder_paths_str" :placeholder="$t('specifiedSearchFolder')"/>
+          <ATextarea :auto-size="{ maxRows: 8 }" v-model:value="matchIds.folder_paths_str" :placeholder="$t('specifiedSearchFolder')"/>
         </div>
       </div>
 

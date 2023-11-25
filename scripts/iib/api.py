@@ -46,6 +46,7 @@ from scripts.iib.db.datamodel import (
     ImageTag,
     ExtraPath,
     FileInfoDict,
+    Cursor
 )
 from scripts.iib.db.update_image_data import update_image_data, rebuild_image_index
 from scripts.iib.logger import logger
@@ -597,22 +598,51 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         finally:
             DataBase._initing = False
 
+    class SearchBySubstrReq(BaseModel):
+        surstr: str
+        cursor: str
+        regexp: str
+        folder_paths: List[str] = None
+        size: Optional[int] = 200
+
+    @app.post(db_pre + "/search_by_substr", dependencies=[Depends(verify_secret)])
+    async def search_by_substr(req: SearchBySubstrReq):
+        conn = DataBase.get_conn()
+        folder_paths=normalize_paths(req.folder_paths, os.getcwd())
+        if(not folder_paths and req.folder_paths):
+            return { "files": [], "cursor": Cursor(has_next=False) }
+        imgs, next_cursor = DbImg.find_by_substring(
+            conn=conn, 
+            substring=req.surstr, 
+            cursor=req.cursor, 
+            limit=req.size,
+            regexp=req.regexp,
+            folder_paths=folder_paths
+        )
+        return {
+            "files": filter_allowed_files([x.to_file_info() for x in imgs]),
+            "cursor": next_cursor
+        }
+    
     class MatchImagesByTagsReq(BaseModel):
         and_tags: List[int]
         or_tags: List[int]
         not_tags: List[int]
         cursor: str
-        folder_paths: List[str] = None, 
+        folder_paths: List[str] = None
         size: Optional[int] = 200
 
     @app.post(db_pre + "/match_images_by_tags", dependencies=[Depends(verify_secret)])
     async def match_image_by_tags(req: MatchImagesByTagsReq):
         conn = DataBase.get_conn()
+        folder_paths=normalize_paths(req.folder_paths, os.getcwd())
+        if(not folder_paths and req.folder_paths):
+            return { "files": [], "cursor": Cursor(has_next=False) }
         imgs, next_cursor = ImageTag.get_images_by_tags(
             conn=conn,
             tag_dict={"and": req.and_tags, "or": req.or_tags, "not": req.not_tags},
             cursor=req.cursor,
-            folder_paths=normalize_paths(req.folder_paths, os.getcwd()),
+            folder_paths=folder_paths,
             limit=req.size
         )
         return {
@@ -767,20 +797,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         conn = DataBase.get_conn()
         ImageTag.remove(conn, image_id=req.img_id, tag_id=req.tag_id)
 
-    @app.get(db_pre + "/search_by_substr", dependencies=[Depends(verify_secret)])
-    async def search_by_substr(substr: str = '', cursor: str = '', size = 200, regexp: str = ''):
-        conn = DataBase.get_conn()
-        imgs, next_cursor = DbImg.find_by_substring(
-            conn=conn, 
-            substring=substr, 
-            cursor=cursor, 
-            limit=size,
-            regexp=regexp
-        )
-        return {
-            "files": filter_allowed_files([x.to_file_info() for x in imgs]),
-            "cursor": next_cursor
-        }
+
 
 
     class ExtraPathModel(BaseModel):

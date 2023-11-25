@@ -74,8 +74,17 @@ export const getImageSelectedCustomTag = async (path: string) => {
   return resp.data as Tag[]
 }
 
-export const getImagesBySubstr = async (substr: string, cursor: string, regexp?: string) => {
-  const resp = await axiosInst.value.get('/db/search_by_substr', { params: { substr,cursor,regexp } })
+export interface SearchBySubstrReq {
+  surstr: string;
+  cursor: string;
+  regexp: string;
+  folder_paths?: string[];
+  size?: number;
+}
+
+
+export const getImagesBySubstr = async (req: SearchBySubstrReq) => {
+  const resp = await axiosInst.value.post('/db/search_by_substr', req)
   return resp.data as {
     files: FileNodeInfo[],
     cursor: PageCursor

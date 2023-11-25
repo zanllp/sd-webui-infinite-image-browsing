@@ -201,33 +201,35 @@ class Image:
 
     @classmethod
     def find_by_substring(
-        cls, conn: Connection, substring: str, limit: int = 500, cursor="", regexp=""
+        cls, conn: Connection, substring: str, limit: int = 500, cursor="", regexp="",
+        folder_paths: List[str] = []
     ) -> tuple[List["Image"], Cursor]:
         api_cur = Cursor()
         with closing(conn.cursor()) as cur:
+            params = []
+            where_clauses = []
             if regexp:
-                if cursor:
-                    sql = f"SELECT * FROM image WHERE (exif REGEXP ?) and (date < ?) ORDER BY date DESC LIMIT ?"
-                    cur.execute(sql, (regexp, cursor, limit))
-                else:
-                    sql = "SELECT * FROM image WHERE (exif REGEXP ?) ORDER BY date DESC LIMIT ?"
-                    cur.execute(
-                        sql,
-                        (
-                            regexp,
-                            limit,
-                        ),
-                    )
+                where_clauses.append("(exif REGEXP ?)")
+                params.append(regexp)
             else:
-                if cursor:
-                    sql = f"SELECT * FROM image WHERE (path LIKE ? OR exif LIKE ?) AND (date < ?) ORDER BY date DESC LIMIT ?"
-                    cur.execute(
-                        sql, (f"%{substring}%", f"%{substring}%", cursor, limit)
-                    )
-                else:
-                    sql = "SELECT * FROM image WHERE path LIKE ? OR exif LIKE ? ORDER BY date DESC LIMIT ?"
-                    cur.execute(sql, (f"%{substring}%", f"%{substring}%", limit))
-
+                where_clauses.append("(path LIKE ? OR exif LIKE ?)")
+                params.extend((f"%{substring}%", f"%{substring}%"))
+            if cursor:
+                where_clauses.append("(date < ?)")
+                params.append(cursor)
+            if folder_paths:
+                folder_clauses = []
+                for folder_path in folder_paths:
+                    folder_clauses.append("(image.path LIKE ?)")
+                    params.append(os.path.join(folder_path, "%"))
+                where_clauses.append("(" + " OR ".join(folder_clauses) + ")")
+            sql = "SELECT * FROM image"
+            if where_clauses:
+                sql += " WHERE "
+                sql += " AND ".join(where_clauses)
+            sql += " ORDER BY date DESC LIMIT ? "
+            params.append(limit)
+            cur.execute(sql, params)
             rows = cur.fetchall()
 
         api_cur.has_next = len(rows) >= limit

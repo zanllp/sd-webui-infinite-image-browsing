@@ -1,4 +1,4 @@
-import { useGlobalStore, type FileTransferTabPane, type Shortcut, type TagSearchTabPane  } from '@/store/useGlobalStore'
+import { useGlobalStore, type FileTransferTabPane, type Shortcut, type TagSearchTabPane, FuzzySearchTabPane  } from '@/store/useGlobalStore'
 import { useImgSliStore } from '@/store/useImgSli'
 import { onLongPress, useElementSize, useMouseInElement } from '@vueuse/core'
 import { ref, computed, watch, onMounted, h, reactive } from 'vue'
@@ -542,13 +542,13 @@ export function useLocation () {
     copy2clipboardI18n(url, t('copyLocationUrlSuccessMsg'))
   }
 
-  const searchInCurrentDir = () => {
+  const searchInCurrentDir = (type: (TagSearchTabPane|FuzzySearchTabPane)['type'] = 'tag-search') => {
     const tab = global.tabList[props.value.tabIdx]
-    const pane: TagSearchTabPane  = {
-      type: 'tag-search',
+    const pane  = {
+      type,
       key: uniqueId(),
       searchScope: currLocation.value,
-      name: t('imgSearch'),
+      name: t(type === 'tag-search' ? 'imgSearch' : 'fuzzy-search'),
     }
     tab.panes.push(pane)
     tab.key = pane.key

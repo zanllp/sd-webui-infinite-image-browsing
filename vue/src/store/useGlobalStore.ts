@@ -18,7 +18,7 @@ interface TabPaneBase {
 }
 
 interface OtherTabPane extends TabPaneBase {
-  type: 'empty' | 'global-setting' | 'tag-search' | 'fuzzy-search' | 'batch-download'
+  type: 'empty' | 'global-setting' | 'tag-search' |  'batch-download'
 }
 // logDetailId
 
@@ -45,7 +45,12 @@ export interface TagSearchTabPane extends TabPaneBase {
   searchScope?: string
 }
 
-export type TabPane = FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane | ImgSliTabPane | TagSearchTabPane
+export interface FuzzySearchTabPane extends TabPaneBase {
+  type: 'fuzzy-search'
+  searchScope?: string
+}
+
+export type TabPane = FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane | ImgSliTabPane | TagSearchTabPane | FuzzySearchTabPane
 
 /**
  * This interface represents a tab, which contains an array of panes, an ID, and a key
