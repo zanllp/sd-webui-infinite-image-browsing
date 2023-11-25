@@ -134,7 +134,22 @@ watch(
         </div>
         <div class="actions">
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
-          <a class="opt" @click.prevent="searchInCurrentDir"> {{ $t('search') }} </a>
+          <a-dropdown>
+            <a class="opt" @click.prevent>
+              {{ $t('search') }}
+              <down-outlined />
+            </a>
+            <template #overlay>
+              <a-menu>
+                <a-menu-item key="tag-search">
+                  <a @click.prevent="searchInCurrentDir('tag-search')">{{ $t('imgSearch') }}</a>
+                </a-menu-item> 
+                 <a-menu-item key="tag-search">
+                  <a @click.prevent="searchInCurrentDir('fuzzy-search')">{{ $t('fuzzy-search') }}</a>
+                </a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
           <a class="opt" @click.prevent="onWalkBtnClick" v-if="showWalkButton"> Walk </a>
           <a class="opt" @click.prevent.stop="selectAll"> {{ $t('selectAll') }} </a>
           <a class="opt" @click.prevent="share" v-if="!isTauri"> {{ $t('share') }} </a>

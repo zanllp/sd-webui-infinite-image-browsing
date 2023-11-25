@@ -5,7 +5,7 @@ import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 // @ts-ignore
 import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
 import { toRawFileUrl } from '@/util/file'
-import { getDbBasicInfo, getExpiredDirs, getImagesBySubstr, updateImageData, type DataBaseBasicInfo } from '@/api/db'
+import { getDbBasicInfo, getExpiredDirs, getImagesBySubstr, updateImageData, type DataBaseBasicInfo, SearchBySubstrReq } from '@/api/db'
 import { copy2clipboardI18n, makeAsyncFunctionSingle, useGlobalEventListen } from '@/util'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
 import { LeftCircleOutlined, RightCircleOutlined, regex } from '@/icon'
@@ -13,9 +13,19 @@ import { message } from 'ant-design-vue'
 import { t } from '@/i18n'
 import { createImageSearchIter, useImageSearch } from './hook'
 
+const props = defineProps<{ tabIdx: number; paneIdx: number, searchScope?: string }>()
 const isRegex = ref(false)
 const substr = ref('')
-const iter = createImageSearchIter(cursor => isRegex.value ? getImagesBySubstr('', cursor, substr.value) : getImagesBySubstr(substr.value, cursor))
+const folder_paths_str = ref(props.searchScope ?? '')
+const iter = createImageSearchIter(cursor => {
+  const req: SearchBySubstrReq = {
+    cursor,
+    regexp: isRegex.value ? substr.value : '',
+    surstr: !isRegex.value ? substr.value : '',
+    folder_paths: (folder_paths_str.value ?? '').split(/,|\n/).map(v => v.trim()).filter(v => v)
+  }
+  return getImagesBySubstr(req) 
+})
 const {
   queue,
   images,
@@ -46,7 +56,10 @@ const info = ref<DataBaseBasicInfo>()
 onMounted(async () => {
   info.value = await getDbBasicInfo()
   if (info.value.img_count && info.value.expired) {
-    onUpdateBtnClick()
+    await onUpdateBtnClick()
+  }
+  if (props.searchScope) {
+    await query()
   }
 })
 
@@ -89,9 +102,13 @@ const onRegexpClick = () => {
         title="Use Regular Expression"> <img :src="regex"></div>
       <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
         {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
-      <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" :disabled="!substr">{{
+      <AButton v-else type="primary" @click="query" :loading="!queue.isIdle || iter.loading" :disabled="!substr && !folder_paths_str">{{
         $t('search') }}
       </AButton>
+    </div>
+    <div class="search-bar last">
+      <div class="form-name">{{ $t('searchScope') }}</div>
+      <ATextarea :auto-size="{ maxRows: 8 }" v-model:value="folder_paths_str" :placeholder="$t('specifiedSearchFolder')"/>
     </div>
     <ASpin size="large" :spinning="!queue.isIdle">
       <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
@@ -153,8 +170,15 @@ const onRegexpClick = () => {
 }
 
 .search-bar {
-  padding: 8px;
+  padding: 8px 8px 0 8px;
+  &.last {
+    padding-bottom: 8px;
+  }
   display: flex;
+    .form-name {
+      flex-shrink: 0;
+      padding: 4px 8px;
+    }
 }
 
 .preview-switch {
