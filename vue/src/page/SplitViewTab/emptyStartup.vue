@@ -202,6 +202,7 @@ const restoreRecord = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .header h1 {
@@ -215,6 +216,7 @@ const restoreRecord = () => {
   margin-left: 16px;
   font-size: 14px;
   color: var(--zp-secondary);
+  flex-shrink: 0;
 }
 
 .last-record a {

@@ -107,7 +107,7 @@ watch(
         </ASkeleton>
       </AModal>
       <div class="location-bar">
-        <div v-if="props.walkModePath">
+        <div v-if="props.walkModePath" class="breadcrumb">
           <a-tooltip>
             <template #title>{{ $t('walk-mode-move-message') }}</template><a-breadcrumb style="flex: 1">
               <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx">
@@ -127,8 +127,8 @@ watch(
           </a-breadcrumb>
 
           <AButton size="small" v-if="isLocationEditing" @click="onLocEditEnter" type="primary">{{ $t('go') }}</AButton>
-          <div v-else style="margin-left: 8px;">
-            <a @click.prevent="copyLocation" style="margin-right: 4px;">{{ $t('copy') }}</a>
+          <div v-else class="location-act">
+            <a @click.prevent="copyLocation" class="copy">{{ $t('copy') }}</a>
             <a @click.prevent.stop="onEditBtnClick">{{ $t('edit') }}</a>
           </div>
         </div>
@@ -143,8 +143,8 @@ watch(
               <a-menu>
                 <a-menu-item key="tag-search">
                   <a @click.prevent="searchInCurrentDir('tag-search')">{{ $t('imgSearch') }}</a>
-                </a-menu-item> 
-                 <a-menu-item key="tag-search">
+                </a-menu-item>
+                <a-menu-item key="tag-search">
                   <a @click.prevent="searchInCurrentDir('fuzzy-search')">{{ $t('fuzzy-search') }}</a>
                 </a-menu-item>
               </a-menu>
@@ -266,6 +266,23 @@ watch(
   }
 }
 
+.location-act {
+  margin-left: 8px;
+
+  .copy {
+    margin-right: 4px;
+  }
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+
+    &>*, .copy {
+      margin: 2px;
+    }
+  }
+}
+
 .breadcrumb {
   display: flex;
   align-items: center;
@@ -273,12 +290,18 @@ watch(
   &>* {
     margin-right: 4px;
   }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    .ant-breadcrumb>* {
+      display: inline-block;
+    }
+  }
 }
 
 .container {
   background: var(--zp-secondary-background);
   height: var(--pane-max-height);
-
 }
 
 .location-bar {
@@ -289,10 +312,30 @@ watch(
   align-items: center;
   justify-content: space-between;
 
+  @media (max-width: 768px) {
+    flex-direction: column;
+
+    ::-webkit-scrollbar {
+      height: 2px; // 滚动条宽度
+      background-color: var(--zp-secondary-variant-background); // 滚动条背景颜色
+    }
+
+    .actions {
+      padding: 4px 0;
+      width: 100%;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+
+      &>* {
+        flex-shrink: 0;
+      }
+    }
+  }
+
   .actions {
     display: flex;
     align-items: center;
-
     flex-shrink: 0;
   }
 
@@ -318,5 +361,4 @@ watch(
   border: 4px;
   background: var(--zp-secondary-background);
   border: 1px solid var(--zp-border);
-}
-</style>
+}</style>
