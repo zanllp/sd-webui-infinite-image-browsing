@@ -8,6 +8,7 @@ import { t } from '@/i18n'
 import { cloneDeep } from 'lodash-es'
 import { useImgSliStore } from '@/store/useImgSli'
 import { addToExtraPath, onRemoveExtraPathClick } from './extraPathControlFunc'
+import actionContextMenu from './actionContextMenu.vue'
 
 const global = useGlobalStore()
 const imgsli = useImgSliStore()
@@ -19,7 +20,8 @@ const compCnMap: Partial<Record<TabPane['type'], string>> = {
   'global-setting': t('globalSettings'),
   'batch-download': t('batchDownload') + ' / ' + t('archive')
 }
-const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false) => {
+
+const createPane = (type: TabPane['type'], path?: string, walkMode = false) => {
   let pane: TabPane
   switch (type) {
     case 'tag-search-matched-image-grid':
@@ -41,8 +43,32 @@ const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false
         walkModePath: walkMode ? path : undefined
       }
   }
+  return pane
+}
+const openInCurrentTab = (type: TabPane['type'], path?: string, walkMode = false) => {
+  const pane = createPane(type, path, walkMode)
+  if (!pane) return
   const tab = global.tabList[props.tabIdx]
   tab.panes.splice(props.paneIdx, 1, pane)
+  tab.key = pane.key
+}
+
+const openInNewTab = (type: TabPane['type'], path?: string, walkMode = false) => {
+  const pane = createPane(type, path, walkMode)
+  if (!pane) return
+  const tab = global.tabList[props.tabIdx]
+  tab.panes.push(pane)
+}
+
+const openOnTheRight = (type: TabPane['type'], path?: string, walkMode = false) => {
+  const pane = createPane(type, path, walkMode)
+  if (!pane) return
+  let tab = global.tabList[props.tabIdx + 1]
+  if (!tab) {
+    tab = { panes: [], key: '', id: uniqueId() }
+    global.tabList[props.tabIdx + 1] = tab
+  }
+  tab.panes.push(pane)
   tab.key = pane.key
 }
 
@@ -111,7 +137,7 @@ const restoreRecord = () => {
       </template>
     </a-alert>
     <div class="content">
-      <div class="feature-item" >
+      <div class="feature-item">
         <h2>{{ $t('walkMode') }}</h2>
         <ul>
           <li @click="addToExtraPath('walk')" class="item" style="text-align: ;">
@@ -119,13 +145,16 @@ const restoreRecord = () => {
               <PlusOutlined /> {{ $t('add') }}
             </span>
           </li>
-          <li v-for="dir in walkModeSupportedDir" :key="dir.key" class="item rem"
-            @click.prevent="openInCurrentTab('local', dir.dir, true)">
-            <span class="text line-clamp-2">{{ dir.zh }}</span>
-            <AButton v-if="dir.can_delete" type="link" @click.stop="onRemoveExtraPathClick(dir.dir, 'walk')">{{
-              $t('remove') }}
-            </AButton>
-          </li>
+          <actionContextMenu v-for="dir in walkModeSupportedDir" :key="dir.key"
+            @open-in-new-tab="openInNewTab('local', dir.dir, true)"
+            @open-on-the-right="openOnTheRight('local', dir.dir, true)">
+            <li class="item rem" @click.prevent="openInCurrentTab('local', dir.dir, true)">
+              <span class="text line-clamp-2">{{ dir.zh }}</span>
+              <AButton v-if="dir.can_delete" type="link" @click.stop="onRemoveExtraPathClick(dir.dir, 'walk')">{{
+                $t('remove') }}
+              </AButton>
+            </li>
+          </actionContextMenu>
         </ul>
       </div>
       <div class="feature-item" v-if="global.quickMovePaths.length">
@@ -136,13 +165,15 @@ const restoreRecord = () => {
               <PlusOutlined /> {{ $t('add') }}
             </span>
           </li>
-          <li v-for="dir in global.quickMovePaths.filter(v => v.type !== 'walk')" :key="dir.key" class="item rem"
-            @click.prevent="openInCurrentTab('local', dir.dir)">
-            <span class="text line-clamp-2">{{ dir.zh }}</span>
-            <AButton v-if="dir.can_delete && dir.type == 'scanned'" type="link"
-              @click.stop="onRemoveExtraPathClick(dir.dir, 'scanned')">{{ $t('remove') }}
-            </AButton>
-          </li>
+          <actionContextMenu v-for="dir in global.quickMovePaths.filter(v => v.type !== 'walk')" :key="dir.key"
+            @open-in-new-tab="openInNewTab('local', dir.dir)" @open-on-the-right="openOnTheRight('local', dir.dir)">
+            <li class="item rem" @click.prevent="openInCurrentTab('local', dir.dir)">
+              <span class="text line-clamp-2">{{ dir.zh }}</span>
+              <AButton v-if="dir.can_delete && dir.type == 'scanned'" type="link"
+                @click.stop="onRemoveExtraPathClick(dir.dir, 'scanned')">{{ $t('remove') }}
+              </AButton>
+            </li>
+          </actionContextMenu>
         </ul>
       </div>
       <div class="feature-item">
@@ -299,4 +330,5 @@ const restoreRecord = () => {
   flex: 1;
   font-size: 16px;
   word-break: break-all;
-}</style>
+}
+</style>
