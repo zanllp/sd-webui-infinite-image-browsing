@@ -205,7 +205,7 @@ export const en: IIBI18nMap = {
   workingFolder: 'working folder',
   lang: 'Language',
   langChangeReload: 'Reload: Some changes may require a reload to take effect',
-  openOnTheRight: 'Open on the right',
+  openOnTheRight: 'Open to the Side',
   openInNewTab: 'Open in a new tab',
   openWithWalkMode: 'Open with Walk Mode',
   longPressOpenContextMenu: 'Support long press to open right-click menu',
