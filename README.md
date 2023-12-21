@@ -120,7 +120,8 @@ If you, like me, don't need to view the generation information, you can choose t
 ## Image comparison
 
 ![ezgif com-video-to-gif](https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/4023317b-0b2d-41a3-8155-c4862eb43846)
-
+## Transfer files between different tab panes.
+https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/e631e3c3-1cbf-49bc-8577-f2963a6c9e4d
 ### Right-click menu
 <img width="536" alt="image" src="https://user-images.githubusercontent.com/25872019/232162244-e728d510-b6c6-45e6-afb3-872bd67db05b.png">
 
