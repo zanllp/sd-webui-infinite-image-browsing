@@ -32,7 +32,7 @@ from fastapi.staticfiles import StaticFiles
 import asyncio
 from typing import List, Optional
 from pydantic import BaseModel
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from PIL import Image
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -67,6 +67,7 @@ WRITEABLE_PERMISSIONS = ["read-write", "write-only"]
 is_api_writeable = not (os.getenv("IIB_ACCESS_CONTROL_PERMISSION")) or (
     os.getenv("IIB_ACCESS_CONTROL_PERMISSION") in WRITEABLE_PERMISSIONS
 )
+IIB_DEBUG=False
 
 
 async def write_permission_required():
@@ -81,7 +82,7 @@ async def write_permission_required():
 async def verify_secret(request: Request):
     if not secret_key:
         if is_secret_key_required:
-            raise HTTPException(status_code=400, detail={ "type": "secret_key_required" })
+            raise HTTPException(status_code=400, detail={"type": "secret_key_required"})
         return
     token = request.cookies.get("IIB_S")
     if not token:
@@ -96,6 +97,41 @@ async def verify_secret(request: Request):
 
 def infinite_image_browsing_api(app: FastAPI, **kwargs):
     pre = "/infinite_image_browsing"
+
+    if IIB_DEBUG:
+        @app.exception_handler(Exception)
+        async def exception_handler(request: Request, exc: Exception):
+            error_msg = f"An exception occurred while processing {request.method} {request.url}: {exc}"
+            logger.error(error_msg)
+
+            return JSONResponse(
+                status_code=500, content={"message": "Internal Server Error"}
+            )
+        @app.middleware("http")
+        async def log_requests(request: Request, call_next):
+            path = request.url.path
+            if (
+                path.find("infinite_image_browsing/image-thumbnail") == -1
+                and path.find("infinite_image_browsing/file") == -1
+                and path.find("infinite_image_browsing/fe-static") == -1
+            ):
+                logger.info(f"Received request: {request.method} {request.url}")
+                if request.query_params:
+                    logger.debug(f"Query Params: {request.query_params}")
+                if request.path_params:
+                    logger.debug(f"Path Params: {request.path_params}")
+
+            try:
+                return await call_next(request)
+            except HTTPException as http_exc:
+                logger.warning(
+                    f"HTTPException occurred while processing {request.method} {request.url}: {http_exc}"
+                )
+                raise http_exc
+            except Exception as exc:
+                logger.error(
+                    f"An exception occurred while processing {request.method} {request.url}: {exc}"
+                )
 
     if kwargs.get("allow_cors"):
         app.add_middleware(
@@ -607,6 +643,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
 
     @app.post(db_pre + "/search_by_substr", dependencies=[Depends(verify_secret)])
     async def search_by_substr(req: SearchBySubstrReq):
+        if IIB_DEBUG:
+            logger.info(req)
         conn = DataBase.get_conn()
         folder_paths=normalize_paths(req.folder_paths, os.getcwd())
         if(not folder_paths and req.folder_paths):
@@ -634,6 +672,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
 
     @app.post(db_pre + "/match_images_by_tags", dependencies=[Depends(verify_secret)])
     async def match_image_by_tags(req: MatchImagesByTagsReq):
+        if IIB_DEBUG:
+            logger.info(req)
         conn = DataBase.get_conn()
         folder_paths=normalize_paths(req.folder_paths, os.getcwd())
         if(not folder_paths and req.folder_paths):
