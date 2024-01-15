@@ -33,6 +33,7 @@ export const zhHans = {
   doubleClickToCopy: '双击复制',
   root: '根',
   drive: '盘',
+  promptcompare: 'Compare Prompts',
   refresh: '刷新',
   quickMove: '快速移动',
   more: '更多',

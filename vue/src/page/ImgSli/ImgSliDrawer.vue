@@ -14,6 +14,7 @@ const splitpane = ref<{ requestFullScreen (): void }>()
       <div class="actions">
         <AButton @click="sli.drawerVisible = false">{{ $t('close') }}</AButton>
         <AButton @click="splitpane?.requestFullScreen()">{{ $t('fullscreenview') }}</AButton>
+        <small>⋁ Scroll down to compare prompts</small>
       </div>
     </template>
   </ADrawer>

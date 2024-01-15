@@ -2,6 +2,7 @@
 // @ts-ignore
 import { Splitpanes, Pane } from 'splitpanes'
 import ImgSliSide from './ImgSliSide.vue'
+import PromptCompare from './PromptCompare.vue'
 import { asyncComputed, useElementSize } from '@vueuse/core'
 import { ref } from 'vue'
 import { FileNodeInfo } from '@/api/files'
@@ -38,6 +39,9 @@ const maxEdge = asyncComputed(async () => {
 })
 </script>
 <template>
+  <div style="height:80%;position:absolute;width:99%;height:100%;top:0;left:0;">
+    <PromptCompare :lImg="left" :rImg="right"></PromptCompare>
+  </div>  
   <div ref="wrapperEl" style="height: 100%;">
     <splitpanes class="default-theme" @resize="onResize">
       <pane v-if="left">
