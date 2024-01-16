@@ -22,6 +22,7 @@ import { toRawFileUrl } from '@/util/file'
 import ContextMenu from '@/components/ContextMenu.vue'
 import { useWatchDocument } from 'vue3-ts-util'
 import { useTagStore } from '@/store/useTagStore'
+import { parse } from 'stable-diffusion-image-metadata';
 
 const global = useGlobalStore()
 
@@ -36,6 +37,14 @@ const currImgResolution = ref('')
 const q = createReactiveQueue()
 const imageGenInfo = ref('')
 const geninfoFrags = computed(() => imageGenInfo.value.split('\n'))
+const geninfoStruct = computed(() => parse(imageGenInfo.value))
+
+const geninfoStructNoPrompts = computed(() => {
+  let p = parse(imageGenInfo.value);
+  delete p.prompt;
+  delete p.negativePrompt;
+  return p;
+})
 const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
 }>()
@@ -88,6 +97,26 @@ useResizeAndDrag(el, resizeHandle, dragHandle, {
 
 function getParNode (p: any) {
   return p.parentNode as HTMLDivElement
+}
+
+function spanWrap(text: string) {
+  if (!text) {
+    return ""
+  }
+  let result = '';
+  const values = text.split(/[\n,]+/);
+  let parenthesisActive = false;
+  for (let i = 0; i < values.length; i++) {
+    const trimmedValue = values[i].trim();
+    if(!parenthesisActive) parenthesisActive = trimmedValue.includes("(");
+    const cssClass = parenthesisActive ? "has-parentheses" : "";
+    result += `<span class="${cssClass}">${trimmedValue}</span>`;
+    if (i < values.length - 1) {
+      result += ",";
+    }
+        if(parenthesisActive) parenthesisActive = !trimmedValue.includes(")");
+  }
+  return result;
 }
 
 useWatchDocument('load', e => {
@@ -192,9 +221,26 @@ const copyPositivePrompt = () => {
             {{ tag.name }}
           </div>
         </div>
-        <p v-for="txt in geninfoFrags" :key="txt" class="gen-info-frag">
-          {{ txt }}
-        </p>
+        <div>
+          <br/>
+          <h3>Prompt</h3>
+          <code v-html="spanWrap(geninfoStruct.prompt ?? '')"></code>
+          <br/>
+          <h3>Negative Prompt</h3>
+          <code v-html="spanWrap(geninfoStruct.negativePrompt ?? '')"></code>
+        </div><br/>
+        <h3>Params</h3>
+        <table>
+        <tr v-for="txt,key in geninfoStructNoPrompts" :key="txt" class="gen-info-frag">
+          <td style="font-weight: 600;text-transform: capitalize;">{{key}}</td>
+          <td v-if="typeof txt == 'object'">
+            <code>{{ txt }}</code>
+          </td>
+          <td v-else>
+            {{ txt }}
+          </td>
+        </tr>
+      </table>
       </div>
     </div>
 
@@ -234,7 +280,7 @@ const copyPositivePrompt = () => {
         color: white;
       }
     }
-  }
+  }   
 
   .container {
     height: 100%;
@@ -252,6 +298,49 @@ const copyPositivePrompt = () => {
     z-index: 1;
     padding-top: 4px;
     position: relative;
+
+    code {
+      font-size:0.9em;
+      display: block;
+      padding: 4px;
+      background: var(--zp-primary-background);
+      border-radius: 4px;
+      border: 2px solid var(--zp-primary);
+      margin-right:20px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.78em;
+      
+      :deep(span) {
+        background: rgba(0,0,0,0.06);
+        color: black;
+        padding: 2px 4px;
+        border-radius: 4px;
+        margin-right: 4px;
+      }
+
+      :deep(.has-parentheses) {
+        background: rgba(255,100,100,0.14);
+      }
+      :deep(span:hover) {
+        background: rgba(120,0,0,0.15);
+      }    
+    }
+
+    table {
+      font-size: 1em;      
+      border-radius: 4px;
+      border: 2px solid var(--zp-primary);
+      border-collapse: separate;
+      margin-bottom: 3em;
+    }
+
+    table td {
+      padding-right: 14px;
+      padding-left:4px;      
+      border-bottom: 1px solid var(--zp-primary);
+      border-collapse: collapse;
+    }
 
     .info-tags {
       .info-tag {
