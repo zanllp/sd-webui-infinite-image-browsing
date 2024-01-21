@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ImgSliComparePane from './ImgSliComparePane.vue';
+import ImgSliComparePane from './ImgSliComparePane.vue'
 import { FileNodeInfo } from '@/api/files'
 defineProps<{
   paneIdx: number,
@@ -9,6 +9,16 @@ defineProps<{
 }>()
 </script>
 <template>
-<ImgSliComparePane :left="left" :right="right">
-</ImgSliComparePane>
+  <div class="img-sli-container">
+    <ImgSliComparePane :left="left" :right="right">
+    </ImgSliComparePane>
+  </div>
 </template>
+
+<style lang="scss" scoped>
+.img-sli-container {
+  position: relative;
+  overflow-y: auto;
+  height: calc(100vh - 40px);
+}
+</style>

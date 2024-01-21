@@ -3,9 +3,9 @@
 import { Splitpanes, Pane } from 'splitpanes'
 import { FileNodeInfo } from '@/api/files'
 import { getImageGenerationInfo } from '@/api'
-import { watch,ref } from 'vue'
+import { watch, ref } from 'vue'
 import { createReactiveQueue } from '@/util'
-import { parse } from 'stable-diffusion-image-metadata';
+import { parse } from 'stable-diffusion-image-metadata'
 
 const props = defineProps<{
     lImg: FileNodeInfo,
@@ -17,14 +17,14 @@ const lImgInfo = ref("")
 const rImgInfo = ref("")
 let seenKeys = []
 
-function preprocessGenerationInfo(info:any) {    
+function preprocessGenerationInfo (info: any) {
     let formatted = ""
     let parsed = parse(info)
 
     formatted += "--- PROMPT --- \r\n"
-    formatted += parsed.prompt?.replace(/\r\n/g, "")+"\r\n\r\n"
+    formatted += parsed.prompt?.replace(/\r\n/g, "") + "\r\n\r\n"
     formatted += "--- NEGATIVE PROMPT --- \r\n"
-    formatted += parsed.negativePrompt ? parsed.negativePrompt.replace(/\n/g, "")+"\r\n\r\n" : "\r\n\r\n"
+    formatted += parsed.negativePrompt ? parsed.negativePrompt.replace(/\n/g, "") + "\r\n\r\n" : "\r\n\r\n"
 
     //add rest of info properties line by line
     //collect seen keys in global array and add linebreak if known key is missing
@@ -60,36 +60,21 @@ watch(
 </script>
 
 <template>
-    <div class="wrapper-promptcompare">
-        <VueDiff class="diff" mode="split" theme="light" language="plaintext" :prev="lImgInfo"
-            :current="rImgInfo" :virtual-scroll="{ height: 500, lineMinHeight: 18, delay: 100 }"></VueDiff>
-        
-    </div>
+    <VueDiff class="diff" mode="split" theme="light" language="plaintext" :prev="lImgInfo" :current="rImgInfo">
+    </VueDiff>
 </template>
 
 <style lang="scss">
-.wrapper-promptcompare {
-    color: #f8f8f8;
-    padding: 10px;
-    overflow: hidden !important;
-}
-
 .diff {
-    width: 90%;
-    height: 500px;
     transform: scale(1);
     opacity: 1;
-    background-color: rgba(255,255,255,0.5) !important;
+    background-color: rgba(255, 255, 255, 0.5) !important;
+
+    color: #f8f8f8;
     backdrop-filter: blur(5px);
-    top:100%;
-    position: absolute;
     transition: top 0.2s ease-in-out;
 }
 
-.diff.open {
-    top:calc(100% - 500px);
-    transition: top 0.2s ease-in-out;
-}
 
 .diff code {
     font-size: 12px;
