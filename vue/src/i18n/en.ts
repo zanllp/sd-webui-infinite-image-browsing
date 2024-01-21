@@ -63,6 +63,7 @@ export const en: IIBI18nMap = {
   resolution: 'Resolution',
   fileSize: 'File Size',
   fullscreenview: 'Fullscreen View',
+  promptcompare: 'Compare Prompts',
   imgCompare: 'Image Comparison',
   share: 'Share',
   dragImageHere: 'Drag image here',

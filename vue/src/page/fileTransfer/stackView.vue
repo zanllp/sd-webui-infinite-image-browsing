@@ -167,7 +167,7 @@ watch(
             </template>
           </a-dropdown>
           <a-dropdown :trigger="['click']" v-model:visible="moreActionsDropdownShow" placement="bottomLeft"
-            :getPopupContainer="trigger => trigger.parentNode as HTMLDivElement">
+            :getPopupContainer="(trigger: any) => trigger.parentNode as HTMLDivElement">
             <a class="opt" @click.prevent>
               {{ $t('more') }}
             </a>

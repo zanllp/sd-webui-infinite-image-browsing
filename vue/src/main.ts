@@ -11,10 +11,20 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { usePreferredDark } from '@vueuse/core'
 import { i18n } from './i18n'
 import { delay } from 'vue3-ts-util'
+import VueDiff from 'vue-diff';
+
+import 'vue-diff/dist/index.css';
 
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
-createApp(App).use(pinia).use(i18n).mount('#zanllp_dev_gradio_fe')
+createApp(App)
+    .use(pinia)
+    .use(i18n)
+    .use(VueDiff, {
+      componentName: 'VueDiff',
+    })
+    .mount('#zanllp_dev_gradio_fe')
+
 
 const dark = usePreferredDark()
 

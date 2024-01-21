@@ -33,6 +33,7 @@ export const zhHant: IIBI18nMap = {
   confirmDelete: '確認刪除?',
   deleteSuccess: '刪除成功',
   doubleClickToCopy: '雙擊複製',
+  promptcompare: 'Compare Prompts',
   root: '根',
   drive: '磁碟',
   refresh: '重新整理',

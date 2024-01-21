@@ -125,5 +125,6 @@ export const de: Partial<IIBI18nMap> = {
   longPressOpenContextMenu: 'Langes Rechtsklicken zur Öffnung des Kontextmenüs unterstützen',
   searchResults: 'Suchergebnisse',
   imgSearch: 'Bildsuche',
-  send2savedDir: 'In den gespeicherten Ordner senden'
+  send2savedDir: 'In den gespeicherten Ordner senden',
+  promptcompare: 'Prompts vergleichen',
 }

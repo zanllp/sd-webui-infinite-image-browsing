@@ -100,7 +100,7 @@ watch(useDocumentVisibility(), v => v && emitReturnToIIB())
     <splitpanes class="default-theme">
       <pane v-for="(tab, tabIdx) in global.tabList" :key="tab.id">
         <edge-trigger :tabIdx="tabIdx">
-          <a-tabs type="editable-card" v-model:activeKey="tab.key" @edit="(key, act) => onEdit(tabIdx, key, act)">
+          <a-tabs type="editable-card" v-model:activeKey="tab.key" @edit="(key:any, act:any) => onEdit(tabIdx, key, act)">
             <a-tab-pane v-for="(pane, paneIdx) in tab.panes" :key="pane.key" :tab="pane.name" class="pane">
               <component :is="compMap[pane.type]" :tabIdx="tabIdx" :paneIdx="paneIdx" v-bind="pane" />
             </a-tab-pane>
