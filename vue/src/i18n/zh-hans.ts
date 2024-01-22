@@ -1,4 +1,7 @@
 export const zhHans = {
+  scrollDownToComparePrompt: "向下滚查看Prompt比较",
+  sourceText: '源文本',
+  structuredData: '结构化数据',
   searchScope: '搜索范围',
   specifiedSearchFolder: '指定搜索的文件夹，使用逗号或者换行分割多个',
   batchAddTag: '批量添加Tag',

@@ -52,7 +52,7 @@ const maxEdge = asyncComputed(async () => {
   </div>
   <div class="hint" v-if="container !== 'drawer'">
     <div class="hint-inline">
-      <ArrowDownOutlined /> Scroll down to compare prompts
+      <ArrowDownOutlined /> {{ $t('scrollDownToComparePrompt') }}
     </div>
   </div>
   <PromptCompare :lImg="left" :rImg="right"></PromptCompare>
