@@ -1,6 +1,9 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  scrollDownToComparePrompt: "Scroll down to compare prompts",
+  sourceText: 'Source Text',
+  structuredData: 'Structured Data',
   searchScope: 'Search Scope',
   specifiedSearchFolder: 'Specify the folders to search, separate multiple folders with commas or line breaks',
   batchAddTag: 'Batch Add Tag',

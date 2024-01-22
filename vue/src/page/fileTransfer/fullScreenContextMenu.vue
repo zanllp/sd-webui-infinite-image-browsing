@@ -62,7 +62,7 @@ watch(
   },
   { immediate: true }
 )
-
+const promptTabActivedKey = useLocalStorage('iib@fullScreenContextMenu.prompt-tab', 'structedData' as 'structedData' | 'sourceText')
 const resizeHandle = ref<HTMLElement>()
 const dragHandle = ref<HTMLElement>()
 const dragInitParams = {
@@ -221,33 +221,39 @@ const copyPositivePrompt = () => {
             {{ tag.name }}
           </div>
         </div>
-        <div>
-          <template v-if="geninfoStruct.prompt">
-            <br />
-            <h3>Prompt</h3>
-            <code v-html="spanWrap(geninfoStruct.prompt ?? '')"></code>
-          </template>
-          <template v-if="geninfoStruct.negativePrompt">
-
-            <br />
-            <h3>Negative Prompt</h3>
-            <code v-html="spanWrap(geninfoStruct.negativePrompt ?? '')"></code>
-          </template>
-        </div>
-        <template v-if="Object.keys(geninfoStructNoPrompts).length"> <br />
-          <h3>Params</h3>
-          <table>
-            <tr v-for="txt, key in geninfoStructNoPrompts" :key="txt" class="gen-info-frag">
-              <td style="font-weight: 600;text-transform: capitalize;">{{ key }}</td>
-              <td v-if="typeof txt == 'object'">
-                <code>{{ txt }}</code>
-              </td>
-              <td v-else>
-                {{ txt }}
-              </td>
-            </tr>
-          </table>
-        </template>
+        <a-tabs v-model:activeKey="promptTabActivedKey">
+          <a-tab-pane key="structedData" :tab="$t('structuredData')">
+            <div>
+              <template v-if="geninfoStruct.prompt">
+                <br />
+                <h3>Prompt</h3>
+                <code v-html="spanWrap(geninfoStruct.prompt ?? '')"></code>
+              </template>
+              <template v-if="geninfoStruct.negativePrompt">
+                <br />
+                <h3>Negative Prompt</h3>
+                <code v-html="spanWrap(geninfoStruct.negativePrompt ?? '')"></code>
+              </template>
+            </div>
+            <template v-if="Object.keys(geninfoStructNoPrompts).length"> <br />
+              <h3>Params</h3>
+              <table>
+                <tr v-for="txt, key in geninfoStructNoPrompts" :key="txt" class="gen-info-frag">
+                  <td style="font-weight: 600;text-transform: capitalize;">{{ key }}</td>
+                  <td v-if="typeof txt == 'object'">
+                    <code>{{ txt }}</code>
+                  </td>
+                  <td v-else>
+                    {{ txt }}
+                  </td>
+                </tr>
+              </table>
+            </template>
+          </a-tab-pane>
+          <a-tab-pane key="sourceText" :tab="$t('sourceText')">
+            <code>{{ imageGenInfo }}</code>
+          </a-tab-pane>
+        </a-tabs>
       </div>
     </div>
 

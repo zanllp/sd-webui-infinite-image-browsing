@@ -3,7 +3,6 @@ import DraggingPort from './DraggingPort.vue'
 import { useImgSliStore } from '@/store/useImgSli'
 import ImgSliSplitPane from './ImgSliComparePane.vue'
 import { ref } from 'vue'
-import { ArrowDownOutlined } from '@/icon'
 
 const sli = useImgSliStore()
 const splitpane = ref<{ requestFullScreen (): void }>()
@@ -16,16 +15,22 @@ const splitpane = ref<{ requestFullScreen (): void }>()
       <div class="actions">
         <AButton @click="sli.drawerVisible = false">{{ $t('close') }}</AButton>
         <AButton @click="splitpane?.requestFullScreen()">{{ $t('fullscreenview') }}</AButton>
-        <small>
-          <ArrowDownOutlined /> Scroll down to compare prompts
-        </small>
+        <a-alert banner style="height: 32px;" :message="'👇 '+$t('scrollDownToComparePrompt')" type="info" show-icon />
       </div>
     </template>
   </ADrawer>
   <DraggingPort />
 </template>
 
+
+<style lang="scss" scoped>
+.actions {
+  display: flex;
+  flex-direction: row;
+}
+</style>
 <style lang="scss">
+
 .img-sli {
 
   .ant-drawer-header,
