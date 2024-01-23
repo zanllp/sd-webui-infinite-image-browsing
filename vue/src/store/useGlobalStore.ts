@@ -6,6 +6,7 @@ import { getPreferredLang } from '@/i18n'
 import { SortMethod } from '@/page/fileTransfer/fileSort'
 import type { getQuickMovePaths } from '@/page/taskRecord/autoComplete'
 import { type Dict, type ReturnTypeAsync } from '@/util'
+import { usePreferredDark } from '@vueuse/core'
 import { cloneDeep, uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { VNode, computed, onMounted, reactive, toRaw, watch } from 'vue'
@@ -98,6 +99,7 @@ export const useGlobalStore = defineStore(
     const gridThumbnailResolution = ref(512)
     const defaultSortingMethod = ref(SortMethod.CREATED_TIME_DESC)
     const defaultGridCellWidth = ref(256)
+    const darkModeControl = ref<'light' | 'dark' | 'auto'>('auto')
 
     const createEmptyPane = (): TabPane => ({
       type: 'empty',
@@ -176,7 +178,22 @@ export const useGlobalStore = defineStore(
 
     const ignoredConfirmActions = reactive<Record<ActionConfirmRequired, boolean>>({ deleteOneOnly: false })
 
+    const dark = usePreferredDark()
+
+    const computedTheme = computed(() =>  {
+      const getParDark = () => {
+        try {
+          return parent.location.search.includes('theme=dark') // sd-webui的
+        } catch (error) {
+          return false
+        }
+      }
+      const isDark = darkModeControl.value === 'auto' ? (dark.value || getParDark()) : (darkModeControl.value === 'dark')
+      return isDark ? 'dark' : 'light'
+    })
     return {
+      computedTheme,
+      darkModeControl,
       defaultSortingMethod,
       defaultGridCellWidth,
       pathAliasMap,
@@ -205,6 +222,7 @@ export const useGlobalStore = defineStore(
     persist: {
       // debug: true,
       paths: [
+        'darkModeControl',
         'dontShowAgainNewImgOpts',
         'defaultSortingMethod',
         'defaultGridCellWidth',

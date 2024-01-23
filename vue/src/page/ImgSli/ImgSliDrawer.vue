@@ -15,7 +15,7 @@ const splitpane = ref<{ requestFullScreen (): void }>()
       <div class="actions">
         <AButton @click="sli.drawerVisible = false">{{ $t('close') }}</AButton>
         <AButton @click="splitpane?.requestFullScreen()">{{ $t('fullscreenview') }}</AButton>
-        <a-alert banner style="height: 32px;" :message="'👇 '+$t('scrollDownToComparePrompt')" type="info" show-icon />
+        <a-alert banner style="height: 32px;" :message="'👇 ' + $t('scrollDownToComparePrompt')" type="info" show-icon />
       </div>
     </template>
   </ADrawer>
@@ -30,7 +30,6 @@ const splitpane = ref<{ requestFullScreen (): void }>()
 }
 </style>
 <style lang="scss">
-
 .img-sli {
 
   .ant-drawer-header,
@@ -39,16 +38,17 @@ const splitpane = ref<{ requestFullScreen (): void }>()
   }
 
   .default-theme {
-
     .splitpanes__splitter {
-      background-color: #ccc;
+      background-color: var(--zp-tertiary);
       position: relative;
       width: 4px;
     }
 
-    .splitpanes {
-      background-color: #f8f8f8;
+
+    .splitpanes__pane {
+      background: var(--zp-primary-background);
     }
 
   }
-}</style>
+}
+</style>

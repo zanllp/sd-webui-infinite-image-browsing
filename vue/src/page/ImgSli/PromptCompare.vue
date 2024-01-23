@@ -6,6 +6,7 @@ import { getImageGenerationInfo } from '@/api'
 import { watch, ref } from 'vue'
 import { createReactiveQueue } from '@/util'
 import { parse } from 'stable-diffusion-image-metadata'
+import { useGlobalStore } from '@/store/useGlobalStore'
 
 const props = defineProps<{
     lImg: FileNodeInfo,
@@ -13,6 +14,7 @@ const props = defineProps<{
 }>()
 
 const q = createReactiveQueue()
+const g = useGlobalStore()
 const lImgInfo = ref("")
 const rImgInfo = ref("")
 let seenKeys = []
@@ -60,7 +62,7 @@ watch(
 </script>
 
 <template>
-    <VueDiff class="diff" mode="split" theme="light" language="plaintext" :prev="lImgInfo" :current="rImgInfo">
+    <VueDiff class="diff" mode="split" :theme="g.computedTheme" language="plaintext" :prev="lImgInfo" :current="rImgInfo">
     </VueDiff>
 </template>
 
@@ -68,9 +70,6 @@ watch(
 .diff {
     transform: scale(1);
     opacity: 1;
-    background-color: rgba(255, 255, 255, 0.5) !important;
-
-    color: #f8f8f8;
     backdrop-filter: blur(5px);
     transition: top 0.2s ease-in-out;
 }
