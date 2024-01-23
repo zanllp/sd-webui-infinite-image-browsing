@@ -68,7 +68,7 @@ const maxEdge = asyncComputed(async () => {
 
   .hint-inline {
     display: inline-block;
-    color: var(--main-text-color);
+    color: var(--zp-primary);
     margin: 0 auto;
     padding: 4px 8px;
     border-radius: 4px;
@@ -79,13 +79,9 @@ const maxEdge = asyncComputed(async () => {
 .img-sli .default-theme {
 
   .splitpanes__splitter {
-    background-color: #ccc;
+    background-color: var(--zp-tertiary);
     position: relative;
     width: 4px;
-  }
-
-  .splitpanes {
-    background-color: #f8f8f8;
   }
 
 }

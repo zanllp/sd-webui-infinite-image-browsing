@@ -103,6 +103,7 @@ const restoreRecord = () => {
         <LockOutlined title="Access Control mode" style="vertical-align: text-bottom;" />
       </div>
       <div flex-placeholder />
+
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing" target="_blank" class="last-record">Github</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/.env.example" target="_blank"
         class="last-record">{{ $t('privacyAndSecurity') }}</a>
@@ -110,6 +111,11 @@ const restoreRecord = () => {
         class="last-record">{{ $t('changlog') }}</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank"
         class="last-record">{{ $t('faq') }}</a>
+        <a-radio-group v-model:value="global.darkModeControl" button-style="solid">
+        <a-radio-button value="light">light</a-radio-button>
+        <a-radio-button value="auto">auto</a-radio-button>
+        <a-radio-button value="dark">dark</a-radio-button>
+      </a-radio-group>
     </div>
     <a-alert show-icon v-if="global.conf?.enable_access_control && !global.dontShowAgain">
       <template #message>
@@ -244,7 +250,7 @@ const restoreRecord = () => {
 }
 
 .last-record {
-  margin-left: 16px;
+  margin-right: 16px;
   font-size: 14px;
   color: var(--zp-secondary);
   flex-shrink: 0;

@@ -324,8 +324,8 @@ const copyPositivePrompt = () => {
       line-height: 1.78em;
 
       :deep(span) {
-        background: rgba(0, 0, 0, 0.06);
-        color: black;
+        background: var(--zp-secondary-variant-background);
+        color: var(--zp-primary);
         padding: 2px 4px;
         border-radius: 4px;
         margin-right: 4px;
