@@ -1,7 +1,7 @@
 import type { IIBI18nMap } from '.'
 
-export const zhHant: IIBI18nMap = {
-  scrollDownToComparePrompt: "向下滾查看提示比較",
+export const zhHant: Partial<IIBI18nMap> = {
+  scrollDownToComparePrompt: "向下滾查看Prompt比較",
   sourceText: '源文本',
   structuredData: '結構化數據',
   searchScope: '搜尋範圍',
