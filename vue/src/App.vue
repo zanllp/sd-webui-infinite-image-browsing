@@ -9,7 +9,6 @@ import { resolveQueryActions } from './queryActions'
 import { refreshTauriConf, tauriConf } from './util/tauriAppConf'
 import { openModal } from './taurilaunchModal'
 import { isTauri } from './util/env'
-import { usePreferredDark } from '@vueuse/core'
 import { delay } from 'vue3-ts-util'
 
 const globalStore = useGlobalStore()
