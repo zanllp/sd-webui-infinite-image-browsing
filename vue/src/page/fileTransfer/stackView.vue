@@ -21,6 +21,7 @@ import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { watch } from 'vue'
 import FileItem from '@/components/FileItem.vue'
 import fullScreenContextMenu from './fullScreenContextMenu.vue'
+import BaseFileListInfo from '@/components/BaseFileListInfo.vue'
 import { copy2clipboardI18n } from '@/util'
 import { openFolder } from '@/api'
 import { sortMethods } from './fileSort'
@@ -220,13 +221,14 @@ watch(
               @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick"
               :is-selected-mutil-files="multiSelectedIdxs.length > 1" />
           </template>
-          <template v-if="props.walkModePath" #after>
-            <div style="padding: 16px 0 32px;">
-              <AButton @click="loadNextDir" :loading="loadNextDirLoading" block type="primary" :disabled="!canLoadNext"
+          <template  #after>
+            <div style="padding: 16px 0 64px;">
+              <AButton v-if="props.walkModePath" @click="loadNextDir" :loading="loadNextDirLoading" block type="primary" :disabled="!canLoadNext"
                 ghost>
                 {{ $t('loadNextPage') }}</AButton>
             </div>
           </template>
+          
         </RecycleScroller>
         <div v-if="previewing" class="preview-switch">
           <LeftCircleOutlined @click="previewImgMove('prev')" :class="{ disable: !canPreview('prev') }" />
@@ -236,6 +238,7 @@ watch(
     </div>
     <fullScreenContextMenu v-if="previewing" :file="sortedFiles[previewIdx]" :idx="previewIdx"
       @context-menu-click="onContextMenuClick" />
+    <BaseFileListInfo :file-num="sortedFiles.length" :selected-file-num="multiSelectedIdxs.length"/>
   </ASpin>
 </template>
 <style lang="scss" scoped>

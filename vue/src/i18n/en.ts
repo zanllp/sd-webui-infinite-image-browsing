@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  selectedItems: ' {0} selected',
+  items: '{0} items',
   scrollDownToComparePrompt: "Scroll down to compare prompts",
   sourceText: 'Source Text',
   structuredData: 'Structured Data',
