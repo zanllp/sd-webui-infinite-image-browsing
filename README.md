@@ -1,3 +1,5 @@
+🌍 i18n Advisory: Some translations may be incomplete or inaccurate. Pull requests are welcome for improvements!
+
 [中文文档](./README-zh.md)
 
 [View recent updates (Change log)](https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log)
