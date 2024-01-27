@@ -1,4 +1,6 @@
 export const zhHans = {
+  items: "{0}个项目",
+  selectedItems: "已选择{0}个项目",
   scrollDownToComparePrompt: "向下滚查看Prompt比较",
   sourceText: '源文本',
   structuredData: '结构化数据',
