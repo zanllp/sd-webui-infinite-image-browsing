@@ -1,4 +1,6 @@
 > 🌍 i18n Advisory: Some translations may be incomplete or inaccurate. Pull requests are welcome for improvements!
+>
+> Important Update: IIB is undergoing a major update and will soon support Foocus, StableSwarmUI, and NovelAI images. Additionally, source differentiation in search will be introduced. Completion expected within a month. Exciting enhancements coming soon! Thank you for your support. Stay tuned for an improved IIB experience!
 
 [中文文档](./README-zh.md)
 
