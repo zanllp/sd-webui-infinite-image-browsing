@@ -308,7 +308,7 @@ def is_img_created_by_comfyui(img: Image):
     return img.info.get('prompt') and img.info.get('workflow')
 
 def is_img_created_by_comfyui_with_webui_gen_info(img: Image):
-    return img.info.get('parameters')
+    return is_img_created_by_comfyui(img) and img.info.get('parameters')
 
 def get_comfyui_exif_data(img: Image):
     prompt = img.info.get('prompt')
@@ -521,3 +521,5 @@ def open_folder(folder_path, file_path=None):
             subprocess.run(["xdg-open", folder])
 
 
+def omit(d, keys):
+    return {k: v for k, v in d.items() if k not in keys}
