@@ -50,7 +50,7 @@ from scripts.iib.db.datamodel import (
 )
 from scripts.iib.db.update_image_data import update_image_data, rebuild_image_index
 from scripts.iib.logger import logger
-from functional import seq
+from scripts.iib.seq import seq
 import urllib.parse
 
 index_html_path = os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
