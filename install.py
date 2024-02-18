@@ -6,7 +6,6 @@ req_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "requiremen
 
 def dist2package(dist: str):
     return ({
-        "pyfunctional": "functional",
         "python-dotenv": "dotenv",
         "Pillow": "PIL"
     }).get(dist, dist)
