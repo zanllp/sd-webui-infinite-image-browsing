@@ -17,6 +17,7 @@ import type { GenDiffInfo } from '@/api/files'
 
 const global = useGlobalStore()
 const tagStore = useTagStore()
+
 const props = withDefaults(
   defineProps<{
     file: FileNodeInfo
@@ -28,12 +29,22 @@ const props = withDefaults(
     enableRightClickMenu?: boolean,
     enableCloseIcon?: boolean
     isSelectedMutilFiles?: boolean
-    genDiffToPrevious: GenDiffInfo
-    genDiffToNext: GenDiffInfo
+    genDiffToPrevious?: GenDiffInfo
+    genDiffToNext?: GenDiffInfo
     genInfo?: string
-    enableChangeIndicator: boolean
+    enableChangeIndicator?: boolean
   }>(),
-  { selected: false, enableRightClickMenu: true, enableCloseIcon: false }
+  { selected: false, enableRightClickMenu: true, enableCloseIcon: false, genDiffToNext: () => ({
+    empty: true,
+    ownFile: "",
+    otherFile: "",
+    diff: "",    
+}), genDiffToPrevious: () => ({
+    empty: true,
+    ownFile: "",
+    otherFile: "",
+    diff: "",    
+}) }
 )
 
 const emit = defineEmits<{

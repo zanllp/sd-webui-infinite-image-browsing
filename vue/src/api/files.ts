@@ -17,7 +17,7 @@ export interface GenDiffInfo {
   empty: boolean
   ownFile: string
   otherFile: string
-  diff: object
+  diff: any
 }
 
 export const getTargetFolderFiles = async (folder_path: string) => {

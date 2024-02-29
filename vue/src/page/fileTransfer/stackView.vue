@@ -137,7 +137,7 @@ function getGenDiff(ownGenInfo: any, idx: any, increment: any, ownFile: FileNode
 
   //diff vars init
   let gen_a = ownGenInfo
-  let gen_b = sortedFiles.value[idx + increment].gen_info_obj
+  let gen_b :any = sortedFiles.value[idx + increment].gen_info_obj
   if(gen_b == undefined) {    
     return result
   }

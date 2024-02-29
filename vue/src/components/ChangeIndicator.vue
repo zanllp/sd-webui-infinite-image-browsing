@@ -2,7 +2,7 @@
 import { CaretRightOutlined } from '@/icon'
 import type { GenDiffInfo } from '@/api/files'
 
-const props = defineProps<{
+defineProps<{
     genDiffToPrevious: GenDiffInfo
     genDiffToNext: GenDiffInfo
     genInfo?: string
@@ -83,7 +83,7 @@ function hasOtherProps(diff: Record<string, unknown>) {
                 <div v-if="hasOtherProps(genDiffToPrevious.diff)">
                     <span class="otherChangeIndicator">Other</span> props that changed:<br/><br/>
                     <ul>
-                        <li v-for="(value, propertyName) in filterManualProps(genDiffToPrevious.diff)">{{ propertyName }}
+                        <li v-for="(_value, propertyName) in filterManualProps(genDiffToPrevious.diff)">{{ propertyName }}
                         </li>
                     </ul>
                 </div>
@@ -146,7 +146,7 @@ function hasOtherProps(diff: Record<string, unknown>) {
                 <div v-if="hasOtherProps(genDiffToNext.diff)">
                     <span class="otherChangeIndicator">Other</span> props that changed:<br/><br/>
                     <ul>
-                        <li v-for="(value, propertyName) in filterManualProps(genDiffToNext.diff)">{{ propertyName }}
+                        <li v-for="(_value, propertyName) in filterManualProps(genDiffToNext.diff)">{{ propertyName }}
                         </li>
                     </ul>
                 </div>
