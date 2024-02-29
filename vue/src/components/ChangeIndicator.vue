@@ -261,41 +261,41 @@ table tr td:first-child {
 }
 
 .otherChangeIndicator {
-    background-color: #551f58;
+    background-color: #8b5b8e;
     color: #efefef;
 }
 
 .stepsChangeIndicator {
-    background-color: #1c56bb;
+    background-color: #577ab8;
     color: #efefef;
 }
 
 .seedChangeIndicator {
-    background-color: #0593A2;
+    background-color: #649da3;
     color: #112211;
 }
 
 .negpromptChangeIndicator {
-    background-color: #FF7A48;
-    color: #112211;
+    background-color: #d8a390;
+    color: rgb(47, 47, 47);
 }
 
 .modelChangeIndicator {
-    background-color: #E3371E;
+    background-color: #d68679;
     color: #efefef;
 }
 
 .promptChangeIndicator {
-    background-color: #89D99D;
+    background-color: #8fba99;
     color: #112211;
 }
 
 .cfgChangeIndicator {
-    background-color: #FFD700;
+    background-color: #d4c98f;
     color: #112211;
 }
 
 .sizeChangeIndicator {
-    background-color: #254b2a;
+    background-color: #678a6c;
     color: #efefef;
 }</style>
