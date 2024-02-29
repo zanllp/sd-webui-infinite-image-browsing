@@ -23,12 +23,12 @@ import FileItem from '@/components/FileItem.vue'
 import fullScreenContextMenu from './fullScreenContextMenu.vue'
 import BaseFileListInfo from '@/components/BaseFileListInfo.vue'
 import { copy2clipboardI18n } from '@/util'
-import { openFolder, getImageGenerationInfo } from '@/api'
+import { openFolder, getImageGenerationInfoBatch } from '@/api'
 import { sortMethods } from './fileSort'
 import { isTauri } from '@/util/env'
 import { parse } from 'stable-diffusion-image-metadata'
 import { ref } from 'vue'
-import type { GenDiffInfo } from '@/api/files'
+import type { FileNodeInfo, GenDiffInfo } from '@/api/files'
 
 const global = useGlobalStore()
 const props = defineProps<{
@@ -81,28 +81,40 @@ watch(
     const stackC = stackCache.get(props.stackKey ?? '')
     if (stackC) {
       stack.value = stackC.slice() // 浅拷贝
-    }
+    }    
   },
   { immediate: true }
 )
+
+watch(sortedFiles, async (newList, oldList) => {
+  //check files in newList if it is an image-only list
+  if (newList.length > 0 && newList.length !== oldList.length) {
+    getRawGenParams()
+  }
+})
 
 const changeIndchecked = ref<boolean>(true);
 const seedChangeChecked = ref<boolean>(false);
 
 function getRawGenParams() {
+  //extract fullpaths of all files from sortedfiles to array, but only if it's an actual file (not a folder or something else)
+  let paths: string[] = []
+  const allowedExtensions = [".png", ".jpg", ".jpeg"]
   for (let f in sortedFiles.value) {
-    if (sortedFiles.value[f].gen_info_raw) {
-      continue
+    if (sortedFiles.value[f].type == "file" && allowedExtensions.includes(sortedFiles.value[f].fullpath.slice(-4).toLowerCase())) {
+      paths.push(sortedFiles.value[f].fullpath)
     }
-    let path = sortedFiles.value[f].fullpath
-    q.pushAction(() => getImageGenerationInfo(path)).res.then((v) => {
-      sortedFiles.value[f].gen_info_raw = v
-      sortedFiles.value[f].gen_info_obj = parse(v)
-    })
-  }
+  }  
+  q.pushAction(() => getImageGenerationInfoBatch(paths)).res.then((v) => {
+      //result is a json object with fullpath as key and gen_info_raw as value
+      for (let f in sortedFiles.value) {
+        sortedFiles.value[f].gen_info_raw = v[sortedFiles.value[f].fullpath]
+        sortedFiles.value[f].gen_info_obj = parse(v[sortedFiles.value[f].fullpath])
+      }
+  })
 }
 
-function getGenDiff(ownGenInfo: any, idx: any, increment: any, ownFileName?: any) {
+function getGenDiff(ownGenInfo: any, idx: any, increment: any, ownFile: FileNodeInfo) {
   //init result obj
   let result: GenDiffInfo = {
     diff: {},
@@ -133,7 +145,7 @@ function getGenDiff(ownGenInfo: any, idx: any, increment: any, ownFileName?: any
   //further vars
   let skip = ["hashes", "resources"]
   result.diff = {}
-  result.ownFile = ownFileName,
+  result.ownFile = ownFile.name,
   result.otherFile = sortedFiles.value[idx + increment].name,
   result.empty = false
 
@@ -177,8 +189,6 @@ function getGenDiff(ownGenInfo: any, idx: any, increment: any, ownFileName?: any
   //result
   return result
 }
-
-getRawGenParams();
 
 </script>
 <template>
@@ -287,7 +297,7 @@ getRawGenParams();
                     <search-select v-model:value="sortMethod" @click.stop :conv="sortMethodConv" :options="sortMethods" />
                   </a-form-item>
                   <a-form-item :label="$t('showChangeIndicators')">
-                    <a-switch v-model:checked="changeIndchecked"/>
+                    <a-switch v-model:checked="changeIndchecked" @click="getRawGenParams"/>
                   </a-form-item>
                   <a-form-item :label="$t('seedAsChange')">
                     <a-switch v-model:checked="seedChangeChecked" :disabled="!changeIndchecked"/>
@@ -312,7 +322,7 @@ getRawGenParams();
       </div>
       <div v-if="currPage" class="view">
         <RecycleScroller class="file-list" :items="sortedFiles" ref="scroller" @scroll="onScroll"
-          v-on:scroll="getRawGenParams()" :item-size="itemSize.first" key-field="fullpath"
+          :item-size="itemSize.first" key-field="fullpath"
           :item-secondary-size="itemSize.second" :gridItems="gridItems">
           <template v-slot="{ item: file, index: idx }">
             <!-- idx 和file有可能丢失 -->
@@ -322,8 +332,8 @@ getRawGenParams();
               @file-item-click="onFileItemClick" @dragstart="onFileDragStart" @dragend="onFileDragEnd"
               @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick"
               :is-selected-mutil-files="multiSelectedIdxs.length > 1"
-              :gen-diff-to-next="getGenDiff(file.gen_info_obj, idx, 1, file.name)" 
-              :gen-diff-to-previous="getGenDiff(file.gen_info_obj, idx, -1, file.name)"
+              :gen-diff-to-next="getGenDiff(file.gen_info_obj, idx, 1, file)" 
+              :gen-diff-to-previous="getGenDiff(file.gen_info_obj, idx, -1, file)"
               :enable-change-indicator="changeIndchecked"
               />
           </template>

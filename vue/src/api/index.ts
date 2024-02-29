@@ -114,6 +114,11 @@ export const getImageGenerationInfo = async (path: string) => {
   return (await axiosInst.value.get(`/image_geninfo?path=${encodeURIComponent(path)}`)).data as string
 }
 
+export const getImageGenerationInfoBatch = async (paths: string[]) => {
+  const resp = await axiosInst.value.post(`/image_geninfo_batch`, { paths })
+  return resp.data
+}
+
 export const openFolder = async (path: string) => {
   await axiosInst.value.post('/open_folder', { path })
 }
