@@ -8,10 +8,12 @@ import { toImageThumbnailUrl, toRawFileUrl } from '@/util/file'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { computed } from 'vue'
 import ContextMenu from './ContextMenu.vue'
+import ChangeIndicator from './ChangeIndicator.vue'
 import { useTagStore } from '@/store/useTagStore'
 import { CloseCircleOutlined, StarFilled, StarOutlined, PlayCircleFilled } from '@/icon'
 import { Tag } from '@/api/db'
 import { openVideoModal } from './functionalCallableComp'
+import type { GenDiffInfo } from '@/api/files'
 
 const global = useGlobalStore()
 const tagStore = useTagStore()
@@ -26,6 +28,10 @@ const props = withDefaults(
     enableRightClickMenu?: boolean,
     enableCloseIcon?: boolean
     isSelectedMutilFiles?: boolean
+    genDiffToPrevious: GenDiffInfo
+    genDiffToNext: GenDiffInfo
+    genInfo?: string
+    enableChangeIndicator: boolean
   }>(),
   { selected: false, enableRightClickMenu: true, enableCloseIcon: false }
 )
@@ -105,6 +111,10 @@ const taggleLikeTag = () => {
           这么复杂是因为再全屏查看时可能因为直接删除导致fullpath变化，然后整个预览直接退出-->
         <div :key="file.fullpath" :class="`idx-${idx} item-content`" v-if="isImageFile(file.name)">
 
+          <!-- change indicators -->
+          <ChangeIndicator  v-if="enableChangeIndicator" :gen-diff-to-next="genDiffToNext" :gen-diff-to-previous="genDiffToPrevious"/>
+          <!-- change indicators END -->
+
           <a-image :src="imageSrc" :fallback="fallbackImage" :preview="{
             src: fullScreenPreviewImageUrl,
             onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
@@ -152,6 +162,7 @@ const taggleLikeTag = () => {
   </a-dropdown>
 </template>
 <style lang="scss" scoped>
+
 .center {
   display: flex;
   justify-content: center;
@@ -322,5 +333,4 @@ const taggleLikeTag = () => {
     flex-direction: column;
     align-items: flex-end;
   }
-}
-</style>
+}</style>

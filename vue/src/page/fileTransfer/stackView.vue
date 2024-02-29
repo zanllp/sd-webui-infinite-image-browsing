@@ -23,9 +23,12 @@ import FileItem from '@/components/FileItem.vue'
 import fullScreenContextMenu from './fullScreenContextMenu.vue'
 import BaseFileListInfo from '@/components/BaseFileListInfo.vue'
 import { copy2clipboardI18n } from '@/util'
-import { openFolder } from '@/api'
+import { openFolder, getImageGenerationInfo } from '@/api'
 import { sortMethods } from './fileSort'
 import { isTauri } from '@/util/env'
+import { parse } from 'stable-diffusion-image-metadata'
+import { ref } from 'vue'
+import type { GenDiffInfo } from '@/api/files'
 
 const global = useGlobalStore()
 const props = defineProps<{
@@ -83,7 +86,99 @@ watch(
   { immediate: true }
 )
 
+const changeIndchecked = ref<boolean>(true);
+const seedChangeChecked = ref<boolean>(false);
 
+function getRawGenParams() {
+  for (let f in sortedFiles.value) {
+    if (sortedFiles.value[f].gen_info_raw) {
+      continue
+    }
+    let path = sortedFiles.value[f].fullpath
+    q.pushAction(() => getImageGenerationInfo(path)).res.then((v) => {
+      sortedFiles.value[f].gen_info_raw = v
+      sortedFiles.value[f].gen_info_obj = parse(v)
+    })
+  }
+}
+
+function getGenDiff(ownGenInfo: any, idx: any, increment: any, ownFileName?: any) {
+  //init result obj
+  let result: GenDiffInfo = {
+    diff: {},
+    empty: true,
+    ownFile: "",
+    otherFile: ""
+  }
+
+  //check for out of bounds
+  if(idx + increment < 0 
+    || idx + increment >= sortedFiles.value.length
+    || sortedFiles.value[idx] == undefined) {
+      return result
+  }
+  //check for gen_info_obj existence
+  if(!("gen_info_obj" in sortedFiles.value[idx])
+    || !("gen_info_obj" in sortedFiles.value[idx + increment])) {
+      return result
+  }
+
+  //diff vars init
+  let gen_a = ownGenInfo
+  let gen_b = sortedFiles.value[idx + increment].gen_info_obj
+  if(gen_b == undefined) {    
+    return result
+  }
+
+  //further vars
+  let skip = ["hashes", "resources"]
+  result.diff = {}
+  result.ownFile = ownFileName,
+  result.otherFile = sortedFiles.value[idx + increment].name,
+  result.empty = false
+
+  if(!seedChangeChecked.value) {
+    skip.push("seed")
+  }
+
+  //actual per property diff
+  for (let k in gen_a) {
+    //skip unwanted values
+    if (skip.includes(k)) {
+      continue
+    }
+    //for all non-identical values, compare type based
+    //existence test
+    if (!(k in gen_b)) {
+      result.diff[k] = "+"
+      continue
+    }
+    //content test
+    if (gen_a[k] != gen_b[k]) {
+      if(k.includes("rompt") && gen_a[k] != "" && gen_b[k] != "") {
+          //prompt values are comma separated, handle them differently
+          let tokenize_a = gen_a[k].split(",")
+          let tokenize_b = gen_b[k].split(",")
+          //count how many tokens are different or at a different place
+          let diff_count = 0
+          for (let i in tokenize_a) {
+              if(tokenize_a[i] != tokenize_b[i]) {
+                  diff_count++
+              }
+          }
+          result.diff[k] = diff_count;
+      } else {
+          //all others
+          result.diff[k] = [gen_a[k],gen_b[k]]
+      }
+    }
+  }
+
+  //result
+  return result
+}
+
+getRawGenParams();
 
 </script>
 <template>
@@ -191,6 +286,12 @@ watch(
                   <a-form-item :label="$t('sortingMethod')">
                     <search-select v-model:value="sortMethod" @click.stop :conv="sortMethodConv" :options="sortMethods" />
                   </a-form-item>
+                  <a-form-item :label="$t('showChangeIndicators')">
+                    <a-switch v-model:checked="changeIndchecked"/>
+                  </a-form-item>
+                  <a-form-item :label="$t('seedAsChange')">
+                    <a-switch v-model:checked="seedChangeChecked" :disabled="!changeIndchecked"/>
+                  </a-form-item>
                   <div style="padding: 4px;">
                     <a @click.prevent="addToSearchScanPathAndQuickMove" v-if="!searchPathInfo">{{
                       $t('addToSearchScanPathAndQuickMove') }}</a>
@@ -211,7 +312,8 @@ watch(
       </div>
       <div v-if="currPage" class="view">
         <RecycleScroller class="file-list" :items="sortedFiles" ref="scroller" @scroll="onScroll"
-          :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems">
+          v-on:scroll="getRawGenParams()" :item-size="itemSize.first" key-field="fullpath"
+          :item-secondary-size="itemSize.second" :gridItems="gridItems">
           <template v-slot="{ item: file, index: idx }">
             <!-- idx 和file有可能丢失 -->
             <file-item :idx="parseInt(idx)" :file="file"
@@ -219,7 +321,11 @@ watch(
               v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :cell-width="cellWidth"
               @file-item-click="onFileItemClick" @dragstart="onFileDragStart" @dragend="onFileDragEnd"
               @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick"
-              :is-selected-mutil-files="multiSelectedIdxs.length > 1" />
+              :is-selected-mutil-files="multiSelectedIdxs.length > 1"
+              :gen-diff-to-next="getGenDiff(file.gen_info_obj, idx, 1, file.name)" 
+              :gen-diff-to-previous="getGenDiff(file.gen_info_obj, idx, -1, file.name)"
+              :enable-change-indicator="changeIndchecked"
+              />
           </template>
           <template  #after>
             <div style="padding: 16px 0 64px;">
@@ -228,7 +334,7 @@ watch(
                 {{ $t('loadNextPage') }}</AButton>
             </div>
           </template>
-          
+
         </RecycleScroller>
         <div v-if="previewing" class="preview-switch">
           <LeftCircleOutlined @click="previewImgMove('prev')" :class="{ disable: !canPreview('prev') }" />
