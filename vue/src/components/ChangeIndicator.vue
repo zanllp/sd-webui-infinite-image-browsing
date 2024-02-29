@@ -30,6 +30,7 @@ function hasOtherProps(diff: Record<string, unknown>) {
             <div class="cfgChangeIndicator changeIndicator" v-if="'cfgScale' in genDiffToPrevious.diff!">Cf</div>
             <div class="sizeChangeIndicator changeIndicator" v-if="'size' in genDiffToPrevious.diff">Si</div>
             <div class="modelChangeIndicator changeIndicator" v-if="'Model' in genDiffToPrevious.diff">Mo</div>
+            <div class="samplerChangeIndicator changeIndicator" v-if="'Sampler' in genDiffToPrevious.diff">Sa</div>
             <div class="otherChangeIndicator changeIndicator" v-if="hasOtherProps(genDiffToPrevious.diff)">Ot</div>
         </div>
         <div class="hoverOverlay">
@@ -70,12 +71,17 @@ function hasOtherProps(diff: Record<string, unknown>) {
                         <td><strong>{{ genDiffToPrevious.diff.Model[0] }}</strong><br/> vs {{ genDiffToPrevious.diff.Model[1] }}
                         </td>
                     </tr>
+                    <tr v-if="'Sampler' in genDiffToPrevious.diff">
+                        <td><span class="samplerChangeIndicator">Sampler</span></td>
+                        <td><strong>{{ genDiffToPrevious.diff.Sampler[0] }}</strong><br/> vs {{ genDiffToPrevious.diff.Sampler[1] }}
+                        </td>
+                    </tr>
                 </table>
                 <br />
 
                 <!-- others -->
                 <div v-if="hasOtherProps(genDiffToPrevious.diff)">
-                    <span class="otherChangeIndicator">Other</span> props that changed:
+                    <span class="otherChangeIndicator">Other</span> props that changed:<br/><br/>
                     <ul>
                         <li v-for="(value, propertyName) in filterManualProps(genDiffToPrevious.diff)">{{ propertyName }}
                         </li>
@@ -91,6 +97,7 @@ function hasOtherProps(diff: Record<string, unknown>) {
             <div class="cfgChangeIndicator changeIndicator" v-if="'cfgScale' in genDiffToNext.diff">Cf</div>
             <div class="sizeChangeIndicator changeIndicator" v-if="'size' in genDiffToNext.diff">Si</div>
             <div class="modelChangeIndicator changeIndicator" v-if="'Model' in genDiffToNext.diff">Mo</div>
+            <div class="samplerChangeIndicator changeIndicator" v-if="'Sampler' in genDiffToNext.diff">Sa</div>
             <div class="otherChangeIndicator changeIndicator" v-if="hasOtherProps(genDiffToNext.diff)">Ot</div>
         </div>
         <div class="hoverOverlay">
@@ -128,12 +135,16 @@ function hasOtherProps(diff: Record<string, unknown>) {
                         <td><span class="modelChangeIndicator">Model</span></td>
                         <td><strong>{{ genDiffToNext.diff.Model[0] }}</strong><br/> vs {{ genDiffToNext.diff.Model[1] }}</td>
                     </tr>
+                    <tr v-if="'Sampler' in genDiffToNext.diff">
+                        <td><span class="samplerChangeIndicator">Sampler</span></td>
+                        <td><strong>{{ genDiffToNext.diff.Sampler[0] }}</strong><br/> vs {{ genDiffToNext.diff.Sampler[1] }}</td>
+                    </tr>
                 </table>
                 <br />
 
                 <!-- others -->
                 <div v-if="hasOtherProps(genDiffToNext.diff)">
-                    <span class="otherChangeIndicator">Other</span> props that changed:
+                    <span class="otherChangeIndicator">Other</span> props that changed:<br/><br/>
                     <ul>
                         <li v-for="(value, propertyName) in filterManualProps(genDiffToNext.diff)">{{ propertyName }}
                         </li>
