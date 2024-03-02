@@ -36,11 +36,12 @@ const selectedTag = computed(() => tagStore.tagMap.get(props.file.fullpath) ?? [
 const currImgResolution = ref('')
 const q = createReactiveQueue()
 const imageGenInfo = ref('')
-const geninfoFrags = computed(() => imageGenInfo.value.split('\n'))
-const geninfoStruct = computed(() => parse(imageGenInfo.value))
+const cleanImageGenInfo = ref('')
+const geninfoFrags = computed(() => cleanImageGenInfo.value.split('\n'))
+const geninfoStruct = computed(() => parse(cleanImageGenInfo.value))
 
 const geninfoStructNoPrompts = computed(() => {
-  let p = parse(imageGenInfo.value)
+  let p = parse(cleanImageGenInfo.value)
   delete p.prompt
   delete p.negativePrompt
   return p
@@ -58,6 +59,11 @@ watch(
     q.tasks.forEach((v) => v.cancel())
     q.pushAction(() => getImageGenerationInfo(path)).res.then((v) => {
       imageGenInfo.value = v
+      cleanImageGenInfo.value = v.replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#39;");
     })
   },
   { immediate: true }
