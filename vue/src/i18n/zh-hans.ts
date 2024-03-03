@@ -173,7 +173,7 @@ export const zhHans = {
   clientSpecificSettings: '客户端特有的设置',
   initiateSoftwareStartupConfig: '初始化软件启动配置',
   gridCellWidth: '网格单元宽度 (px)',
-  showChangeIndicators: 'Show Change Indicators',
+  showChangeIndicators: '显示变更指示器',
   seedAsChange: 'Seed as Change',
   defaultGridCellWidth: '默认网格单元宽度 (px)',
   thumbnailResolution: '缩略图分辨率 (px)',

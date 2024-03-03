@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  showChangeIndicators: '顯示變更指示器',
   scrollDownToComparePrompt: "向下滾查看Prompt比較",
   sourceText: '源文本',
   structuredData: '結構化數據',

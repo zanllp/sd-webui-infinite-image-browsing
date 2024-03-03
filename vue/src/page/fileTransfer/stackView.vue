@@ -287,8 +287,8 @@ function getGenDiff(ownGenInfo: any, idx: any, increment: any, ownFile: FileNode
                     border: 1px solid var(--zp-secondary-background);
                   ">
                 <a-form v-bind="{
-                  labelCol: { span: 6 },
-                  wrapperCol: { span: 18 }
+                  labelCol: { span: 10 },
+                  wrapperCol: { span: 14 }
                 }">
                   <a-form-item :label="$t('gridCellWidth')">
                     <numInput v-model="cellWidth" :max="1024" :min="64" :step="64" />
