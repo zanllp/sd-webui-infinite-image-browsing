@@ -541,6 +541,17 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             else:
                 return read_sd_webui_gen_info_from_image(img, path)
 
+    class GeninfoBatchReq(BaseModel):
+        paths: List[str]
+
+    @app.post(pre + "/image_geninfo_batch", dependencies=[Depends(verify_secret)])
+    async def image_geninfo_batch(req: GeninfoBatchReq):
+        res = {}
+        for path in req.paths:
+            res[path] = await image_geninfo(path)
+        return res
+
+
     class CheckPathExistsReq(BaseModel):
         paths: List[str]
 

@@ -9,6 +9,15 @@ export interface FileNodeInfo {
   bytes: number
   fullpath: string
   is_under_scanned_path: boolean
+  gen_info_raw?: string
+  gen_info_obj?: object
+}
+
+export interface GenDiffInfo {
+  empty: boolean
+  ownFile: string
+  otherFile: string
+  diff: any
 }
 
 export const getTargetFolderFiles = async (folder_path: string) => {
