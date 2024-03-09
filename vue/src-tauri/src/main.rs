@@ -8,6 +8,8 @@ use std::io::Error;
 use tauri::api::process::Command;
 use tauri::api::process::CommandEvent;
 use tauri::WindowEvent;
+use std::fs::OpenOptions;
+use std::io::Write;
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -67,13 +69,21 @@ fn main() {
         .args(args)
         .spawn()
         .expect("Failed to spawn sidecar");
-
+    let log_file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .append(true)
+        .open("iib_api_server.log")
+        .expect("Failed to open log file");
     tauri::async_runtime::spawn(async move {
         // read events such as stdout
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(line) => println!("{}", line),
-                CommandEvent::Stderr(line) => eprintln!("{}", line),
+                CommandEvent::Stderr(line) => {
+                    eprintln!("{}", line);
+                    writeln!(&log_file, "{}", line).expect("Failed to write to log file");
+                },
                 _ => (),
             };
         }
