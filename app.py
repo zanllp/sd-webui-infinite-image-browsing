@@ -1,3 +1,4 @@
+import codecs
 from typing import List
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -19,7 +20,7 @@ default_host = "127.0.0.1"
 
 def sd_webui_paths_check(sd_webui_config: str, relative_to_config: bool):
     conf = {}
-    with open(sd_webui_config, "r") as f:
+    with codecs.open(sd_webui_config, "r", "utf-8") as f:
         conf = json.loads(f.read())
     if relative_to_config:
         for dir in sd_img_dirs:

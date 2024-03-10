@@ -50,7 +50,7 @@ def get_sd_webui_conf(**kwargs):
         pass
     try:
         sd_conf_path = kwargs.get("sd_webui_config")
-        with open(sd_conf_path, "r") as f:
+        with codecs.open(sd_conf_path, "r", "utf-8") as f:
             obj = json.loads(f.read())
             if kwargs.get("sd_webui_path_relative_to_config"):
                 for dir in sd_img_dirs:

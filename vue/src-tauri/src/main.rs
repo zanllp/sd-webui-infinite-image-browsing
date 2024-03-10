@@ -3,11 +3,16 @@
 
 use serde::Deserialize;
 use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::io::Error;
+use std::io::Write;
 use tauri::api::process::Command;
 use tauri::api::process::CommandEvent;
 use tauri::WindowEvent;
+use chrono::Local;
+use chrono::format::{DelayedFormat, StrftimeItems};
+
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -67,13 +72,24 @@ fn main() {
         .args(args)
         .spawn()
         .expect("Failed to spawn sidecar");
-
+    let log_file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .append(true)
+        .open("iib_api_server.log")
+        .expect("Failed to open log file");
     tauri::async_runtime::spawn(async move {
         // read events such as stdout
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(line) => println!("{}", line),
-                CommandEvent::Stderr(line) => eprintln!("{}", line),
+                CommandEvent::Stderr(line) => {
+                    let timestamp: DelayedFormat<StrftimeItems<'_>> =
+                        Local::now().format("[%Y-%m-%d %H:%M:%S]");
+                    let log_line = format!("{} {}", timestamp, line);
+                    println!("{}", log_line);
+                    writeln!(&log_file, "{}", log_line).expect("Failed to write to log file");
+                }
                 _ => (),
             };
         }
