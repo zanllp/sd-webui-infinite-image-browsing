@@ -6,7 +6,7 @@ import { getPreferredLang } from '@/i18n'
 import { SortMethod } from '@/page/fileTransfer/fileSort'
 import type { getQuickMovePaths } from '@/page/taskRecord/autoComplete'
 import { type Dict, type ReturnTypeAsync } from '@/util'
-import { AnyFn } from '@vueuse/core'
+import { AnyFn, usePreferredDark } from '@vueuse/core'
 import { cloneDeep, uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { VNode, computed, onMounted, reactive, toRaw, watch } from 'vue'
@@ -92,12 +92,17 @@ export interface FileTransferTabPane extends TabPaneBase {
   stackKey?: string
 }
 
-export type TabPane =
-  | FileTransferTabPane
-  | OtherTabPane
-  | TagSearchMatchedImageGridTabPane
-  | ImgSliTabPane
-  | GridViewTabPane
+export interface TagSearchTabPane extends TabPaneBase {
+  type: 'tag-search'
+  searchScope?: string
+}
+
+export interface FuzzySearchTabPane extends TabPaneBase {
+  type: 'fuzzy-search'
+  searchScope?: string
+}
+
+export type TabPane = FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane | ImgSliTabPane | TagSearchTabPane | FuzzySearchTabPane| GridViewTabPane
 
 /**
  * This interface represents a tab, which contains an array of panes, an ID, and a key
@@ -228,7 +233,21 @@ export const useGlobalStore = defineStore(
     })
 
     const pageFuncExportMap = new Map<string, Dict<AnyFn>>()
+    const ignoredConfirmActions = reactive<Record<ActionConfirmRequired, boolean>>({ deleteOneOnly: false })
 
+    const dark = usePreferredDark()
+
+    const computedTheme = computed(() =>  {
+      const getParDark = () => {
+        try {
+          return parent.location.search.includes('theme=dark') // sd-webui的
+        } catch (error) {
+          return false
+        }
+      }
+      const isDark = darkModeControl.value === 'auto' ? (dark.value || getParDark()) : (darkModeControl.value === 'dark')
+      return isDark ? 'dark' : 'light'
+    })
     return {
       computedTheme,
       darkModeControl,
