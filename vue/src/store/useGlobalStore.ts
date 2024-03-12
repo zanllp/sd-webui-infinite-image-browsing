@@ -6,6 +6,7 @@ import { getPreferredLang } from '@/i18n'
 import { SortMethod } from '@/page/fileTransfer/fileSort'
 import type { getQuickMovePaths } from '@/page/taskRecord/autoComplete'
 import { type Dict, type ReturnTypeAsync } from '@/util'
+import { AnyFn } from '@vueuse/core'
 import { cloneDeep, uniqueId } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { VNode, computed, onMounted, reactive, toRaw, watch } from 'vue'
@@ -23,6 +24,31 @@ interface OtherTabPane extends TabPaneBase {
 }
 
 export type GridViewFileTag = WithRequired<Partial<Tag>, 'name'>;
+
+export interface GridViewFile extends FileNodeInfo {
+  /**
+   * Tags for displaying the file. The 'name' property is required,
+   * while the other properties are optional.
+   */
+  tags?: GridViewFileTag[];
+}
+
+/**
+ * A tab pane that displays files in a grid view.
+ */
+interface GridViewTabPane extends TabPaneBase {
+  type: 'grid-view'
+  /**
+   * Indicates whether the files in the grid view can be deleted.
+   */
+  removable?: boolean
+  /**
+   * Indicates whether files can be dragged and dropped from other pages into the grid view.
+   */
+  allowDragAndDrop?: boolean,
+  files: GridViewFile[]
+}
+
 
 export interface GridViewFile extends FileNodeInfo {
   /**
@@ -66,7 +92,12 @@ export interface FileTransferTabPane extends TabPaneBase {
   stackKey?: string
 }
 
-export type TabPane = FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane | ImgSliTabPane
+export type TabPane =
+  | FileTransferTabPane
+  | OtherTabPane
+  | TagSearchMatchedImageGridTabPane
+  | ImgSliTabPane
+  | GridViewTabPane
 
 /**
  * This interface represents a tab, which contains an array of panes, an ID, and a key
@@ -195,6 +226,9 @@ export const useGlobalStore = defineStore(
       const res = quickMovePaths.value.filter((v) => keys.includes(v.key)).map((v) => [v.zh, v.dir])
       return Object.fromEntries(res)
     })
+
+    const pageFuncExportMap = new Map<string, Dict<AnyFn>>()
+
     return {
       computedTheme,
       darkModeControl,
