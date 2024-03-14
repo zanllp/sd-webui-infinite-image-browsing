@@ -44,7 +44,7 @@ def paths_check(paths):
         if os.path.isabs(path):
             abs_path = path
         else:
-            abs_path = os.path.join(os.getcwd(), path)
+            abs_path = os.path.normpath(os.path.join(os.getcwd(), path))
         if not os.path.exists(abs_path):
             print(f"{tag} The path '{abs_path}' will be ignored (value: {path}).")
 
@@ -75,7 +75,7 @@ class AppUtils:
         allow_cors=False,
         enable_shutdown=False,
         sd_webui_dir: Optional[str] = None,
-        base="",
+        base: Optional[str]=None,
         export_fe_fn=False,
     ):
         """
@@ -88,6 +88,8 @@ class AppUtils:
         self.allow_cors = allow_cors
         self.enable_shutdown = enable_shutdown
         self.sd_webui_dir = sd_webui_dir
+        if base and not base.startswith('/'):
+            base = '/' + base
         self.base = base
         self.export_fe_fn = export_fe_fn
         if sd_webui_dir:
@@ -138,7 +140,7 @@ class AppUtils:
             allow_cors=self.allow_cors,
             enable_shutdown=self.enable_shutdown,
             launch_mode="server",
-            base=self.base,
+            base= self.base,
             export_fe_fn=self.export_fe_fn,
         )
 
@@ -151,7 +153,7 @@ class AppUtils:
         # 用于在首页显示
         @app.get("/")
         def index():
-            if self.base and self.base != DEFAULT_BASE:
+            if isinstance(self.base, str):
                 with open(index_html_path, "r", encoding="utf-8") as file:
                     content = file.read().replace(DEFAULT_BASE, self.base)
                     return Response(content=content, media_type="text/html")

@@ -23,7 +23,7 @@ Promise.resolve().then(async () => {
     
   </body>
 </html>
-`
+`.replace(/\/infinite_image_browsing/g, (window.location.pathname + '/infinite_image_browsing').replace(/\/\//g, '/'))
   let containerSelector = '#infinite_image_browsing_container_wrapper'
   let shouldMaximize = true
 
