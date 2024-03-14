@@ -654,7 +654,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             dirs = (
                 get_img_search_dirs()
                 if img_count == 0
-                else Floder.get_expired_dirs(conn)
+                else Folder.get_expired_dirs(conn)
             ) + mem["extra_paths"]
 
             update_image_data(dirs)
