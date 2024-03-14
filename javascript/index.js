@@ -12,8 +12,8 @@ Promise.resolve().then(async () => {
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Infinite Image Browsing</title>
-    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-594b377e.js"></script>
-    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-4cc43e92.css">
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-17974bd4.js"></script>
+    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-bcb0968c.css">
   </head>
 
   <body>
@@ -23,7 +23,7 @@ Promise.resolve().then(async () => {
     
   </body>
 </html>
-`
+`.replace(/\/infinite_image_browsing/g, (window.location.pathname + '/infinite_image_browsing').replace(/\/\//g, '/'))
   let containerSelector = '#infinite_image_browsing_container_wrapper'
   let shouldMaximize = true
 

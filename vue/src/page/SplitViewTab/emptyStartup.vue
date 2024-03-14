@@ -24,6 +24,7 @@ const compCnMap: Partial<Record<TabPane['type'], string>> = {
 const createPane = (type: TabPane['type'], path?: string, walkMode = false) => {
   let pane: TabPane
   switch (type) {
+    case 'grid-view':
     case 'tag-search-matched-image-grid':
     case 'img-sli':
       return

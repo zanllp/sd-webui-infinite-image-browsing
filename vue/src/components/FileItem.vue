@@ -27,12 +27,13 @@ const props = withDefaults(
     cellWidth: number
     fullScreenPreviewImageUrl?: string
     enableRightClickMenu?: boolean,
-    enableCloseIcon?: boolean
+    enableCloseIcon?: boolean,
     isSelectedMutilFiles?: boolean
     genDiffToPrevious?: GenDiffInfo
     genDiffToNext?: GenDiffInfo
     genInfo?: string
     enableChangeIndicator?: boolean
+    extraTags?: Tag[]
   }>(),
   { selected: false, enableRightClickMenu: true, enableCloseIcon: false, genDiffToNext: () => ({
     empty: true,
@@ -131,7 +132,7 @@ const taggleLikeTag = () => {
             onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
           }" />
           <div class="tags-container" v-if="customTags && cellWidth > 128">
-            <a-tag v-for="tag in customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
+            <a-tag v-for="tag in extraTags ?? customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
               {{ tag.name }}
             </a-tag>
           </div>

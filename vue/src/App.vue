@@ -10,6 +10,7 @@ import { refreshTauriConf, tauriConf } from './util/tauriAppConf'
 import { openModal } from './taurilaunchModal'
 import { isTauri } from './util/env'
 import { delay } from 'vue3-ts-util'
+import { exportFn } from './defineExportFunc'
 
 const globalStore = useGlobalStore()
 const queue = createReactiveQueue()
@@ -21,6 +22,7 @@ useGlobalEventListen('updateGlobalSetting', async () => {
   globalStore.conf = resp
   const r = await getQuickMovePaths(resp)
   globalStore.quickMovePaths = r.filter((v) => v?.dir?.trim?.())
+  exportFn(globalStore)
   resolveQueryActions(globalStore)
 })
 

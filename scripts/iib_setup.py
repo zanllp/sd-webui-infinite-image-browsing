@@ -7,6 +7,7 @@ from scripts.iib.logger import logger
 
 from fastapi import FastAPI
 import gradio as gr
+from modules.shared import cmd_opts
 
 """
 api函数声明和启动分离方便另外一边被外部调用
@@ -71,7 +72,14 @@ def on_ui_tabs():
 
 def on_app_started(_: gr.Blocks, app: FastAPI) -> None:
     # 第一个参数是SD-WebUI传进来的gr.Blocks，但是不需要使用
-    infinite_image_browsing_api(app)
+    DEFAULT_BASE = "/infinite_image_browsing"
+    fe_public_path = None
+    subpath = vars(cmd_opts).get("subpath")
+
+    if subpath:
+        base = "/" + subpath + "/" + DEFAULT_BASE
+        fe_public_path = base.replace('//', '/')
+    infinite_image_browsing_api(app, fe_public_path = fe_public_path)
 
 
 script_callbacks.on_ui_tabs(on_ui_tabs)
