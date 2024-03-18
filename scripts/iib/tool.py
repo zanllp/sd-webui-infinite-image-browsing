@@ -1,3 +1,4 @@
+import ctypes
 from datetime import datetime
 import os
 import platform
@@ -137,10 +138,12 @@ def human_readable_size(size_bytes):
 
 def get_windows_drives():
     drives = []
-    for drive in range(ord("A"), ord("Z") + 1):
-        drive_name = chr(drive) + ":/"
-        if os.path.exists(drive_name):
+    bitmask = ctypes.windll.kernel32.GetLogicalDrives()
+    for letter in range(65, 91):
+        if bitmask & 1:
+            drive_name = chr(letter) + ":/"
             drives.append(drive_name)
+        bitmask >>= 1
     return drives
 
 
