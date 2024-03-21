@@ -169,7 +169,7 @@ def convert_to_bytes(file_size_str):
         raise ValueError(f"Invalid file size string '{file_size_str}'")
     
 def get_video_type(file_path):
-    video_extensions = ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv']
+    video_extensions = ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.ts']
     file_extension = file_path[file_path.rfind('.'):].lower()
 
     if file_extension in video_extensions:
