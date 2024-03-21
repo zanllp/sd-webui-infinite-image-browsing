@@ -167,9 +167,17 @@ def convert_to_bytes(file_size_str):
         return int(size)
     else:
         raise ValueError(f"Invalid file size string '{file_size_str}'")
+    
+def get_video_type(file_path):
+    video_extensions = ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv']
+    file_extension = file_path[file_path.rfind('.'):].lower()
 
+    if file_extension in video_extensions:
+        return file_extension[1:] 
+    else:
+        return None
 
-def is_valid_image_path(path):
+def is_valid_media_path(path):
     """
     判断给定的路径是否是图像文件
     """
@@ -178,7 +186,7 @@ def is_valid_image_path(path):
         return False
     if not os.path.isfile(abs_path):  # 判断是否是文件
         return False
-    if not imghdr.what(abs_path):  # 判断是否是图像文件
+    if not imghdr.what(abs_path) and not get_video_type(abs_path):  # 判断是否是图像文件
         return False
     return True
 

@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import * as Path from '@/util/path'
 import { FileNodeInfo, mkdirs } from '@/api/files'
 import { t } from '@/i18n'
-import { downloadFiles, globalEvents, toRawFileUrl } from '@/util'
+import { downloadFiles, globalEvents, toRawFileUrl, toStreamVideoUrl } from '@/util'
 import { DownloadOutlined } from '@/icon'
 import { isStandalone } from '@/util/env'
 import { rebuildImageIndex } from '@/api/db'
@@ -52,7 +52,7 @@ export const openVideoModal = (file: FileNodeInfo) => {
           flexDirection: 'column'
         }}
       >
-        <video style={{ maxHeight: isStandalone ? '80vh' : '60vh' }} src={toRawFileUrl(file)} controls autoplay></video>
+        <video style={{ maxHeight: isStandalone ? '80vh' : '60vh' }} src={toStreamVideoUrl(file)} controls autoplay></video>
         <div class="actions" style={{ marginTop: '16px' }}>
           <Button onClick={() => downloadFiles([toRawFileUrl(file, true)])}>
             {{

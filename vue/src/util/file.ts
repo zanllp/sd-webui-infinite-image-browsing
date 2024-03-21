@@ -4,13 +4,18 @@ import { uniqBy } from 'lodash-es'
 
 const encode = encodeURIComponent
 export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
-  `${apiBase.value}/file?path=${encode(file.fullpath)}&t=${encode(file.date)}${
-    download ? `&disposition=${encode(file.name)}` : ''
+  `${apiBase.value}/file?path=${encode(file.fullpath)}&t=${encode(file.date)}${download ? `&disposition=${encode(file.name)}` : ''
   }`
 export const toImageThumbnailUrl = (file: FileNodeInfo, size: string = '512x512') =>
   `${apiBase.value}/image-thumbnail?path=${encode(file.fullpath)}&size=${size}&t=${encode(
     file.date
   )}`
+
+export const toStreamVideoUrl = (file: FileNodeInfo) =>
+  `${apiBase.value}/stream_video?path=${encode(file.fullpath)}`
+
+  export const toVideoCoverUrl = (file: FileNodeInfo) =>
+  parent.document.location.origin+ `${apiBase.value}/video_cover?path=${encode(file.fullpath)}&t=${encode(file.date)}`
 
 export type FileTransferData = {
   path: string[]
@@ -30,7 +35,7 @@ export const getFileTransferDataFromDragEvent = (e: DragEvent) => {
 
 export const uniqueFile = (files: FileNodeInfo[]) => uniqBy(files, 'fullpath')
 
-export function isImageFile(filename: string): boolean {
+export function isImageFile (filename: string): boolean {
   if (typeof filename !== 'string') {
     return false
   }
@@ -39,7 +44,7 @@ export function isImageFile(filename: string): boolean {
   return extension !== undefined && exts.includes(`.${extension}`)
 }
 
-export function isVideoFile(filename: string): boolean {
+export function isVideoFile (filename: string): boolean {
   if (typeof filename !== 'string') {
     return false
   }
@@ -50,10 +55,10 @@ export function isVideoFile(filename: string): boolean {
 
 export const isMediaFile = (file: string) => isImageFile(file) || isVideoFile(file)
 
-export function downloadFiles(urls: string[]) {
-  const link = document.createElement('a');
-  link.style.display = 'none';
-  document.body.appendChild(link);
+export function downloadFiles (urls: string[]) {
+  const link = document.createElement('a')
+  link.style.display = 'none'
+  document.body.appendChild(link)
 
   urls.forEach((url) => {
     const urlObject = new URL(url, 'https://github.com/zanllp/sd-webui-infinite-image-browsing')
@@ -62,12 +67,12 @@ export function downloadFiles(urls: string[]) {
     if (disposition) {
       filename = disposition
     }
-    link.href = url;
-    link.download = filename;
-    link.click();
-  });
+    link.href = url
+    link.download = filename
+    link.click()
+  })
 
-  document.body.removeChild(link);
+  document.body.removeChild(link)
 }
 
 export const downloadFileInfoJSON = (files: FileNodeInfo[], name?: string) => {

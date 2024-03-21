@@ -6,8 +6,9 @@ from PIL import Image
 from scripts.iib.tool import (
     read_sd_webui_gen_info_from_image,
     parse_generation_parameters,
-    is_valid_image_path,
+    is_valid_media_path,
     get_modified_date,
+    get_video_type,
     is_dev,
     get_comfyui_exif_data,
     comfyui_exif_data_to_str,
@@ -22,6 +23,8 @@ from scripts.iib.logger import logger
 def get_exif_data(file_path):
     info = ''
     params = None
+    if get_video_type(file_path):
+        return params, info
     try:
         with Image.open(file_path) as img:
             if is_img_created_by_comfyui(img):
@@ -62,7 +65,7 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
                 if os.path.isdir(file_path):
                     process_folder(file_path)
 
-                elif is_valid_image_path(file_path):
+                elif is_valid_media_path(file_path):
                     img = DbImg.get(conn, file_path)
                     if is_rebuild:
                         parsed_params, info = get_exif_data(file_path)
