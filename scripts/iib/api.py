@@ -25,7 +25,8 @@ from scripts.iib.tool import (
     create_zip_file,
     normalize_paths,
     to_abs_path,
-    is_secret_key_required
+    is_secret_key_required,
+    open_file_with_default_app
 )
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.staticfiles import StaticFiles
@@ -616,6 +617,13 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         file_path = os.path.join(zip_temp_dir, f"iib_batch_download_{timestamp}.zip")
         create_zip_file(req.paths, file_path)
         return FileResponse(file_path, media_type="application/zip")
+    
+    @app.post(
+        api_base + "/open_with_default_app",
+        dependencies=[Depends(verify_secret), Depends(write_permission_required)],
+    )
+    def open_target_file_withDefault_app(req: OpenFolderReq):
+        open_file_with_default_app(req.path)
 
     db_api_base = api_base + "/db"
 

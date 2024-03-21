@@ -1,4 +1,4 @@
-import { createReactiveQueue } from '@/util'
+import { createReactiveQueue, downloadFileInfoJSON } from '@/util'
 import { identity } from 'lodash-es'
 import { reactive, computed } from 'vue'
 import {
@@ -49,6 +49,17 @@ export const useImageSearch = (iter: ReturnType<typeof createImageSearchIter>) =
     paths.forEach((v) => deletedImagePahts.add(v))
   })
 
+  const saveLoadedFileAsJson = () => {
+    downloadFileInfoJSON(images.value)
+  }
+
+  const saveAllFileAsJson = async () => {
+    while (!iter.load) {
+      await iter.next()
+    }
+    saveLoadedFileAsJson()
+  }
+
 
   return {
     images,
@@ -74,6 +85,8 @@ export const useImageSearch = (iter: ReturnType<typeof createImageSearchIter>) =
     onFileDragStart,
     onFileDragEnd,
     cellWidth,
-    onScroll
+    onScroll,
+    saveLoadedFileAsJson,
+    saveAllFileAsJson
   }
 }

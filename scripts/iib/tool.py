@@ -524,3 +524,13 @@ def open_folder(folder_path, file_path=None):
             subprocess.run(["xdg-open", folder])
 
 
+def open_file_with_default_app(file_path):
+    system = platform.system()
+    if system == 'Darwin':  # macOS
+        subprocess.call(['open', file_path])
+    elif system == 'Windows':  # Windows
+        subprocess.call(file_path, shell=True)
+    elif system == 'Linux':  # Linux
+        subprocess.call(['xdg-open', file_path])
+    else:
+        raise OSError(f'Unsupported operating system: {system}')

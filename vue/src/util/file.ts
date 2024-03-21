@@ -69,3 +69,14 @@ export function downloadFiles(urls: string[]) {
 
   document.body.removeChild(link);
 }
+
+export const downloadFileInfoJSON = (files: FileNodeInfo[], name?: string) => {
+  const url = window.URL.createObjectURL(new Blob([JSON.stringify({
+    files
+  }, null, 4)]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `iib_imginfo_${name ?? new Date().toLocaleString()}.json`)
+  document.body.appendChild(link)
+  link.click()
+}

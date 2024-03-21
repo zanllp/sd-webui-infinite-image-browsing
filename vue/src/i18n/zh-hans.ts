@@ -1,4 +1,8 @@
 export const zhHans = {
+  openWithDefaultApp: '使用默认应用打开',
+  saveSelectedAsJson: '保存选中图像信息',
+  saveAllAsJson: '保存所有图像信息',
+  saveLoadedImageAsJson: '保存已加载的图像信息',
   items: "{0}个项目",
   selectedItems: "已选择{0}个项目",
   scrollDownToComparePrompt: "向下滚查看Prompt比较",
