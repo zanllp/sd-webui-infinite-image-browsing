@@ -680,7 +680,7 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
     const s = scroller.value
     if (s) {
       const paths = sortedFiles.value.slice(Math.max(s.$_startIndex - 10, 0), s.$_endIndex + 10)
-        .filter(v => v.is_under_scanned_path && isImageFile(v.name))
+        .filter(v => v.is_under_scanned_path && isMediaFile(v.name))
         .map(v => v.fullpath)
       tagStore.fetchImageTags(paths)
     }
