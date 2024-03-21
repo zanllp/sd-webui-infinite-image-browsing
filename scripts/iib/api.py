@@ -535,7 +535,6 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
 
         # 如果缓存文件存在，则直接返回该文件
         if os.path.exists(cache_path):
-            print("命中缓存")
             return FileResponse(
                 cache_path,
                 media_type="image/webp",
