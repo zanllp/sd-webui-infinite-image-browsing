@@ -2,7 +2,7 @@ import { useGlobalStore, type FileTransferTabPane, type Shortcut, type TagSearch
 import { useImgSliStore } from '@/store/useImgSli'
 import { onLongPress, useElementSize, useMouseInElement } from '@vueuse/core'
 import { ref, computed, watch, onMounted, h, reactive } from 'vue'
-import { genInfoCompleted, getImageGenerationInfo, openFolder, setImgPath } from '@/api'
+import { genInfoCompleted, getImageGenerationInfo, openFolder, openWithDefaultApp, setImgPath } from '@/api'
 import {
   useWatchDocument,
   ok,
@@ -30,7 +30,7 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
 import { addExtraPath, batchUpdateImageTag, removeExtraPath, toggleCustomTagToImg } from '@/api/db'
-import { FileTransferData, downloadFiles, getFileTransferDataFromDragEvent, isMediaFile, toRawFileUrl } from '@/util/file'
+import { FileTransferData, downloadFileInfoJSON, downloadFiles, getFileTransferDataFromDragEvent, isMediaFile, toRawFileUrl } from '@/util/file'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { openCreateFlodersModal, MultiSelectTips } from '@/components/functionalCallableComp'
 import { useTagStore } from '@/store/useTagStore'
@@ -933,6 +933,10 @@ export function useFileItemActions (
     switch (e.key) {
       case 'previewInNewWindow':
         return window.open(url)
+      case 'saveSelectedAsJson':
+        return downloadFileInfoJSON(getSelectedImg())
+      case 'openWithDefaultApp':
+        return openWithDefaultApp(file.fullpath)
       case 'download':{
         const selectedFiles = getSelectedImg()
         downloadFiles(selectedFiles.map(file => toRawFileUrl(file, true)))

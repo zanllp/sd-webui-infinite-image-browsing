@@ -1,6 +1,10 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  openWithDefaultApp: 'Open with default app',
+  saveSelectedAsJson: 'Save selected image info',
+  saveAllAsJson: 'Save all image info',
+  saveLoadedImageAsJson: 'Save loaded image info',
   selectedItems: ' {0} selected',
   items: '{0} items',
   scrollDownToComparePrompt: "Scroll down to compare prompts",

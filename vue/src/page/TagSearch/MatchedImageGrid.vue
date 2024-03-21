@@ -43,6 +43,8 @@ const {
   onFileDragEnd,
   cellWidth,
   onScroll,
+  saveAllFileAsJson,
+  saveLoadedFileAsJson
 } = useImageSearch(iter)
 
 watch(
@@ -77,6 +79,11 @@ watch(
           </div>
         </ASkeleton>
       </AModal>
+      <div class="action-bar">
+        <a-button @click="saveLoadedFileAsJson">{{ $t('saveLoadedImageAsJson') }}</a-button>
+        <a-button @click="saveAllFileAsJson">{{ $t('saveAllAsJson') }}</a-button>
+
+      </div>
       <RecycleScroller
         ref="scroller"
         class="file-list"
@@ -162,13 +169,22 @@ watch(
 
 .container {
   background: var(--zp-secondary-background);
+  .action-bar {
+    display: flex;
+    align-items: center;
+    user-select: none;
+    gap: 4px; 
+    padding: 4px;
+    &>* {
+      flex-wrap: wrap;
+    }
+  }
 
   .file-list {
     list-style: none;
     padding: 8px;
-    height: 100%;
     overflow: auto;
-    height: var(--pane-max-height);
+    height: calc(var(--pane-max-height) - 40px);
     width: 100%;
   }
   .no-res-hint {

@@ -48,7 +48,9 @@ const {
   onFileDragStart,
   onFileDragEnd,
   cellWidth,
-  onScroll
+  onScroll,
+  saveAllFileAsJson,
+  saveLoadedFileAsJson
 } = useImageSearch(iter)
 
 const info = ref<DataBaseBasicInfo>()
@@ -106,9 +108,13 @@ const onRegexpClick = () => {
         $t('search') }}
       </AButton>
     </div>
-    <div class="search-bar last">
+    <div class="search-bar">
       <div class="form-name">{{ $t('searchScope') }}</div>
       <ATextarea :auto-size="{ maxRows: 8 }" v-model:value="folder_paths_str" :placeholder="$t('specifiedSearchFolder')"/>
+    </div>
+    <div class="search-bar last actions">
+      <a-button @click="saveLoadedFileAsJson">{{ $t('saveLoadedImageAsJson') }}</a-button>
+      <a-button @click="saveAllFileAsJson">{{ $t('saveAllAsJson') }}</a-button>
     </div>
     <ASpin size="large" :spinning="!queue.isIdle">
       <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
@@ -179,6 +185,9 @@ const onRegexpClick = () => {
       flex-shrink: 0;
       padding: 4px 8px;
     }
+  .actions > * {
+    margin-right:  4px;
+  }
 }
 
 .preview-switch {

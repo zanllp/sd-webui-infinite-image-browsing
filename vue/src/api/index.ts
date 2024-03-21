@@ -124,3 +124,7 @@ export const getImageGenerationInfoBatch = async (paths: string[]) => {
 export const openFolder = async (path: string) => {
   await axiosInst.value.post('/open_folder', { path })
 }
+
+export const openWithDefaultApp = async (path: string) => {
+  await axiosInst.value.post('/open_with_default_app', { path })
+}
