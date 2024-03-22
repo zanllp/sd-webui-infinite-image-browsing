@@ -50,27 +50,21 @@ def backup_db_file(db_file_path):
         return
     max_backup_count = int(os.environ.get('IIB_DB_FILE_BACKUP_MAX', '20'))
     backup_folder = os.path.join(cwd,'iib_db_backup')
-
     current_time = datetime.now()
     timestamp = current_time.strftime('%Y-%m-%d %H-%M-%S')
-
     backup_filename = f"iib.db_{timestamp}"
-
     os.makedirs(backup_folder, exist_ok=True)
-
     backup_filepath = os.path.join(backup_folder, backup_filename)
-
     shutil.copy2(db_file_path, backup_filepath)
-
     backup_files = os.listdir(backup_folder)
-
-    sorted_backup_files = sorted(backup_files, key=lambda f: os.path.getmtime(os.path.join(backup_folder, f)))
+    pattern = r"iib\.db_(\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2})"
+    backup_files_with_time = [(f, re.search(pattern, f).group(1)) for f in backup_files if re.search(pattern, f)]
+    sorted_backup_files = sorted(backup_files_with_time, key=lambda x: datetime.strptime(x[1], '%Y-%m-%d %H-%M-%S'))
 
     if len(sorted_backup_files) > max_backup_count:
         files_to_remove_count = len(sorted_backup_files) - max_backup_count
-
         for i in range(files_to_remove_count):
-            file_to_remove = os.path.join(backup_folder, sorted_backup_files[i])
+            file_to_remove = os.path.join(backup_folder, sorted_backup_files[i][0])
             os.remove(file_to_remove)
             
     print(f"\033[92mIIB Database file has been successfully backed up to the backup folder.\033[0m")
