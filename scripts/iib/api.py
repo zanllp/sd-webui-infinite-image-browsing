@@ -1,14 +1,16 @@
 from datetime import datetime, timedelta
 import os
+from pathlib import Path
 import shutil
 import sqlite3
+
 from scripts.iib.tool import (
     comfyui_exif_data_to_str,
     get_comfyui_exif_data,
     human_readable_size,
     is_img_created_by_comfyui,
     is_img_created_by_comfyui_with_webui_gen_info,
-    is_valid_image_path,
+    is_valid_media_path,
     temp_path,
     read_sd_webui_gen_info_from_image,
     get_formatted_date,
@@ -28,12 +30,12 @@ from scripts.iib.tool import (
     is_secret_key_required,
     open_file_with_default_app
 )
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Header, Response
 from fastapi.staticfiles import StaticFiles
 import asyncio
 from typing import List, Optional
 from pydantic import BaseModel
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from PIL import Image
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -53,6 +55,7 @@ from scripts.iib.db.update_image_data import update_image_data, rebuild_image_in
 from scripts.iib.logger import logger
 from scripts.iib.seq import seq
 import urllib.parse
+from scripts.iib.fastapi_video import range_requests_response
 
 index_html_path = os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 
@@ -493,7 +496,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             encoded_filename = urllib.parse.quote(disposition.encode('utf-8'))
             headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{encoded_filename}"
 
-        if is_path_under_parents(filename) and is_valid_image_path(
+        if is_path_under_parents(filename) and is_valid_media_path(
             filename
         ):  # 认为永远不变,不要协商缓存了试试
             headers[
@@ -507,6 +510,53 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             filename,
             media_type=media_type,
             headers=headers,
+        )
+    
+    @app.get(api_base + "/stream_video", dependencies=[Depends(verify_secret)])
+    async def stream_video(path: str, request: Request):
+        import mimetypes
+        print(path)
+        print(request)
+        media_type, _ = mimetypes.guess_type(path)
+        return range_requests_response(
+            request, file_path=path, content_type=media_type
+        )
+
+    @app.get(api_base + "/video_cover", dependencies=[Depends(verify_secret)])
+    async def video_cover(path: str, t: str):        
+        check_path_trust(path)
+        if not temp_path:
+            return
+        # 生成缓存文件的路径
+        hash_dir = hashlib.md5((path + t).encode("utf-8")).hexdigest()
+        hash = hash_dir
+        cache_dir = os.path.join(temp_path, "iib_cache", "video_cover", hash_dir)
+        cache_path = os.path.join(cache_dir, "cover.webp")
+
+        # 如果缓存文件存在，则直接返回该文件
+        if os.path.exists(cache_path):
+            return FileResponse(
+                cache_path,
+                media_type="image/webp",
+                headers={"Cache-Control": "max-age=31536000", "ETag": hash},
+            )
+        # 如果缓存文件不存在，则生成缩略图并保存
+        
+        import imageio.v3 as iio
+        frame = iio.imread(
+            path,
+            index=16,
+            plugin="pyav",
+        )
+        
+        os.makedirs(cache_dir, exist_ok=True)
+        iio.imwrite(cache_path,frame, extension=".webp")
+
+        # 返回缓存文件
+        return FileResponse(
+            cache_path,
+            media_type="image/webp",
+            headers={"Cache-Control": "max-age=31536000", "ETag": hash},
         )
 
     @app.post(api_base + "/send_img_path", dependencies=[Depends(verify_secret)])
@@ -728,7 +778,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     @app.get(db_api_base + "/img_selected_custom_tag", dependencies=[Depends(verify_secret)])
     async def get_img_selected_custom_tag(path: str):
         path = os.path.normpath(path)
-        if not is_valid_image_path(path):
+        if not is_valid_media_path(path):
             return []
         conn = DataBase.get_conn()
         update_extra_paths(conn)
