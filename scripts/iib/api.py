@@ -29,7 +29,8 @@ from scripts.iib.tool import (
     to_abs_path,
     is_secret_key_required,
     open_file_with_default_app,
-    is_nuitka
+    is_nuitka,
+    backup_db_file
 )
 from fastapi import FastAPI, HTTPException, Header, Response
 from fastapi.staticfiles import StaticFiles
@@ -101,6 +102,7 @@ async def verify_secret(request: Request):
 
 DEFAULT_BASE = "/infinite_image_browsing"
 def infinite_image_browsing_api(app: FastAPI, **kwargs):
+    backup_db_file(DataBase.get_db_file_path())
     api_base = kwargs.get("base") if isinstance(kwargs.get("base"), str) else DEFAULT_BASE
     fe_public_path = kwargs.get("fe_public_path") if isinstance(kwargs.get("fe_public_path"), str) else api_base
     # print(f"IIB api_base:{api_base} fe_public_path:{fe_public_path}")
