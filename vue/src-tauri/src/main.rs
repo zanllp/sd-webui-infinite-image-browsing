@@ -82,11 +82,17 @@ fn main() {
         // read events such as stdout
         while let Some(event) = rx.recv().await {
             match event {
-                CommandEvent::Stdout(line) => println!("{}", line),
+                CommandEvent::Stdout(line) => {
+                    let timestamp: DelayedFormat<StrftimeItems<'_>> =
+                        Local::now().format("[%Y-%m-%d %H:%M:%S]");
+                    let log_line = format!("INFO {} {}", timestamp, line);
+                    println!("{}", log_line);
+                    writeln!(&log_file, "{}", log_line).expect("Failed to write to log file");
+                },
                 CommandEvent::Stderr(line) => {
                     let timestamp: DelayedFormat<StrftimeItems<'_>> =
                         Local::now().format("[%Y-%m-%d %H:%M:%S]");
-                    let log_line = format!("{} {}", timestamp, line);
+                    let log_line = format!("ERR {} {}", timestamp, line);
                     println!("{}", log_line);
                     writeln!(&log_file, "{}", log_line).expect("Failed to write to log file");
                 }
