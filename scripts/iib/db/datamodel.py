@@ -51,13 +51,15 @@ class DataBase:
             clz.local.conn = conn
 
             return conn
+        
+    @classmethod
+    def get_db_file_path(clz):
+        return clz.path if os.path.isabs(clz.path) else os.path.join(cwd, clz.path)
 
     @classmethod
     def init(clz):
         # 创建连接并打开数据库
-        conn = connect(
-            clz.path if os.path.isabs(clz.path) else os.path.join(cwd, clz.path)
-        )
+        conn = connect(clz.get_db_file_path())
 
         def regexp(expr, item):
             if not isinstance(item, str):
