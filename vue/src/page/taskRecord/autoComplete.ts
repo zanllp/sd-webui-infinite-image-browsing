@@ -53,7 +53,7 @@ export const getQuickMovePaths = async ({
     outdir_samples: t('image'),
     outdir_txt2img_grids: t('t2i-grid'),
     cwd: t('workingFolder'),
-    home: 'home',
+    home: t('home'),
     desktop: t('desktop')
   }
   const pathAliasMap = {
