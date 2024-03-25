@@ -663,6 +663,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
     def zip_files(req: PathsReq):
+        for path in req.paths:
+            check_path_trust(path)
+            if not os.path.isfile(path):
+                   raise HTTPException(400, "The corresponding path must be a file.")
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
         zip_temp_dir = os.path.join(cwd, "zip_temp")
