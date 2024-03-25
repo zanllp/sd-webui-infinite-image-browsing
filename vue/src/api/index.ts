@@ -59,7 +59,15 @@ const addInterceptor = (axiosInst: AxiosInstance) => {
             })
             throw new Error(t('secretKeyRequiredWarnMsg'))
         }
-        const errmsg = err.response?.data?.detail ?? t('errorOccurred')
+        let errmsg = err.response?.data?.detail
+        try {
+          if (!errmsg) {
+            errmsg = JSON.parse(await err.response?.data.text()).detail
+          }
+        } catch (e) {
+          console.error(err.response ,e)
+        }
+        errmsg ??=  t('errorOccurred')
         message.error(errmsg)
         throw new Error(errmsg)
       }
