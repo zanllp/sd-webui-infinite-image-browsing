@@ -516,10 +516,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         )
     
     @app.get(api_base + "/stream_video", dependencies=[Depends(verify_secret)])
-    async def stream_video(path: str, request: Request):
+    async def stream_video(path: str, request: Request):      
+        check_path_trust(path)
         import mimetypes
-        print(path)
-        print(request)
         media_type, _ = mimetypes.guess_type(path)
         return range_requests_response(
             request, file_path=path, content_type=media_type
@@ -680,6 +679,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
     def open_target_file_withDefault_app(req: OpenFolderReq):
+        check_path_trust(req.path)
         open_file_with_default_app(req.path)
 
     db_api_base = api_base + "/db"
