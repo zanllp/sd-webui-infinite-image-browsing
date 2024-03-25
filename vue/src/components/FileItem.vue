@@ -144,7 +144,7 @@ const taggleLikeTag = () => {
           </div>
         </div>
         <div :class="`idx-${idx} item-content video`" :urld="toVideoCoverUrl(file)" :style="{ 'background-image': `url('${toVideoCoverUrl(file)}')` }"
-          v-else-if="isVideoFile(file.name)" @click="openVideoModal(file)">
+          v-else-if="isVideoFile(file.name)" @click="openVideoModal(file, (id) => emit('contextMenuClick', { key: `toggle-tag-${id}` } as any, file, idx))">
       
           <div class="play-icon">
             <img :src="play" style="width: 40px;height: 40px;">
