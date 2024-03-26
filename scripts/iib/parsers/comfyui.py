@@ -21,12 +21,15 @@ class ComfyUIParser:
         params = None
         if not clz.test(img):
             raise Exception("The input image does not match the current parser.")
-        if is_img_created_by_comfyui_with_webui_gen_info(img):
-            info = read_sd_webui_gen_info_from_image(img, file_path)
-            params = parse_generation_parameters(info)
-        else:
-            params = get_comfyui_exif_data(img)
-            info = comfyui_exif_data_to_str(params)
+        try:
+            if is_img_created_by_comfyui_with_webui_gen_info(img):
+                info = read_sd_webui_gen_info_from_image(img, file_path)
+                params = parse_generation_parameters(info)
+            else:
+                params = get_comfyui_exif_data(img)
+                info = comfyui_exif_data_to_str(params)
+        except Exception:
+            return ImageGenerationInfo()
         return ImageGenerationInfo(
             info,
             ImageGenerationParams(
