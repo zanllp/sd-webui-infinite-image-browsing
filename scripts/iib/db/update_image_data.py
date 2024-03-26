@@ -6,11 +6,8 @@ from scripts.iib.tool import (
     is_valid_media_path,
     get_modified_date,
     get_video_type,
-    is_dev
-    is_valid_media_path,
+    is_dev,
     get_modified_date,
-    get_modified_date,
-    is_dev
 )
 from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 from scripts.iib.logger import logger
