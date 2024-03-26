@@ -8,7 +8,7 @@ from scripts.iib.tool import (
     parse_generation_parameters,
     read_sd_webui_gen_info_from_image,
 )
-from scripts.iib.vendor.model import ImageGenerationInfo, ImageGenerationParams
+from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 
 
 class ComfyUIParser:
@@ -20,7 +20,7 @@ class ComfyUIParser:
         info = ""
         params = None
         if not clz.test(img):
-            raise Exception("image not matchd")
+            raise Exception("The input image does not match the current parser.")
         if is_img_created_by_comfyui_with_webui_gen_info(img):
             info = read_sd_webui_gen_info_from_image(img, file_path)
             params = parse_generation_parameters(info)

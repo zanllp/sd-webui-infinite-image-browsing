@@ -53,7 +53,7 @@ from scripts.iib.logger import logger
 from scripts.iib.seq import seq
 import urllib.parse
 from scripts.iib.fastapi_video import range_requests_response
-from scripts.iib.vendor.index import parse_image_info
+from scripts.iib.parsers.index import parse_image_info
 
 index_html_path = os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 

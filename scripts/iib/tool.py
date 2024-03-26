@@ -569,5 +569,6 @@ def open_file_with_default_app(file_path):
         subprocess.call(['xdg-open', file_path])
     else:
         raise OSError(f'Unsupported operating system: {system}')
+    
 def omit(d, keys):
     return {k: v for k, v in d.items() if k not in keys}

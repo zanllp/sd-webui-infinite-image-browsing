@@ -3,24 +3,18 @@ from typing import Dict, List
 from scripts.iib.db.datamodel import Image as DbImg, Tag, ImageTag, DataBase, Folder
 import os
 from scripts.iib.tool import (
-    read_sd_webui_gen_info_from_image,
-    parse_generation_parameters,
     is_valid_media_path,
     get_modified_date,
     get_video_type,
-    is_dev,
-    get_comfyui_exif_data,
-    comfyui_exif_data_to_str,
-    is_img_created_by_comfyui,
-    is_img_created_by_comfyui_with_webui_gen_info
+    is_dev
     is_valid_media_path,
     get_modified_date,
     get_modified_date,
     is_dev
 )
-from scripts.iib.vendor.model import ImageGenerationInfo, ImageGenerationParams
+from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 from scripts.iib.logger import logger
-from scripts.iib.vendor.index import parse_image_info
+from scripts.iib.parsers.index import parse_image_info
 
 # 定义一个函数来获取图片文件的EXIF数据
 def get_exif_data(file_path):
