@@ -6,7 +6,7 @@ import sqlite3
 
 from scripts.iib.tool import (
     human_readable_size,
-    is_valid_image_path,
+    is_valid_media_path,
     temp_path,
     get_formatted_date,
     is_win,
