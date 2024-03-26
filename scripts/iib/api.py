@@ -5,14 +5,9 @@ import shutil
 import sqlite3
 
 from scripts.iib.tool import (
-    comfyui_exif_data_to_str,
-    get_comfyui_exif_data,
     human_readable_size,
-    is_img_created_by_comfyui,
-    is_img_created_by_comfyui_with_webui_gen_info,
     is_valid_media_path,
     temp_path,
-    read_sd_webui_gen_info_from_image,
     get_formatted_date,
     is_win,
     cwd,
@@ -58,6 +53,7 @@ from scripts.iib.logger import logger
 from scripts.iib.seq import seq
 import urllib.parse
 from scripts.iib.fastapi_video import range_requests_response
+from scripts.iib.parsers.index import parse_image_info
 
 index_html_path = os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 
@@ -578,20 +574,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
 
     @app.get(api_base + "/image_geninfo", dependencies=[Depends(verify_secret)])
     async def image_geninfo(path: str):
-        with Image.open(path) as img:
-            if is_img_created_by_comfyui(img):
-                if is_img_created_by_comfyui_with_webui_gen_info(img):
-                    return read_sd_webui_gen_info_from_image(img, path)
-                else:
-                    try:                    
-                        params = get_comfyui_exif_data(img)
-                        return comfyui_exif_data_to_str(params)
-                    except:
-                        logger.error('parse comfyui image failed. prompt:')
-                        logger.error(img.info.get('prompt'))
-                        return ''
-            else:
-                return read_sd_webui_gen_info_from_image(img, path)
+        return parse_image_info(path).raw_info
 
     class GeninfoBatchReq(BaseModel):
         paths: List[str]

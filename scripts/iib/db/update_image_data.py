@@ -2,45 +2,27 @@ from contextlib import closing
 from typing import Dict, List
 from scripts.iib.db.datamodel import Image as DbImg, Tag, ImageTag, DataBase, Folder
 import os
-from PIL import Image
 from scripts.iib.tool import (
-    read_sd_webui_gen_info_from_image,
-    parse_generation_parameters,
     is_valid_media_path,
     get_modified_date,
     get_video_type,
     is_dev,
-    get_comfyui_exif_data,
-    comfyui_exif_data_to_str,
-    is_img_created_by_comfyui,
-    is_img_created_by_comfyui_with_webui_gen_info
+    get_modified_date,
 )
-
+from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 from scripts.iib.logger import logger
-
+from scripts.iib.parsers.index import parse_image_info
 
 # 定义一个函数来获取图片文件的EXIF数据
 def get_exif_data(file_path):
-    info = ''
-    params = None
     if get_video_type(file_path):
-        return params, info
+        return ImageGenerationInfo()
     try:
-        with Image.open(file_path) as img:
-            if is_img_created_by_comfyui(img):
-                if is_img_created_by_comfyui_with_webui_gen_info(img):
-                    info = read_sd_webui_gen_info_from_image(img, file_path)
-                    params = parse_generation_parameters(info)
-                else:
-                    params = get_comfyui_exif_data(img)
-                    info = comfyui_exif_data_to_str(params)
-            else:
-                info = read_sd_webui_gen_info_from_image(img, file_path)
-                params = parse_generation_parameters(info)
+        return parse_image_info(file_path)
     except Exception as e:
         if is_dev:
             logger.error("get_exif_data %s", e)
-    return params, info
+    return ImageGenerationInfo()
 
 
 def update_image_data(search_dirs: List[str], is_rebuild = False):
@@ -58,6 +40,7 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
         if not is_rebuild and not Folder.check_need_update(conn, folder_path):
             return
         print(f"Processing folder: {folder_path}")
+        parsed_params = ImageGenerationParams()
         for filename in os.listdir(folder_path):
             file_path = os.path.normpath(os.path.join(folder_path, filename))
             try:
@@ -68,11 +51,12 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
                 elif is_valid_media_path(file_path):
                     img = DbImg.get(conn, file_path)
                     if is_rebuild:
-                        parsed_params, info = get_exif_data(file_path)
+                        info = get_exif_data(file_path)
+                        parsed_params = info.params
                         if not img:
                             img = DbImg(
                                 file_path,
-                                info,
+                                info.raw_info,
                                 os.path.getsize(file_path),
                                 get_modified_date(file_path),
                             )
@@ -83,10 +67,11 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
                                 continue
                             else:
                                 DbImg.safe_batch_remove(conn=conn, image_ids=[img.id])
-                        parsed_params, info = get_exif_data(file_path)
+                        info = get_exif_data(file_path)
+                        parsed_params = info.params
                         img = DbImg(
                             file_path,
-                            info,
+                            info.raw_info,
                             os.path.getsize(file_path),
                             get_modified_date(file_path),
                         )
@@ -94,10 +79,10 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
 
                     if not parsed_params:
                         continue
-                    meta = parsed_params.get("meta", {})
-                    lora = parsed_params.get("lora", [])
-                    lyco = parsed_params.get("lyco", [])
-                    pos = parsed_params["pos_prompt"]
+                    meta = parsed_params.meta
+                    lora = parsed_params.extra.get("lora", [])
+                    lyco = parsed_params.extra.get("lyco", [])
+                    pos = parsed_params.pos_prompt
                     size_tag = Tag.get_or_create(
                         conn,
                         str(meta.get("Size-1", 0)) + " * " + str(meta.get("Size-2", 0)),
