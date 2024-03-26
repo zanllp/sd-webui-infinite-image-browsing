@@ -9,6 +9,7 @@ from scripts.iib.tool import (
     read_sd_webui_gen_info_from_image,
 )
 from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
+from scripts.iib.logger import logger
 
 
 class ComfyUIParser:
@@ -28,7 +29,9 @@ class ComfyUIParser:
             else:
                 params = get_comfyui_exif_data(img)
                 info = comfyui_exif_data_to_str(params)
-        except Exception:
+        except Exception:                        
+            logger.error('parse comfyui image failed. prompt:')
+            logger.error(img.info.get('prompt'))
             return ImageGenerationInfo()
         return ImageGenerationInfo(
             info,
