@@ -15,6 +15,7 @@ from scripts.iib.tool import (
     is_img_created_by_comfyui_with_webui_gen_info
     is_valid_media_path,
     get_modified_date,
+    get_modified_date,
     is_dev
 )
 from scripts.iib.vendor.model import ImageGenerationInfo, ImageGenerationParams
