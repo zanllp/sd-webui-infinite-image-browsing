@@ -20,11 +20,12 @@ class ComfyUIParser:
     def parse(clz, img, file_path):
         info = ""
         params = None
-        if not clz.test(img):
+        if not clz.test(img, file_path):
             raise Exception("The input image does not match the current parser.")
         try:
             if is_img_created_by_comfyui_with_webui_gen_info(img):
                 info = read_sd_webui_gen_info_from_image(img, file_path)
+                info += ", Source Identifier: ComfyUI"
                 params = parse_generation_parameters(info)
             else:
                 params = get_comfyui_exif_data(img)
@@ -41,7 +42,7 @@ class ComfyUIParser:
         )
 
     @classmethod
-    def test(clz, img: Image) -> bool:
+    def test(clz, img: Image, file_path: str) -> bool:
         try:
             return is_img_created_by_comfyui(
                 img

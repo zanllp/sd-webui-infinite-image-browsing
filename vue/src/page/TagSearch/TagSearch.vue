@@ -31,6 +31,7 @@ const tags = computed(() =>
 )
 const classSort = [
   'custom',
+  'Source Identifier',
   'Model',
   'lora',
   'lyco',

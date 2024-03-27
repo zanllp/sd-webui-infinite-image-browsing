@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  'Source Identifier': 'Source',
   openWithDefaultApp: 'Open with default app',
   saveSelectedAsJson: 'Save selected image info',
   saveAllAsJson: 'Save all image info',

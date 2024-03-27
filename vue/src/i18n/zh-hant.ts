@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  'Source Identifier': '來源',
   openWithDefaultApp: '使用預設應用程式開啟',
   saveSelectedAsJson: '儲存選取的圖像資訊',
   saveAllAsJson: '儲存所有圖像資訊',
