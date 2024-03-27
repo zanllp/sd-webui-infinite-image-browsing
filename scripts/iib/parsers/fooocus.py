@@ -49,7 +49,8 @@ class FooocusParser:
                     v = v.replace(",", "，")
                     params["meta"][k] = v
                     metadata_list_str += f" {k}: {v},"
-
+        params["meta"]["Model"] = params["meta"]["Base Model"]
+        params["meta"]["Size"] = str(params["meta"]["Resolution"]).replace("(", "").replace(")", "").replace("，", " * ")
         metadata_list_str = metadata_list_str.strip()
         info = f"""{params['Prompt']}\nNegative prompt: {params['Negative Prompt']}\n{metadata_list_str}""".strip()
         return ImageGenerationInfo(
