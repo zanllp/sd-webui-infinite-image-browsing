@@ -96,6 +96,7 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
                         "Source Identifier",
                         "Postprocess upscale by",
                         "Postprocess upscaler",
+                        "Size"
                     ]:
                         v = meta.get(k)
                         if not v:
