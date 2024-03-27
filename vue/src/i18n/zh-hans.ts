@@ -1,4 +1,5 @@
 export const zhHans = {
+  'Source Identifier': '来源',
   openWithDefaultApp: '使用默认应用打开',
   saveSelectedAsJson: '保存选中图像信息',
   saveAllAsJson: '保存所有图像信息',

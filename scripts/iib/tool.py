@@ -364,8 +364,12 @@ def get_comfyui_exif_data(img: Image):
             pass
     meta = {}
     KSampler_entry = data[meta_key]["inputs"]
+    # As a workaround to bypass parsing errors in the parser.
+    # https://github.com/jiw0220/stable-diffusion-image-metadata/blob/00b8d42d4d1a536862bba0b07c332bdebb2a0ce5/src/index.ts#L130
+    meta["Steps"] = "Unknown" 
     meta["Sampler"] = KSampler_entry["sampler_name"]
     meta["Model"] = data[KSampler_entry["model"][0]]["inputs"]["ckpt_name"]
+    meta["Source Identifier"] = "ComfyUI"
     def get_text_from_clip(idx: str) :
         text = data[idx]["inputs"]["text"]
         if isinstance(text, list): # type:CLIPTextEncode (NSP) mode:Wildcards

@@ -50,6 +50,16 @@ const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
 }>()
 
+
+function reverseEscapeHtml(string: string) {
+  return `${string}`
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g,'<')
+    .replace( /&gt;/g,'>')
+    .replace( /&quot;/g,'"',)
+    .replace( /&#39;/g,'\'');
+}
+
 watch(
   () => props?.file?.fullpath,
   async (path) => {
@@ -59,11 +69,11 @@ watch(
     q.tasks.forEach((v) => v.cancel())
     q.pushAction(() => getImageGenerationInfo(path)).res.then((v) => {
       imageGenInfo.value = v
-      cleanImageGenInfo.value = v.replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#39;");
+      cleanImageGenInfo.value = v.replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     })
   },
   { immediate: true }
@@ -107,20 +117,20 @@ function getParNode (p: any) {
 
 function spanWrap (text: string) {
   if (!text) {
-    return ""
+    return ''
   }
   let result = ''
   const values = text.split(/[\n,]+/)
   let parenthesisActive = false
   for (let i = 0; i < values.length; i++) {
     const trimmedValue = values[i].trim()
-    if (!parenthesisActive) parenthesisActive = trimmedValue.includes("(")
-    const cssClass = parenthesisActive ? "has-parentheses" : ""
+    if (!parenthesisActive) parenthesisActive = trimmedValue.includes('(')
+    const cssClass = parenthesisActive ? 'has-parentheses' : ''
     result += `<span class="${cssClass}">${trimmedValue}</span>`
     if (i < values.length - 1) {
-      result += ","
+      result += ','
     }
-    if (parenthesisActive) parenthesisActive = !trimmedValue.includes(")")
+    if (parenthesisActive) parenthesisActive = !trimmedValue.includes(')')
   }
   return result
 }
@@ -250,7 +260,7 @@ const copyPositivePrompt = () => {
                     <code>{{ txt }}</code>
                   </td>
                   <td v-else>
-                    {{ txt }}
+                    {{ reverseEscapeHtml(txt) }}
                   </td>
                 </tr>
               </table>

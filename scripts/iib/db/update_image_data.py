@@ -93,6 +93,7 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
                     for k in [
                         "Model",
                         "Sampler",
+                        "Source Identifier",
                         "Postprocess upscale by",
                         "Postprocess upscaler",
                     ]:

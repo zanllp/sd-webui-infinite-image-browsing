@@ -13,9 +13,12 @@ class SdWebUIParser:
 
     @classmethod
     def parse(clz, img: Image, file_path):
-        if not clz.test(img):
+        if not clz.test(img, file_path):
             raise Exception("The input image does not match the current parser.")
         info = read_sd_webui_gen_info_from_image(img, file_path)
+        if not info:
+            return ImageGenerationInfo()
+        info += ", Source Identifier: Stable Diffusion web UI"
         params = parse_generation_parameters(info)
         return ImageGenerationInfo(
             info,
@@ -25,7 +28,7 @@ class SdWebUIParser:
         )
 
     @classmethod
-    def test(clz, img: Image):
+    def test(clz, img: Image, file_path: str):
         try:
             return True
         except Exception as e:

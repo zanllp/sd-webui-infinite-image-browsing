@@ -5,7 +5,7 @@ class ImageGenerationParams:
     def __init__(self, meta: dict = {}, pos_prompt: list = [], extra: dict = {}) -> None:
         self.meta = meta
         self.pos_prompt = pos_prompt
-        self.extra = omit(extra, ["meta", "por_prompt"])
+        self.extra = omit(extra, ["meta", "pos_prompt"])
 
 
 class ImageGenerationInfo:
