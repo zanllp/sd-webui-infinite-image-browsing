@@ -249,11 +249,11 @@ export function usePreview () {
     if (previewing.value && !state.sortedFiles[previewIdx.value]) {
       message.info(t('manualExitFullScreen'), 5)
       await delay(500)
-        ; (
-          document.querySelector(
-            '.ant-image-preview-operations-operation .anticon-close'
-          ) as HTMLDivElement
-        )?.click()
+      ; (
+        document.querySelector(
+          '.ant-image-preview-operations-operation .anticon-close'
+        ) as HTMLDivElement
+      )?.click()
       previewIdx.value = -1
     }
   })
@@ -267,6 +267,23 @@ export function usePreview () {
   }
 }
 
+
+export function useKeepMultiSelect () {
+  const { eventEmitter, multiSelectedIdxs, sortedFiles } = useHookShareState().toRefs()
+  const onSelectAll = () => eventEmitter.value.emit('selectAll')
+  const onReverseSelect = () => {
+    multiSelectedIdxs.value = sortedFiles.value.map((_, idx) => idx)
+      .filter(v => !multiSelectedIdxs.value.includes(v))
+  }
+  const onClearAllSelected = () => {
+    multiSelectedIdxs.value = []
+  }
+  return {
+    onSelectAll,
+    onReverseSelect,
+    onClearAllSelected
+  }
+}
 /**
  * 路径栏相关
  */
@@ -649,7 +666,7 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
     }
   }
 
-    // 填充够一页，直到不行为止
+  // 填充够一页，直到不行为止
   const fetchDataUntilViewFilled = async (isFullScreenPreview = false) => {
     const s = scroller.value
     const currIdx = () => (isFullScreenPreview ? previewIdx.value : s?.$_endIndex ?? 0)
@@ -716,8 +733,16 @@ export function useFileTransfer () {
   const recover = () => {
     multiSelectedIdxs.value = []
   }
-  useWatchDocument('click', recover)
-  useWatchDocument('blur', recover)
+  useWatchDocument('click', () => {
+    if (!global.keepMultiSelect) {
+      recover()
+    }
+  })
+  useWatchDocument('blur',  () => {
+    if (!global.keepMultiSelect) {
+      recover()
+    }
+  })
   watch(currPage, recover)
 
   const onFileDragStart = (e: DragEvent, idx: number) => {
@@ -1055,10 +1080,10 @@ export function useFileItemActions (
       case 'deleteFiles': {
         const selectedFiles = getSelectedImg()
         const removeFile = async () => {
-            const paths = selectedFiles.map((v) => v.fullpath)
-            await deleteFiles(paths)
-            message.success(t('deleteSuccess'))
-            events.emit('removeFiles', { paths: paths, loc: currLocation.value })
+          const paths = selectedFiles.map((v) => v.fullpath)
+          await deleteFiles(paths)
+          message.success(t('deleteSuccess'))
+          events.emit('removeFiles', { paths: paths, loc: currLocation.value })
         }
         if (selectedFiles.length === 1 && global.ignoredConfirmActions.deleteOneOnly) {
           return removeFile()

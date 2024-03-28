@@ -11,6 +11,8 @@ import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue
 import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 import { useImageSearch, createImageSearchIter } from './hook'
 import { openRebuildImageIndexModal } from '@/components/functionalCallableComp'
+import { useGlobalStore } from '@/store/useGlobalStore'
+import { useKeepMultiSelect } from '../fileTransfer/hook'
 
 const props = defineProps<{
   tabIdx: number
@@ -57,9 +59,15 @@ watch(
   },
   { immediate: true }
 )
+
+const g = useGlobalStore()
+const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect()
 </script>
 <template>
   <div class="container" ref="stackViewEl">
+    
+    <MultiSelectKeep :show="!!multiSelectedIdxs.length || g.keepMultiSelect" 
+      @clear-all-selected="onClearAllSelected" @select-all="onSelectAll" @reverse-select="onReverseSelect"/>
     <ASpin size="large" :spinning="!queue.isIdle">
       <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
         <template #cancelText />
@@ -95,6 +103,9 @@ watch(
         :gridItems="gridItems"
         @scroll="onScroll"
       >
+        <template #after>
+          <div style="padding: 16px 0 512px;"/>
+        </template>
         <template v-slot="{ item: file, index: idx }">
           <file-item-cell
             :idx="idx"
@@ -169,6 +180,7 @@ watch(
 
 .container {
   background: var(--zp-secondary-background);
+  position: relative;
   .action-bar {
     display: flex;
     align-items: center;

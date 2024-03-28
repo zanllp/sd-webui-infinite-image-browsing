@@ -45,6 +45,7 @@ declare module '@vue/runtime-core' {
     ChangeIndicator: typeof import('./src/components/ChangeIndicator.vue')['default']
     ContextMenu: typeof import('./src/components/ContextMenu.vue')['default']
     FileItem: typeof import('./src/components/FileItem.vue')['default']
+    MultiSelectKeep: typeof import('./src/components/MultiSelectKeep.vue')['default']
     NumInput: typeof import('./src/components/numInput.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

@@ -268,6 +268,7 @@ export const useGlobalStore = defineStore(
       longPressOpenContextMenu,
       openTagSearchMatchedImageGridInRight,
       onlyFoldersAndImages: ref(true),
+      keepMultiSelect: ref(false),
       fullscreenPreviewInitialUrl: ref(''),
       shortcut,
       pageFuncExportMap,
