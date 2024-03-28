@@ -12,6 +12,9 @@ import { LeftCircleOutlined, RightCircleOutlined, regex } from '@/icon'
 import { message } from 'ant-design-vue'
 import { t } from '@/i18n'
 import { createImageSearchIter, useImageSearch } from './hook'
+import { useKeepMultiSelect } from '../fileTransfer/hook'
+import MultiSelectKeep from '@/components/MultiSelectKeep.vue'
+import { useGlobalStore } from '@/store/useGlobalStore'
 
 const props = defineProps<{ tabIdx: number; paneIdx: number, searchScope?: string }>()
 const isRegex = ref(false)
@@ -53,6 +56,7 @@ const {
   saveLoadedFileAsJson
 } = useImageSearch(iter)
 
+
 const info = ref<DataBaseBasicInfo>()
 
 onMounted(async () => {
@@ -93,10 +97,14 @@ useGlobalEventListen('searchIndexExpired', () => info.value && (info.value.expir
 const onRegexpClick = () => {
   isRegex.value = !isRegex.value
 }
+const g = useGlobalStore()
 
+const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect()
 </script>
 <template>
   <div class="container" ref="stackViewEl">
+    <MultiSelectKeep :show="!!multiSelectedIdxs.length || g.keepMultiSelect" 
+      @clear-all-selected="onClearAllSelected" @select-all="onSelectAll" @reverse-select="onReverseSelect"/>
     <div class="search-bar" v-if="info" @keydown.stop>
       <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder') + ' ' + $t('regexSearchEnabledHint')"
         :disabled="!queue.isIdle" @keydown.enter="query" allow-clear />
@@ -134,6 +142,9 @@ const onRegexpClick = () => {
       </AModal>
       <RecycleScroller ref="scroller" class="file-list" v-if="images" :items="images" :item-size="itemSize.first"
         key-field="fullpath" :item-secondary-size="itemSize.second" :gridItems="gridItems" @scroll="onScroll">
+        <template #after>
+          <div style="padding: 16px 0 512px;"/>
+        </template>
         <template v-slot="{ item: file, index: idx }">
           <!-- idx 和file有可能丢失 -->
           <file-item-cell :idx="idx" :file="file" v-model:show-menu-idx="showMenuIdx" @file-item-click="onFileItemClick"
@@ -153,6 +164,11 @@ const onRegexpClick = () => {
   </div>
 </template>
 <style scoped lang="scss">
+::v-deep {
+  .float-panel {
+    position: fixed;
+  }
+}
 .regex-icon {
   img {
     height: 1.5em;
@@ -219,6 +235,8 @@ const onRegexpClick = () => {
 
 .container {
   background: var(--zp-secondary-background);
+  
+  position: relative;
 
   .file-list {
     list-style: none;

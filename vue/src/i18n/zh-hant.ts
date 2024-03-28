@@ -1,13 +1,18 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  exit: '退出',
+  'select-all': '全選',
+  'rerverse-select': '反選',
+  'clear-all-selected': '清除所有選擇',
+  'keep-multi-selected': '保留多選',
   'Source Identifier': '來源',
   openWithDefaultApp: '使用預設應用程式開啟',
   saveSelectedAsJson: '儲存選取的圖像資訊',
   saveAllAsJson: '儲存所有圖像資訊',
   saveLoadedImageAsJson: '儲存已載入的圖像資訊',
   showChangeIndicators: '顯示變更指示器',
-  scrollDownToComparePrompt: "向下滾查看Prompt比較",
+  scrollDownToComparePrompt: '向下滾查看Prompt比較',
   sourceText: '源文本',
   structuredData: '結構化數據',
   searchScope: '搜尋範圍',

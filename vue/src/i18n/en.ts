@@ -1,6 +1,11 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  exit: 'Exit',
+  'select-all': 'Select All',
+  'rerverse-select': 'Reverse Select',
+  'clear-all-selected': 'Clear All Selected',
+  'keep-multi-selected': 'Keep Multi-selected',
   'Source Identifier': 'Source',
   openWithDefaultApp: 'Open with default app',
   saveSelectedAsJson: 'Save selected image info',
@@ -8,7 +13,7 @@ export const en: IIBI18nMap = {
   saveLoadedImageAsJson: 'Save loaded image info',
   selectedItems: ' {0} selected',
   items: '{0} items',
-  scrollDownToComparePrompt: "Scroll down to compare prompts",
+  scrollDownToComparePrompt: 'Scroll down to compare prompts',
   sourceText: 'Source Text',
   structuredData: 'Structured Data',
   searchScope: 'Search Scope',
@@ -31,14 +36,14 @@ export const en: IIBI18nMap = {
   archive: 'Archive',
   zipDownload: 'Download as ZIP',
   batchDownloaDDragAndDropHint:
-    "Use drag and drop or the 'Send to Batch Download' option in the right-click menu to add images from other pages here. Multiple selections are supported.",
+    'Use drag and drop or the \'Send to Batch Download\' option in the right-click menu to add images from other pages here. Multiple selections are supported.',
   lyco: 'LyCORIS',
   sendToThirdPartyExtension: 'Send to third-party extension',
   createFolder: 'Create Folder',
   inputFolderName: 'Input Folder Name',
   desktop: 'Desktop',
   move: 'Move',
-  majorUpdateCustomCellSizeTips: `Major Update: You can now customize the size of the grid image. Adjust it in the global settings page or in the "More" menu in the upper right corner.`,
+  majorUpdateCustomCellSizeTips: 'Major Update: You can now customize the size of the grid image. Adjust it in the global settings page or in the "More" menu in the upper right corner.',
   ImageBrowsingSettings: 'Image Browsing Settings',
   other: 'Other',
   livePreview: 'Live Preview',
@@ -89,7 +94,7 @@ export const en: IIBI18nMap = {
   defaultSortingMethod: 'Default Sorting Method',
   defaultViewMode: 'Default View Mode',
   showPreviewImage: 'Show Preview Image',
-  dontShowAgain: "Don't show again",
+  dontShowAgain: 'Don\'t show again',
   accessControlModeTips:
     'To ensure data security, you are currently running in access control mode, which only allows access to authorized folders. You can adjust the access permissions settings (IIB_ACCESS_CONTROL) by editing the .env file in the root directory of this extension. If the .env file does not exist, you can copy the .env.example file and rename it to .env.',
   changlog: 'Change log',
@@ -121,7 +126,7 @@ export const en: IIBI18nMap = {
   'index.expired': 'Index expired, updating automatically',
   manualExitFullScreen:
     'You have deleted the last image and may need to manually exit Full-screen view',
-  'walk-mode-move-message': "Moving position is only allowed using 'Quick Move' in walk mode",
+  'walk-mode-move-message': 'Moving position is only allowed using \'Quick Move\' in walk mode',
   refreshCompleted: 'Refresh completed',
   //! MissingTranslations
   addedTagToImage: 'Tag "{tag}" has been added to this image',
@@ -148,7 +153,7 @@ export const en: IIBI18nMap = {
   lora: 'LoRA',
   size: 'Size',
   pos: 'Positive Prompt',
-  unknownSavedDir: `Cannot find the saved folder (outdir_save field in the config)`,
+  unknownSavedDir: 'Cannot find the saved folder (outdir_save field in the config)',
   errorOccurred: 'An error occurred',
   useThumbnailPreview: 'Use thumbnail preview',
   gridThumbnailWidth: 'Grid thumbnail width',
