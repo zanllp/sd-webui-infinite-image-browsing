@@ -74,16 +74,16 @@ export const getQuickMovePaths = async ({
     return replacedPaths.sort((a,b) => a.length - b.length)[0]
   }
   const res = Object.keys(cnMap)
-  .filter((k) => exists[pathMap[k as keyof typeof pathMap] as string])
-  .map((k) => {
-    const key = k as Keys
-    return {
-      key,
-      zh: cnMap[key],
-      dir: pathMap[key],
-      can_delete: false,
-      type: 'preset' as 'preset' | ExtraPathType
-    }
-  }).concat(extra_paths.map(v => ({ key: v.path, zh: findshortest(v.path), dir: v.path, can_delete: true, type: v.type })) as any[])
+    .filter((k) => exists[pathMap[k as keyof typeof pathMap] as string])
+    .map((k) => {
+      const key = k as Keys
+      return {
+        key,
+        zh: cnMap[key],
+        dir: pathMap[key],
+        can_delete: false,
+        type: 'preset' as 'preset' | ExtraPathType
+      }
+    }).concat(extra_paths.map(v => ({ key: v.path, zh: findshortest(v.path), dir: v.path, can_delete: true, type: v.type })) as any[])
   return uniqBy(res, v => v.key + v.type)
 }

@@ -39,14 +39,14 @@ const props = withDefaults(
   {
     selected: false, enableRightClickMenu: true, enableCloseIcon: false, genDiffToNext: () => ({
       empty: true,
-      ownFile: "",
-      otherFile: "",
-      diff: "",
+      ownFile: '',
+      otherFile: '',
+      diff: '',
     }), genDiffToPrevious: () => ({
       empty: true,
-      ownFile: "",
-      otherFile: "",
-      diff: "",
+      ownFile: '',
+      otherFile: '',
+      diff: '',
     })
   }
 )

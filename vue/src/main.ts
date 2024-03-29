@@ -16,10 +16,10 @@ import 'vue-diff/dist/index.css';
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 createApp(App)
-    .use(pinia)
-    .use(i18n)
-    .use(VueDiff, {
-      componentName: 'VueDiff',
-    })
-    .mount('#zanllp_dev_gradio_fe')
+  .use(pinia)
+  .use(i18n)
+  .use(VueDiff, {
+    componentName: 'VueDiff',
+  })
+  .mount('#zanllp_dev_gradio_fe')
 

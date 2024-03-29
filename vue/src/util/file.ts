@@ -15,7 +15,7 @@ export const toImageThumbnailUrl = (file: FileNodeInfo, size: string = '512x512'
 export const toStreamVideoUrl = (file: FileNodeInfo) =>
   `${apiBase.value}/stream_video?path=${encode(file.fullpath)}`
 
-  export const toVideoCoverUrl = (file: FileNodeInfo) =>
+export const toVideoCoverUrl = (file: FileNodeInfo) =>
   (isTauri ? '' : parent.document.location.origin)+ `${apiBase.value}/video_cover?path=${encode(file.fullpath)}&t=${encode(file.date)}`
 
 export type FileTransferData = {

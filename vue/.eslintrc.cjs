@@ -1,7 +1,12 @@
+/* eslint-disable no-undef */
 
 // require('@rushstack/eslint-patch/modern-module-resolution')
 
 module.exports = {
+  ignorePatterns: [
+    'dist/',
+    // 其他忽略规则
+  ],
   root: true,
   extends: [
     'plugin:vue/vue3-essential',

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 // @ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Splitpanes, Pane } from 'splitpanes'
 import { FileNodeInfo } from '@/api/files'
 import { getImageGenerationInfo } from '@/api'
@@ -9,54 +10,54 @@ import { parse } from 'stable-diffusion-image-metadata'
 import { useGlobalStore } from '@/store/useGlobalStore'
 
 const props = defineProps<{
-    lImg: FileNodeInfo,
-    rImg: FileNodeInfo
+  lImg: FileNodeInfo,
+  rImg: FileNodeInfo
 }>()
 
 const q = createReactiveQueue()
 const g = useGlobalStore()
-const lImgInfo = ref("")
-const rImgInfo = ref("")
+const lImgInfo = ref('')
+const rImgInfo = ref('')
 let seenKeys = []
 
 function preprocessGenerationInfo (info: any) {
-    let formatted = ""
-    let parsed = parse(info)
+  let formatted = ''
+  let parsed = parse(info)
 
-    formatted += "--- PROMPT --- \r\n"
-    formatted += parsed.prompt?.replace(/\r\n/g, "") + "\r\n\r\n"
-    formatted += "--- NEGATIVE PROMPT --- \r\n"
-    formatted += parsed.negativePrompt ? parsed.negativePrompt.replace(/\n/g, "") + "\r\n\r\n" : "\r\n\r\n"
+  formatted += '--- PROMPT --- \r\n'
+  formatted += parsed.prompt?.replace(/\r\n/g, '') + '\r\n\r\n'
+  formatted += '--- NEGATIVE PROMPT --- \r\n'
+  formatted += parsed.negativePrompt ? parsed.negativePrompt.replace(/\n/g, '') + '\r\n\r\n' : '\r\n\r\n'
 
-    //add rest of info properties line by line
-    //collect seen keys in global array and add linebreak if known key is missing
-    formatted += "--- PARAMS ---\r\n"
-    for (const [key, value] of Object.entries(parsed)) {
-        if (key == "prompt" || key == "negativePrompt") {
-            continue
-        }
-        formatted += key + ": " + value + "\r\n"
-        seenKeys.push(key)
+  //add rest of info properties line by line
+  //collect seen keys in global array and add linebreak if known key is missing
+  formatted += '--- PARAMS ---\r\n'
+  for (const [key, value] of Object.entries(parsed)) {
+    if (key == 'prompt' || key == 'negativePrompt') {
+      continue
     }
+    formatted += key + ': ' + value + '\r\n'
+    seenKeys.push(key)
+  }
 
-    return formatted
+  return formatted
 }
 
 watch(
-    () => props?.lImg?.fullpath,
-    async (path) => {
-        if (!path) {
-            return
-        }
-        q.tasks.forEach((v) => v.cancel())
-        q.pushAction(() => getImageGenerationInfo(path)).res.then((v) => {
-            lImgInfo.value = preprocessGenerationInfo(v)
-        })
-        q.pushAction(() => getImageGenerationInfo(props.rImg.fullpath)).res.then((v) => {
-            rImgInfo.value = preprocessGenerationInfo(v)
-        })
-    },
-    { immediate: true }
+  () => props?.lImg?.fullpath,
+  async (path) => {
+    if (!path) {
+      return
+    }
+    q.tasks.forEach((v) => v.cancel())
+    q.pushAction(() => getImageGenerationInfo(path)).res.then((v) => {
+      lImgInfo.value = preprocessGenerationInfo(v)
+    })
+    q.pushAction(() => getImageGenerationInfo(props.rImg.fullpath)).res.then((v) => {
+      rImgInfo.value = preprocessGenerationInfo(v)
+    })
+  },
+  { immediate: true }
 )
 
 </script>
