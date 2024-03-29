@@ -582,8 +582,13 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     @app.post(api_base + "/image_geninfo_batch", dependencies=[Depends(verify_secret)])
     async def image_geninfo_batch(req: GeninfoBatchReq):
         res = {}
+        conn = DataBase.get_conn()
         for path in req.paths:
-            res[path] = await image_geninfo(path)
+            img = DbImg.get(conn, path)
+            if img:
+                res[path] = img.exif
+            else:
+                res[path] = await image_geninfo(path)
         return res
 
 
