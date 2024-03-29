@@ -2,7 +2,6 @@
 
 # Stable-Diffusion-WebUI无边图像浏览
 
-> 百度云部分已独立，如果你有需要请[点此单独安装](https://github.com/zanllp/sd-webui-baidu-netdisk)
 
 [查看近期更新](https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log)
 
@@ -92,14 +91,16 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 ## 作为使用Python运行的独立程序（不需要SD-webui）:
 请参考[Can the extension function without the web UI?](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47)
 
-如果需要查看ComfyUI生成的图片相关，请先参考 https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/202
+如果需要查看ComfyUI/Fooocus生成的图片相关，请先参考 https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/202#issuecomment-1655764627
 
 如果你需要dockerfile 参考  https://github.com/zanllp/sd-webui-infinite-image-browsing/discussions/366
 
 ## 作为桌面应用程序（不需要SD-webui和Python）:
+exe版本同样支持ComfyUI/Fooocus
 
-从仓库页面右侧的`releases`部分下载并安装程序。如果提升检测到病毒忽略即可这是误报。
+从仓库页面右侧的`releases`部分下载并安装程序。如果提示检测到病毒忽略即可这是误报。
 
+如果你需要自行编译请参考 https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/.github/workflows/tauri_app_build.yml
 ## 作为库使用
 
 使用iframe接入IIB，将IIB作为你应用的文件浏览器使用。 参考 https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/vue/usage.md
