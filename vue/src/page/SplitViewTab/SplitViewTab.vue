@@ -91,7 +91,7 @@ tryOnMounted(async () => {
   }
   par.onUiTabChange(() => {
     const el = par.get_uiCurrentTabContent()
-    if (el?.id.includes("infinite-image-browsing")) {
+    if (el?.id.includes('infinite-image-browsing')) {
       emitReturnToIIB()
     }
   })

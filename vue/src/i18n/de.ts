@@ -24,7 +24,7 @@ export const de: Partial<IIBI18nMap> = {
   manualExitFullScreen:
     'Du hast das letzte Bild gelöscht und musst möglicherweise manuell den Vollbild-Vorschaumodus beenden',
   'walk-mode-move-message':
-    "Im Walk-Modus ist das Verschieben des Verzeichnisses nur über 'Schnellzugriff' gestattet",
+    'Im Walk-Modus ist das Verschieben des Verzeichnisses nur über \'Schnellzugriff\' gestattet',
   refreshCompleted: 'Aktualisierung erfolgreich abgeschlossen',
   addedTagToImage: 'Schlagwort wurde erfolgreich diesem Bild hinzugefügt',
   removedTagFromImage: 'Schlagwort wurde von diesem Bild entfernt',

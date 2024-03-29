@@ -1,21 +1,22 @@
+
 <script setup lang="ts">
 import { CaretRightOutlined } from '@/icon'
 import type { GenDiffInfo } from '@/api/files'
 
 defineProps<{
-    genDiffToPrevious: GenDiffInfo
-    genDiffToNext: GenDiffInfo
-    genInfo?: string
+  genDiffToPrevious: GenDiffInfo
+  genDiffToNext: GenDiffInfo
+  genInfo?: string
 }>()
 
 function filterManualProps(diff: Record<string, unknown>) {
-    const manualProps = ['prompt', 'negativePrompt', 'seed', 'steps', 'cfgScale', 'size', 'Model', 'others']
-    const otherKeys = Object.keys(diff).filter((key) => !manualProps.includes(key))
-    return Object.fromEntries(otherKeys.map((key) => [key, diff[key]]))
+  const manualProps = ['prompt', 'negativePrompt', 'seed', 'steps', 'cfgScale', 'size', 'Model', 'others']
+  const otherKeys = Object.keys(diff).filter((key) => !manualProps.includes(key))
+  return Object.fromEntries(otherKeys.map((key) => [key, diff[key]]))
 }
 
 function hasOtherProps(diff: Record<string, unknown>) {
-    return Object.keys(filterManualProps(diff)).length > 0
+  return Object.keys(filterManualProps(diff)).length > 0
 }
 
 </script>
@@ -82,7 +83,7 @@ function hasOtherProps(diff: Record<string, unknown>) {
                 <!-- others -->
                 <div v-if="hasOtherProps(genDiffToPrevious.diff)">
                     <span class="otherChangeIndicator">Other</span> props that changed:<br/><br/>
-                    <ul>
+                    <ul><!-- eslint-disable vue/require-v-for-key -->
                         <li v-for="(_value, propertyName) in filterManualProps(genDiffToPrevious.diff)">{{ propertyName }}
                         </li>
                     </ul>

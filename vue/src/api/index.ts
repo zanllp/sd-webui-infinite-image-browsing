@@ -51,11 +51,11 @@ const addInterceptor = (axiosInst: AxiosInstance) => {
         }
       
         switch (err.response?.data?.detail?.type) {
-          case "secret_key_required":
+          case 'secret_key_required':
             Modal.error({
               width: '60vw',
               title: t('secretKeyMustBeConfigured'),
-              content: () => h('p', { style: `white-space: pre-line;` } , t('secretKeyRequiredWarnMsg'))
+              content: () => h('p', { style: 'white-space: pre-line;' } , t('secretKeyRequiredWarnMsg'))
             })
             throw new Error(t('secretKeyRequiredWarnMsg'))
         }
@@ -116,7 +116,7 @@ export const setImgPath = async (path: string) => {
 }
 
 export const genInfoCompleted = async () => {
-  return (await axiosInst.value.get(`/gen_info_completed`, { timeout: 60_000 })).data as boolean
+  return (await axiosInst.value.get('/gen_info_completed', { timeout: 60_000 })).data as boolean
 }
 
 export const getImageGenerationInfo = async (path: string) => {
@@ -125,7 +125,7 @@ export const getImageGenerationInfo = async (path: string) => {
 }
 
 export const getImageGenerationInfoBatch = async (paths: string[]) => {
-  const resp = await axiosInst.value.post(`/image_geninfo_batch`, { paths })
+  const resp = await axiosInst.value.post('/image_geninfo_batch', { paths })
   return resp.data
 }
 

@@ -62,7 +62,7 @@ const TauriLaunchConfModal = defineComponent({
 export const openModal = async () => {
   try {
     conf.value = JSON.parse(await fs.readTextFile(appConfFilename))
-  } catch (error) { }
+  } catch (error) { /* empty */ }
   if (!conf.value) {
     conf.value = {
       sdwebui_dir: ''

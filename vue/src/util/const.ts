@@ -1,1 +1,1 @@
-const prefix = 'iib://'
+export const prefix = 'iib://'

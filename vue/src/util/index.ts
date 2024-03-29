@@ -91,7 +91,7 @@ export const copy2clipboardI18n = async (text: string, msg?: string) => {
     }
     message.success(msg ?? t('copied'))
   } catch (error) {
-    message.error("copy failed. maybe it's non-secure environment")
+    message.error('copy failed. maybe it\'s non-secure environment')
   }
 }
 

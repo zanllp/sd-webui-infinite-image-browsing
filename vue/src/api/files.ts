@@ -21,12 +21,12 @@ export interface GenDiffInfo {
 }
 
 export const getTargetFolderFiles = async (folder_path: string) => {
-  const resp = await axiosInst.value.get(`/files`, { params: { folder_path } })
+  const resp = await axiosInst.value.get('/files', { params: { folder_path } })
   return resp.data as { files: FileNodeInfo[] }
 }
 
 export const deleteFiles = async (file_paths: string[]) => {
-  const resp = await axiosInst.value.post(`/delete_files`, { file_paths })
+  const resp = await axiosInst.value.post('/delete_files', { file_paths })
   return resp.data as { files: FileNodeInfo[] }
 }
 
@@ -35,7 +35,7 @@ export const moveFiles = async (
   dest: string,
   create_dest_folder?: boolean
 ) => {
-  const resp = await axiosInst.value.post(`/move_files`, { file_paths, dest, create_dest_folder })
+  const resp = await axiosInst.value.post('/move_files', { file_paths, dest, create_dest_folder })
   return resp.data as { files: FileNodeInfo[] }
 }
 
@@ -44,10 +44,10 @@ export const copyFiles = async (
   dest: string,
   create_dest_folder?: boolean
 ) => {
-  const resp = await axiosInst.value.post(`/copy_files`, { file_paths, dest, create_dest_folder })
+  const resp = await axiosInst.value.post('/copy_files', { file_paths, dest, create_dest_folder })
   return resp.data as { files: FileNodeInfo[] }
 }
 
 export const mkdirs = async (dest_folder: string) => {
-  await axiosInst.value.post(`/mkdirs`, { dest_folder })
+  await axiosInst.value.post('/mkdirs', { dest_folder })
 }

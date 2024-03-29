@@ -1,16 +1,17 @@
+/* eslint-disable no-undef */
 Promise.resolve().then(async () => {
   /**
    * This is a file generated using `yarn build`.
    * If you want to make changes, please modify `index.tpl.js` and run the command to generate it again.
    */
-  const html = `__built_html__`.replace(/\/infinite_image_browsing/g, (window.location.pathname + '/infinite_image_browsing').replace(/\/\//g, '/'))
+  const html = '__built_html__'.replace(/\/infinite_image_browsing/g, (window.location.pathname + '/infinite_image_browsing').replace(/\/\//g, '/'))
   let containerSelector = '#infinite_image_browsing_container_wrapper'
   let shouldMaximize = true
 
   try {
     containerSelector = __iib_root_container__
     shouldMaximize = __iib_should_maximize__
-  } catch (e) {}
+  } catch (e) { /* empty */ }
 
   const delay = (timeout = 0) => new Promise((resolve) => setTimeout(resolve, timeout))
   const asyncCheck = async (getter, checkSize = 100, timeout = 1000) => {
@@ -43,7 +44,7 @@ Promise.resolve().then(async () => {
   wrap.childNodes.forEach((v) => wrap.removeChild(v))
   const iframe = document.createElement('iframe')
   iframe.srcdoc = html
-  iframe.style = `width: 100%;height:100vh`
+  iframe.style = 'width: 100%;height:100vh'
   wrap.appendChild(iframe)
 
   if (shouldMaximize) {
@@ -53,7 +54,7 @@ Promise.resolve().then(async () => {
         try {
           const iibTop = gradioApp().querySelector('#iib_top')
           if (!iibTop) {
-            throw new Error("element '#iib_top' is not found")
+            throw new Error('element \'#iib_top\' is not found')
           }
           const topRect = iibTop.getBoundingClientRect()
           wrap.style = `
@@ -64,11 +65,11 @@ Promise.resolve().then(async () => {
             z-index: 100;
             width: unset;
             bottom: 10px;`
-          iframe.style = `width: 100%;height:100%`
+          iframe.style = 'width: 100%;height:100%'
         } catch (error) {
           console.error('Error mounting IIB. Running fallback.', error)
           wrap.style = ''
-          iframe.style = `width: 100%;height:100vh`
+          iframe.style = 'width: 100%;height:100vh'
         }
       }
     })
@@ -85,7 +86,7 @@ Promise.resolve().then(async () => {
     ) {
       return
     }
-    console.log(`iib-message:`, data)
+    console.log('iib-message:', data)
     const appDoc = gradioApp()
     switch (data.event) {
       case 'click_hidden_button': {

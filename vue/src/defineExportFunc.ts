@@ -19,7 +19,7 @@ export const exportFn = async (g: ReturnType<typeof useGlobalStore>) => {
   }) => {
     const tab = g.tabList[tabIdx]
     if (!pane.key) {
-      ;(pane as any).key = uniqueId()
+      (pane as any).key = uniqueId()
     }
     tab.panes.splice(paneIdx, 0, pane)
     tab.key = pane.key
@@ -63,6 +63,7 @@ export const exportFn = async (g: ReturnType<typeof useGlobalStore>) => {
     return new Proxy(
       {},
       {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         get(_target, p, _receiver) {
           if (p === 'close') {
             const tabIdx = g.tabList.findIndex((v) => v.panes.some((v) => v.key === key))
