@@ -5,6 +5,7 @@ import shutil
 import sqlite3
 
 from scripts.iib.tool import (
+    get_video_type,
     human_readable_size,
     is_valid_media_path,
     temp_path,
@@ -525,6 +526,11 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         check_path_trust(path)
         if not temp_path:
             return
+        
+        if not os.path.exists(path):
+            raise HTTPException(status_code=404)
+        if not os.path.isfile(path) and get_video_type(path):
+            raise HTTPException(status_code=400, detail=f"{path} is not a video file")
         # 生成缓存文件的路径
         hash_dir = hashlib.md5((path + t).encode("utf-8")).hexdigest()
         hash = hash_dir
