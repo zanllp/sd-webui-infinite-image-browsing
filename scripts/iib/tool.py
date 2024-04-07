@@ -336,6 +336,14 @@ def find(lst, comparator):
 def findIndex(lst, comparator):
     return next((i for i, item in enumerate(lst) if comparator(item)), -1)
 
+def unquote(text):
+    if len(text) == 0 or text[0] != '"' or text[-1] != '"':
+        return text
+
+    try:
+        return json.loads(text)
+    except Exception:
+        return text
 
 def get_img_geninfo_txt_path(path: str):
     txt_path = re.sub(r"\.\w+$", ".txt", path)
@@ -508,13 +516,22 @@ def parse_generation_parameters(x: str):
             prompt += ("" if prompt == "" else "\n") + line
 
     for k, v in re_param.findall(lastline):
-        v = v[1:-1] if v[0] == '"' and v[-1] == '"' else v
-        m = re_imagesize.match(v)
-        if m is not None:
-            res[k + "-1"] = m.group(1)
-            res[k + "-2"] = m.group(2)
-        else:
-            res[k] = v
+        try:
+            if len(v) == 0:
+                res[k] = v
+                continue
+            if v[0] == '"' and v[-1] == '"':
+                v = unquote(v)
+
+            m = re_imagesize.match(v)
+            if m is not None:
+                res[f"{k}-1"] = m.group(1)
+                res[f"{k}-2"] = m.group(2)
+            else:
+                res[k] = v
+        except Exception:
+            print(f"Error parsing \"{k}: {v}\"")
+            
     prompt_parse_res = parse_prompt(prompt)
     lora = prompt_parse_res["lora"]
     for k in res:
