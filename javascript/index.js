@@ -1,9 +1,10 @@
+/* eslint-disable no-undef */
 Promise.resolve().then(async () => {
   /**
    * This is a file generated using `yarn build`.
    * If you want to make changes, please modify `index.tpl.js` and run the command to generate it again.
    */
-  const html = `<!DOCTYPE html>
+  const html = '<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -12,8 +13,8 @@ Promise.resolve().then(async () => {
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Infinite Image Browsing</title>
-    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-50eccecb.js"></script>
-    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-4ed4b1ce.css">
+    <script type="module" crossorigin src="/infinite_image_browsing/fe-static/assets/index-ef697bbd.js"></script>
+    <link rel="stylesheet" href="/infinite_image_browsing/fe-static/assets/index-f6de8b10.css">
   </head>
 
   <body>
@@ -23,14 +24,14 @@ Promise.resolve().then(async () => {
     
   </body>
 </html>
-`.replace(/\/infinite_image_browsing/g, (window.location.pathname + '/infinite_image_browsing').replace(/\/\//g, '/'))
+'.replace(/\/infinite_image_browsing/g, (window.location.pathname + '/infinite_image_browsing').replace(/\/\//g, '/'))
   let containerSelector = '#infinite_image_browsing_container_wrapper'
   let shouldMaximize = true
 
   try {
     containerSelector = __iib_root_container__
     shouldMaximize = __iib_should_maximize__
-  } catch (e) {}
+  } catch (e) { /* empty */ }
 
   const delay = (timeout = 0) => new Promise((resolve) => setTimeout(resolve, timeout))
   const asyncCheck = async (getter, checkSize = 100, timeout = 1000) => {
@@ -63,7 +64,7 @@ Promise.resolve().then(async () => {
   wrap.childNodes.forEach((v) => wrap.removeChild(v))
   const iframe = document.createElement('iframe')
   iframe.srcdoc = html
-  iframe.style = `width: 100%;height:100vh`
+  iframe.style = 'width: 100%;height:100vh'
   wrap.appendChild(iframe)
 
   if (shouldMaximize) {
@@ -73,7 +74,7 @@ Promise.resolve().then(async () => {
         try {
           const iibTop = gradioApp().querySelector('#iib_top')
           if (!iibTop) {
-            throw new Error("element '#iib_top' is not found")
+            throw new Error('element \'#iib_top\' is not found')
           }
           const topRect = iibTop.getBoundingClientRect()
           wrap.style = `
@@ -84,11 +85,11 @@ Promise.resolve().then(async () => {
             z-index: 100;
             width: unset;
             bottom: 10px;`
-          iframe.style = `width: 100%;height:100%`
+          iframe.style = 'width: 100%;height:100%'
         } catch (error) {
           console.error('Error mounting IIB. Running fallback.', error)
           wrap.style = ''
-          iframe.style = `width: 100%;height:100vh`
+          iframe.style = 'width: 100%;height:100vh'
         }
       }
     })
@@ -105,7 +106,7 @@ Promise.resolve().then(async () => {
     ) {
       return
     }
-    console.log(`iib-message:`, data)
+    console.log('iib-message:', data)
     const appDoc = gradioApp()
     switch (data.event) {
       case 'click_hidden_button': {
