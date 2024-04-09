@@ -28,13 +28,27 @@ const requestFullScreen = () => {
 }
 defineExpose({ requestFullScreen })
 
+const maxArea = asyncComputed(async () => {
+  if (!props.left || !props.right) {
+    return {
+      width: 0,
+      height: 0
+    }
+  }
+  const [l, r] = await Promise.all([createImage(toRawFileUrl(props.left)), createImage(toRawFileUrl(props.right))])
+  return {
+    width: Math.max(l.width, r.width),
+    height: Math.max(r.height, l.height)
+  }
+})
 
 const maxEdge = asyncComputed(async () => {
-  if (!props.left) {
+  const area = maxArea.value
+  if (!area) {
     return 'width'
   }
-  const l = await createImage(toRawFileUrl(props.left))
-  const aspectRatio = l.width / l.height
+  const { height, width } = area
+  const aspectRatio = width / height
   const clientAR = document.body.clientWidth / document.body.clientHeight
   return aspectRatio > clientAR ? 'width' : 'height'
 })
