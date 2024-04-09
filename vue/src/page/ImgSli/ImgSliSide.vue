@@ -2,7 +2,11 @@
 import { toRawFileUrl } from '@/util/file'
 import { computed } from 'vue'
 import { FileNodeInfo } from '@/api/files'
-const props = defineProps<{ side: 'left' | 'right', containerWidth: number, img: FileNodeInfo, maxEdge: 'width' | 'height', percent: number }>()
+import { asyncComputed } from '@vueuse/core'
+import { createImage, pick } from '@/util'
+const props = defineProps<{ side: 'left' | 'right',containerWidth: number, img: FileNodeInfo, maxEdge: 'width' | 'height', percent: number }>()
+const rect = asyncComputed(async () =>  pick(await createImage(toRawFileUrl(props.img)), 'width', 'height'))
+
 const style = computed(() => {
   let x = ''
   const handlerWidth = 4
@@ -12,7 +16,15 @@ const style = computed(() => {
   } else {
     x = `calc(-50% - ${(props.percent - 50) / 100 * width + handlerWidth}px)`
   }
-  return `${props.maxEdge === 'width' ? 'width:100%' : 'height:100%'};transform: translate(${x}, -50%)`
+  if (props.maxEdge === 'height') {
+    return `height:100%;transform: translate(${x}, -50%)`
+  } else {
+    const r = rect.value
+    if (!r) {
+      return
+    }
+    return `height:${width / r.width * r.height}px;transform: translate(${x}, -50%)`
+  }
 })
 </script>
 

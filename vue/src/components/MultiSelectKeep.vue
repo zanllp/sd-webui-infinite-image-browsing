@@ -42,7 +42,7 @@ const onKeepClick = () => {
   position: absolute;
   bottom: 32px;
   right: 32px;
-  background: white;
+  background: var(--zp-primary-background);
   border-radius: 4px;
   z-index: 1000;
   padding: 8px;
