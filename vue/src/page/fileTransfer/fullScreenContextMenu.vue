@@ -51,7 +51,7 @@ const emit = defineEmits<{
 }>()
 
 
-function reverseEscapeHtml(string: string) {
+function unescapeHtml(string: string) {
   return `${string}`
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g,'<')
@@ -120,10 +120,10 @@ function spanWrap (text: string) {
     return ''
   }
   let result = ''
-  const values = text.split(/[\n,]+/)
+  const values = text.split(/[\n,]+/).map(v => v.trim()).filter(v => v)
   let parenthesisActive = false
   for (let i = 0; i < values.length; i++) {
-    const trimmedValue = values[i].trim()
+    const trimmedValue = values[i]
     if (!parenthesisActive) parenthesisActive = trimmedValue.includes('(')
     const cssClass = parenthesisActive ? 'has-parentheses' : ''
     result += `<span class="${cssClass}">${trimmedValue}</span>`
@@ -153,7 +153,7 @@ const baseInfoTags = computed(() => {
 const copyPositivePrompt = () => {
   const neg = 'Negative prompt:'
   const text = imageGenInfo.value.includes(neg) ? imageGenInfo.value.split(neg)[0] : geninfoFrags.value[0] ?? ''
-  copy2clipboardI18n(text.trim())
+  copy2clipboardI18n(unescapeHtml(text.trim()))
 }
 
 </script>
@@ -260,7 +260,7 @@ const copyPositivePrompt = () => {
                     <code>{{ txt }}</code>
                   </td>
                   <td v-else>
-                    {{ reverseEscapeHtml(txt) }}
+                    {{ unescapeHtml(txt) }}
                   </td>
                 </tr>
               </table>
