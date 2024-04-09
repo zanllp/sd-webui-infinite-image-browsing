@@ -4,7 +4,7 @@ Promise.resolve().then(async () => {
    * This is a file generated using `yarn build`.
    * If you want to make changes, please modify `index.tpl.js` and run the command to generate it again.
    */
-  const html = '__built_html__'.replace(/\/infinite_image_browsing/g, (window.location.pathname + '/infinite_image_browsing').replace(/\/\//g, '/'))
+  const html = `__built_html__`.replace(/\/infinite_image_browsing/g, (window.location.pathname + '/infinite_image_browsing').replace(/\/\//g, '/'))
   let containerSelector = '#infinite_image_browsing_container_wrapper'
   let shouldMaximize = true
 
@@ -24,6 +24,7 @@ Promise.resolve().then(async () => {
     }
     return target
   }
+  
   const getTabIdxById = (id) => {
     const tabList = gradioApp().querySelectorAll('#tabs > .tabitem[id^=tab_]')
     return Array.from(tabList).findIndex((v) => v.id.includes(id))
