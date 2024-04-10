@@ -78,12 +78,12 @@ const lastRecord = computed(() => global.tabListHistoryRecord?.[1])
 
 const walkModeSupportedDir = computed(() =>
   global.quickMovePaths.filter(
-    ({ key: k, type }) =>
+    ({ key: k, types }) =>
       k === 'outdir_txt2img_samples' ||
       k === 'outdir_img2img_samples' ||
       k === 'outdir_txt2img_grids' ||
       k === 'outdir_img2img_grids' ||
-      type === 'walk'
+      types.includes('walk')
   )
 )
 const canpreviewInNewWindow = window.parent !== window
@@ -147,7 +147,7 @@ const restoreRecord = () => {
       <div class="feature-item">
         <h2>{{ $t('walkMode') }}</h2>
         <ul>
-          <li @click="addToExtraPath('walk')" class="item" style="text-align: ;">
+          <li @click="addToExtraPath('walk')" class="item" >
             <span class="text line-clamp-1">
               <PlusOutlined /> {{ $t('add') }}
             </span>
@@ -167,16 +167,16 @@ const restoreRecord = () => {
       <div class="feature-item" v-if="global.quickMovePaths.length">
         <h2>{{ $t('launchFromQuickMove') }}</h2>
         <ul>
-          <li @click="addToExtraPath('scanned')" class="item" style="text-align: ;">
+          <li @click="addToExtraPath('scanned')" class="item" >
             <span class="text line-clamp-1">
               <PlusOutlined /> {{ $t('add') }}
             </span>
           </li>
-          <actionContextMenu v-for="dir in global.quickMovePaths.filter(v => v.type !== 'walk')" :key="dir.key"
+          <actionContextMenu v-for="dir in global.quickMovePaths.filter(({ types: ts }) => ts.includes('cli_access_only') || ts.includes('preset') || ts.includes('scanned'))" :key="dir.key"
             @open-in-new-tab="openInNewTab('local', dir.dir)" @open-on-the-right="openOnTheRight('local', dir.dir)">
             <li class="item rem" @click.prevent="openInCurrentTab('local', dir.dir)">
               <span class="text line-clamp-2">{{ dir.zh }}</span>
-              <AButton v-if="dir.can_delete && dir.type == 'scanned'" type="link"
+              <AButton v-if="dir.can_delete && dir.types.includes('scanned')" type="link"
                 @click.stop="onRemoveExtraPathClick(dir.dir, 'scanned')">{{ $t('remove') }}
               </AButton>
             </li>

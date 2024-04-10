@@ -257,7 +257,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             conn = DataBase.get_conn()
             all_custom_tags = Tag.get_all_custom_tag(conn)
             extra_paths = ExtraPath.get_extra_paths(conn) + [
-                ExtraPath(path, ExtraPathType.cli_only)
+                ExtraPath(path, ExtraPathType.cli_only.value)
                 for path in kwargs.get("extra_paths_cli", [])
             ]
             update_extra_paths(conn)
@@ -928,7 +928,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
 
     class ExtraPathModel(BaseModel):
         path: str
-        type: Optional[ExtraPathType]
+        types: List[str]
 
     @app.post(
         f"{db_api_base}/extra_paths",
@@ -939,7 +939,13 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             if not is_path_under_parents(extra_path.path):
                 raise HTTPException(status_code=403)
         conn = DataBase.get_conn()
-        path = ExtraPath(extra_path.path, extra_path.type)
+        path = ExtraPath.get_target_path(conn, extra_path.path)
+        if path:
+            for t in extra_path.types:
+                path.types.append(t)
+            path.types = unique_by(path.types)
+        else:
+            path = ExtraPath(extra_path.path, extra_path.types)
         try:
             path.save(conn)
         finally:
@@ -960,7 +966,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def delete_extra_path(extra_path: ExtraPathModel):
         path = to_abs_path(extra_path.path)
         conn = DataBase.get_conn()
-        ExtraPath.remove(conn, path, extra_path.type, img_search_dirs=get_img_search_dirs())
+        ExtraPath.remove(conn, path, extra_path.types, img_search_dirs=get_img_search_dirs())
 
     
     @app.post(

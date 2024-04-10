@@ -40,7 +40,6 @@ declare module '@vue/runtime-core' {
     ATabs: typeof import('ant-design-vue/es')['Tabs']
     ATag: typeof import('ant-design-vue/es')['Tag']
     ATextarea: typeof import('ant-design-vue/es')['Textarea']
-    ATooltip: typeof import('ant-design-vue/es')['Tooltip']
     BaseFileListInfo: typeof import('./src/components/BaseFileListInfo.vue')['default']
     ChangeIndicator: typeof import('./src/components/ChangeIndicator.vue')['default']
     ContextMenu: typeof import('./src/components/ContextMenu.vue')['default']

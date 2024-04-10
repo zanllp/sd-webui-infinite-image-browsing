@@ -49,6 +49,8 @@ def backup_db_file(db_file_path):
     if not os.path.exists(db_file_path):
         return
     max_backup_count = int(os.environ.get('IIB_DB_FILE_BACKUP_MAX', '20'))
+    if max_backup_count <= 1:
+        return
     backup_folder = os.path.join(cwd,'iib_db_backup')
     current_time = datetime.now()
     timestamp = current_time.strftime('%Y-%m-%d %H-%M-%S')

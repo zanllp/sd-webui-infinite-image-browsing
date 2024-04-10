@@ -82,8 +82,8 @@ export const getQuickMovePaths = async ({
         zh: cnMap[key],
         dir: pathMap[key],
         can_delete: false,
-        type: 'preset' as 'preset' | ExtraPathType
+        types: ['preset' as 'preset' | ExtraPathType]
       }
-    }).concat(extra_paths.map(v => ({ key: v.path, zh: findshortest(v.path), dir: v.path, can_delete: true, type: v.type })) as any[])
-  return uniqBy(res, v => v.key + v.type)
+    }).concat(extra_paths.map(v => ({ key: v.path, zh: findshortest(v.path), dir: v.path, can_delete: true, types: v.types })) as any[])
+  return uniqBy(res, v => v.key + v.types.join())
 }

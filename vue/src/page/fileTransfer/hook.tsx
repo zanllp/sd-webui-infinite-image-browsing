@@ -518,10 +518,10 @@ export function useLocation () {
       if (!path.can_delete) {
         return
       }
-      await removeExtraPath({ path: currLocation.value, type: 'scanned' })
+      await removeExtraPath({ path: currLocation.value, types: ['scanned'] })
       message.success(t('removeCompleted'))
     } else {
-      await addExtraPath({ path: currLocation.value, type: 'scanned' })
+      await addExtraPath({ path: currLocation.value, types: ['scanned'] })
       message.success(t('addCompleted'))
     }
     globalEvents.emit('searchIndexExpired')
