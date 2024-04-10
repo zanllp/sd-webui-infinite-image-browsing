@@ -47,5 +47,11 @@ watch(() => [g.enableThumbnail, g.gridThumbnailResolution], debounce(async () =>
       <img :width="g.defaultGridCellWidth" :height="g.defaultGridCellWidth" :src="g.enableThumbnail ? thuImg : sampleImg">
     </div>
   </a-form-item>
+  <a-form-item :label="t('defaultShowChangeIndicators')">
+    <a-switch v-model:checked="g.defaultChangeIndchecked" />
+  </a-form-item>
+  <a-form-item v-if="g.defaultChangeIndchecked" :label="t('defaultSeedAsChange')">
+    <a-switch v-model:checked="g.defaultSeedChangeChecked" />
+  </a-form-item>
 </template>
 <style lang="scss" scoped></style>

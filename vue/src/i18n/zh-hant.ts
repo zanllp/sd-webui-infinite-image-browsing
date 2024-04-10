@@ -1,6 +1,10 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  showChangeIndicators: '顯示變更指示器',
+  seedAsChange: '將Seed也進行比較',
+  defaultShowChangeIndicators: '預設顯示變更指示器',
+  defaultSeedAsChange: '預設將Seed也進行比較',
   exit: '退出',
   'select-all': '全選',
   'rerverse-select': '反選',
@@ -11,7 +15,6 @@ export const zhHant: Partial<IIBI18nMap> = {
   saveSelectedAsJson: '儲存選取的圖像資訊',
   saveAllAsJson: '儲存所有圖像資訊',
   saveLoadedImageAsJson: '儲存已載入的圖像資訊',
-  showChangeIndicators: '顯示變更指示器',
   scrollDownToComparePrompt: '向下滾查看Prompt比較',
   sourceText: '源文本',
   structuredData: '結構化數據',

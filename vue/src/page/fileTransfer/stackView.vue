@@ -96,8 +96,8 @@ watch(sortedFiles, async (newList, oldList) => {
   }
 })
 
-const changeIndchecked = ref<boolean>(true)
-const seedChangeChecked = ref<boolean>(false)
+const changeIndchecked = ref<boolean>(global.defaultChangeIndchecked)
+const seedChangeChecked = ref<boolean>(global.defaultSeedChangeChecked)
 
 function getRawGenParams () {
   //extract fullpaths of all files from sortedfiles to array, but only if it's an actual file (not a folder or something else)

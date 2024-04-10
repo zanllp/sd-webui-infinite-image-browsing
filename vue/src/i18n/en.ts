@@ -50,6 +50,8 @@ export const en: IIBI18nMap = {
   gridCellWidth: 'Grid Cell Width (px)',
   showChangeIndicators: 'Show Change Indicators',
   seedAsChange: 'Seed as Change',
+  defaultShowChangeIndicators: 'Default Show Change Indicators',
+  defaultSeedAsChange: 'Default Compare Seed as Change',
   defaultGridCellWidth: 'Default Grid Cell Width (px)',
   thumbnailResolution: 'Thumbnail Resolution (px)',
   inputTargetFolderPath: 'Enter the absolute path of the target folder',
