@@ -219,16 +219,7 @@ function getGenDiff (ownGenInfo: any, idx: any, increment: any, ownFile: FileNod
         </ASkeleton>
       </AModal>
       <div class="location-bar">
-        <div v-if="props.walkModePath" class="breadcrumb">
-          <a-tooltip>
-            <template #title>{{ $t('walk-mode-move-message') }}</template><a-breadcrumb style="flex: 1">
-              <a-breadcrumb-item v-for="(item, idx) in stack" :key="idx">
-                <span>{{ item.curr === '/' ? $t('root') : item.curr.replace(/:\/$/, $t('drive')) }}</span>
-              </a-breadcrumb-item>
-            </a-breadcrumb>
-          </a-tooltip>
-        </div>
-        <div class="breadcrumb" :style="{ flex: isLocationEditing ? 1 : '' }" v-else>
+        <div class="breadcrumb" :style="{ flex: isLocationEditing ? 1 : '' }" >
           <AInput v-if="isLocationEditing" style="flex: 1" v-model:value="locInputValue" @click.stop @keydown.stop
             @press-enter="onLocEditEnter" allow-clear></AInput>
           <a-breadcrumb style="flex: 1" v-else>

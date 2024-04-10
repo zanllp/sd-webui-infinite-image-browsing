@@ -44,7 +44,7 @@ export const addToExtraPath = async (type: ExtraPathType) => {
   Modal.confirm({
     content: t('confirmToAddToExtraPath'),
     async onOk () {
-      await addExtraPath({ type, path })
+      await addExtraPath({ types: [type], path })
       message.success(t('addCompleted'))
       globalEvents.emit('searchIndexExpired')
       globalEvents.emit('updateGlobalSetting')
@@ -57,7 +57,7 @@ export const onRemoveExtraPathClick = (path: string, type: ExtraPathType) => {
     content: t('confirmDelete'),
     closable: true,
     async onOk () {
-      await removeExtraPath({ type, path })
+      await removeExtraPath({ types: [type], path })
       message.success(t('removeCompleted'))
       globalEvents.emit('searchIndexExpired')
       globalEvents.emit('updateGlobalSetting')

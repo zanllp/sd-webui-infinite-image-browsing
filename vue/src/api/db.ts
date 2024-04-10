@@ -96,7 +96,7 @@ export type ExtraPathType =  'scanned' | 'walk' | 'cli_access_only' | ''
 
 export interface ExtraPathModel {
   path: string
-  type: ExtraPathType
+  types: ExtraPathType[]
 }
 
 export const getExtraPath = async () => {

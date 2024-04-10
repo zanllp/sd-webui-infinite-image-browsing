@@ -1,6 +1,6 @@
 from sqlite3 import Connection, connect
 from enum import Enum
-from typing import Dict, List, Optional, TypedDict
+from typing import Dict, List, Optional, TypedDict, Union
 from scripts.iib.tool import (
     cwd,
     get_modified_date,
@@ -626,28 +626,25 @@ class ExtraPathType(Enum):
 
 
 class ExtraPath:
-    def __init__(self, path: str, type: Optional[ExtraPathType] = None):
-        assert type
+    def __init__(self, path: str, types: Union[str, List[str]]):
         self.path = os.path.normpath(path)
-        self.type = type
+        self.types = types.split('+') if isinstance(types, str) else types
 
     def save(self, conn):
-        assert self.type in [ExtraPathType.walk, ExtraPathType.scanned]
+        type_str = '+'.join(self.types)
+        for type in self.types:
+            assert type in [ExtraPathType.walk.value, ExtraPathType.scanned.value]
         with closing(conn.cursor()) as cur:
             cur.execute(
                 "INSERT INTO extra_path (path, type) VALUES (?, ?) ON CONFLICT (path) DO UPDATE SET type = ?",
-                (self.path, self.type.value, self.type.value),
+                (self.path, type_str, type_str),
             )
 
     @classmethod
-    def get_extra_paths(
-        cls, conn, type: Optional[ExtraPathType] = None
-    ) -> List["ExtraPath"]:
-        query = "SELECT * FROM extra_path"
-        params = ()
-        if type:
-            query += " WHERE type = ?"
-            params = (type.value,)
+    def get_target_path(cls, conn, path) -> Optional['ExtraPath']:
+        path = os.path.normpath(path)
+        query = f"SELECT * FROM extra_path where path = ?"
+        params = (path,)
         with closing(conn.cursor()) as cur:
             cur.execute(query, params)
             rows = cur.fetchall()
@@ -655,7 +652,22 @@ class ExtraPath:
             for row in rows:
                 path = row[0]
                 if os.path.exists(path):
-                    paths.append(ExtraPath(path, ExtraPathType(row[1])))
+                    paths.append(ExtraPath(path, row[1]))
+                else:
+                    cls.remove(conn, path)
+            return paths[0] if paths else None
+
+    @classmethod
+    def get_extra_paths(cls, conn) -> List["ExtraPath"]:
+        query = "SELECT * FROM extra_path"
+        with closing(conn.cursor()) as cur:
+            cur.execute(query)
+            rows = cur.fetchall()
+            paths: List[ExtraPath] = []
+            for row in rows:
+                path = row[0]
+                if os.path.exists(path):
+                    paths.append(ExtraPath(path, row[1]))
                 else:
                     cls.remove(conn, path)
             return paths
@@ -665,13 +677,25 @@ class ExtraPath:
         cls,
         conn,
         path: str,
-        type: Optional[ExtraPathType] = None,
+        types: List[str] = None,
         img_search_dirs: Optional[List[str]] = [],
     ):
         with closing(conn.cursor()) as cur:
-            sql = "DELETE FROM extra_path WHERE path = ?"
             path = os.path.normpath(path)
-            cur.execute(sql, (path,))
+            target = cls.get_target_path(conn, path)
+            if not target:
+                return
+            new_types = []
+            for type in target.types:
+                if type not in types:
+                    new_types.append(type)
+            if new_types:
+                target.types = new_types
+                target.save(conn)
+            else:
+                sql = "DELETE FROM extra_path WHERE path = ?"
+                cur.execute(sql, (path,))
+
             if path not in img_search_dirs:
                 Folder.remove_folder(conn, path)
             conn.commit()
