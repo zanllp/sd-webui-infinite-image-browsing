@@ -253,6 +253,8 @@ export const useGlobalStore = defineStore(
       darkModeControl,
       defaultSortingMethod,
       defaultGridCellWidth,
+      defaultChangeIndchecked: ref(true),
+      defaultSeedChangeChecked: ref(false),
       pathAliasMap,
       createEmptyPane,
       lang,
@@ -281,6 +283,8 @@ export const useGlobalStore = defineStore(
     persist: {
       // debug: true,
       paths: [
+        'defaultChangeIndchecked',
+        'defaultSeedChangeChecked',
         'darkModeControl',
         'dontShowAgainNewImgOpts',
         'defaultSortingMethod',
