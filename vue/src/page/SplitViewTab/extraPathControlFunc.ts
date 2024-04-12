@@ -1,5 +1,5 @@
 
-import { ExtraPathType, addExtraPath, removeExtraPath } from '@/api/db'
+import { ExtraPathType, addExtraPath, aliasExtraPath, removeExtraPath } from '@/api/db'
 import { globalEvents } from '@/util'
 import { Input, Modal, message } from 'ant-design-vue'
 import { open } from '@tauri-apps/api/dialog'
@@ -60,6 +60,32 @@ export const onRemoveExtraPathClick = (path: string, type: ExtraPathType) => {
       await removeExtraPath({ types: [type], path })
       message.success(t('removeCompleted'))
       globalEvents.emit('searchIndexExpired')
+      globalEvents.emit('updateGlobalSetting')
+    }
+  })
+}
+
+export const onAliasExtraPathClick = (path: string) => {
+  const alias = ref('')
+  Modal.confirm({
+    title: t('inputAlias'),
+    content: () => {
+      return h('div', [
+        h('div', { 
+          style: { 
+            'word-break': 'break-all',
+            'margin-bottom': '4px'
+          } 
+        }, 'Path: ' + path),
+        h(Input, {
+          value: alias.value,
+          'onUpdate:value': (v: string) => (alias.value = v)
+        })]
+      )
+    },
+    async onOk () {
+      await aliasExtraPath({ alias: alias.value, path })
+      message.success(t('addAliasCompleted'))
       globalEvents.emit('updateGlobalSetting')
     }
   })

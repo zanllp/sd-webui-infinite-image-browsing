@@ -293,6 +293,7 @@ const copyPositivePrompt = () => {
 
     .tag {
       margin-right: 4px;
+      margin-bottom: 4px;
       padding: 2px 16px;
       border-radius: 4px;
       display: inline-block;

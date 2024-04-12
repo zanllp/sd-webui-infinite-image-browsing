@@ -1,4 +1,7 @@
 export const zhHans = {
+  inputAlias: '输入别名',
+  addAliasCompleted: '添加别名完成',
+  alias: '别名',
   exit: '退出',
   'select-all': '全选',
   'rerverse-select': '反选',

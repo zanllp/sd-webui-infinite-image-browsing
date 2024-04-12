@@ -1,6 +1,9 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  inputAlias: 'Input Alias',
+  addAliasCompleted: 'Add Alias Completed',
+  alias: 'Alias',
   exit: 'Exit',
   'select-all': 'Select All',
   'rerverse-select': 'Reverse Select',
