@@ -951,6 +951,25 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         finally:
             conn.commit()
 
+    class ExtraPathAliasModel(BaseModel):
+        path: str
+        alias: str
+
+
+    @app.post(
+        f"{db_api_base}/alias_extra_path",
+        dependencies=[Depends(verify_secret), Depends(write_permission_required)],
+    )
+    async def create_extra_path(req: ExtraPathAliasModel):
+        conn = DataBase.get_conn()
+        path = ExtraPath.get_target_path(conn, req.path)
+        if not path:
+            raise HTTPException(400)
+        path.alias = req.alias
+        path.save(conn)
+        return path
+        
+
     @app.get(
         f"{db_api_base}/extra_paths",
         dependencies=[Depends(verify_secret)],
@@ -958,6 +977,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def read_extra_paths():
         conn = DataBase.get_conn()
         return ExtraPath.get_extra_paths(conn)
+    
+
 
     @app.delete(
         f"{db_api_base}/extra_paths",

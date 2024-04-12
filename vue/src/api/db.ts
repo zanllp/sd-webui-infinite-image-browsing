@@ -96,6 +96,7 @@ export type ExtraPathType =  'scanned' | 'walk' | 'cli_access_only' | ''
 
 export interface ExtraPathModel {
   path: string
+  alias?: string
   types: ExtraPathType[]
 }
 
@@ -109,6 +110,15 @@ export const addExtraPath = async (model: ExtraPathModel) => {
 }
 export const removeExtraPath = async (req: ExtraPathModel) => {
   await axiosInst.value.delete(extraPaths, { data: req })
+}
+
+export interface ExtraPathAliasModel {
+  path: string
+  alias: string
+}
+
+export const aliasExtraPath = async (model: ExtraPathAliasModel) => {
+  await axiosInst.value.post('/db/alias_extra_path', model)
 }
 
 export const batchGetTagsByPath = async (paths: string[]) => {

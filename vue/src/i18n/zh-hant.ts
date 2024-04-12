@@ -1,6 +1,9 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  inputAlias: '輸入別名',
+  addAliasCompleted: '添加別名完成',
+  alias: '別名',
   showChangeIndicators: '顯示變更指示器',
   seedAsChange: '將Seed也進行比較',
   defaultShowChangeIndicators: '預設顯示變更指示器',

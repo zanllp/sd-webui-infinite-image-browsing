@@ -1,5 +1,6 @@
 from sqlite3 import Connection, connect
 from enum import Enum
+import sqlite3
 from typing import Dict, List, Optional, TypedDict, Union
 from scripts.iib.tool import (
     cwd,
@@ -626,9 +627,10 @@ class ExtraPathType(Enum):
 
 
 class ExtraPath:
-    def __init__(self, path: str, types: Union[str, List[str]]):
+    def __init__(self, path: str, types: Union[str, List[str]], alias = ''):
         self.path = os.path.normpath(path)
         self.types = types.split('+') if isinstance(types, str) else types
+        self.alias = alias
 
     def save(self, conn):
         type_str = '+'.join(self.types)
@@ -636,8 +638,9 @@ class ExtraPath:
             assert type in [ExtraPathType.walk.value, ExtraPathType.scanned.value]
         with closing(conn.cursor()) as cur:
             cur.execute(
-                "INSERT INTO extra_path (path, type) VALUES (?, ?) ON CONFLICT (path) DO UPDATE SET type = ?",
-                (self.path, type_str, type_str),
+                "INSERT INTO extra_path (path, type, alias) VALUES (?, ?, ?) "
+                "ON CONFLICT (path) DO UPDATE SET type = excluded.type, alias = excluded.alias",
+                (self.path, type_str, self.alias),
             )
 
     @classmethod
@@ -652,7 +655,7 @@ class ExtraPath:
             for row in rows:
                 path = row[0]
                 if os.path.exists(path):
-                    paths.append(ExtraPath(path, row[1]))
+                    paths.append(ExtraPath(*row))
                 else:
                     cls.remove(conn, path)
             return paths[0] if paths else None
@@ -667,7 +670,7 @@ class ExtraPath:
             for row in rows:
                 path = row[0]
                 if os.path.exists(path):
-                    paths.append(ExtraPath(path, row[1]))
+                    paths.append(ExtraPath(*row))
                 else:
                     cls.remove(conn, path)
             return paths
@@ -706,6 +709,15 @@ class ExtraPath:
             cur.execute(
                 """CREATE TABLE IF NOT EXISTS extra_path (
                             path TEXT PRIMARY KEY,
-                            type TEXT NOT NULL
+                            type TEXT NOT NULL,
+                            alias TEXT DEFAULT ''
                         )"""
             )
+            try:
+                cur.execute(
+                    """ALTER TABLE extra_path
+                    ADD COLUMN alias TEXT DEFAULT ''"""
+                )
+            except sqlite3.OperationalError:
+                pass
+
