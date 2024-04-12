@@ -960,7 +960,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         f"{db_api_base}/alias_extra_path",
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
-    async def create_extra_path(req: ExtraPathAliasModel):
+    async def alias_extra_path(req: ExtraPathAliasModel):
         conn = DataBase.get_conn()
         path = ExtraPath.get_target_path(conn, req.path)
         if not path:
