@@ -27,7 +27,7 @@ def replace_path(old_base, new_base):
     return replace_func
 
 
-def update_paths(conn, table_name):
+def update_paths(conn, table_name, old_base):
     """
     Update paths in a specified SQLite table using a custom SQL function.
 
@@ -54,7 +54,7 @@ def setup_parser() -> argparse.ArgumentParser:
         description="Script to migrate paths in an IIB SQLite database from an old directory structure to a new one."
     )
     parser.add_argument(
-        "--db_path", type=str, help="Path to the input IIB QLite database file to be migrated. Default value is 'iib.db'.", required=True, default="iib.db"
+        "--db_path", type=str, help="Path to the input IIB QLite database file to be migrated. Default value is 'iib.db'.", default="iib.db"
     )
     parser.add_argument(
         "--old_dir", type=str, help="Old base directory to be replaced in the paths.", required=True
@@ -76,9 +76,9 @@ if __name__ == "__main__":
     DataBase.path = os.path.normpath(os.path.join(os.getcwd(), db_temp_path))
     conn = DataBase.get_conn()
     conn.create_function("replace_path", 1, replace_path(old_base, new_base))
-    update_paths(conn, "image")
-    update_paths(conn, "extra_path")
-    update_paths(conn, "folders")
+    update_paths(conn, "image", old_base)
+    update_paths(conn, "extra_path", old_base)
+    update_paths(conn, "folders", old_base)
     shutil.copy(db_temp_path, "iib.db")
     # os.remove(db_temp_path)
     print("Database migration completed successfully.")
