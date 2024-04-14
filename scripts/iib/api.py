@@ -900,7 +900,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         return tag
 
     class RemoveCustomTagReq(BaseModel):
-        tag_id: str
+        tag_id: int
 
     @app.post(
         db_api_base + "/remove_custom_tag",
