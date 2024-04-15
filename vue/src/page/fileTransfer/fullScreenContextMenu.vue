@@ -36,7 +36,11 @@ const selectedTag = computed(() => tagStore.tagMap.get(props.file.fullpath) ?? [
 const currImgResolution = ref('')
 const q = createReactiveQueue()
 const imageGenInfo = ref('')
-const cleanImageGenInfo = ref('')
+const cleanImageGenInfo = computed(() => imageGenInfo.value.replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;'))
 const geninfoFrags = computed(() => cleanImageGenInfo.value.split('\n'))
 const geninfoStruct = computed(() => parse(cleanImageGenInfo.value))
 
@@ -69,11 +73,6 @@ watch(
     q.tasks.forEach((v) => v.cancel())
     q.pushAction(() => getImageGenerationInfo(path)).res.then((v) => {
       imageGenInfo.value = v
-      cleanImageGenInfo.value = v.replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
     })
   },
   { immediate: true }
@@ -254,7 +253,7 @@ const copyPositivePrompt = () => {
             <template v-if="Object.keys(geninfoStructNoPrompts).length"> <br />
               <h3>Params</h3>
               <table>
-                <tr v-for="txt, key in geninfoStructNoPrompts" :key="txt" class="gen-info-frag">
+                <tr v-for="txt, key in geninfoStructNoPrompts" :key="key" class="gen-info-frag">
                   <td style="font-weight: 600;text-transform: capitalize;">{{ key }}</td>
                   <td v-if="typeof txt == 'object'">
                     <code>{{ txt }}</code>
