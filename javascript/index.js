@@ -79,7 +79,7 @@ Promise.resolve().then(async () => {
           }
           const topRect = iibTop.getBoundingClientRect()
           wrap.style = `
-            top:${Math.max(48, topRect.top) - 10}px;
+            top:${Math.max(128, topRect.top) - 10}px;
             position: fixed;
             left: 10px;
             right: 10px;
