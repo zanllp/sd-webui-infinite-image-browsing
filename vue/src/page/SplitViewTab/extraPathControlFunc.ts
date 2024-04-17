@@ -6,10 +6,12 @@ import { open } from '@tauri-apps/api/dialog'
 import { checkPathExists } from '@/api'
 import { h, ref } from 'vue'
 import { t } from '@/i18n'
+import { useGlobalStore } from '@/store/useGlobalStore'
 
 
 
 export const addToExtraPath = async (type: ExtraPathType) => {
+  const g = useGlobalStore()
   let path: string
   if (import.meta.env.TAURI_ARCH) {
     const ret = await open({ directory: true })
@@ -23,11 +25,23 @@ export const addToExtraPath = async (type: ExtraPathType) => {
       const key = ref('')
       Modal.confirm({
         title: t('inputTargetFolderPath'),
+        width: '800px',
         content: () => {
-          return h(Input, {
-            value: key.value,
-            'onUpdate:value': (v: string) => (key.value = v)
-          })
+          return h('div', [
+            g.conf?.enable_access_control ? h('a', { 
+              style: { 
+                'word-break': 'break-all',
+                'margin-bottom': '4px',
+                display: 'block'
+              },
+              target: '_blank',
+              href: 'https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/518'
+            }, 'Please open this link first (Access Control mode only)') : '',
+            h(Input, {
+              value: key.value,
+              'onUpdate:value': (v: string) => (key.value = v)
+            })
+          ])
         },
         async onOk () {
           const path = key.value
