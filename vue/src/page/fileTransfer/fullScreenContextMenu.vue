@@ -22,7 +22,7 @@ import { toRawFileUrl } from '@/util/file'
 import ContextMenu from '@/components/ContextMenu.vue'
 import { useWatchDocument } from 'vue3-ts-util'
 import { useTagStore } from '@/store/useTagStore'
-import { parse } from 'stable-diffusion-image-metadata'
+import { parse } from '@/util/stable-diffusion-image-metadata'
 
 const global = useGlobalStore()
 

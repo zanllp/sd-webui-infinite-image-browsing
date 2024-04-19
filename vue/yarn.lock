@@ -1063,11 +1063,6 @@
   dependencies:
     vue-demi "*"
 
-"@xmldom/xmldom@^0.8.10":
-  version "0.8.10"
-  resolved "https://registry.yarnpkg.com/@xmldom/xmldom/-/xmldom-0.8.10.tgz#a1337ca426aa61cef9fe15b5b28e340a72f6fa99"
-  integrity sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==
-
 "@zanllp/vue-virtual-scroller@^2.0.0-beta.7":
   version "2.0.0-beta.7"
   resolved "https://registry.yarnpkg.com/@zanllp/vue-virtual-scroller/-/vue-virtual-scroller-2.0.0-beta.7.tgz#be56cd78d60c5b8241f32f06b477599ccb75d1f9"
@@ -1606,13 +1601,6 @@ eventemitter3@^5.0.0:
   version "5.0.1"
   resolved "https://registry.npmjs.org/eventemitter3/-/eventemitter3-5.0.1.tgz"
   integrity sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==
-
-exifreader@^4.13.0:
-  version "4.20.0"
-  resolved "https://registry.yarnpkg.com/exifreader/-/exifreader-4.20.0.tgz#3d53eb38067adbbecc51c7a09a444f658c402bcf"
-  integrity sha512-C28BhOHe5svd0Jj/5DGSIXD3PnPp46gfvHN4OkRfvHYZHkcJMhxeUxlwsgJ6Yl62zlZRtmfN+9suZFg0fv4hgg==
-  optionalDependencies:
-    "@xmldom/xmldom" "^0.8.10"
 
 fast-deep-equal@^3.1.1, fast-deep-equal@^3.1.3:
   version "3.1.3"
@@ -2463,13 +2451,6 @@ splitpanes@^3.1.5:
   version "3.1.5"
   resolved "https://registry.yarnpkg.com/splitpanes/-/splitpanes-3.1.5.tgz#de81da25681c252d131747a9cb48a17156e2b210"
   integrity sha512-r3Mq2ITFQ5a2VXLOy4/Sb2Ptp7OfEO8YIbhVJqJXoFc9hc5nTXXkCvtVDjIGbvC0vdE7tse+xTM9BMjsszP6bw==
-
-stable-diffusion-image-metadata@^1.0.13:
-  version "1.0.13"
-  resolved "https://registry.yarnpkg.com/stable-diffusion-image-metadata/-/stable-diffusion-image-metadata-1.0.13.tgz#fc68984e8e933c658f9659ce55e8a8d02082938a"
-  integrity sha512-YQ/mrUHcRueRrPkwYQ5RjOCOYjkaKzOVmVIpzx6ZKvVeB4SMh2RTisZ9gNdkF25YLS/hMwuRPNUEfk1Wp5i3kw==
-  dependencies:
-    exifreader "^4.13.0"
 
 strip-ansi@^6.0.1:
   version "6.0.1"
