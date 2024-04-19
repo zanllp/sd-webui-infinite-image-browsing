@@ -6,7 +6,7 @@ import { FileNodeInfo } from '@/api/files'
 import { getImageGenerationInfo } from '@/api'
 import { watch, ref } from 'vue'
 import { createReactiveQueue } from '@/util'
-import { parse } from 'stable-diffusion-image-metadata'
+import { parse } from '@/util/stable-diffusion-image-metadata'
 import { useGlobalStore } from '@/store/useGlobalStore'
 
 const props = defineProps<{
