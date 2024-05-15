@@ -656,8 +656,10 @@ class ExtraPath:
                 path = row[0]
                 if os.path.exists(path):
                     paths.append(ExtraPath(*row))
-                else:
-                    cls.remove(conn, path)
+                else:                    
+                    sql = "DELETE FROM extra_path WHERE path = ?"
+                    cur.execute(sql, (path,))
+                    conn.commit()
             return paths[0] if paths else None
 
     @classmethod
@@ -685,6 +687,7 @@ class ExtraPath:
     ):
         with closing(conn.cursor()) as cur:
             path = os.path.normpath(path)
+
             target = cls.get_target_path(conn, path)
             if not target:
                 return
