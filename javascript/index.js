@@ -58,6 +58,14 @@ Promise.resolve().then(async () => {
     }
   }
 
+  const isLobe = () => {
+    try {
+      return !!gradioApp().querySelector('[alt*="lobehub"]')
+    } catch (error) {
+      return false
+    }
+  }
+
   /**
    * @type {HTMLDivElement}
    */
@@ -79,7 +87,7 @@ Promise.resolve().then(async () => {
           }
           const topRect = iibTop.getBoundingClientRect()
           wrap.style = `
-            top:${Math.max(128, topRect.top) - 10}px;
+            top:${Math.max(isLobe() ? 32 : 128, topRect.top) - 10}px;
             position: fixed;
             left: 10px;
             right: 10px;
