@@ -49,7 +49,7 @@ from scripts.iib.db.datamodel import (
     FileInfoDict,
     Cursor
 )
-from scripts.iib.db.update_image_data import update_image_data, rebuild_image_index
+from scripts.iib.db.update_image_data import update_image_data, rebuild_image_index, add_image_data_single
 from scripts.iib.logger import logger
 from scripts.iib.seq import seq
 import urllib.parse
@@ -823,6 +823,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         if not img:
             if DbImg.count(conn):
                 update_image_data([os.path.dirname(path)])
+                add_image_data_single(path)
                 img = DbImg.get(conn, path)
             else:
                 raise HTTPException(
@@ -866,8 +867,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 )
             img = DbImg.get(conn, path)
             if not img:
-                if  DbImg.count(conn):
-                    update_image_data([os.path.dirname(path)])
+                if DbImg.count(conn):
+                    add_image_data_single(path)
                     img = DbImg.get(conn, path)
                 else: 
                     raise HTTPException(
