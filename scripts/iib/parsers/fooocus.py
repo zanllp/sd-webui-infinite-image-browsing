@@ -36,7 +36,7 @@ class FooocusParser:
         metadata_list_str = "Steps: Unknown , Source Identifier: Fooocus ,"
         params = {"meta": {"Source Identifier": "Fooocus"}}
         for tr in tr_elements:
-            label = tr.xpath('.//td[@class="label"]/text()')
+            label = tr.xpath('.//td[@class="label" or @class="key"]/text()')
             value = tr.xpath('.//td[@class="value"]/text()')
             if label:
                 k = label[0]
