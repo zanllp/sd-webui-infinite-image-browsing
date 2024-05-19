@@ -49,6 +49,8 @@ const tags = computed(() => {
             <a-menu-item key="send2outpaint">openOutpaint</a-menu-item>
           </a-sub-menu>
         </template>
+        
+        <a-menu-item key="rename">{{ $t('rename') }}</a-menu-item>
         <a-menu-item key="send2BatchDownload">{{ $t('sendToBatchDownload') }}</a-menu-item>
         <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
         <a-menu-divider />
