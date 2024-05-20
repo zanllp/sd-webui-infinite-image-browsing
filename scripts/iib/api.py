@@ -412,10 +412,11 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                         continue
                     fullpath = os.path.normpath(item.path)
                     name = os.path.basename(item.path)
-                    date = get_formatted_date(item.stat().st_mtime)
-                    created_time = get_formatted_date(item.stat().st_ctime)
+                    stat = item.stat()
+                    date = get_formatted_date(stat.st_mtime)
+                    created_time = get_formatted_date(stat.st_birthtime if hasattr(stat, 'st_birthtime') else stat.st_ctime)
                     if item.is_file():
-                        bytes = item.stat().st_size
+                        bytes = stat.st_size
                         size = human_readable_size(bytes)
                         files.append(
                             {
