@@ -110,7 +110,7 @@ export const openRenameFileModal = (path: string) => {
   const name = ref(path.split(/[\\/]/).pop() ?? '')
   return new Promise<string>((resolve) => {
     Modal.confirm({
-      title: 'Rename',
+      title: t('rename'),
       content: () => <Input v-model:value={name.value} />,
       async onOk() {
         if (!name.value) {

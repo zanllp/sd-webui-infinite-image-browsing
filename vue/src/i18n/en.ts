@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  rename: 'Rename',
   inputAlias: 'Input Alias',
   addAliasCompleted: 'Add Alias Completed',
   alias: 'Alias',

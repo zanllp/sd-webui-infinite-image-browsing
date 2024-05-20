@@ -1,4 +1,5 @@
 export const zhHans = {
+  rename: '重命名',
   inputAlias: '输入别名',
   addAliasCompleted: '添加别名完成',
   alias: '别名',

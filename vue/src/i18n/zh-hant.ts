@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  rename: '重命名',
   inputAlias: '輸入別名',
   addAliasCompleted: '添加別名完成',
   alias: '別名',
