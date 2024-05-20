@@ -3,16 +3,28 @@ from typing import BinaryIO
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
+from scripts.iib.tool import get_video_type
 
+video_file_handler = {}
+
+def close_video_file_reader(path):
+    if not get_video_type(path):
+        return
+    try:
+        video_file_handler[path].close()
+    except Exception as e:
+        print(f"close file error: {e}")
+    
 
 def send_bytes_range_requests(
-    file_obj: BinaryIO, start: int, end: int, chunk_size: int = 10_000
+    file_path, start: int, end: int, chunk_size: int = 10_000
 ):
     """Send a file in chunks using Range Requests specification RFC7233
 
     `start` and `end` parameters are inclusive due to specification
     """
-    with file_obj as f:
+    with open(file_path, mode="rb") as f:
+        video_file_handler[file_path] = f
         f.seek(start)
         while (pos := f.tell()) <= end:
             read_size = min(chunk_size, end + 1 - pos)
@@ -68,7 +80,7 @@ def range_requests_response(
         status_code = status.HTTP_206_PARTIAL_CONTENT
 
     return StreamingResponse(
-        send_bytes_range_requests(open(file_path, mode="rb"), start, end),
+        send_bytes_range_requests(file_path, start, end),
         headers=headers,
         status_code=status_code,
     )
