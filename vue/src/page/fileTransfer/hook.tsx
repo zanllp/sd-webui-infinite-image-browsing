@@ -32,7 +32,7 @@ import { DatabaseOutlined } from '@/icon'
 import { addExtraPath, batchUpdateImageTag, removeExtraPath, toggleCustomTagToImg } from '@/api/db'
 import { FileTransferData, downloadFileInfoJSON, downloadFiles, getFileTransferDataFromDragEvent, isMediaFile, toRawFileUrl } from '@/util/file'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
-import { openCreateFlodersModal, MultiSelectTips } from '@/components/functionalCallableComp'
+import { openCreateFlodersModal, MultiSelectTips, openRenameFileModal } from '@/components/functionalCallableComp'
 import { useTagStore } from '@/store/useTagStore'
 import { useBatchDownloadStore } from '@/store/useBatchDownloadStore'
 import { Walker } from './walker'
@@ -969,6 +969,16 @@ export function useFileItemActions (
       }
       case 'copyPreviewUrl': {
         return copy2clipboardI18n(parent.document.location.origin + url)
+      }
+      case 'rename': {
+        let newPath = await openRenameFileModal(file.fullpath)
+        newPath = Path.normalize(newPath)
+        const map = tagStore.tagMap
+        map.set(newPath, map.get(file.fullpath) ?? [])
+        map.delete(file.fullpath)
+        file.fullpath = newPath
+        file.name =  newPath.split(/[\\/]/).pop() ?? ''
+        return 
       }
       case 'send2txt2img':
         return copyImgTo('txt2img')

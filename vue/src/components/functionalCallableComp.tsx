@@ -6,7 +6,7 @@ import { t } from '@/i18n'
 import { downloadFiles, globalEvents, toRawFileUrl, toStreamVideoUrl } from '@/util'
 import { DownloadOutlined } from '@/icon'
 import { isStandalone } from '@/util/env'
-import { rebuildImageIndex } from '@/api/db'
+import { rebuildImageIndex, renameFile } from '@/api/db'
 import { useTagStore } from '@/store/useTagStore'
 import { useGlobalStore } from '@/store/useGlobalStore'
 
@@ -102,5 +102,23 @@ export const openRebuildImageIndexModal = () => {
       globalEvents.emit('searchIndexExpired')
       message.success(t('rebuildComplete'))
     }
+  })
+}
+
+
+export const openRenameFileModal = (path: string) => {
+  const name = ref(path.split(/[\\/]/).pop() ?? '')
+  return new Promise<string>((resolve) => {
+    Modal.confirm({
+      title: t('rename'),
+      content: () => <Input v-model:value={name.value} />,
+      async onOk() {
+        if (!name.value) {
+          return
+        }
+        const resp = await renameFile({ path, name: name.value })
+        resolve(resp.new_path)
+      }
+    })
   })
 }

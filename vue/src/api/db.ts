@@ -137,3 +137,13 @@ export interface BatchUpdateTagParams {
 export const batchUpdateImageTag = (data: BatchUpdateTagParams) => {
   return axiosInst.value.post('/db/batch_update_image_tag', data)
 }
+
+export interface RenameFileParams {
+  path: string
+  name: string
+}
+
+export const renameFile = async  (data: RenameFileParams) => {
+  const resp = await axiosInst.value.post('/db/rename', data)
+  return resp.data  as Promise<{ new_path:string }>
+}

@@ -53,7 +53,7 @@ from scripts.iib.db.update_image_data import update_image_data, rebuild_image_in
 from scripts.iib.logger import logger
 from scripts.iib.seq import seq
 import urllib.parse
-from scripts.iib.fastapi_video import range_requests_response
+from scripts.iib.fastapi_video import range_requests_response, close_video_file_reader
 from scripts.iib.parsers.index import parse_image_info
 
 index_html_path = os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
@@ -298,6 +298,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                         raise HTTPException(400, detail=error_msg)
                     shutil.rmtree(path)
                 else:
+                    close_video_file_reader(path)
                     os.remove(path)
                     txt_path = get_img_geninfo_txt_path(path)
                     if txt_path:
@@ -899,6 +900,46 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         tag = Tag.get_or_create(conn, name=req.tag_name, type="custom")
         conn.commit()
         return tag
+    
+    class RenameFileReq(BaseModel):
+        path: str
+        name: str
+
+    @app.post(
+        db_api_base + "/rename",
+        dependencies=[Depends(verify_secret), Depends(write_permission_required)],
+    )
+    async def rename_file(req: RenameFileReq):
+        conn = DataBase.get_conn()
+        try:
+            # Normalize the paths
+
+            path = os.path.normpath(req.path)
+            new_path = os.path.join(os.path.dirname(path), req.name)
+
+            # Check if the file exists
+            if not os.path.exists(path):
+                raise HTTPException(status_code=404, detail="File not found")
+
+            # Check if a file with the new name already exists
+            if os.path.exists(new_path):
+                raise HTTPException(status_code=400, detail="A file with the new name already exists")
+            close_video_file_reader(path)
+            img = DbImg.get(conn, path)
+            if img:
+                img.update_path(conn, new_path)
+                conn.commit()
+
+            # Perform the file rename operation
+            os.rename(path, new_path)
+
+
+            return {"detail": "File renamed successfully", "new_path": new_path}
+
+        except PermissionError:
+            raise HTTPException(status_code=403, detail="Permission denied")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
     class RemoveCustomTagReq(BaseModel):
         tag_id: int
