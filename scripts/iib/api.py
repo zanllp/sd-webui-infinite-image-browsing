@@ -824,7 +824,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         img = DbImg.get(conn, path)
         if not img:
             if DbImg.count(conn):
-                update_image_data([os.path.dirname(path)])
+                # update_image_data([os.path.dirname(path)])
                 add_image_data_single(path)
                 img = DbImg.get(conn, path)
             else:
