@@ -368,13 +368,15 @@ const taggleLikeTag = () => {
     top: 0;
     display: flex;
     flex-wrap: wrap;
+    padding: 4px;
 
     &>img {
-      width: calc(50% - 12px);
-      height: calc(50% - 12px);
-      margin: 6px;
+      width: calc(50% - 8px);
+      height: calc(50% - 8px);
+      margin: 4px;
       object-fit: cover;
-      border-radius: 6px;
+      border-radius: 8px;
+      overflow: hidden
     }
   }
 }
