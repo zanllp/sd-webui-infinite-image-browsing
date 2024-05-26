@@ -14,11 +14,9 @@ def get_top_4_media_info(folder_path):
     """
     conn = DataBase.get_conn()
     if DirCoverCache.is_cache_expired(conn, folder_path):
-        print("create cache")
         media_files = get_media_files_from_folder(folder_path)
         DirCoverCache.cache_media_files(conn, folder_path, media_files)
     else:
-        print("use cache")
         media_files = DirCoverCache.get_cached_media_files(conn, folder_path)
 
     return media_files[:4]
