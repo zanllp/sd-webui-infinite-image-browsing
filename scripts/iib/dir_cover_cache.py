@@ -32,17 +32,16 @@ def get_media_files_from_folder(folder_path):
     list: 包含媒体文件完整路径的列表。
     """
     media_files = []
-    for root, dirs, files in os.walk(folder_path):
-        for file in files:
-            file_path = os.path.join(root, file)
-            if is_valid_media_path(file_path):
-                name = os.path.basename(file_path)
-                stat = os.stat(file_path)
+    with os.scandir(folder_path) as entries:
+        for entry in sorted(entries, key=lambda x: x.stat().st_mtime, reverse=True):
+            if entry.is_file() and is_valid_media_path(entry.path):
+                name = os.path.basename(entry.path)
+                stat = entry.stat()
                 date = get_formatted_date(stat.st_mtime)
                 created_time = get_formatted_date(stat.st_birthtime if hasattr(stat, 'st_birthtime') else stat.st_ctime)
-                media_files.append({ 
-                    "fullpath": file_path, 
-                    "media_type": "video" if get_video_type(file_path) else "image",
+                media_files.append({
+                    "fullpath": entry.path,
+                    "media_type": "video" if get_video_type(entry.path) else "image",
                     "type": "file",
                     "date": date,
                     "created_time": created_time,
@@ -50,4 +49,5 @@ def get_media_files_from_folder(folder_path):
                 })
             if len(media_files) > 3:
                 return media_files
+    
     return media_files
