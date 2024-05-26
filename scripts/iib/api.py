@@ -4,6 +4,7 @@ from pathlib import Path
 import shutil
 import sqlite3
 
+from scripts.iib.dir_cover_cache import get_top_4_media_info
 from scripts.iib.tool import (
     get_video_type,
     human_readable_size,
@@ -677,6 +678,15 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     def open_target_file_withDefault_app(req: OpenFolderReq):
         check_path_trust(req.path)
         open_file_with_default_app(req.path)
+
+
+    @app.post(
+        api_base + "/top_4_media_info",
+        dependencies=[Depends(verify_secret)],
+    )
+    def get_top_4_media_cover_info(path: str):
+        check_path_trust(path)
+        return get_top_4_media_info(path)
 
     db_api_base = api_base + "/db"
 
