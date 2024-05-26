@@ -705,14 +705,16 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
       const fetchDirTop4MediaPaths = viewableAreaFiles
         .filter(v => v.is_under_scanned_path && v.type === 'dir' && !dirCoverCache.has(v.fullpath))
         .map(v => v.fullpath)
-      batchGetDirTop4MediaInfo(fetchDirTop4MediaPaths).then(v => {
-        for (const key in v) {
-          if (Object.prototype.hasOwnProperty.call(v, key)) {
-            const element = v[key];
-            dirCoverCache.set(key, element)
+      if (fetchDirTop4MediaPaths.length) {
+        batchGetDirTop4MediaInfo(fetchDirTop4MediaPaths).then(v => {
+          for (const key in v) {
+            if (Object.prototype.hasOwnProperty.call(v, key)) {
+              const element = v[key];
+              dirCoverCache.set(key, element)
+            }
           }
-        }
-      })
+        })
+      }
     }
   }
 
