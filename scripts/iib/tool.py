@@ -205,6 +205,17 @@ def get_video_type(file_path):
         return file_extension[1:] 
     else:
         return None
+    
+def is_image_file(filename: str) -> bool:
+    if not isinstance(filename, str):
+        return False
+    
+    extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+    extension = filename.split('.')[-1].lower()
+    return f".{extension}" in extensions
+
+def is_video_file(filename: str) -> bool:
+    return isinstance(get_video_type(filename), str)
 
 def is_valid_media_path(path):
     """
@@ -215,9 +226,7 @@ def is_valid_media_path(path):
         return False
     if not os.path.isfile(abs_path):  # 判断是否是文件
         return False
-    if not imghdr.what(abs_path) and not get_video_type(abs_path):  # 判断是否是图像文件
-        return False
-    return True
+    return is_image_file(abs_path) or is_video_file(abs_path)
 
 
 
