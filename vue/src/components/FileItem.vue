@@ -15,6 +15,7 @@ import { Tag } from '@/api/db'
 import { openVideoModal } from './functionalCallableComp'
 import type { GenDiffInfo } from '@/api/files'
 import { play } from '@/icon'
+import { Top4MediaInfo } from '@/api'
 
 const global = useGlobalStore()
 const tagStore = useTagStore()
@@ -35,6 +36,7 @@ const props = withDefaults(
     genInfo?: string
     enableChangeIndicator?: boolean
     extraTags?: Tag[]
+    coverFiles?: Top4MediaInfo[]
   }>(),
   {
     selected: false, enableRightClickMenu: true, enableCloseIcon: false, genDiffToNext: () => ({
@@ -50,7 +52,6 @@ const props = withDefaults(
     })
   }
 )
-
 
 
 const emit = defineEmits<{
@@ -143,9 +144,10 @@ const taggleLikeTag = () => {
             </a-tag>
           </div>
         </div>
-        <div :class="`idx-${idx} item-content video`" :urld="toVideoCoverUrl(file)" :style="{ 'background-image': `url('${toVideoCoverUrl(file)}')` }"
-          v-else-if="isVideoFile(file.name)" @click="openVideoModal(file, (id) => emit('contextMenuClick', { key: `toggle-tag-${id}` } as any, file, idx))">
-      
+        <div :class="`idx-${idx} item-content video`" :urld="toVideoCoverUrl(file)"
+          :style="{ 'background-image': `url('${toVideoCoverUrl(file)}')` }" v-else-if="isVideoFile(file.name)"
+          @click="openVideoModal(file, (id) => emit('contextMenuClick', { key: `toggle-tag-${id}` } as any, file, idx))">
+
           <div class="play-icon">
             <img :src="play" style="width: 40px;height: 40px;">
           </div>
@@ -157,6 +159,12 @@ const taggleLikeTag = () => {
         </div>
         <div v-else class="preview-icon-wrap">
           <file-outlined class="icon center" v-if="file.type === 'file'" />
+          <div v-else-if="coverFiles?.length && cellWidth > 160" class="dir-cover-container">
+            <img class="dir-cover-item"
+              :src="item.media_type === 'image' ? toImageThumbnailUrl(item) : toVideoCoverUrl(item)"
+              v-for="item in coverFiles" :key="item.fullpath">
+          </div>
+          
           <folder-open-outlined class="icon center" v-else />
         </div>
         <div class="profile" v-if="cellWidth > 128">
@@ -165,7 +173,7 @@ const taggleLikeTag = () => {
           </div>
           <div class="basic-info">
             <div>
-              {{ file.size }}
+              {{ file.type }} {{ file.size }}
             </div>
             <div>
               {{ file.date }}
@@ -205,7 +213,7 @@ const taggleLikeTag = () => {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); 
+    transform: translate(-50%, -50%);
     border-radius: 100%;
     display: flex;
   }
@@ -324,7 +332,8 @@ const taggleLikeTag = () => {
         overflow: hidden;
       }
 
-      img,
+      img:not(.dir-cover-item),
+      .dir-cover-container,
       .preview-icon-wrap>[role='img'] {
         height: v-bind('$props.cellWidth + "px"');
         width: v-bind('$props.cellWidth + "px"');
@@ -353,6 +362,20 @@ const taggleLikeTag = () => {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+  }
+
+  .dir-cover-container {
+    top: 0;
+    display: flex;
+    flex-wrap: wrap;
+
+    &>img {
+      width: calc(50% - 12px);
+      height: calc(50% - 12px);
+      margin: 6px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
   }
 }
 </style>

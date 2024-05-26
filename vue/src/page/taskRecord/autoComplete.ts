@@ -25,6 +25,12 @@ export const getQuickMovePaths = async ({
     'outdir_txt2img_samples',
     'outdir_save',
   )
+  picked.outdir_extras_samples ??= 'outputs/extras-images'
+  picked.outdir_img2img_grids ??= 'outputs/img2img-grids'
+  picked.outdir_img2img_samples ??= 'outputs/img2img-images'
+  picked.outdir_save ??= 'log/images'
+  picked.outdir_txt2img_grids ??= 'outputs/txt2img-grids'
+  picked.outdir_txt2img_samples ??= 'outputs/txt2img-images'
   const pathMap = {
     ...picked,
     cwd: sd_cwd,
@@ -66,12 +72,12 @@ export const getQuickMovePaths = async ({
   const findshortest = (path: string) => {
     path = normalize(path)
     const replacedPaths = [] as string[]
-    for (const [k,v] of Object.entries(pathAliasMap)) {
+    for (const [k, v] of Object.entries(pathAliasMap)) {
       if (k && v) {
         replacedPaths.push(path.replace(v, '$' + k))
       }
     }
-    return replacedPaths.sort((a,b) => a.length - b.length)[0]
+    return replacedPaths.sort((a, b) => a.length - b.length)[0]
   }
   const res = Object.keys(cnMap)
     .filter((k) => exists[pathMap[k as keyof typeof pathMap] as string])

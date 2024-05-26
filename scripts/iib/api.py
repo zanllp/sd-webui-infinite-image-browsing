@@ -681,12 +681,16 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
 
 
     @app.post(
-        api_base + "/top_4_media_info",
+        api_base + "/batch_top_4_media_info",
         dependencies=[Depends(verify_secret)],
     )
-    def get_top_4_media_cover_info(path: str):
-        check_path_trust(path)
-        return get_top_4_media_info(path)
+    def batch_get_top_4_media_cover_info(req: PathsReq):
+        for path in req.paths:
+            check_path_trust(path)
+        res = {}
+        for path in req.paths:
+            res[path] = get_top_4_media_info(path)
+        return res
 
     db_api_base = api_base + "/db"
 

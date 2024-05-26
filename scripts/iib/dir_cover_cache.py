@@ -1,6 +1,6 @@
 import os
 from scripts.iib.db.datamodel  import DirCoverCache, DataBase
-from scripts.iib.tool import is_valid_media_path, get_video_type
+from scripts.iib.tool import get_formatted_date, is_valid_media_path, get_video_type
 
 def get_top_4_media_info(folder_path):
     """
@@ -36,10 +36,18 @@ def get_media_files_from_folder(folder_path):
         for file in files:
             file_path = os.path.join(root, file)
             if is_valid_media_path(file_path):
-                if get_video_type(file_path):
-                  media_files.append({ "path": file_path, "type": "video" })
-                else:
-                  media_files.append({ "path": file_path, "type": "image" })
+                name = os.path.basename(file_path)
+                stat = os.stat(file_path)
+                date = get_formatted_date(stat.st_mtime)
+                created_time = get_formatted_date(stat.st_birthtime if hasattr(stat, 'st_birthtime') else stat.st_ctime)
+                media_files.append({ 
+                    "fullpath": file_path, 
+                    "media_type": "video" if get_video_type(file_path) else "image",
+                    "type": "file",
+                    "date": date,
+                    "created_time": created_time,
+                    "name": name,
+                })
             if len(media_files) > 3:
                 return media_files
     return media_files

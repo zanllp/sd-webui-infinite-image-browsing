@@ -69,7 +69,8 @@ const {
   loadNextDirLoading,
   canLoadNext,
   onScroll,
-  cellWidth
+  cellWidth,
+  dirCoverCache
 } = useFilesDisplay()
 const { onDrop, onFileDragStart, onFileDragEnd } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions({ openNext })
@@ -332,7 +333,8 @@ function getGenDiff (ownGenInfo: any, idx: any, increment: any, ownFile: FileNod
               :is-selected-mutil-files="multiSelectedIdxs.length > 1"
               :gen-diff-to-next="getGenDiff(file.gen_info_obj, idx, 1, file)"
               :gen-diff-to-previous="getGenDiff(file.gen_info_obj, idx, -1, file)"
-              :enable-change-indicator="changeIndchecked" />
+              :enable-change-indicator="changeIndchecked" 
+              :cover-files="dirCoverCache.get(file.fullpath)"/>
           </template>
           <template #after>
             <div style="padding: 16px 0 512px;">
