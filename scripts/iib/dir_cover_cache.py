@@ -33,7 +33,7 @@ def get_media_files_from_folder(folder_path):
     """
     media_files = []
     with os.scandir(folder_path) as entries:
-        for entry in sorted(entries, key=lambda x: x.stat().st_mtime, reverse=True):
+        for entry in sorted(entries, key=lambda x: x.stat().st_birthtime if hasattr(x.stat(), 'st_birthtime') else x.stat().st_ctime, reverse=True):
             if entry.is_file() and is_valid_media_path(entry.path):
                 name = os.path.basename(entry.path)
                 stat = entry.stat()
