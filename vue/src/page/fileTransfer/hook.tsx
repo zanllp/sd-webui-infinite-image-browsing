@@ -2,7 +2,7 @@ import { useGlobalStore, type FileTransferTabPane, type Shortcut, type TagSearch
 import { useImgSliStore } from '@/store/useImgSli'
 import { onLongPress, useElementSize, useMouseInElement } from '@vueuse/core'
 import { ref, computed, watch, onMounted, h, reactive } from 'vue'
-import { genInfoCompleted, getImageGenerationInfo, openFolder, openWithDefaultApp, setImgPath } from '@/api'
+import { Top4MediaInfo, batchGetDirTop4MediaInfo, genInfoCompleted, getImageGenerationInfo, openFolder, openWithDefaultApp, setImgPath } from '@/api'
 import {
   useWatchDocument,
   ok,
@@ -641,6 +641,7 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
   const profileHeight = 44
   const { width } = useElementSize(stackViewEl)
   const gridItems = computed(() => ~~(width.value / gridSize.value))
+  const dirCoverCache = reactive(new Map<string, Top4MediaInfo[]>())
 
   const itemSize = computed(() => {
     const second = gridSize.value
@@ -693,21 +694,33 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
   state.useEventListen('loadNextDir', fetchDataUntilViewFilled)
 
 
-  const updateViewingImagesTag = () => {
+  const onViewableAreaChange = () => {
     const s = scroller.value
     if (s) {
-      const paths = sortedFiles.value.slice(Math.max(s.$_startIndex - 10, 0), s.$_endIndex + 10)
+      const viewableAreaFiles = sortedFiles.value.slice(Math.max(s.$_startIndex - 10, 0), s.$_endIndex + 10)
+      const fetchTagPaths = viewableAreaFiles
         .filter(v => v.is_under_scanned_path && isMediaFile(v.name))
         .map(v => v.fullpath)
-      tagStore.fetchImageTags(paths)
+      tagStore.fetchImageTags(fetchTagPaths)
+      const fetchDirTop4MediaPaths = viewableAreaFiles
+        .filter(v => v.is_under_scanned_path && v.type === 'dir' && !dirCoverCache.has(v.fullpath))
+        .map(v => v.fullpath)
+      batchGetDirTop4MediaInfo(fetchDirTop4MediaPaths).then(v => {
+        for (const key in v) {
+          if (Object.prototype.hasOwnProperty.call(v, key)) {
+            const element = v[key];
+            dirCoverCache.set(key, element)
+          }
+        }
+      })
     }
   }
 
-  watch(currLocation, debounce(updateViewingImagesTag, 150))
+  watch(currLocation, debounce(onViewableAreaChange, 150))
 
   const onScroll = debounce(async () => {
     await fetchDataUntilViewFilled()
-    updateViewingImagesTag()
+    onViewableAreaChange()
   }, 150)
 
   return {
@@ -722,7 +735,8 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
     loadNextDirLoading,
     canLoadNext,
     itemSize,
-    cellWidth
+    cellWidth,
+    dirCoverCache
   }
 }
 

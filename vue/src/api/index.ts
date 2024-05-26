@@ -9,6 +9,8 @@ import { computed, h, ref } from 'vue'
 import 'ant-design-vue/es/input/style/index.css'
 import sjcl from 'sjcl'
 import { tauriConf } from '@/util/tauriAppConf'
+import { Dict } from '@/util'
+import { FileNodeInfo } from './files'
 
 export const apiBase = computed(() =>
   tauriConf.value
@@ -135,4 +137,13 @@ export const openFolder = async (path: string) => {
 
 export const openWithDefaultApp = async (path: string) => {
   await axiosInst.value.post('/open_with_default_app', { path })
+}
+
+export interface Top4MediaInfo extends FileNodeInfo {
+  media_type: 'video' | 'image'
+}
+
+export const batchGetDirTop4MediaInfo = async (paths: string[]) => {
+  const resp = await axiosInst.value.post('/batch_top_4_media_info', { paths })
+  return resp.data as Dict<Top4MediaInfo[]>
 }
