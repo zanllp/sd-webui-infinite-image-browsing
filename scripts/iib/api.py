@@ -6,6 +6,7 @@ import sqlite3
 
 from scripts.iib.dir_cover_cache import get_top_4_media_info
 from scripts.iib.tool import (
+    get_created_date_by_stat,
     get_video_type,
     human_readable_size,
     is_valid_media_path,
@@ -415,7 +416,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     name = os.path.basename(item.path)
                     stat = item.stat()
                     date = get_formatted_date(stat.st_mtime)
-                    created_time = get_formatted_date(stat.st_birthtime if hasattr(stat, 'st_birthtime') else stat.st_ctime)
+                    created_time = get_created_date_by_stat(stat)
                     if item.is_file():
                         bytes = stat.st_size
                         size = human_readable_size(bytes)
