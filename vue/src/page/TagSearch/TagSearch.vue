@@ -14,14 +14,14 @@ import {
 import { SearchSelect, delay } from 'vue3-ts-util'
 import { PlusOutlined, ArrowRightOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { groupBy, uniqueId } from 'lodash-es'
+import { groupBy, uniqueId, debounce, cloneDeep } from 'lodash-es'
 import { createReactiveQueue, type Dict, useGlobalEventListen } from '@/util'
 import { Modal, message } from 'ant-design-vue'
 import { t } from '@/i18n'
 import { makeAsyncFunctionSingle } from '@/util'
 import TagSearchItem from './TagSearchItem.vue'
-import { reactive } from 'vue'
-import { nextTick } from 'vue'
+import { reactive, nextTick } from 'vue'
+import { watch } from 'vue'
 
 const props = defineProps<{ tabIdx: number; paneIdx: number, searchScope?: string }>()
 const global = useGlobalStore()
@@ -58,6 +58,14 @@ const tagMaxNum = reactive(new Map<string, number>())
 const getTagMaxNum = (name: string) => {
   return tagMaxNum.get(name) ?? 512
 }
+
+const tagClassSearch = ref({} as Dict<string>)
+const tagClassSearchDebounceSync = ref({} as Dict<string>)
+
+watch(tagClassSearch, debounce((val) => {
+  tagClassSearchDebounceSync.value = cloneDeep(val)
+}, 300), { deep: true })
+
 const pairid = uniqueId()
 const openedKeys = ref((classifyTags.value.map(v => v[0])))
 onMounted(async () => {
@@ -162,6 +170,16 @@ const toggleTag = (tag_id: TagId, taglist: TagId[]) => {
   }
 }
 
+const tagListFilter = (list: Tag[], name: string) => {
+  const max = getTagMaxNum(name)
+  let kw = tagClassSearchDebounceSync.value[name]
+  if (kw) {
+    kw = kw.trim()
+    list = list.filter(tag => toTagDisplayName(tag).toLowerCase().includes(kw.toLowerCase()))
+  }
+  return list.slice(0, max)
+}
+
 </script>
 <template>
   <div class="container">
@@ -205,15 +223,18 @@ const toggleTag = (tag_id: TagId, taglist: TagId[]) => {
             @click="!openedKeys.includes(name) ? openedKeys.push(name) : openedKeys.splice(openedKeys.indexOf(name), 1)">
             <ArrowRightOutlined class="arrow" :class="{ down: openedKeys.includes(name) }" />
             {{ $t(name) }}
+            <div @click.stop.prevent class="filter-input">
+              <a-input v-model:value="tagClassSearch[name]" size="small" allowClear
+                :placeholder="$t('filterByKeyword')" />
+            </div>
           </h3>
           <a-collapse ghost v-model:activeKey="openedKeys">
             <template #expandIcon></template>
             <a-collapse-panel :key="name">
               <tag-search-item @click="onTagClick(tag)" @remove="onTagRemoveClick(tag.id)"
                 @toggle-and="toggleTag(tag.id, matchIds.and_tags)" @toggle-or="toggleTag(tag.id, matchIds.or_tags)"
-                @toggle-not="toggleTag(tag.id, matchIds.not_tags)"
-                v-for="(tag, idx) in list.slice(0, getTagMaxNum(name))" :key="tag.id" :idx="idx" :name="name" :tag="tag"
-                :selected="selectedTagIds.has(tag.id)" />
+                @toggle-not="toggleTag(tag.id, matchIds.not_tags)" v-for="(tag, idx) in tagListFilter(list, name)"
+                :key="tag.id" :idx="idx" :name="name" :tag="tag" :selected="selectedTagIds.has(tag.id)" />
               <li v-if="name === 'custom'" class="tag" @click="addInputing = true">
                 <template v-if="addInputing">
                   <a-input-group compact>
@@ -227,7 +248,7 @@ const toggleTag = (tag_id: TagId, taglist: TagId[]) => {
                   <PlusOutlined /> {{ $t('add') }}
                 </template>
               </li>
-              <div v-if="getTagMaxNum(name) < list.length"> 
+              <div v-if="getTagMaxNum(name) < list.length">
                 <a-button block @click="tagMaxNum.set(name, getTagMaxNum(name) + 512)">{{ $t('loadmore') }}</a-button>
               </div>
             </a-collapse-panel>
@@ -314,6 +335,19 @@ const toggleTag = (tag_id: TagId, taglist: TagId[]) => {
     transition: all .3s ease;
     border-left: 4px solid var(--primary-color);
     cursor: pointer;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+
+    .filter-input {
+      margin-left: 32px;
+      width: 256px;
+       & > span {
+        border-radius: 6px;
+       }
+    }
+
 
     &:hover {
       border-radius: 4px;
