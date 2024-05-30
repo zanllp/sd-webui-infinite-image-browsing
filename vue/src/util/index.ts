@@ -1,7 +1,7 @@
 import { t } from '@/i18n'
 import { message } from 'ant-design-vue'
 import { reactive } from 'vue'
-import { FetchQueue, idKey, typedEventEmitter, type UniqueId } from 'vue3-ts-util'
+import { FetchQueue, idKey, typedEventEmitter, type UniqueId} from 'vue3-ts-util'
 export * from './file'
 
 export const parentWindow = () => {

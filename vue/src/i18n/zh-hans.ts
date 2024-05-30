@@ -1,4 +1,5 @@
 export const zhHans = {
+  loadmore: '加载更多',
   rename: '重命名',
   inputAlias: '输入别名',
   addAliasCompleted: '添加别名完成',
@@ -132,9 +133,9 @@ export const zhHans = {
   exactMatch: '完全匹配',
   anyMatch: '匹配任意',
   exclude: '排除掉',
-  selectExactMatchTag: '选择完全匹配的 Tag',
-  selectAnyMatchTag: '可选,选择匹配其中一个或多个的 Tag',
-  selectExcludeTag: '可选，选择需要排除掉的 Tag',
+  selectExactMatchTag: '选择完全匹配的 Tag。 您可以输入部分字符进行搜索',
+  selectAnyMatchTag: '可选,选择匹配其中一个或多个的 Tag。 您可以输入部分字符进行搜索',
+  selectExcludeTag: '可选，选择需要排除掉的 Tag。 您可以输入部分字符进行搜索',
   faq: '常见问题',
   autoUpdate: '检测到发生改变自动更新',
   'fuzzy-search': '模糊搜索',
