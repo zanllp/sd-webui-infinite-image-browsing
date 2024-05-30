@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  loadmore: 'Load more',
   rename: 'Rename',
   inputAlias: 'Input Alias',
   addAliasCompleted: 'Add Alias Completed',
@@ -121,9 +122,9 @@ export const en: IIBI18nMap = {
   'fuzzy-search': 'Fuzzy search',
   autoUpdate: 'Detected changes, automatically updating',
   faq: 'FAQ',
-  selectExactMatchTag: 'Select Exact Match Tags',
-  selectAnyMatchTag: 'Optional, Select Any Match Tags',
-  selectExcludeTag: 'Optional, Select Exclude Tags',
+  selectExactMatchTag: 'Select Exact Match Tags. You can search by entering partial characters',
+  selectAnyMatchTag: 'Optional, Select Any Match Tags. You can search by entering partial characters',
+  selectExcludeTag: 'Optional, Select Exclude Tags. You can search by entering partial characters',
   exactMatch: 'Exact Match',
   anyMatch: 'Match Any',
   exclude: 'Exclude',

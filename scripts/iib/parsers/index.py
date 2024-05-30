@@ -4,6 +4,7 @@ from scripts.iib.parsers.fooocus import FooocusParser
 from scripts.iib.parsers.model import ImageGenerationInfo
 from scripts.iib.logger import logger
 from PIL import Image
+import traceback
 
 
 def parse_image_info(image_path: str) -> ImageGenerationInfo:
@@ -16,5 +17,6 @@ def parse_image_info(image_path: str) -> ImageGenerationInfo:
                 except Exception as e:
                     logger.error(e, stack_info=True)
                     print(e)
+                    print(traceback.format_exc())
                     return ImageGenerationInfo()
         raise Exception("matched parser is not found")

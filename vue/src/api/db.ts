@@ -31,7 +31,7 @@ export const getExpiredDirs = async () => {
 export const updateImageData = async () => {
   await axiosInst.value.post('/db/update_image_data', {}, { timeout: Infinity })
 }
-type TagId = number | string
+export type TagId = number | string
 export interface MatchImageByTagsReq {
   folder_paths_str?: string
   and_tags: TagId[]

@@ -8,16 +8,20 @@ import {
   addCustomTag,
   removeCustomTag,
   getExpiredDirs,
-  type MatchImageByTagsReq
+  type MatchImageByTagsReq,
+  type TagId
 } from '@/api/db'
-import { SearchSelect } from 'vue3-ts-util'
-import { CheckOutlined, PlusOutlined, CloseOutlined, ArrowRightOutlined } from '@/icon'
+import { SearchSelect, delay } from 'vue3-ts-util'
+import { PlusOutlined, ArrowRightOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { groupBy, uniqueId } from 'lodash-es'
 import { createReactiveQueue, type Dict, useGlobalEventListen } from '@/util'
 import { Modal, message } from 'ant-design-vue'
 import { t } from '@/i18n'
 import { makeAsyncFunctionSingle } from '@/util'
+import TagSearchItem from './TagSearchItem.vue'
+import { reactive } from 'vue'
+import { nextTick } from 'vue'
 
 const props = defineProps<{ tabIdx: number; paneIdx: number, searchScope?: string }>()
 const global = useGlobalStore()
@@ -50,11 +54,21 @@ const classifyTags = computed(() => {
     (a, b) => classSort[a[0]] - classSort[b[0]]
   )
 })
+const tagMaxNum = reactive(new Map<string, number>())
+const getTagMaxNum = (name: string) => {
+  return tagMaxNum.get(name) ?? 256
+}
 const pairid = uniqueId()
 const openedKeys = ref((classifyTags.value.map(v => v[0])))
 onMounted(async () => {
+  console.log(new Date().toLocaleString())
   info.value = await getDbBasicInfo()
+  await delay(20)
+  console.log(new Date().toLocaleString())
   openedKeys.value = (classifyTags.value.map(v => v[0]))
+  nextTick(() => {
+    console.log(new Date().toLocaleString())
+  })
   if (info.value.img_count && info.value.expired) {
     await onUpdateBtnClick()
   }
@@ -83,9 +97,9 @@ useGlobalEventListen('returnToIIB', async () => {
   const res = await queue.pushAction(getExpiredDirs).res
   info.value!.expired = res.expired
 })
-
 const toTagDisplayName = (v: Tag, withType = false) =>
   (withType ? `[${v.type}] ` : '') + (v.display_name ? `${v.display_name} : ${v.name}` : v.name)
+
 const addInputing = ref(false)
 const addTagName = ref('')
 const onAddTagBtnSubmit = async () => {
@@ -106,7 +120,7 @@ const onAddTagBtnSubmit = async () => {
   addTagName.value = ''
   addInputing.value = false
 }
-const onTagRemoveClick = (tagId: number|string) => {
+const onTagRemoveClick = (tagId: TagId) => {
   Modal.confirm({
     title: t('confirmDelete'),
     async onOk () {
@@ -138,6 +152,16 @@ const conv = {
   text: toTagDisplayName,
   optionText: (v: Tag) => toTagDisplayName(v, true)
 }
+
+const toggleTag = (tag_id: TagId, taglist: TagId[]) => {
+  const idx = taglist.indexOf(tag_id)
+  if (idx === -1) {
+    taglist.push(tag_id)
+  } else {
+    taglist.splice(idx, 1)
+  }
+}
+
 </script>
 <template>
   <div class="container">
@@ -146,28 +170,29 @@ const conv = {
       <div>
         <div class="search-bar">
           <div class="form-name">{{ $t('exactMatch') }}</div>
-          <SearchSelect :conv="conv" mode="multiple" style="width: 100%" :options="tags" v-model:value="matchIds.and_tags"
-            :disabled="!tags.length" :placeholder="$t('selectExactMatchTag')" />
+          <SearchSelect :conv="conv" mode="multiple" style="width: 100%" :options="tags"
+            v-model:value="matchIds.and_tags" :disabled="!tags.length" :placeholder="$t('selectExactMatchTag')" />
           <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary"
             v-if="info.expired || !info.img_count">
             {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
-          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle" >{{
-            $t('search') }}
+          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle">{{
+      $t('search') }}
           </AButton>
         </div>
         <div class="search-bar">
           <div class="form-name">{{ $t('anyMatch') }}</div>
-          <SearchSelect :conv="conv" mode="multiple" style="width: 100%" :options="tags" v-model:value="matchIds.or_tags"
-            :disabled="!tags.length" :placeholder="$t('selectAnyMatchTag')" />
+          <SearchSelect :conv="conv" mode="multiple" style="width: 100%" :options="tags"
+            v-model:value="matchIds.or_tags" :disabled="!tags.length" :placeholder="$t('selectAnyMatchTag')" />
         </div>
         <div class="search-bar">
           <div class="form-name">{{ $t('exclude') }}</div>
-          <SearchSelect :conv="conv" mode="multiple" style="width: 100%" :options="tags" v-model:value="matchIds.not_tags"
-            :disabled="!tags.length" :placeholder="$t('selectExcludeTag')" />
+          <SearchSelect :conv="conv" mode="multiple" style="width: 100%" :options="tags"
+            v-model:value="matchIds.not_tags" :disabled="!tags.length" :placeholder="$t('selectExcludeTag')" />
         </div>
         <div class="search-bar">
           <div class="form-name">{{ $t('searchScope') }}</div>
-          <ATextarea :auto-size="{ maxRows: 8 }" v-model:value="matchIds.folder_paths_str" :placeholder="$t('specifiedSearchFolder')"/>
+          <ATextarea :auto-size="{ maxRows: 8 }" v-model:value="matchIds.folder_paths_str"
+            :placeholder="$t('specifiedSearchFolder')" />
         </div>
       </div>
 
@@ -184,35 +209,47 @@ const conv = {
           <a-collapse ghost v-model:activeKey="openedKeys">
             <template #expandIcon></template>
             <a-collapse-panel :key="name">
-              <li v-for="(tag, idx) in list" :key="tag.id" class="tag" :class="{ selected: selectedTagIds.has(tag.id) }"
-                @click="onTagClick(tag)">
-                <CheckOutlined v-if="selectedTagIds.has(tag.id)" />
-                {{ toTagDisplayName(tag) }}
-                <span v-if="name === 'custom' && idx !== 0" class="remove" @click.capture.stop="onTagRemoveClick(tag.id)">
-                  <CloseOutlined />
-                </span>
-              </li>
+              <tag-search-item @click="onTagClick(tag)" @remove="onTagRemoveClick(tag.id)"
+                @toggle-and="toggleTag(tag.id, matchIds.and_tags)" @toggle-or="toggleTag(tag.id, matchIds.or_tags)"
+                @toggle-not="toggleTag(tag.id, matchIds.not_tags)"
+                v-for="(tag, idx) in list.slice(0, getTagMaxNum(name))" :key="tag.id" :idx="idx" :name="name" :tag="tag"
+                :selected="selectedTagIds.has(tag.id)" />
               <li v-if="name === 'custom'" class="tag" @click="addInputing = true">
                 <template v-if="addInputing">
                   <a-input-group compact>
                     <a-input v-model:value="addTagName" style="width: 128px" :loading="loading" allow-clear
                       size="small" />
                     <a-button size="small" type="primary" @click.capture.stop="onAddTagBtnSubmit" :loading="loading">{{
-                      addTagName ? $t('submit') : $t('cancel') }}</a-button>
+      addTagName ? $t('submit') : $t('cancel') }}</a-button>
                   </a-input-group>
                 </template>
                 <template v-else>
                   <PlusOutlined /> {{ $t('add') }}
                 </template>
               </li>
+              <div v-if="getTagMaxNum(name) < list.length"> 
+                <a-button block @click="tagMaxNum.set(name, getTagMaxNum(name) + 256)">{{ $t('loadmore') }}</a-button>
+              </div>
             </a-collapse-panel>
           </a-collapse>
         </ul>
+
+
       </div>
     </template>
+    <div class="spin-container" v-else>
+      <a-spin size="large" />
+    </div>
   </div>
 </template>
 <style scoped lang="scss">
+.spin-container {
+  text-align: center;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  padding: 256px;
+}
+
 :deep() {
   .ant-collapse>.ant-collapse-item>.ant-collapse-header {
     padding: 0;
@@ -303,7 +340,7 @@ const conv = {
     padding: 8px;
 
 
-    .tag {
+    :deep() .tag {
       border: 2px solid var(--zp-secondary);
       color: var(--zp-primary);
       border-radius: 999px;
@@ -315,6 +352,7 @@ const conv = {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      position: relative;
 
       &.selected {
         color: var(--primary-color);

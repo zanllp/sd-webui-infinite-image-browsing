@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  loadmore: '載入更多',
   rename: '重命名',
   inputAlias: '輸入別名',
   addAliasCompleted: '添加別名完成',
@@ -136,9 +137,9 @@ export const zhHant: Partial<IIBI18nMap> = {
   exactMatch: '完全匹配',
   anyMatch: '匹配任意',
   exclude: '排除掉',
-  selectExactMatchTag: '選擇完全匹配的 Tag',
-  selectAnyMatchTag: '可選,選擇匹配其中一個或多個的 Tag',
-  selectExcludeTag: '可選,選擇需要排除掉的 Tag',
+  selectExactMatchTag: '選擇完全匹配的 Tag。 您可以輸入部分字符進行搜索',
+  selectAnyMatchTag: '可選,選擇匹配其中一個或多個的 Tag。 您可以輸入部分字符進行搜索',
+  selectExcludeTag: '可選,選擇需要排除掉的 Tag。 您可以輸入部分字符進行搜索',
   faq: '常見問題',
   autoUpdate: '檢測到發生改變自動更新',
   'fuzzy-search': '模糊搜尋',

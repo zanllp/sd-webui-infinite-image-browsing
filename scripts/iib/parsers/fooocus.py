@@ -3,7 +3,7 @@ import re
 from PIL import Image
 
 from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
-from scripts.iib.tool import omit, parse_generation_parameters
+from scripts.iib.tool import omit, parse_generation_parameters, unique_by
 
 
 def remove_extra_spaces(text):
@@ -15,6 +15,7 @@ def get_log_file(file_path: str):
     with open(os.path.join(dir, "log.html")) as f:
         return f.read()
 
+lora_re = re.compile("LoRA \d+", re.IGNORECASE)
 
 class FooocusParser:
     def __init__(self):
@@ -31,6 +32,7 @@ class FooocusParser:
         id = str(os.path.basename(file_path)).replace(".", "_")
         metadata = root.xpath(f'//div[@id="{id}"]/descendant::table[@class="metadata"]')
         tr_elements = metadata[0].xpath(".//tr")
+        lora_list = []
         # As a workaround to bypass parsing errors in the parser.
         # https://github.com/jiw0220/stable-diffusion-image-metadata/blob/00b8d42d4d1a536862bba0b07c332bdebb2a0ce5/src/index.ts#L130
         metadata_list_str = "Steps: Unknown , Source Identifier: Fooocus ,"
@@ -49,6 +51,8 @@ class FooocusParser:
                     v = v.replace(",", "，")
                     params["meta"][k] = v
                     metadata_list_str += f" {k}: {v},"
+                if lora_re.search(k):
+                    lora_list.append({ "name": v.strip(), "value": 1 })
         params["meta"]["Model"] = params["meta"]["Base Model"]
         params["meta"]["Size"] = str(params["meta"]["Resolution"]).replace("(", "").replace(")", "").replace("，", " * ")
         metadata_list_str = metadata_list_str.strip()
@@ -57,7 +61,10 @@ class FooocusParser:
             info,
             ImageGenerationParams(
                 meta=params["meta"],
-                pos_prompt=parse_generation_parameters(info)["pos_prompt"]
+                pos_prompt=parse_generation_parameters(info)["pos_prompt"],
+                extra={
+                    "lora": unique_by(lora_list, lambda x: x["name"].lower())
+                }
             ),
         )
 
