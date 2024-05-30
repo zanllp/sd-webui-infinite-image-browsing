@@ -56,7 +56,7 @@ const classifyTags = computed(() => {
 })
 const tagMaxNum = reactive(new Map<string, number>())
 const getTagMaxNum = (name: string) => {
-  return tagMaxNum.get(name) ?? 256
+  return tagMaxNum.get(name) ?? 512
 }
 const pairid = uniqueId()
 const openedKeys = ref((classifyTags.value.map(v => v[0])))
@@ -228,7 +228,7 @@ const toggleTag = (tag_id: TagId, taglist: TagId[]) => {
                 </template>
               </li>
               <div v-if="getTagMaxNum(name) < list.length"> 
-                <a-button block @click="tagMaxNum.set(name, getTagMaxNum(name) + 256)">{{ $t('loadmore') }}</a-button>
+                <a-button block @click="tagMaxNum.set(name, getTagMaxNum(name) + 512)">{{ $t('loadmore') }}</a-button>
               </div>
             </a-collapse-panel>
           </a-collapse>

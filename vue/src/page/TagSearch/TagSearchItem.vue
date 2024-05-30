@@ -1,12 +1,12 @@
 <template>
   <div class="tag-wrap">
     <div class="float-actions">
-      <a-button size="small" @click="$emit('toggleAnd')">{{ $t('exactMatch') }}
-      </a-button>
-      <a-button size="small" @click="$emit('toggleOr')">{{ $t('anyMatch')
-        }}</a-button>
-      <a-button size="small" @click="$emit('toggleNot')">{{ $t('exclude')
-        }}</a-button>
+      <button size="small" @click="$emit('toggleAnd')">{{ $t('exactMatch') }}
+      </button>
+      <button size="small" @click="$emit('toggleOr')">{{ $t('anyMatch')
+        }}</button>
+      <button size="small" @click="$emit('toggleNot')">{{ $t('exclude')
+        }}</button>
     </div>
     <li class="tag" :title="toTagDisplayName(tag)" :class="{ selected }" @click="$emit('click')">
       <CheckOutlined v-if="selected" />
@@ -68,7 +68,14 @@ const toTagDisplayName = (v: Tag, withType = false) =>
     padding: 2px;
     box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.12),
       0 2px 3px rgba(0, 0, 0, 0.16);
-    border-bottom: 2px solid #1453ad;
+    border-bottom: 3px solid #1453ad;
+
+    button {
+      cursor: pointer;
+      white-space: pre;
+      font-size: 12px;
+      padding: 1px 4px;
+    }
 
     &> :not(:last-child) {
       margin-right: 2px;
