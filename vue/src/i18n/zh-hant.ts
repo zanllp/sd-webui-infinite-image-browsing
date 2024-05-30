@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  filterByKeyword: '輸入標籤關鍵詞過濾',
   loadmore: '載入更多',
   rename: '重命名',
   inputAlias: '輸入別名',

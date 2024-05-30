@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  filterByKeyword: 'Filter tags by keyword',
   loadmore: 'Load more',
   rename: 'Rename',
   inputAlias: 'Input Alias',

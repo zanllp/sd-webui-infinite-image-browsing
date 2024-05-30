@@ -1,4 +1,5 @@
 export const zhHans = {
+  filterByKeyword: '输入标签关键词过滤',
   loadmore: '加载更多',
   rename: '重命名',
   inputAlias: '输入别名',
