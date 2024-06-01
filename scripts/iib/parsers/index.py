@@ -1,6 +1,7 @@
 from scripts.iib.parsers.comfyui import ComfyUIParser
 from scripts.iib.parsers.sd_webui import SdWebUIParser
 from scripts.iib.parsers.fooocus import FooocusParser
+from scripts.iib.parsers.novelai import NovelAIParser
 from scripts.iib.parsers.model import ImageGenerationInfo
 from scripts.iib.logger import logger
 from PIL import Image
@@ -8,7 +9,7 @@ import traceback
 
 
 def parse_image_info(image_path: str) -> ImageGenerationInfo:
-    parsers = [ComfyUIParser, FooocusParser, SdWebUIParser]
+    parsers = [ComfyUIParser, FooocusParser, NovelAIParser, SdWebUIParser]
     with Image.open(image_path) as img:
         for parser in parsers:
             if parser.test(img, image_path):
