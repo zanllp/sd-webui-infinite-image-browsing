@@ -20,7 +20,7 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 | Stable Diffusion web UI| Supported        | --                   |
 | ComfyUI                | Partially supported | --                |
 | Fooocus                | Supported        | --                   |
-| NovelAI                | Not supported    | Planned              |
+| NovelAI                | Supported    | --            |
 | StableSwarmUI          | Not supported    | Planned              |
 
 

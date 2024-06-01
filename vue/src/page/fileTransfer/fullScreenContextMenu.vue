@@ -361,6 +361,9 @@ const copyPositivePrompt = () => {
       border-radius: 4px;
       border-collapse: separate;
       margin-bottom: 3em;
+      tr td:first-child {
+        white-space: nowrap;
+      }
     }
 
     table td {
