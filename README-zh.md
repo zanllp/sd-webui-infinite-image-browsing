@@ -4,6 +4,7 @@
 
 
 [查看近期更新](https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log)
+[安装/运行](#安装运行)
 
 <p style="text-align:center;margin:0 32px">不仅仅是图像浏览器，更是一个强大的图像管理器。精确的图像搜索配合多选操作进行筛选/归档/打包，成倍提高效率。更是支持以独立模式运行，无需SD-Webui</p>
 
@@ -91,12 +92,12 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 ## 作为使用Python运行的独立程序（不需要SD-webui）:
 请参考[Can the extension function without the web UI?](https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/47)
 
-如果需要查看ComfyUI/Fooocus生成的图片相关，请先参考 https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/202#issuecomment-1655764627
+如果需要查看ComfyUI/Fooocus/NovelAI生成的图片相关，请先参考 https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/202#issuecomment-1655764627
 
 如果你需要dockerfile 参考  https://github.com/zanllp/sd-webui-infinite-image-browsing/discussions/366
 
 ## 作为桌面应用程序（不需要SD-webui和Python）:
-exe版本同样支持ComfyUI/Fooocus
+exe版本同样支持ComfyUI/Fooocus/NovelAI
 
 从仓库页面右侧的`releases`部分下载并安装程序。如果提示检测到病毒忽略即可这是误报。
 
