@@ -146,20 +146,29 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
         type="size",
     )
     safe_save_img_tag(ImageTag(img.id, size_tag.id))
-
     for k in [
         "Model",
         "Sampler",
         "Source Identifier",
         "Postprocess upscale by",
         "Postprocess upscaler",
-        "Size"
+        "Size",
+        "Refiner",
+        "Hires upscaler"
     ]:
+        
         v = meta.get(k)
         if not v:
             continue
+        
         tag = Tag.get_or_create(conn, str(v), k)
         safe_save_img_tag(ImageTag(img.id, tag.id))
+        if "Hires upscaler" == k:
+            tag = Tag.get_or_create(conn, 'Hires All', k)
+            safe_save_img_tag(ImageTag(img.id, tag.id))
+        elif "Refiner" == k:
+            tag = Tag.get_or_create(conn, 'Refiner All', k)
+            safe_save_img_tag(ImageTag(img.id, tag.id))
     for i in lora:
         tag = Tag.get_or_create(conn, i["name"], "lora")
         safe_save_img_tag(ImageTag(img.id, tag.id))
