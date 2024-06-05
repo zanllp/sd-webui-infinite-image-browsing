@@ -542,10 +542,10 @@ def parse_generation_parameters(x: str):
                     res[f"{k}-2"] = m.group(2)
                     continue
                 v = v.strip()  # Remove surrounding spaces for non-JSON values
-
-            res[k] = v
         except Exception as e:
             print(f"Error parsing \"{k}: {v}\": {e}")
+
+        res[k] = v
             
     prompt_parse_res = parse_prompt(prompt)
     lora = prompt_parse_res["lora"]
