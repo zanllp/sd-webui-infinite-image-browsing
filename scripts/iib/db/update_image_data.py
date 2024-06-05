@@ -8,6 +8,7 @@ from scripts.iib.tool import (
     get_video_type,
     is_dev,
     get_modified_date,
+    is_image_file
 )
 from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 from scripts.iib.logger import logger
@@ -146,6 +147,8 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
         type="size",
     )
     safe_save_img_tag(ImageTag(img.id, size_tag.id))
+    media_type_tag = Tag.get_or_create(conn, "Image" if is_image_file(file_path) else "Video", 'Media Type')
+    safe_save_img_tag(ImageTag(img.id, media_type_tag.id))
     for k in [
         "Model",
         "Sampler",

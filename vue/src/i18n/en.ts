@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  type: 'Type',
   filterByKeyword: 'Filter tags by keyword',
   loadmore: 'Load more',
   rename: 'Rename',
@@ -116,7 +117,7 @@ export const en: IIBI18nMap = {
   serverKeyRequired:
     'The server has configured a key. You must provide the same key to continue using it.',
   removeFromSearchScanPathAndQuickMove: 'Remove from Search Scan Path and Quick Move',
-  addToSearchScanPathAndQuickMove: 'Add to Search Scan Path and Quick Move',
+  addToSearchScanPathAndQuickMove: 'Add to Search Scan Path',
   openWithLocalFileBrowser: 'Open with Local File Browser',
   'fuzzy-search-noResults': 'Nothing was found',
   'fuzzy-search-placeholder': 'Enter a part of the image information or filename to search',
@@ -217,7 +218,7 @@ export const en: IIBI18nMap = {
   restoreLastRecord: 'Restore last record',
   launch: 'Launch',
   walkMode: 'Use Walk mode to browse images',
-  launchFromQuickMove: 'Launch from Quick Move',
+  launchFromNormalAndFixed: 'Use Normal / Fixed mode to browse images',
   recent: 'Recent',
   emptyStartPage: 'Empty start page',
   t2i: 'txt2img',

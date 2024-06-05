@@ -92,7 +92,7 @@ export const getImagesBySubstr = async (req: SearchBySubstrReq) => {
 }
 
 const extraPaths = '/db/extra_paths'
-export type ExtraPathType =  'scanned' | 'walk' | 'cli_access_only' | ''
+export type ExtraPathType =  'scanned' | 'walk' | 'cli_access_only' | '' | 'scanned-fixed'
 
 export interface ExtraPathModel {
   path: string

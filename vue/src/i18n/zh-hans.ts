@@ -1,4 +1,5 @@
 export const zhHans = {
+  type: '类型',
   filterByKeyword: '输入标签关键词过滤',
   loadmore: '加载更多',
   rename: '重命名',
@@ -79,7 +80,7 @@ export const zhHans = {
   restoreLastRecord: '还原上次记录',
   launch: '启动',
   walkMode: '使用 Walk 模式浏览图片',
-  launchFromQuickMove: '从快速移动启动',
+  launchFromNormalAndFixed: '使用 Normal / Fixed 模式浏览图片',
   recent: '最近',
   emptyStartPage: '空启动页',
   t2i: '文生图',
@@ -143,7 +144,7 @@ export const zhHans = {
   'fuzzy-search-placeholder': '输入图像信息或者文件名的一部分来进行搜索',
   'fuzzy-search-noResults': '什么都没找到',
   openWithLocalFileBrowser: '使用本地文件浏览器打开',
-  addToSearchScanPathAndQuickMove: '添加到搜索扫描路径和快速移动',
+  addToSearchScanPathAndQuickMove: '添加到搜索扫描路径',
   removeFromSearchScanPathAndQuickMove: '从搜索扫描路径和快速移动中移除',
   serverKeyRequired: '服务器配置了密匙，你必须提供相同的密匙才能继续使用',
   shortcutKey: '快捷键（仅允许在全屏查看下使用）',

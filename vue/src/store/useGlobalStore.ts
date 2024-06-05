@@ -1,9 +1,10 @@
 import type { GlobalConf } from '@/api'
-import type { MatchImageByTagsReq, Tag } from '@/api/db'
+import type { ExtraPathType, MatchImageByTagsReq, Tag } from '@/api/db'
 import { FileNodeInfo } from '@/api/files'
 import { i18n, t } from '@/i18n'
 import { getPreferredLang } from '@/i18n'
 import { SortMethod } from '@/page/fileTransfer/fileSort'
+import { Props as FileTransferProps } from '@/page/fileTransfer/hooks'
 import type { getQuickMovePaths } from '@/page/taskRecord/autoComplete'
 import { type Dict, type ReturnTypeAsync } from '@/util'
 import { AnyFn, usePreferredDark } from '@vueuse/core'
@@ -20,7 +21,15 @@ interface TabPaneBase {
 }
 
 interface OtherTabPane extends TabPaneBase {
-  type: 'empty' | 'global-setting' | 'tag-search' |  'batch-download'
+  type: 'global-setting' | 'tag-search' |  'batch-download'
+}
+
+export interface EmptyStartTabPane extends TabPaneBase  {
+  type: 'empty' 
+  popAddPathModal?: {
+    path: string
+    type: ExtraPathType
+  }
 }
 
 export type GridViewFileTag = WithRequired<Partial<Tag>, 'name'>;
@@ -88,7 +97,7 @@ export interface ImgSliTabPane extends TabPaneBase {
 export interface FileTransferTabPane extends TabPaneBase {
   type: 'local'
   path?: string
-  walkModePath?: string
+  mode?: FileTransferProps['mode']
   stackKey?: string
 }
 
@@ -102,7 +111,7 @@ export interface FuzzySearchTabPane extends TabPaneBase {
   searchScope?: string
 }
 
-export type TabPane = FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane | ImgSliTabPane | TagSearchTabPane | FuzzySearchTabPane| GridViewTabPane
+export type TabPane = EmptyStartTabPane | FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane | ImgSliTabPane | TagSearchTabPane | FuzzySearchTabPane| GridViewTabPane
 
 /**
  * This interface represents a tab, which contains an array of panes, an ID, and a key

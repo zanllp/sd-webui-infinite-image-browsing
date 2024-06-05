@@ -83,7 +83,8 @@ export const zhHant: Partial<IIBI18nMap> = {
   restoreLastRecord: '還原上次記錄',
   launch: '啟動',
   walkMode: '使用 Walk 模式瀏覽圖片',
-  launchFromQuickMove: '從快速移動啟動',
+  
+  launchFromNormalAndFixed: '使用 Normal / Fixed 模式瀏覽圖片',
   recent: '最近',
   emptyStartPage: '空啟動頁',
   t2i: '文生圖',
@@ -147,7 +148,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   'fuzzy-search-placeholder': '輸入圖片信息或者文件名的一部分來進行搜尋',
   'fuzzy-search-noResults': '什麼都沒找到',
   openWithLocalFileBrowser: '使用本地檔案瀏覽器打開',
-  addToSearchScanPathAndQuickMove: '加入搜尋掃描路徑和快速移動',
+  addToSearchScanPathAndQuickMove: '加入搜尋掃描路徑',
   removeFromSearchScanPathAndQuickMove: '從搜尋掃描路徑和快速移動中移除',
   serverKeyRequired: '伺服器配置了密鑰,你必须提供相同的密鑰才能繼續使用',
   shortcutKey: '快速鍵(僅允許在全螢幕檢視下使用)',

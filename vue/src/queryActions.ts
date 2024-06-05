@@ -25,7 +25,7 @@ export const resolveQueryActions = async (g: ReturnType<typeof useGlobalStore>) 
         path,
         key: uniqueId(),
         name: '',
-        walkModePath: params.get('walk') ? path : undefined
+        mode: params.get('walk') ? 'walk' : 'scanned'
       }
       tab.panes.unshift(pane)
       tab.key = pane.key

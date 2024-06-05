@@ -37,13 +37,14 @@ const classSort = [
   'custom',
   'Source Identifier',
   'Model',
+  'Media Type',
   'lora',
   'lyco',
   'pos',
   'size',
+  'Sampler',
   'Postprocess upscaler',
   'Postprocess upscale by',
-  'Sampler'
 ].reduce((p, c, i) => {
   p[c] = i
   return p
@@ -51,7 +52,11 @@ const classSort = [
 
 const classifyTags = computed(() => {
   return Object.entries(groupBy(tags.value, (v) => v.type)).sort(
-    (a, b) => classSort[a[0]] - classSort[b[0]]
+    (a, b) => {
+      const aClass = classSort[a[0]] !== undefined ? classSort[a[0]] : Number.MAX_SAFE_INTEGER;
+      const bClass = classSort[b[0]] !== undefined ? classSort[b[0]] : Number.MAX_SAFE_INTEGER;
+      return aClass - bClass;
+    }
   )
 })
 const tagMaxNum = reactive(new Map<string, number>())
@@ -218,7 +223,8 @@ const tagListFilter = (list: Tag[], name: string) => {
         {{ $t('needGenerateIdx') }}
       </p>
       <div class="list-container">
-        <ul class="tag-list" :key="name" v-for="[name, list] in classifyTags">
+      <template :key="name" v-for="[name, list] in classifyTags">
+         <ul class="tag-list" v-if="name !== 'Media Type' || list.length > 1">
           <h3 class="cat-name"
             @click="!openedKeys.includes(name) ? openedKeys.push(name) : openedKeys.splice(openedKeys.indexOf(name), 1)">
             <ArrowRightOutlined class="arrow" :class="{ down: openedKeys.includes(name) }" />
@@ -254,6 +260,7 @@ const tagListFilter = (list: Tag[], name: string) => {
             </a-collapse-panel>
           </a-collapse>
         </ul>
+      </template>
 
 
       </div>

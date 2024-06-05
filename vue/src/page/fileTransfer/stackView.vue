@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DownOutlined, LeftCircleOutlined, RightCircleOutlined } from '@/icon'
+import { DownOutlined, LeftCircleOutlined, RightCircleOutlined, ArrowLeftOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import {
   useFileTransfer,
@@ -10,7 +10,9 @@ import {
   useFileItemActions,
   useMobileOptimization,
   stackCache,
-  useKeepMultiSelect
+  useKeepMultiSelect,
+  Props,
+  useGenInfoDiff
 } from './hook'
 import { SearchSelect } from 'vue3-ts-util'
 import { toRawFileUrl } from '@/util/file'
@@ -24,12 +26,9 @@ import FileItem from '@/components/FileItem.vue'
 import fullScreenContextMenu from './fullScreenContextMenu.vue'
 import BaseFileListInfo from '@/components/BaseFileListInfo.vue'
 import { copy2clipboardI18n } from '@/util'
-import { openFolder, getImageGenerationInfoBatch } from '@/api'
+import { openFolder } from '@/api'
 import { sortMethods } from './fileSort'
 import { isTauri } from '@/util/env'
-import { parse } from '@/util/stable-diffusion-image-metadata'
-import { ref } from 'vue'
-import type { FileNodeInfo, GenDiffInfo } from '@/api/files'
 import MultiSelectKeep from '@/components/MultiSelectKeep.vue'
 
 const global = useGlobalStore()
@@ -40,7 +39,7 @@ const props = defineProps<{
    * 初始打开路径
    */
   path?: string
-  walkModePath?: string
+  mode?: Props['mode']
   /**
    * 页面栈,跳过不必要的api请求
    */
@@ -54,9 +53,9 @@ const {
   spinning
 } = useHookShareState().toRefs()
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, quickMoveTo,
-  addToSearchScanPathAndQuickMove, searchPathInfo, locInputValue, isLocationEditing,
+  addToSearchScanPathAndQuickMove, locInputValue, isLocationEditing,
   onLocEditEnter, onEditBtnClick, share, selectAll, onCreateFloderBtnClick, onWalkBtnClick,
-  showWalkButton, searchInCurrentDir
+  showWalkButton, searchInCurrentDir, backToLastUseTo
 } = useLocation()
 const {
   gridItems,
@@ -77,6 +76,7 @@ const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = us
 const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } = usePreview()
 const { showMenuIdx } = useMobileOptimization()
 const { onClearAllSelected, onReverseSelect, onSelectAll } = useKeepMultiSelect()
+const { getGenDiff, changeIndchecked, seedChangeChecked, getRawGenParams, getGenDiffWatchDep } = useGenInfoDiff()
 
 watch(
   () => props,
@@ -90,109 +90,6 @@ watch(
   { immediate: true }
 )
 
-watch(sortedFiles, async (newList, oldList) => {
-  //check files in newList if it is an image-only list
-  if (newList.length > 0 && newList.length !== oldList.length) {
-    getRawGenParams()
-  }
-})
-
-const changeIndchecked = ref<boolean>(global.defaultChangeIndchecked)
-const seedChangeChecked = ref<boolean>(global.defaultSeedChangeChecked)
-
-function getRawGenParams () {
-  //extract fullpaths of all files from sortedfiles to array, but only if it's an actual file (not a folder or something else)
-  let paths: string[] = []
-  const allowedExtensions = ['.png', '.jpg', '.jpeg']
-  for (let f in sortedFiles.value) {
-    if (sortedFiles.value[f].type == 'file' && allowedExtensions.includes(sortedFiles.value[f].fullpath.slice(-4).toLowerCase())) {
-      paths.push(sortedFiles.value[f].fullpath)
-    }
-  }
-  q.pushAction(() => getImageGenerationInfoBatch(paths)).res.then((v) => {
-    //result is a json object with fullpath as key and gen_info_raw as value
-    for (let f in sortedFiles.value) {
-      sortedFiles.value[f].gen_info_raw = v[sortedFiles.value[f].fullpath]
-      sortedFiles.value[f].gen_info_obj = parse(v[sortedFiles.value[f].fullpath])
-    }
-  })
-}
-
-function getGenDiff (ownGenInfo: any, idx: any, increment: any, ownFile: FileNodeInfo) {
-  //init result obj
-  let result: GenDiffInfo = {
-    diff: {},
-    empty: true,
-    ownFile: '',
-    otherFile: ''
-  }
-
-  //check for out of bounds
-  if (idx + increment < 0
-    || idx + increment >= sortedFiles.value.length
-    || sortedFiles.value[idx] == undefined) {
-    return result
-  }
-  //check for gen_info_obj existence
-  if (!('gen_info_obj' in sortedFiles.value[idx])
-    || !('gen_info_obj' in sortedFiles.value[idx + increment])) {
-    return result
-  }
-
-  //diff vars init
-  let gen_a = ownGenInfo
-  let gen_b: any = sortedFiles.value[idx + increment].gen_info_obj
-  if (gen_b == undefined) {
-    return result
-  }
-
-  //further vars
-  let skip = ['hashes', 'resources']
-  result.diff = {}
-  result.ownFile = ownFile.name,
-  result.otherFile = sortedFiles.value[idx + increment].name,
-  result.empty = false
-
-  if (!seedChangeChecked.value) {
-    skip.push('seed')
-  }
-
-  //actual per property diff
-  for (let k in gen_a) {
-    //skip unwanted values
-    if (skip.includes(k)) {
-      continue
-    }
-    //for all non-identical values, compare type based
-    //existence test
-    if (!(k in gen_b)) {
-      result.diff[k] = '+'
-      continue
-    }
-    //content test
-    if (gen_a[k] != gen_b[k]) {
-      if (k.includes('rompt') && gen_a[k] != '' && gen_b[k] != '') {
-        //prompt values are comma separated, handle them differently
-        let tokenize_a = gen_a[k].split(',')
-        let tokenize_b = gen_b[k].split(',')
-        //count how many tokens are different or at a different place
-        let diff_count = 0
-        for (let i in tokenize_a) {
-          if (tokenize_a[i] != tokenize_b[i]) {
-            diff_count++
-          }
-        }
-        result.diff[k] = diff_count
-      } else {
-        //all others
-        result.diff[k] = [gen_a[k], gen_b[k]]
-      }
-    }
-  }
-
-  //result
-  return result
-}
 
 </script>
 <template>
@@ -232,6 +129,7 @@ function getGenDiff (ownGenInfo: any, idx: any, increment: any, ownFile: FileNod
 
           <AButton size="small" v-if="isLocationEditing" @click="onLocEditEnter" type="primary">{{ $t('go') }}</AButton>
           <div v-else class="location-act">
+            <a @click.prevent="backToLastUseTo" style="margin: 0 8px 16px 0;" v-if="mode === 'scanned-fixed'"><ArrowLeftOutlined /></a>
             <a @click.prevent="copyLocation" class="copy">{{ $t('copy') }}</a>
             <a @click.prevent.stop="onEditBtnClick">{{ $t('edit') }}</a>
           </div>
@@ -302,10 +200,8 @@ function getGenDiff (ownGenInfo: any, idx: any, increment: any, ownFile: FileNod
                     <a-switch v-model:checked="seedChangeChecked" :disabled="!changeIndchecked" />
                   </a-form-item>
                   <div style="padding: 4px;">
-                    <a @click.prevent="addToSearchScanPathAndQuickMove" v-if="!searchPathInfo">{{
+                    <a @click.prevent="addToSearchScanPathAndQuickMove" >{{
     $t('addToSearchScanPathAndQuickMove') }}</a>
-                    <a @click.prevent="addToSearchScanPathAndQuickMove" v-else-if="searchPathInfo.can_delete">{{
-    $t('removeFromSearchScanPathAndQuickMove') }}</a>
                   </div>
                   <div style="padding: 4px;">
                     <a @click.prevent="openFolder(currLocation + '/')">{{ $t('openWithLocalFileBrowser') }}</a>
@@ -331,14 +227,15 @@ function getGenDiff (ownGenInfo: any, idx: any, increment: any, ownFile: FileNod
               @file-item-click="onFileItemClick" @dragstart="onFileDragStart" @dragend="onFileDragEnd"
               @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick"
               :is-selected-mutil-files="multiSelectedIdxs.length > 1"
-              :gen-diff-to-next="getGenDiff(file.gen_info_obj, idx, 1, file)"
-              :gen-diff-to-previous="getGenDiff(file.gen_info_obj, idx, -1, file)"
-              :enable-change-indicator="changeIndchecked" 
+              :enable-change-indicator="changeIndchecked"
+              :seed-change-checked="seedChangeChecked"
+              :get-gen-diff="getGenDiff"
+              :get-gen-diff-watch-dep="getGenDiffWatchDep"
               :cover-files="dirCoverCache.get(file.fullpath)"/>
           </template>
           <template #after>
             <div style="padding: 16px 0 512px;">
-              <AButton v-if="props.walkModePath" @click="loadNextDir" :loading="loadNextDirLoading" block type="primary"
+              <AButton v-if="props.mode === 'walk'" @click="loadNextDir" :loading="loadNextDirLoading" block type="primary"
                 :disabled="!canLoadNext" ghost>
                 {{ $t('loadNextPage') }}</AButton>
             </div>
