@@ -533,9 +533,7 @@ def parse_generation_parameters(x: str):
         try:
             if v.startswith('"') and v.endswith('"'):
                 v = unquote(v)
-            elif v.startswith('[') and v.endswith(']'):
-                v = json.loads(v)
-            elif v.startswith('{') and v.endswith('}'):
+            elif v.startswith('[') and v.endswith(']') or v.startswith('{') and v.endswith('}'):
                 v = json.loads(v)
             else:
                 m = re_imagesize.match(v)
