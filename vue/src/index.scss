@@ -170,3 +170,8 @@ body {
   padding: 8px;
   border-left: 4px solid var(--primary-color);
 }
+
+ul.ant-dropdown-menu  {
+  max-height:80vh;
+  overflow: auto;
+}
