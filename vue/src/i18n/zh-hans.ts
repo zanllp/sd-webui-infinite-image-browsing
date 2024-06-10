@@ -1,4 +1,7 @@
 export const zhHans = {
+  walkModeDoc: '无需翻页即可浏览指定文件夹下的所有文件，使用无限滚动的方式呈现。将会使用DFS的方式遍历所有文件. 注意:该模式下排序仅在同层之间进行',
+  normalModelDoc: '类似于windows的文件浏览器，拥有较高的灵活性. 但在访问云存储或者类似SMB这样的地方时可能会出现异常',
+  fixedModeDoc: '类似Normal模式，但页面初始速度更快，兼容性更好，灵活性稍差。在Normal模式下出现了异常的话都可以改用这个试试',
   type: '类型',
   filterByKeyword: '输入标签关键词过滤',
   loadmore: '加载更多',

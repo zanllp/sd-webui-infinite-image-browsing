@@ -1,6 +1,10 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  walkModeDoc: '無需翻頁即可瀏覽指定資料夾下的所有檔案，使用無限捲動的方式呈現。將會使用 DFS 的方式遍歷所有檔案. 注意:該模式下排序僅在同層之間進行',
+  normalModelDoc: '類似於 Windows 的檔案瀏覽器，擁有較高的靈活性. 但在訪問雲端儲存或者類似 SMB 這樣的地方時可能會出現異常',
+  fixedModeDoc: '類似 Normal 模式，但頁面初始速度更快，相容性更好，靈活性稍差。在 Normal 模式下出現了異常的話都可以改用這個試試',
+  type: '類型',
   filterByKeyword: '輸入標籤關鍵詞過濾',
   loadmore: '載入更多',
   rename: '重命名',

@@ -300,9 +300,6 @@ export function useLocation () {
     const baseUrl = loc.href.substring(0, loc.href.length - loc.search.length)
     const params = new URLSearchParams(loc.search)
     params.set('action', 'open')
-    if (walker.value) {
-      params.set('walk', '1')
-    }
     params.set('path', currLocation.value)
     params.set('mode', props.value.mode ?? 'scanned')
     const url = `${baseUrl}?${params.toString()}`
