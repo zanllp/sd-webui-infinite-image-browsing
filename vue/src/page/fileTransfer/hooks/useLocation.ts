@@ -58,11 +58,15 @@ export function useLocation () {
   onMounted(async () => {
     if (!stack.value.length) {
       // 有传入stack时直接使用传入的
-      const resp = await getTargetFolderFiles('/')
-      stack.value.push({
-        files: resp.files,
-        curr: '/'
-      })
+      if (props.value.mode === 'scanned-fixed') {
+        stack.value = [{ files: [], curr: '' }]
+      } else {
+        const resp = await getTargetFolderFiles('/')
+        stack.value.push({
+          files: resp.files,
+          curr: '/'
+        })
+      }
     }
     np.value = new NProgress()
     np.value!.configure({ parent: stackViewEl.value as any })

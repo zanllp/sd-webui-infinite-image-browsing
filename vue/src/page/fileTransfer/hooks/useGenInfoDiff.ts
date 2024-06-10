@@ -4,7 +4,7 @@ import { getImageGenerationInfoBatch } from '@/api'
 import { FileNodeInfo, GenDiffInfo } from '@/api/files'
 import { parse } from '@/util/stable-diffusion-image-metadata'
 import { delay } from 'vue3-ts-util'
-import { isMediaFile } from '@/util'
+import { isImageFile } from '@/util'
 const geninfocache = new Map<string, string>()
 
 export const useGenInfoDiff = () => {
@@ -16,7 +16,7 @@ export const useGenInfoDiff = () => {
   const setGenInfo = async ({ files }: { files: FileNodeInfo[], startIdx: number }) => {
     await delay(100)
     if (!changeIndchecked.value) return 
-    files = files.filter(v => isMediaFile(v.fullpath) && !v.gen_info_obj)
+    files = files.filter(v => isImageFile(v.fullpath) && !v.gen_info_obj)
     if (!files.length) return 
     const geninfos = await getImageGenerationInfoBatch(files.map(v => v.fullpath).filter(v => !geninfocache.has(v)))
     
