@@ -1032,7 +1032,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         if not path:
             raise HTTPException(400)
         path.alias = req.alias
-        path.save(conn)
+        try:
+            path.save(conn)
+        finally:
+            conn.commit()
         return path
         
 
