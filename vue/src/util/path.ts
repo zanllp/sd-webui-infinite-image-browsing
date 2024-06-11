@@ -69,3 +69,12 @@ export const splitPath = (path: string) => {
   }
   return frags
 }
+export function getParentDirectory(filePath: string) {
+  const lastSlashIndex = filePath.lastIndexOf('/');
+  const lastBackslashIndex = filePath.lastIndexOf('\\');
+  const lastSeparatorIndex = Math.max(lastSlashIndex, lastBackslashIndex);
+  if (lastSeparatorIndex === -1) {
+    return '.';
+  }
+  return filePath.substring(0, lastSeparatorIndex);
+}

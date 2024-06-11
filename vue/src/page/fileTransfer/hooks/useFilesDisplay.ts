@@ -77,13 +77,19 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
     }
   }
 
-  state.useEventListen('loadNextDir', fetchDataUntilViewFilled)
+  state.useEventListen('loadNextDir', async () => {
+    await fetchDataUntilViewFilled()
+    if (props.value.mode === 'walk') {
+      onViewableAreaChangeDebounced()
+    }
+  })
 
 
   const onViewableAreaChange = () => {
     const s = scroller.value
     if (s) {
       const startIdx = Math.max(s.$_startIndex - 10, 0)
+      // console.log('area change',  startIdx, s.$_endIndex + 10)
       const viewableAreaFiles = sortedFiles.value.slice(startIdx, s.$_endIndex + 10)
       state.eventEmitter.emit('viewableAreaFilesChange', { files: viewableAreaFiles, startIdx })
       const fetchTagPaths = viewableAreaFiles

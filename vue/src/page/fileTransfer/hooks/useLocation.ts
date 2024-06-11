@@ -6,7 +6,7 @@ import { TagSearchTabPane, FuzzySearchTabPane, FileTransferTabPane, EmptyStartTa
 import { copy2clipboardI18n, makeAsyncFunctionSingle, useGlobalEventListen } from '@/util'
 import { message } from 'ant-design-vue'
 import { ref, watch, onMounted, h, computed } from 'vue'
-import { delay, ok, useWatchDocument } from 'vue3-ts-util'
+import { ok, useWatchDocument } from 'vue3-ts-util'
 import { useHookShareState, stackCache, global } from '.'
 
 import * as Path from '@/util/path'
@@ -45,21 +45,11 @@ export function useLocation () {
       }
     }, 300)
   )
-
-  const handleWalkModeTo = async (path: string) => {
-    await to(path)
-    if (props.value.mode === 'walk') {
-      await delay()
-      await walker.value?.reset()
-      eventEmitter.value.emit('loadNextDir')
-    }
-  }
-
   onMounted(async () => {
     if (!stack.value.length) {
       // 有传入stack时直接使用传入的
-      if (props.value.mode === 'scanned-fixed') {
-        stack.value = [{ files: [], curr: '' }]
+      if (props.value.mode === 'scanned-fixed' || props.value.mode === 'walk') {
+        stack.value = [{ files: [], curr: props.value.path ?? '' }]
       } else {
         const resp = await getTargetFolderFiles('/')
         stack.value.push({
@@ -71,9 +61,9 @@ export function useLocation () {
     np.value = new NProgress()
     np.value!.configure({ parent: stackViewEl.value as any })
     if (props.value.path && props.value.path !== '/') {
-      await handleWalkModeTo(props.value.path)
+      await handleMultiModeTo(props.value.path)
     } else {
-      global.conf?.home && to(global.conf.home)
+      global.conf?.home && handleMultiModeTo(global.conf.home)
     }
   })
 
@@ -141,14 +131,16 @@ export function useLocation () {
   }
 
   const back = (idx: number) => {
+    if (props.value.mode == 'walk') {
+      return
+    }
     while (idx < stack.value.length - 1) {
       stack.value.pop()
     }
   }
 
   const backToLastUseTo = () => {
-    const lastLevelPath = Path.join(...Path.splitPath(currLocation.value).slice(0, -1))
-    to(lastLevelPath)
+    handleMultiModeTo(Path.getParentDirectory(currLocation.value))
   }
 
   const isDirNameEqual = (a: string, b: string) => {
@@ -160,10 +152,21 @@ export function useLocation () {
     return a == b
   }
 
-  const to = async (dir: string) => {
-    if (props.value.mode === 'scanned-fixed') {
-      return openNext({ fullpath: dir, name: dir, type: 'dir' } as FileNodeInfo)
+
+
+  const handleMultiModeTo = async (path: string) => {
+    // console.log('call handleMultiModeTo', path)
+    if (props.value.mode === 'walk') {
+      getPane.value().path = path
+    } else if (props.value.mode === 'scanned-fixed') {
+      await openNext({ fullpath: path, name: path, type: 'dir' } as FileNodeInfo)
+    } else {
+      await handleToScannedOnly(path)
     }
+  }
+
+
+  const handleToScannedOnly = async (dir: string) => {
     const backup = stack.value.slice()
     try {
       if (!Path.isAbsolute(dir)) {
@@ -210,10 +213,8 @@ export function useLocation () {
         await walker.value.reset()
         eventEmitter.value.emit('loadNextDir')
       } else {
-        
-        const { files } = await getTargetFolderFiles(
-          stack.value.length === 1 && props.value.mode !== 'scanned-fixed' ? '/' : currLocation.value
-        )
+
+        const { files } = await getTargetFolderFiles(currLocation.value)
         last(stack.value)!.files = files
       }
 
@@ -231,9 +232,7 @@ export function useLocation () {
       if (props.value.mode === 'walk') return
       try {
         np.value?.start()
-        const { files } = await getTargetFolderFiles(
-          stack.value.length === 1 && props.value.mode !== 'scanned-fixed' ? '/' : currLocation.value
-        )
+        const { files } = await getTargetFolderFiles(currLocation.value)
         const currFiles = last(stack.value)!.files
         if (currFiles.map((v) => v.date).join() !== files.map((v) => v.date).join()) {
           last(stack.value)!.files = files
@@ -249,7 +248,7 @@ export function useLocation () {
 
   const quickMoveTo = (path: string) => {
     // todo
-    handleWalkModeTo(path)
+    handleMultiModeTo(path)
   }
 
   const normalizedScandPath = computed(() => {
@@ -264,9 +263,9 @@ export function useLocation () {
 
   const addToSearchScanPathAndQuickMove = async () => {
     const tab = global.tabList[props.value.tabIdx]
-    const pane: EmptyStartTabPane = { 
-      type: 'empty', 
-      name: t('emptyStartPage'), 
+    const pane: EmptyStartTabPane = {
+      type: 'empty',
+      name: t('emptyStartPage'),
       key: Date.now() + uniqueId(),
       popAddPathModal: {
         path: currLocation.value,
@@ -285,7 +284,7 @@ export function useLocation () {
   }
 
   const onLocEditEnter = async () => {
-    await to(locInputValue.value)
+    await handleMultiModeTo(locInputValue.value)
     isLocationEditing.value = false
   }
 
@@ -356,7 +355,6 @@ export function useLocation () {
     openNext,
     currPage,
     currLocation,
-    to,
     stack,
     scroller,
     share,

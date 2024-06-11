@@ -4,6 +4,7 @@ import { onLongPress } from '@vueuse/core'
 import { ref, computed, watch, reactive } from 'vue'
 import {
   createTypedShareStateHook,
+  delay,
   typedEventEmitter
 } from 'vue3-ts-util'
 import { type FileNodeInfo } from '@/api/files'
@@ -52,11 +53,24 @@ export const { useHookShareState } = createTypedShareStateHook(
     const basePath = computed(() =>
       stack.value.map((v) => v.curr).slice(global.conf?.is_win && props.value.mode !== 'scanned-fixed' ? 1 : 0)
     )
-    const currLocation = computed(() => Path.join(...basePath.value))
+    const currLocationScannedOnlyAvailable = computed(() => Path.join(...basePath.value))
+    const currLocation = computed(() => {
+      if(props.value.mode === 'scanned-fixed') return stack.value?.[0]?.curr ?? ''
+      if(props.value.mode === 'walk') return props.value.path ?? ''
+      return stack.value.length === 1  ? '/' : currLocationScannedOnlyAvailable.value
+    })
     const sortMethod = ref(global.defaultSortingMethod)
     const walker = ref(props.value.mode == 'walk' ? new Walker(props.value.path!, sortMethod.value) : undefined)
-    watch([() => props.value.mode, sortMethod], () => {
-      walker.value = props.value.mode === 'walk' ? new Walker(props.value.path!, sortMethod.value) : undefined
+    watch([() => props.value.mode, () => props.value.path, sortMethod], async ([mode, path, method]) => {
+      if (mode === 'walk') {
+        walker.value = new Walker(path!, method)
+        stack.value = [{ files: [], curr: path!  }]
+        await delay()
+        await walker.value?.reset()
+        events.eventEmitter.emit('loadNextDir')
+      } else {
+        walker.value = undefined
+      }
     })
 
     const deletedFiles = reactive(new Set<string>())
@@ -97,7 +111,6 @@ export const { useHookShareState } = createTypedShareStateHook(
       loadNextDir (isFullscreenPreview?: boolean): Promise<void>
       refresh (): Promise<void>
       selectAll (): void
-      
       viewableAreaFilesChange(_: { files: FileNodeInfo[], startIdx: number }): void
     }>()
     events.useEventListen('selectAll', () => {

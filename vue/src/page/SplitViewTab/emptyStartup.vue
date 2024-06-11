@@ -125,7 +125,7 @@ const restoreRecord = () => {
         class="last-record">Github</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/.env.example" target="_blank"
         class="last-record">{{ $t('privacyAndSecurity') }}</a>
-      <a-badge :count="hasNewRelease ? 'new' : null" :offset="[2,0]" color="volcano">
+      <a-badge :count="hasNewRelease ? 'new' : null" :offset="[2,0]" color="geekblue">
         <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/releases" target="_blank"
           class="last-record">Releases</a>
       </a-badge>
