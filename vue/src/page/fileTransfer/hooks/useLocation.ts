@@ -6,7 +6,7 @@ import { TagSearchTabPane, FuzzySearchTabPane, FileTransferTabPane, EmptyStartTa
 import { copy2clipboardI18n, makeAsyncFunctionSingle, useGlobalEventListen } from '@/util'
 import { message } from 'ant-design-vue'
 import { ref, watch, onMounted, h, computed } from 'vue'
-import { ok, useWatchDocument } from 'vue3-ts-util'
+import { delay, ok, useWatchDocument } from 'vue3-ts-util'
 import { useHookShareState, stackCache, global } from '.'
 
 import * as Path from '@/util/path'
@@ -163,6 +163,8 @@ export function useLocation () {
     } else {
       await handleToScannedOnly(path)
     }
+    // 初始化页面的tag,diff,文件夹方面，有些加载时间长的无法依靠watch location
+    delay(500).then(() => eventEmitter.value.emit('viewableAreaFilesChange')) 
   }
 
 

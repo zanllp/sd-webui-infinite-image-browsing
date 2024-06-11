@@ -18,7 +18,8 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
     canLoadNext,
     previewIdx,
     props,
-    walker
+    walker,
+    getViewableAreaFiles
   } = useHookShareState().toRefs()
   const { state } = useHookShareState()
   const moreActionsDropdownShow = ref(false)
@@ -84,34 +85,28 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
     }
   })
 
-
-  const onViewableAreaChange = () => {
-    const s = scroller.value
-    if (s) {
-      const startIdx = Math.max(s.$_startIndex - 10, 0)
-      // console.log('area change',  startIdx, s.$_endIndex + 10)
-      const viewableAreaFiles = sortedFiles.value.slice(startIdx, s.$_endIndex + 10)
-      state.eventEmitter.emit('viewableAreaFilesChange', { files: viewableAreaFiles, startIdx })
-      const fetchTagPaths = viewableAreaFiles
-        .filter(v => v.is_under_scanned_path && isMediaFile(v.name))
-        .map(v => v.fullpath)
-      tagStore.fetchImageTags(fetchTagPaths)
-      const fetchDirTop4MediaPaths = viewableAreaFiles
-        .filter(v => v.is_under_scanned_path && v.type === 'dir' && !dirCoverCache.has(v.fullpath))
-        .map(v => v.fullpath)
-      if (fetchDirTop4MediaPaths.length) {
-        batchGetDirTop4MediaInfo(fetchDirTop4MediaPaths).then(v => {
-          for (const key in v) {
-            if (Object.prototype.hasOwnProperty.call(v, key)) {
-              const element = v[key];
-              dirCoverCache.set(key, element)
-            }
+  state.useEventListen('viewableAreaFilesChange', () => {
+    const files = getViewableAreaFiles.value()
+    const fetchTagPaths = files
+      .filter(v => v.is_under_scanned_path && isMediaFile(v.name))
+      .map(v => v.fullpath)
+    tagStore.fetchImageTags(fetchTagPaths)
+    const fetchDirTop4MediaPaths = files
+      .filter(v => v.is_under_scanned_path && v.type === 'dir' && !dirCoverCache.has(v.fullpath))
+      .map(v => v.fullpath)
+    if (fetchDirTop4MediaPaths.length) {
+      batchGetDirTop4MediaInfo(fetchDirTop4MediaPaths).then(v => {
+        for (const key in v) {
+          if (Object.prototype.hasOwnProperty.call(v, key)) {
+            const element = v[key];
+            dirCoverCache.set(key, element)
           }
-        })
-      }
+        }
+      })
     }
-  }
-  const onViewableAreaChangeDebounced = debounce(onViewableAreaChange, 300)
+  })
+
+  const onViewableAreaChangeDebounced = debounce(() => state.eventEmitter.emit('viewableAreaFilesChange'), 300)
   watch(currLocation, onViewableAreaChangeDebounced)
 
   const onScroll = debounce(async () => {

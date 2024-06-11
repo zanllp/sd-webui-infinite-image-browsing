@@ -103,6 +103,8 @@ export const { useHookShareState } = createTypedShareStateHook(
 
     const previewing = ref(false)
 
+    const scroller = ref<Scroller>()
+
     const getPane = () => {
       return global.tabList?.[props.value.tabIdx]?.panes?.[props.value.paneIdx] as FileTransferTabPane
     }
@@ -111,12 +113,22 @@ export const { useHookShareState } = createTypedShareStateHook(
       loadNextDir (isFullscreenPreview?: boolean): Promise<void>
       refresh (): Promise<void>
       selectAll (): void
-      viewableAreaFilesChange(_: { files: FileNodeInfo[], startIdx: number }): void
+      viewableAreaFilesChange(): void
     }>()
     events.useEventListen('selectAll', () => {
       console.log(`select all 0 -> ${sortedFiles.value.length}`)
       multiSelectedIdxs.value = range(0, sortedFiles.value.length)
     })
+
+    const getViewableAreaFiles = () => {
+      const s = scroller.value
+      if (s) {
+        const startIdx = Math.max(s.$_startIndex - 10, 0)
+        // console.log('area change',  startIdx, s.$_endIndex + 10)
+        return sortedFiles.value.slice(startIdx, s.$_endIndex + 10)
+      }
+      return []
+    }
     
     return {
       previewing,
@@ -130,12 +142,13 @@ export const { useHookShareState } = createTypedShareStateHook(
       stack,
       sortMethod,
       sortedFiles,
-      scroller: ref<Scroller>(),
+      scroller,
       stackViewEl: ref<HTMLDivElement>(),
       props,
       getPane,
       walker,
       deletedFiles,
+      getViewableAreaFiles,
       ...events
     }
   },
