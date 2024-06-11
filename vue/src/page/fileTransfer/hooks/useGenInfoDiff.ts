@@ -8,15 +8,15 @@ import { isImageFile } from '@/util'
 const geninfocache = new Map<string, string>()
 
 export const useGenInfoDiff = () => {
-  const { useEventListen, sortedFiles } = useHookShareState().toRefs()
+  const { useEventListen, sortedFiles, getViewableAreaFiles } = useHookShareState().toRefs()
 
   const changeIndchecked = ref<boolean>(global.defaultChangeIndchecked)
   const seedChangeChecked = ref<boolean>(global.defaultSeedChangeChecked)
 
-  const setGenInfo = async ({ files }: { files: FileNodeInfo[], startIdx: number }) => {
+  const setGenInfo = async () => {
     await delay(100)
     if (!changeIndchecked.value) return 
-    files = files.filter(v => isImageFile(v.fullpath) && !v.gen_info_obj)
+    const files = getViewableAreaFiles.value().filter(v => isImageFile(v.fullpath) && !v.gen_info_obj)
     if (!files.length) return 
     const geninfos = await getImageGenerationInfoBatch(files.map(v => v.fullpath).filter(v => !geninfocache.has(v)))
     
@@ -115,7 +115,7 @@ export const useGenInfoDiff = () => {
     getGenDiff,
     changeIndchecked,
     seedChangeChecked,
-    getRawGenParams: () => setGenInfo({ files: sortedFiles.value, startIdx: 0 }),
+    getRawGenParams: () => setGenInfo(),
     getGenDiffWatchDep
   }
 }
