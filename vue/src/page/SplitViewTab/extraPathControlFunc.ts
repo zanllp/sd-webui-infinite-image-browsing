@@ -1,7 +1,7 @@
 
 import { ExtraPathType, addExtraPath, aliasExtraPath, removeExtraPath } from '@/api/db'
 import { globalEvents } from '@/util'
-import { Input, Modal, message } from 'ant-design-vue'
+import { Input, Modal, RadioButton, RadioGroup, message } from 'ant-design-vue'
 import { open } from '@tauri-apps/api/dialog'
 import { checkPathExists } from '@/api'
 import { h, ref } from 'vue'
@@ -10,11 +10,13 @@ import { useGlobalStore } from '@/store/useGlobalStore'
 
 
 
-export const addToExtraPath = async (type: ExtraPathType) => {
+export const addToExtraPath = async (initType: ExtraPathType, initPath?: string) => {
   const g = useGlobalStore()
-  let path: string
+  let path: string = initPath ?? ''
+
+  const type = ref(initType)
   if (import.meta.env.TAURI_ARCH) {
-    const ret = await open({ directory: true })
+    const ret = await open({ directory: true, defaultPath: initPath })
     if (typeof ret === 'string') {
       path = ret
     } else {
@@ -22,14 +24,15 @@ export const addToExtraPath = async (type: ExtraPathType) => {
     }
   } else {
     path = await new Promise<string>((resolve) => {
-      const key = ref('')
+      const key = ref(path)
+      console.log('dfd', key.value)
       Modal.confirm({
         title: t('inputTargetFolderPath'),
         width: '800px',
         content: () => {
           return h('div', [
-            g.conf?.enable_access_control ? h('a', { 
-              style: { 
+            g.conf?.enable_access_control ? h('a', {
+              style: {
                 'word-break': 'break-all',
                 'margin-bottom': '4px',
                 display: 'block'
@@ -40,7 +43,23 @@ export const addToExtraPath = async (type: ExtraPathType) => {
             h(Input, {
               value: key.value,
               'onUpdate:value': (v: string) => (key.value = v)
-            })
+            }),
+            h('div', [
+              h('span', t('type')+': '),
+              h(RadioGroup, {
+                value: type.value,
+                'onUpdate:value': (v: ExtraPathType) => (type.value = v),
+                buttonStyle: 'solid',
+                style: { margin: '16px 0 32px' }
+              }, [
+                h(RadioButton, { value: 'walk' }, 'Walk'),
+                h(RadioButton, { value: 'scanned' }, 'Normal'),
+                h(RadioButton, { value: 'scanned-fixed' }, 'Fixed')
+              ])
+            ]),
+            h('p', 'Walk: '+ t('walkModeDoc')),
+            h('p', 'Normal: '+ t('normalModelDoc')),
+            h('p', 'Fixed: '+ t('fixedModeDoc'))
           ])
         },
         async onOk () {
@@ -58,7 +77,7 @@ export const addToExtraPath = async (type: ExtraPathType) => {
   Modal.confirm({
     content: t('confirmToAddToExtraPath'),
     async onOk () {
-      await addExtraPath({ types: [type], path })
+      await addExtraPath({ types: [type.value], path })
       message.success(t('addCompleted'))
       globalEvents.emit('searchIndexExpired')
       globalEvents.emit('updateGlobalSetting')
@@ -85,11 +104,11 @@ export const onAliasExtraPathClick = (path: string) => {
     title: t('inputAlias'),
     content: () => {
       return h('div', [
-        h('div', { 
-          style: { 
+        h('div', {
+          style: {
             'word-break': 'break-all',
             'margin-bottom': '4px'
-          } 
+          }
         }, 'Path: ' + path),
         h(Input, {
           value: alias.value,

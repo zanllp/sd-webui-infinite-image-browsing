@@ -604,3 +604,24 @@ def open_file_with_default_app(file_path):
     
 def omit(d, keys):
     return {k: v for k, v in d.items() if k not in keys}
+
+
+def get_current_commit_hash():
+    try:
+        result = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, cwd=cwd)
+        if result.returncode == 0:
+            return result.stdout.strip()
+        else:
+            return None
+    except subprocess.CalledProcessError:
+        return None
+
+def get_current_tag():
+    try:
+        result = subprocess.run(['git', 'describe', '--tags', '--abbrev=0'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, cwd=cwd)
+        if result.returncode == 0:
+            return result.stdout.strip()
+        else:
+            return None
+    except subprocess.CalledProcessError:
+        return None

@@ -1,6 +1,10 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  walkModeDoc: '無需翻頁即可瀏覽指定資料夾下的所有檔案，使用無限捲動的方式呈現。將會使用 DFS 的方式遍歷所有檔案. 注意:該模式下排序僅在同層之間進行',
+  normalModelDoc: '類似於 Windows 的檔案瀏覽器，擁有較高的靈活性. 但在訪問雲端儲存或者類似 SMB 這樣的地方時可能會出現異常',
+  fixedModeDoc: '類似 Normal 模式，但頁面初始速度更快，相容性更好，靈活性稍差。在 Normal 模式下出現了異常的話都可以改用這個試試',
+  type: '類型',
   filterByKeyword: '輸入標籤關鍵詞過濾',
   loadmore: '載入更多',
   rename: '重命名',
@@ -83,7 +87,8 @@ export const zhHant: Partial<IIBI18nMap> = {
   restoreLastRecord: '還原上次記錄',
   launch: '啟動',
   walkMode: '使用 Walk 模式瀏覽圖片',
-  launchFromQuickMove: '從快速移動啟動',
+  
+  launchFromNormalAndFixed: '使用 Normal / Fixed 模式瀏覽圖片',
   recent: '最近',
   emptyStartPage: '空啟動頁',
   t2i: '文生圖',
@@ -147,7 +152,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   'fuzzy-search-placeholder': '輸入圖片信息或者文件名的一部分來進行搜尋',
   'fuzzy-search-noResults': '什麼都沒找到',
   openWithLocalFileBrowser: '使用本地檔案瀏覽器打開',
-  addToSearchScanPathAndQuickMove: '加入搜尋掃描路徑和快速移動',
+  addToSearchScanPathAndQuickMove: '加入搜尋掃描路徑',
   removeFromSearchScanPathAndQuickMove: '從搜尋掃描路徑和快速移動中移除',
   serverKeyRequired: '伺服器配置了密鑰,你必须提供相同的密鑰才能繼續使用',
   shortcutKey: '快速鍵(僅允許在全螢幕檢視下使用)',

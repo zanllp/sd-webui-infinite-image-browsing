@@ -20,17 +20,18 @@ export const resolveQueryActions = async (g: ReturnType<typeof useGlobalStore>) 
         path = map[path]
       }
       const tab = g.tabList[0]
+      const mode = params.get('mode') as FileTransferTabPane['mode']
       const pane: FileTransferTabPane = {
         type: 'local',
         path,
         key: uniqueId(),
         name: '',
-        walkModePath: params.get('walk') ? path : undefined
+        mode: (['scanned', 'walk', 'scanned-fixed'] as const).includes(mode || 'scanned') ? mode : 'scanned'
       }
       tab.panes.unshift(pane)
       tab.key = pane.key
       switch2IIB()
-      removeQueryParams(['action', 'path', 'walk'])
+      removeQueryParams(['action', 'path', 'mode'])
       break
     }
   }

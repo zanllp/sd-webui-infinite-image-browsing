@@ -625,6 +625,7 @@ class Folder:
 
 class ExtraPathType(Enum):
     scanned = "scanned"
+    scanned_fixed = "scanned-fixed"
     walk = "walk"
     cli_only = "cli_access_only"
 
@@ -638,7 +639,7 @@ class ExtraPath:
     def save(self, conn):
         type_str = '+'.join(self.types)
         for type in self.types:
-            assert type in [ExtraPathType.walk.value, ExtraPathType.scanned.value]
+            assert type in [ExtraPathType.walk.value, ExtraPathType.scanned.value, ExtraPathType.scanned_fixed.value]
         with closing(conn.cursor()) as cur:
             cur.execute(
                 "INSERT INTO extra_path (path, type, alias) VALUES (?, ?, ?) "

@@ -97,6 +97,7 @@ tryOnMounted(async () => {
   })
 })
 watch(useDocumentVisibility(), v => v && emitReturnToIIB())
+
 </script>
 <template>
   <div ref="container">

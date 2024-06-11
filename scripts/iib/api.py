@@ -27,7 +27,9 @@ from scripts.iib.tool import (
     is_secret_key_required,
     open_file_with_default_app,
     is_nuitka,
-    backup_db_file
+    backup_db_file,
+    get_current_commit_hash,
+    get_current_tag
 )
 from fastapi import FastAPI, HTTPException, Header, Response
 from fastapi.staticfiles import StaticFiles
@@ -275,6 +277,13 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             "enable_access_control": enable_access_control,
             "launch_mode": kwargs.get("launch_mode", "sd"),
             "export_fe_fn": bool(kwargs.get("export_fe_fn")),
+        }
+    
+    @app.get(f"{api_base}/version", dependencies=[Depends(verify_secret)])
+    async def get_version():
+        return {
+            "hash": get_current_commit_hash(),
+            "tag": get_current_tag(),
         }
 
     class DeleteFilesReq(BaseModel):
@@ -1023,7 +1032,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         if not path:
             raise HTTPException(400)
         path.alias = req.alias
-        path.save(conn)
+        try:
+            path.save(conn)
+        finally:
+            conn.commit()
         return path
         
 

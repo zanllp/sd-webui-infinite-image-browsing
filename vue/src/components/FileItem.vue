@@ -6,7 +6,7 @@ import type { FileNodeInfo } from '@/api/files'
 import { isImageFile, isVideoFile } from '@/util'
 import { toImageThumbnailUrl, toVideoCoverUrl, toRawFileUrl } from '@/util/file'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import ContextMenu from './ContextMenu.vue'
 import ChangeIndicator from './ChangeIndicator.vue'
 import { useTagStore } from '@/store/useTagStore'
@@ -16,13 +16,15 @@ import { openVideoModal } from './functionalCallableComp'
 import type { GenDiffInfo } from '@/api/files'
 import { play } from '@/icon'
 import { Top4MediaInfo } from '@/api'
+import { watch } from 'vue'
+import { debounce } from 'lodash-es'
 
 const global = useGlobalStore()
 const tagStore = useTagStore()
 
 const props = withDefaults(
   defineProps<{
-    file: FileNodeInfo
+    file: FileNodeInfo,
     idx: number
     selected?: boolean
     showMenuIdx?: number
@@ -31,28 +33,33 @@ const props = withDefaults(
     enableRightClickMenu?: boolean,
     enableCloseIcon?: boolean,
     isSelectedMutilFiles?: boolean
-    genDiffToPrevious?: GenDiffInfo
-    genDiffToNext?: GenDiffInfo
     genInfo?: string
     enableChangeIndicator?: boolean
     extraTags?: Tag[]
     coverFiles?: Top4MediaInfo[]
+    getGenDiff?: (ownGenInfo: any, idx: any, increment: any, ownFile: FileNodeInfo) => GenDiffInfo,
+    getGenDiffWatchDep?: (idx: number) => any
   }>(),
   {
-    selected: false, enableRightClickMenu: true, enableCloseIcon: false, genDiffToNext: () => ({
-      empty: true,
-      ownFile: '',
-      otherFile: '',
-      diff: '',
-    }), genDiffToPrevious: () => ({
-      empty: true,
-      ownFile: '',
-      otherFile: '',
-      diff: '',
-    })
+    selected: false, enableRightClickMenu: true, enableCloseIcon: false
   }
 )
 
+
+const genDiffToPrevious = ref<GenDiffInfo>()
+const genDiffToNext = ref<GenDiffInfo>()
+const calcGenInfoDiff = debounce(() => {
+  const { getGenDiff, file, idx } = props
+  if (!getGenDiff) return
+  genDiffToNext.value = getGenDiff(file.gen_info_obj, idx, 1, file)
+  genDiffToPrevious.value = getGenDiff(file.gen_info_obj, idx, -1, file)
+}, 200 + 100 * Math.random())
+
+watch(() => props.getGenDiffWatchDep?.(props.idx), () => {
+  genDiffToNext.value = undefined
+  genDiffToPrevious.value = undefined
+  calcGenInfoDiff()
+}, { immediate: true, deep: true })
 
 const emit = defineEmits<{
   'update:showMenuIdx': [v: number],
@@ -130,8 +137,8 @@ const taggleLikeTag = () => {
         <div :key="file.fullpath" :class="`idx-${idx} item-content`" v-if="isImageFile(file.name)">
 
           <!-- change indicators -->
-          <ChangeIndicator v-if="enableChangeIndicator" :gen-diff-to-next="genDiffToNext"
-            :gen-diff-to-previous="genDiffToPrevious" />
+          <ChangeIndicator v-if="enableChangeIndicator && genDiffToNext && genDiffToPrevious"
+            :gen-diff-to-next="genDiffToNext" :gen-diff-to-previous="genDiffToPrevious" />
           <!-- change indicators END -->
 
           <a-image :src="imageSrc" :fallback="fallbackImage" :preview="{
@@ -164,7 +171,7 @@ const taggleLikeTag = () => {
               :src="item.media_type === 'image' ? toImageThumbnailUrl(item) : toVideoCoverUrl(item)"
               v-for="item in coverFiles" :key="item.fullpath">
           </div>
-          
+
           <folder-open-outlined class="icon center" v-else />
         </div>
         <div class="profile" v-if="cellWidth > 128">
