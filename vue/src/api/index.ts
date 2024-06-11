@@ -108,6 +108,11 @@ export const getGlobalSetting = async () => {
   return resp.data as GlobalConf
 }
 
+export const getVersion = async () => {
+  const resp = await axiosInst.value.get('/version')
+  return resp.data as { hash?: string, tag?: string }
+}
+
 export const checkPathExists = async (paths: string[]) => {
   const resp = await axiosInst.value.post('/check_path_exists', { paths })
   return resp.data as Record<string, boolean>

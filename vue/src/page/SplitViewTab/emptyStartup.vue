@@ -11,6 +11,7 @@ import { addToExtraPath, onAliasExtraPathClick, onRemoveExtraPathClick } from '.
 import actionContextMenu from './actionContextMenu.vue'
 import { ExtraPathType } from '@/api/db'
 import { onMounted } from 'vue'
+import { hasNewRelease, version, latestCommit } from '@/util/versionManager'
 
 const global = useGlobalStore()
 const imgsli = useImgSliStore()
@@ -34,7 +35,7 @@ const compCnMap: Partial<Record<TabPane['type'], string>> = {
   'global-setting': t('globalSettings'),
   'batch-download': t('batchDownload') + ' / ' + t('archive')
 }
-type FileTransModeIn =  'preset' | ExtraPathType
+type FileTransModeIn = 'preset' | ExtraPathType
 const createPane = (type: TabPane['type'], path?: string, mode?: FileTransModeIn) => {
   let pane: TabPane
   switch (type) {
@@ -124,6 +125,10 @@ const restoreRecord = () => {
         class="last-record">Github</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/.env.example" target="_blank"
         class="last-record">{{ $t('privacyAndSecurity') }}</a>
+      <a-badge :count="hasNewRelease ? 'new' : null" :offset="[2,0]" color="volcano">
+        <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/releases" target="_blank"
+          class="last-record">Releases</a>
+      </a-badge>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log" target="_blank"
         class="last-record">{{ $t('changlog') }}</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank"
@@ -148,7 +153,7 @@ const restoreRecord = () => {
         <LockOutlined></LockOutlined>
       </template>
     </a-alert>
-    <a-alert show-icon v-if="!global.dontShowAgainNewImgOpts">
+    <!--a-alert show-icon v-if="!global.dontShowAgainNewImgOpts">
       <template #message>
         <div class="access-mode-message">
           <div>
@@ -158,7 +163,7 @@ const restoreRecord = () => {
           <a @click.prevent="global.dontShowAgainNewImgOpts = true">{{ $t('dontShowAgain') }}</a>
         </div>
       </template>
-    </a-alert>
+    </a-alert-->
     <div class="content">
       <div class="feature-item">
         <h2>{{ $t('walkMode') }}</h2>
@@ -196,11 +201,13 @@ const restoreRecord = () => {
             v-for="dir in global.quickMovePaths.filter(({ types: ts }) => ts.includes('cli_access_only') || ts.includes('preset') || ts.includes('scanned') || ts.includes('scanned-fixed')) "
             :key="dir.key">
 
-            <actionContextMenu v-for="t in dir.types.filter(v => v !== 'walk')" :key="t" @open-in-new-tab="openInNewTab('local', dir.dir, t)"
-              @open-on-the-right="openOnTheRight('local', dir.dir,t)">
+            <actionContextMenu v-for="t in dir.types.filter(v => v !== 'walk')" :key="t"
+              @open-in-new-tab="openInNewTab('local', dir.dir, t)"
+              @open-on-the-right="openOnTheRight('local', dir.dir, t)">
 
               <li class="item rem" @click.prevent="openInCurrentTab('local', dir.dir, t)">
-                <span class="text line-clamp-2"><span v-if="t == 'scanned-fixed'" class="fixed">Fixed</span>{{ dir.zh }}</span>
+                <span class="text line-clamp-2"><span v-if="t == 'scanned-fixed'" class="fixed">Fixed</span>{{ dir.zh
+                  }}</span>
                 <template v-if="dir.can_delete && (t === 'scanned-fixed' || t === 'scanned')">
                   <AButton type="link" @click.stop="onAliasExtraPathClick(dir.dir)">{{ $t('alias') }}
                   </AButton>
@@ -243,6 +250,21 @@ const restoreRecord = () => {
           </li>
         </ul>
       </div>
+    </div>
+    <div class="ver-info">
+      <div>
+        Version: {{ version.tag }}
+      </div>
+      <div v-if="version.hash">
+        Hash: {{ version.hash }}
+      </div>
+      <div v-if="latestCommit && version.hash && latestCommit.sha !== version.hash">
+        Not the latest commit
+      </div>
+      <div v-if="latestCommit">
+        Latest Commit: {{ latestCommit.sha }} (Updated at {{ latestCommit.commit.author?.date }})
+      </div>
+
     </div>
   </div>
 </template>
@@ -350,7 +372,7 @@ const restoreRecord = () => {
 
     .fixed {
       background: var(--primary-color);
-      color:  white;
+      color: white;
       font-size: .8em;
       padding: 2px 4px;
       border-radius: 8px;
@@ -376,5 +398,17 @@ const restoreRecord = () => {
   flex: 1;
   font-size: 16px;
   word-break: break-all;
+}
+
+.ver-info {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: center;
+  color: var(--zp-secondary);
+  gap: 16px;
+  padding: 32px;
+  flex-wrap: wrap;
+  font-size: 0.9em;
 }
 </style>

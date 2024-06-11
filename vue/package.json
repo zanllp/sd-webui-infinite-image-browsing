@@ -13,6 +13,7 @@
     "tauri-build-debug": "tauri build --debug"
   },
   "dependencies": {
+    "@octokit/rest": "^20.1.1",
     "@tauri-apps/api": "^1.4.0",
     "@vueuse/core": "^10.1.2",
     "@zanllp/vue-virtual-scroller": "^2.0.0-beta.7",
