@@ -3,11 +3,10 @@ from PIL import Image
 
 from scripts.iib.tool import (
     parse_generation_parameters,
+    replace_punctuation
 )
 from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 
-def replace_punctuation(input_string):
-    return input_string.replace(',', ' ').replace('\n', ' ')
 
 class NovelAIParser:
     def __init__(self):

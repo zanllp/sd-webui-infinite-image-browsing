@@ -424,7 +424,6 @@ def read_sd_webui_gen_info_from_image(image: Image, path="") -> str:
     """
     items = image.info or {}
     geninfo = items.pop("parameters", None)
-
     if "exif" in items:
         exif = piexif.load(items["exif"])
         exif_comment = (exif or {}).get("Exif", {}).get(piexif.ExifIFD.UserComment, b"")
@@ -625,3 +624,14 @@ def get_current_tag():
             return None
     except subprocess.CalledProcessError:
         return None
+    
+    
+def replace_punctuation(input_string):
+    return input_string.replace(',', ' ').replace('\n', ' ')
+
+
+def case_insensitive_get(d, key, default=None):
+    for k, v in d.items():
+        if k.lower() == key.lower():
+            return v
+    return default
