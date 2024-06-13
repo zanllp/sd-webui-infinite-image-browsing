@@ -622,6 +622,12 @@ class Folder:
         with closing(conn.cursor()) as cur:
             cur.execute("DELETE FROM folders WHERE path = ?", (folder_path,))
 
+    @classmethod
+    def remove_all(cls, conn: Connection):
+        with closing(conn.cursor()) as cur:
+            cur.execute("DELETE FROM folders")
+            conn.commit()
+
 
 class ExtraPathType(Enum):
     scanned = "scanned"

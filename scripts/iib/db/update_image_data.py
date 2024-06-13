@@ -8,7 +8,8 @@ from scripts.iib.tool import (
     get_video_type,
     is_dev,
     get_modified_date,
-    is_image_file
+    is_image_file,
+    case_insensitive_get
 )
 from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 from scripts.iib.logger import logger
@@ -30,6 +31,9 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
     conn = DataBase.get_conn()
     tag_incr_count_rec: Dict[int, int] = {}
 
+    if is_rebuild:
+        Folder.remove_all(conn)
+
     def safe_save_img_tag(img_tag: ImageTag):
         tag_incr_count_rec[img_tag.tag_id] = (
             tag_incr_count_rec.get(img_tag.tag_id, 0) + 1
@@ -38,7 +42,7 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
 
     # 递归处理每个文件夹
     def process_folder(folder_path: str):
-        if not is_rebuild and not Folder.check_need_update(conn, folder_path):
+        if not Folder.check_need_update(conn, folder_path):
             return
         print(f"Processing folder: {folder_path}")
         for filename in os.listdir(folder_path):
@@ -160,7 +164,7 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
         "Hires upscaler"
     ]:
         
-        v = meta.get(k)
+        v = case_insensitive_get(meta, k)
         if not v:
             continue
         

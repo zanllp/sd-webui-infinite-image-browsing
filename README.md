@@ -19,7 +19,7 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 | ComfyUI                | Partially supported | --                |
 | Fooocus                | Supported        | --                   |
 | NovelAI                | Supported    | --            |
-| StableSwarmUI          | Not supported    | Planned              |
+| StableSwarmUI          | Supported    | --              |
 
 You can add your own parser through https://github.com/zanllp/sd-webui-infinite-image-browsing/tree/main/scripts/iib/parsers
 
