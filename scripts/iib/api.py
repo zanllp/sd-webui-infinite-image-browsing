@@ -602,11 +602,14 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         res = {}
         conn = DataBase.get_conn()
         for path in req.paths:
-            img = DbImg.get(conn, path)
-            if img:
-                res[path] = img.exif
-            else:
-                res[path] = await image_geninfo(path)
+            try:
+                img = DbImg.get(conn, path)
+                if img:
+                    res[path] = img.exif
+                else:
+                    res[path] = parse_image_info(path).raw_info
+            except Exception as e:
+                logger.error(e, stack_info=True)
         return res
 
 
