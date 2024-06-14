@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import shutil
 import sqlite3
+import pillow_avif
 
 from scripts.iib.dir_cover_cache import get_top_4_media_info
 from scripts.iib.tool import (
