@@ -14,7 +14,8 @@ import {
   FullscreenExitOutlined,
   FullscreenOutlined,
   ArrowsAltOutlined,
-  EllipsisOutlined
+  EllipsisOutlined,
+  fullscreen
 } from '@/icon'
 import { t } from '@/i18n'
 import { createReactiveQueue } from '@/util'
@@ -55,13 +56,13 @@ const emit = defineEmits<{
 }>()
 
 
-function unescapeHtml(string: string) {
+function unescapeHtml (string: string) {
   return `${string}`
     .replace(/&amp;/g, '&')
-    .replace(/&lt;/g,'<')
-    .replace( /&gt;/g,'>')
-    .replace( /&quot;/g,'"',)
-    .replace( /&#39;/g,'\'');
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"',)
+    .replace(/&#39;/g, '\'')
 }
 
 watch(
@@ -154,7 +155,7 @@ const copyPositivePrompt = () => {
   const text = imageGenInfo.value.includes(neg) ? imageGenInfo.value.split(neg)[0] : geninfoFrags.value[0] ?? ''
   copy2clipboardI18n(unescapeHtml(text.trim()))
 }
-
+const requestFullscreen = () => document.body.requestFullscreen()
 </script>
 
 <template>
@@ -164,10 +165,14 @@ const copyPositivePrompt = () => {
         <div ref="dragHandle" class="icon" style="cursor: grab" :title="t('dragToMovePanel')">
           <DragOutlined />
         </div>
+
         <div class="icon" style="cursor: pointer" @click="state.expanded = !state.expanded"
           :title="t('clickToToggleMaximizeMinimize')">
           <FullscreenExitOutlined v-if="state.expanded" />
           <FullscreenOutlined v-else />
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; cursor: grab" class="icon" :title="t('fullscreenview')" @click="requestFullscreen">
+          <img :src="fullscreen" style="width: 21px;height: 21px;padding-bottom: 2px;" alt="">
         </div>
         <a-dropdown :get-popup-container="getParNode">
           <div class="icon" style="cursor: pointer" v-if="!state.expanded">
@@ -361,6 +366,7 @@ const copyPositivePrompt = () => {
       border-radius: 4px;
       border-collapse: separate;
       margin-bottom: 3em;
+
       tr td:first-child {
         white-space: nowrap;
       }
