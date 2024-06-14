@@ -12,6 +12,7 @@ import actionContextMenu from './actionContextMenu.vue'
 import { ExtraPathType } from '@/api/db'
 import { onMounted } from 'vue'
 import { hasNewRelease, version, latestCommit } from '@/util/versionManager'
+import { isTauri } from '@/util/env'
 
 const global = useGlobalStore()
 const imgsli = useImgSliStore()
@@ -108,6 +109,12 @@ const restoreRecord = () => {
   ok(lastRecord.value)
   global.tabList = cloneDeep(lastRecord.value.tabs)
 }
+
+const machine = computed(() => {
+  if (isTauri) return 'desktop application'
+  if ( global.conf?.launch_mode === 'sd') return 'sd-webui extension'
+  return 'standalone'
+})
 
 
 </script>
@@ -253,7 +260,7 @@ const restoreRecord = () => {
     </div>
     <div class="ver-info">
       <div>
-        Version: {{ version.tag }}
+        Version: {{ version.tag }} ({{machine}})
       </div>
       <div v-if="version.hash">
         Hash: {{ version.hash }}
