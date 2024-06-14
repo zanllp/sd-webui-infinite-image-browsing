@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import shutil
 import sqlite3
-import pillow_avif
+
 
 from scripts.iib.dir_cover_cache import get_top_4_media_info
 from scripts.iib.tool import (
@@ -59,6 +59,12 @@ from scripts.iib.seq import seq
 import urllib.parse
 from scripts.iib.fastapi_video import range_requests_response, close_video_file_reader
 from scripts.iib.parsers.index import parse_image_info
+
+
+try:
+    import pillow_avif
+except Exception as e:
+    logger.error(e)
 
 index_html_path = os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 

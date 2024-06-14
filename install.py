@@ -7,7 +7,8 @@ req_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "requiremen
 def dist2package(dist: str):
     return ({
         "python-dotenv": "dotenv",
-        "Pillow": "PIL"
+        "Pillow": "PIL",
+        "pillow-avif-plugin": "pillow_avif"
     }).get(dist, dist)
 
 # copy from controlnet, thanks
