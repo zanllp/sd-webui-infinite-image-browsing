@@ -76,6 +76,7 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 如果您喜欢这个项目并且觉得它对您有帮助，请考虑给我点个⭐️。这将对我持续开发和维护这个项目非常重要。如果您有任何建议或者想法，请随时在issue中提出，我会尽快回复。再次感谢您的支持！
 
 
+[在微信上赞助我](.github/wechat_funding.jpg)
 <a href='https://ko-fi.com/zanllp' target='_blank'><img height='35' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />
 
 
