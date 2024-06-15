@@ -210,7 +210,7 @@ def is_image_file(filename: str) -> bool:
     if not isinstance(filename, str):
         return False
     
-    extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+    extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.avif']
     extension = filename.split('.')[-1].lower()
     return f".{extension}" in extensions
 

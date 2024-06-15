@@ -7,16 +7,17 @@ const encode = encodeURIComponent
 export const toRawFileUrl = (file: FileNodeInfo, download = false) =>
   `${apiBase.value}/file?path=${encode(file.fullpath)}&t=${encode(file.date)}${download ? `&disposition=${encode(file.name)}` : ''
   }`
-export const toImageThumbnailUrl = (file: FileNodeInfo, size: string = '512x512') =>
-  `${apiBase.value}/image-thumbnail?path=${encode(file.fullpath)}&size=${size}&t=${encode(
+export const toImageThumbnailUrl = (file: FileNodeInfo, size: string = '512x512') => {
+  return `${apiBase.value}/image-thumbnail?path=${encode(file.fullpath)}&size=${size}&t=${encode(
     file.date
   )}`
+}
 
 export const toStreamVideoUrl = (file: FileNodeInfo) =>
   `${apiBase.value}/stream_video?path=${encode(file.fullpath)}`
 
 export const toVideoCoverUrl = (file: FileNodeInfo) =>
-  (isTauri ? '' : parent.document.location.origin)+ `${apiBase.value}/video_cover?path=${encode(file.fullpath)}&t=${encode(file.date)}`
+  (isTauri ? '' : parent.document.location.origin) + `${apiBase.value}/video_cover?path=${encode(file.fullpath)}&t=${encode(file.date)}`
 
 export type FileTransferData = {
   path: string[]
@@ -40,7 +41,7 @@ export function isImageFile (filename: string): boolean {
   if (typeof filename !== 'string') {
     return false
   }
-  const exts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+  const exts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.avif']
   const extension = filename.split('.').pop()?.toLowerCase()
   return extension !== undefined && exts.includes(`.${extension}`)
 }

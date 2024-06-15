@@ -4,6 +4,7 @@ from pathlib import Path
 import shutil
 import sqlite3
 
+
 from scripts.iib.dir_cover_cache import get_top_4_media_info
 from scripts.iib.tool import (
     get_video_type,
@@ -58,6 +59,12 @@ from scripts.iib.seq import seq
 import urllib.parse
 from scripts.iib.fastapi_video import range_requests_response, close_video_file_reader
 from scripts.iib.parsers.index import parse_image_info
+
+
+try:
+    import pillow_avif
+except Exception as e:
+    logger.error(e)
 
 index_html_path = os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 
@@ -602,11 +609,14 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         res = {}
         conn = DataBase.get_conn()
         for path in req.paths:
-            img = DbImg.get(conn, path)
-            if img:
-                res[path] = img.exif
-            else:
-                res[path] = await image_geninfo(path)
+            try:
+                img = DbImg.get(conn, path)
+                if img:
+                    res[path] = img.exif
+                else:
+                    res[path] = parse_image_info(path).raw_info
+            except Exception as e:
+                logger.error(e, stack_info=True)
         return res
 
 
