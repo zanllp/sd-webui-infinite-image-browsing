@@ -484,6 +484,16 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 headers={"Cache-Control": "max-age=31536000", "ETag": hash},
             )
 
+                
+        # 如果小于64KB，直接返回原图
+        if os.path.getsize(path) < 64 * 1024:
+            return FileResponse(
+                path,
+                media_type="image/" + path.split(".")[-1],
+                headers={"Cache-Control": "max-age=31536000", "ETag": hash},
+            )
+        
+
         # 如果缓存文件不存在，则生成缩略图并保存
         with Image.open(path) as img:
             w, h = size.split("x")
