@@ -6,7 +6,9 @@
 
 #  Stable Diffusion webui Infinite Image Browsing
 
-<p style="text-align:center;margin:0 32px;">It's not just an image browser, but also a powerful image manager. Precise image search combined with multi-selection operations allows for filtering/archiving/packaging, greatly increasing efficiency. It also supports running in standalone mode, without the need for SD-Webui.</p>
+<p>It's not just an image/video browser, but also a powerful image manager. Precise image search combined with multi-selection operations allows for filtering/archiving/packaging, greatly increasing efficiency. It also supports running in standalone mode, without the need for SD-Webui.
+
+It is also suitable for managing regular photos and videos, allowing you to tag or search them. We have made numerous optimizations to ensure performance under extreme conditions.</p>
 
 https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b890b-7be8-4816-abba-f3ad340a2232
 
@@ -70,7 +72,7 @@ You can add your own parser through https://github.com/zanllp/sd-webui-infinite-
 
 ### 🔐 Privacy and Security
 - Supports custom secret key for authentication.
-- Supports configuring access control for the file system, which will be enabled by default when the service allows public access.
+- Supports configuring access control for the file system, which will be enabled by default when the service allows public access (Only when used as an extension of sd-webui).
 - Supports customizing the allowed paths for access control.
 - Supports controlling access permissions. You can run IIB in read-only mode.
 - [Click here to see details](.env.example)
