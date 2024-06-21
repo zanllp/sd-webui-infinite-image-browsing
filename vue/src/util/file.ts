@@ -50,7 +50,7 @@ export function isVideoFile (filename: string): boolean {
   if (typeof filename !== 'string') {
     return false
   }
-  const exts = ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.ts']
+  const exts = ['.mp4', '.m4v', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.ts']
   const extension = filename.split('.').pop()?.toLowerCase()
   return extension !== undefined && exts.includes(`.${extension}`)
 }

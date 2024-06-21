@@ -1,6 +1,14 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  time: 'Time',
+  pin: 'Pin',
+  unpin: 'Unpin',
+  restore: 'Restore',
+  restoreFromHistory: 'Restore from History',
+  history: 'History', 
+  historyRecordsSubstr: 'Input Value',
+  historyRecordsisRegex: 'Is Regex',
   walkModeDoc: 'Browse all files in a specified folder without paging, using infinite scrolling to display them. DFS will be used to traverse all files. Note: Sorting is only performed within the same layer in this mode.',
   normalModelDoc: 'Similar to the Windows file browser, with high flexibility. But exceptions may occur when accessing cloud storage or similar SMB.',
   fixedModeDoc: 'Similar to Normal mode, but with faster initial page speed, better compatibility, and slightly less flexibility. If you encounter an exception in Normal mode, you can try this mode instead.',
