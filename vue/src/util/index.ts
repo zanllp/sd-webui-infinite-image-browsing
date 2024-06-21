@@ -167,3 +167,17 @@ export const safeJsonParse = <T>(str: string) => {
     return null
   }
 }
+
+
+export const formatDuration = (duration: number) => {
+  if (duration >= 3600) {
+    const hour = Math.floor(duration / 3600);
+    const min = Math.floor((duration % 3600) / 60);
+    const sec = duration % 60;
+    return `${hour}:${min.toString().padStart(2, '0')}:${sec.toFixed(0).padStart(2, '0')}`;
+  } else {
+    const min = Math.floor(duration / 60);
+    const sec = duration % 60;
+    return `${min}:${sec.toFixed(0).padStart(2, '0')}`;
+  }
+}
