@@ -168,8 +168,8 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
         :placeholder="$t('specifiedSearchFolder')" />
     </div>
     <div class="search-bar last actions">
-      <a-button @click="saveLoadedFileAsJson">{{ $t('saveLoadedImageAsJson') }}</a-button>
-      <a-button @click="saveAllFileAsJson">{{ $t('saveAllAsJson') }}</a-button>
+      <a-button @click="saveLoadedFileAsJson" v-if="images.length">{{ $t('saveLoadedImageAsJson') }}</a-button>
+      <a-button @click="saveAllFileAsJson" v-if="images.length">{{ $t('saveAllAsJson') }}</a-button>
       <a-button @click="showHistoryRecord = true">{{ $t('history') }}</a-button>
     </div>
     <ASpin size="large" :spinning="!queue.isIdle">
@@ -188,7 +188,7 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
           </div>
         </ASkeleton>
       </AModal>
-      <div v-if="searchCount === 0 && !images.length"
+      <div v-if="searchCount === 0 && !images.length && fuzzySearchHistory.getRecords().length"
         style="margin: 64px 16px 32px; padding: 8px; background: var(--zp-secondary-variant-background);border-radius: 16px">
         <h2 style="margin: 16px 32px 16px;">
           {{ $t('restoreFromHistory') }}
