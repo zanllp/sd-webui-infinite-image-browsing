@@ -1,6 +1,6 @@
 import os
 from scripts.iib.db.datamodel  import DirCoverCache, DataBase
-from scripts.iib.tool import get_created_date_by_stat, get_formatted_date, is_valid_media_path, get_video_type
+from scripts.iib.tool import get_created_date_by_stat, get_formatted_date, is_valid_media_path, get_video_type, birthtime_sort_key_fn
 
 def get_top_4_media_info(folder_path):
     """
@@ -33,7 +33,7 @@ def get_media_files_from_folder(folder_path):
     """
     media_files = []
     with os.scandir(folder_path) as entries:
-        for entry in sorted(entries, key=lambda x: x.stat().st_birthtime if hasattr(x.stat(), 'st_birthtime') else x.stat().st_ctime, reverse=True):
+        for entry in sorted(entries, key=birthtime_sort_key_fn, reverse=True):
             if entry.is_file() and is_valid_media_path(entry.path):
                 name = os.path.basename(entry.path)
                 stat = entry.stat()

@@ -334,11 +334,30 @@ def get_modified_date(folder_path: str):
 def get_created_date(folder_path: str):
     return get_formatted_date(os.path.getctime(folder_path))
 
+is_st_birthtime_available = True
+
 def get_created_date_by_stat(stat: os.stat_result):
+    global is_st_birthtime_available
     try:
-        return get_formatted_date(stat.st_birthtime if hasattr(stat, 'st_birthtime') else stat.st_ctime)
-    except:
+        if is_st_birthtime_available:
+            return get_formatted_date(stat.st_birthtime)
+        else:
+            return get_formatted_date(stat.st_ctime)
+    except Exception as e:
+        is_st_birthtime_available = False
         return get_formatted_date(stat.st_ctime)
+    
+def birthtime_sort_key_fn(x):
+    stat = x.stat()
+    global is_st_birthtime_available
+    try:
+        if is_st_birthtime_available and hasattr(stat, "st_birthtime"):
+            return stat.st_birthtime
+        else:
+            return stat.st_ctime
+    except:
+        is_st_birthtime_available = False
+        return stat.st_ctime
 
 def unique_by(seq, key_func=lambda x: x):
     seen = set()
