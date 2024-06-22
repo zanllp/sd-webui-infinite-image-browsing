@@ -85,6 +85,7 @@ export function parse(parameters: string): ImageMeta {
   if (detailsLineIndex > -1) metaLines.splice(detailsLineIndex, 1);
   // Remove meta keys I wish I hadn't made... :(
   detailsLine = unescapeHtml(detailsLine)
+  const preprecessedMatchValuesList = [] as any[];
   preproccessConfigs.forEach(({ reg, key: configKey, value: configValue }) => {
     const matchData: any = {};
     const matchValues = [];
@@ -96,7 +97,7 @@ export function parse(parameters: string): ImageMeta {
       matchValues.push(match[0]);
     }
     matchValues.forEach((value) => (detailsLine = detailsLine.replace(value, '')));
-    Object.assign(metadata, matchData);
+    preprecessedMatchValuesList.push(matchData);
   });
 
   const regex = /\s*([\w ]+):\s*("(?:\\"[^,]|\\"|\\|[^"])+"|[^,]*)(?:,|$)/g;
@@ -108,6 +109,12 @@ export function parse(parameters: string): ImageMeta {
     k = getImageMetaKey(k, imageMetaKeyMap);
     metadata[k.trim()] = tryParseJson((v ?? '').trim());
   }
+
+  // 这些信息不是很重要，所以推后
+  preprecessedMatchValuesList.forEach((matchData) => {
+    
+    Object.assign(metadata, matchData);
+  });
 
   // Extract prompts
   const [prompt, ...negativePrompt] = metaLines
