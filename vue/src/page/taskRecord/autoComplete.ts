@@ -1,9 +1,11 @@
 import { checkPathExists, type getGlobalSetting } from '@/api'
 import type { ExtraPathType } from '@/api/db'
 import { t } from '@/i18n'
+import { useGlobalStore } from '@/store/useGlobalStore'
 import { pick, type ReturnTypeAsync } from '@/util'
-import { normalize, normalizeRelativePathToAbsolute } from '@/util/path'
+import { normalizeRelativePathToAbsolute } from '@/util/path'
 import { uniqBy } from 'lodash-es'
+import { delay } from 'vue3-ts-util'
 
 export const getQuickMovePaths = async ({
   global_setting,
@@ -12,6 +14,7 @@ export const getQuickMovePaths = async ({
   extra_paths,
   cwd
 }: ReturnTypeAsync<typeof getGlobalSetting>) => {
+  
   const picked = pick(
     global_setting,
     'outdir_grids',
@@ -62,23 +65,19 @@ export const getQuickMovePaths = async ({
     home: 'home',
     desktop: t('desktop')
   }
-  const pathAliasMap = {
+  const g = useGlobalStore() as any
+  g.extraPathAliasMap = {
     home: home,
     [t('desktop')]: pathMap.desktop,
     [t('workingFolder')]: cwd,
     [t('t2i')]: pathMap.outdir_txt2img_samples,
-    [t('i2i')]: pathMap.outdir_img2img_samples
+    [t('i2i')]: pathMap.outdir_img2img_samples,
+    ...extra_paths.filter(v => v.alias).reduce((acc, v) => {
+      acc[v.alias!] = normalizeRelativePathToAbsolute(v.path, sd_cwd)
+      return acc
+    }, {} as Record<string, string>)
   }
-  const findshortest = (path: string) => {
-    path = normalize(path)
-    const replacedPaths = [] as string[]
-    for (const [k, v] of Object.entries(pathAliasMap)) {
-      if (k && v) {
-        replacedPaths.push(path.replace(v, '$' + k))
-      }
-    }
-    return replacedPaths.sort((a, b) => a.length - b.length)[0]
-  }
+  await delay(0)
   const res = Object.keys(cnMap)
     .filter((k) => exists[pathMap[k as keyof typeof pathMap] as string])
     .map((k) => {
@@ -90,6 +89,6 @@ export const getQuickMovePaths = async ({
         can_delete: false,
         types: ['preset' as 'preset' | ExtraPathType]
       }
-    }).concat(extra_paths.map(v => ({ key: v.path, zh: v.alias || findshortest(v.path), dir: v.path, can_delete: true, types: v.types })) as any[])
+    }).concat(extra_paths.map(v => ({ key: v.path, zh: v.alias || g.getShortPath(v.path), dir: v.path, can_delete: true, types: v.types })) as any[])
   return uniqBy(res, v => v.key + v.types.join())
 }

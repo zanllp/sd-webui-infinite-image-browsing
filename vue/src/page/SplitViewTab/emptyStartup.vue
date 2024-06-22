@@ -116,6 +116,12 @@ const machine = computed(() => {
   return 'standalone'
 })
 
+const modePrefix = (mode?: FileTransModeIn) => {
+  if (!mode || mode === 'scanned') return ''
+  if (mode === 'walk') return 'Walk: '
+  return 'Fixed: '
+
+}
 
 </script>
 <template>
@@ -251,9 +257,9 @@ const machine = computed(() => {
         </div>
         <ul>
           <li v-for="item in global.recent" :key="item.key" class="item"
-            @click.prevent="openInCurrentTab('local', item.path)">
+            @click.prevent="openInCurrentTab('local', item.path, item.mode)">
             <FileDoneOutlined class="icon" />
-            <span class="text line-clamp-1">{{ item.path }}</span>
+            <span class="text line-clamp-1">{{modePrefix(item.mode)}}{{ global.getShortPath(item.path) }}</span>
           </li>
         </ul>
       </div>

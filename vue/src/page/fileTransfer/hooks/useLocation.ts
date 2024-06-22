@@ -75,7 +75,7 @@ export function useLocation () {
         return
       }
       pane.path = loc
-      const filename = pane.path!.split('/').pop() ?? ''
+      const dirname = Path.splitPath(loc).pop() ?? ''
       const getTitle = () => {
         const prefix = {
           walk: 'Walk',
@@ -83,13 +83,8 @@ export function useLocation () {
           scanned: null
         }[props.value.mode ?? 'scanned']
         const wrap = (v: string) => prefix ? `${prefix}: ${v}` : v
-        const np = Path.normalize(loc)
-        for (const [k, v] of Object.entries(global.pathAliasMap)) {
-          if (np.startsWith(v)) {
-            return wrap(np.replace(v, k))
-          }
-        }
-        return wrap(filename)
+        const shortPath = global.getShortPath(loc)
+        return wrap(shortPath.length > 24 && dirname ? dirname : shortPath)
       }
       const title = getTitle()
       pane.name = h('div', { style: 'display:flex;align-items:center' }, [
@@ -98,7 +93,7 @@ export function useLocation () {
       ])
       pane.nameFallbackStr = title
       global.recent = global.recent.filter((v) => v.key !== pane.key)
-      global.recent.unshift({ path: loc, key: pane.key })
+      global.recent.unshift({ path: loc, key: pane.key, mode: props.value.mode})
       if (global.recent.length > 20) {
         global.recent = global.recent.slice(0, 20)
       }
