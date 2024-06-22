@@ -13,6 +13,7 @@ import { defineStore } from 'pinia'
 import { VNode, computed, onMounted, reactive, toRaw, watch } from 'vue'
 import { ref } from 'vue'
 import { WithRequired } from 'vue3-ts-util'
+import * as Path from '../util/path'
 
 interface TabPaneBase {
   name: string | VNode
@@ -172,7 +173,7 @@ export const useGlobalStore = defineStore(
       tabList.value.push({ panes: [emptyPane], key: emptyPane.key, id: uniqueId() })
     })
     const dragingTab = ref<{ tabIdx: number; paneIdx: number }>()
-    const recent = ref(new Array<{ path: string; key: string }>())
+    const recent = ref(new Array<{ path: string; key: string, mode: FileTransferTabPane['mode'] }>())
     const time = Date.now()
     const tabListHistoryRecord = ref<{ time: number; tabs: Tab[] }[]>() // [curr,last]
     const saveRecord = () => {
@@ -228,6 +229,7 @@ export const useGlobalStore = defineStore(
       download: ''
     })
 
+    const extraPathAliasMap = ref({} as Dict<string>)
     const pathAliasMap = computed((): Dict<string> => {
       const keys = [
         'outdir_extras_samples',
@@ -238,7 +240,7 @@ export const useGlobalStore = defineStore(
         'outdir_txt2img_grids'
       ]
       const res = quickMovePaths.value.filter((v) => keys.includes(v.key)).map((v) => [v.zh, v.dir])
-      return Object.fromEntries(res)
+      return {...Object.fromEntries(res), ...extraPathAliasMap.value}
     })
 
     const pageFuncExportMap = new Map<string, Dict<AnyFn>>()
@@ -257,6 +259,26 @@ export const useGlobalStore = defineStore(
       const isDark = darkModeControl.value === 'auto' ? (dark.value || getParDark()) : (darkModeControl.value === 'dark')
       return isDark ? 'dark' : 'light'
     })
+
+    // 简化路径
+    const getShortPath = (loc: string) => {
+      try {
+        loc = loc.trim()
+        const map = pathAliasMap.value
+        const np = Path.normalize(loc)
+        const replacedPaths = [] as string[]
+        for (const [k, v] of Object.entries(map)) {
+          if (k && v) {
+            if (loc === v || np === v) return k
+            replacedPaths.push(np.replace(v, '$' + k))
+          }
+        }
+        return replacedPaths.sort((a, b) => a.length - b.length)?.[0] ?? loc
+      } catch (error) {
+        console.error(error)
+        return loc
+      }
+    }
     return {
       computedTheme,
       darkModeControl,
@@ -285,7 +307,9 @@ export const useGlobalStore = defineStore(
       pageFuncExportMap,
       dontShowAgain: ref(false),
       dontShowAgainNewImgOpts: ref(false),
-      ignoredConfirmActions
+      ignoredConfirmActions,
+      getShortPath,
+      extraPathAliasMap
     }
   },
   {

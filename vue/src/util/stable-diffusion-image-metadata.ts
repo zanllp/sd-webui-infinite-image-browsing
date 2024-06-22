@@ -1,3 +1,4 @@
+import { unescapeHtml } from '.'
 
 // Fork from https://github.com/jiw0220/stable-diffusion-image-metadata/blob/main/src/index.ts
 type ImageMeta = {
@@ -33,9 +34,6 @@ const imageMetadataKeys: Array<[string, string]> = [
   ['Size', 'size'],
 ];
 const imageMetaKeyMap = new Map<string, string>(imageMetadataKeys);
-const imageMetaKeyReverseMap = new Map<string, string>(
-  imageMetadataKeys.map((i) => i.reverse()) as Array<[string, string]>
-);
 const automaticExtraNetsRegex = /<(lora|hypernet):([a-zA-Z0-9_.]+):([0-9.]+)>/g;
 const automaticNameHash = /([a-zA-Z0-9_.]+)\(([a-zA-Z0-9]+)\)/;
 const getImageMetaKey = (key: string, keyMap: Map<string, string>) => keyMap.get(key.trim()) ?? key.trim();
@@ -48,11 +46,22 @@ function preproccessFormatJSONValueFn(v: string) {
     return v;
   }
 }
+
 function preproccessFormatHandler(configValue: PreProcessValue | PreProcessValueFn, inputValue: string) {
   if (typeof configValue === 'function') {
     return configValue.call(null, inputValue);
   }
   return configValue;
+}
+
+
+const tryParseJson = (v: string) => {
+  try {
+    return JSON.parse(v);
+  } catch (e) {
+    return v;
+  }
+
 }
 
 const preproccessConfigs = [
@@ -75,7 +84,7 @@ export function parse(parameters: string): ImageMeta {
   // Strip it from the meta lines
   if (detailsLineIndex > -1) metaLines.splice(detailsLineIndex, 1);
   // Remove meta keys I wish I hadn't made... :(
-
+  detailsLine = unescapeHtml(detailsLine)
   preproccessConfigs.forEach(({ reg, key: configKey, value: configValue }) => {
     const matchData: any = {};
     const matchValues = [];
@@ -90,12 +99,15 @@ export function parse(parameters: string): ImageMeta {
     Object.assign(metadata, matchData);
   });
 
-  detailsLine.split(', ').forEach((str: string) => {
-    const [_k, _v] = str.split(': ');
-    if (!_k) return;
-    const key = getImageMetaKey(_k, imageMetaKeyMap);
-    metadata[key] = _v;
-  });
+  const regex = /\s*([\w ]+):\s*("(?:\\"[^,]|\\"|\\|[^"])+"|[^,]*)(?:,|$)/g;
+  let match;
+  while ((match = regex.exec(detailsLine)) !== null) {
+    let k = match[1];
+    const v = match[2].replace(/\\(.)/g, '$1');
+    if (!k) continue;
+    k = getImageMetaKey(k, imageMetaKeyMap);
+    metadata[k.trim()] = tryParseJson((v ?? '').trim());
+  }
 
   // Extract prompts
   const [prompt, ...negativePrompt] = metaLines
@@ -165,24 +177,3 @@ export function parse(parameters: string): ImageMeta {
   return metadata;
 }
 
-export function stringify(metadata: ImageMeta): string {
-  const { prompt, negativePrompt, width, height, hashes, resources, ...other } = metadata;
-  // [width, height, hashes, resources] is ignore keys
-  const lines: string[] = [];
-  if (!prompt || !other.steps) {
-    //invalid metadata
-    return '';
-  }
-  lines.push(prompt);
-  if (negativePrompt) {
-    lines.push(`Negative prompt: ${negativePrompt}`);
-  }
-  const details: string[] = [];
-  Object.entries(other).forEach(([_k, v]) => {
-    const k = getImageMetaKey(_k, imageMetaKeyReverseMap);
-    details.push(`${k}: ${v}`);
-  });
-  lines.push(details.join(', '));
-
-  return lines.join('\n');
-}

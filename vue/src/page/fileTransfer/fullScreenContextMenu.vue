@@ -18,7 +18,7 @@ import {
   fullscreen
 } from '@/icon'
 import { t } from '@/i18n'
-import { createReactiveQueue } from '@/util'
+import { createReactiveQueue, unescapeHtml } from '@/util'
 import { toRawFileUrl } from '@/util/file'
 import ContextMenu from '@/components/ContextMenu.vue'
 import { useWatchDocument } from 'vue3-ts-util'
@@ -54,16 +54,6 @@ const geninfoStructNoPrompts = computed(() => {
 const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
 }>()
-
-
-function unescapeHtml (string: string) {
-  return `${string}`
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"',)
-    .replace(/&#39;/g, '\'')
-}
 
 watch(
   () => props?.file?.fullpath,

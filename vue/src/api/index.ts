@@ -132,6 +132,9 @@ export const getImageGenerationInfo = async (path: string) => {
 }
 
 export const getImageGenerationInfoBatch = async (paths: string[]) => {
+  if (!paths.length) {
+    return {}
+  }
   const resp = await axiosInst.value.post('/image_geninfo_batch', { paths })
   return resp.data
 }

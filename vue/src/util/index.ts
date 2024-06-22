@@ -181,3 +181,13 @@ export const formatDuration = (duration: number) => {
     return `${min}:${sec.toFixed(0).padStart(2, '0')}`;
   }
 }
+
+
+export function unescapeHtml (string: string) {
+  return `${string}`
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"',)
+    .replace(/&#39;/g, '\'')
+}
