@@ -52,7 +52,8 @@ from scripts.iib.db.datamodel import (
     ImageTag,
     ExtraPath,
     FileInfoDict,
-    Cursor
+    Cursor, 
+    GlobalSetting
 )
 from scripts.iib.db.update_image_data import update_image_data, rebuild_image_index, add_image_data_single
 from scripts.iib.logger import logger
@@ -264,6 +265,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         all_custom_tags = []
 
         extra_paths = []
+        app_fe_setting = {}
         try:
             conn = DataBase.get_conn()
             all_custom_tags = Tag.get_all_custom_tag(conn)
@@ -272,6 +274,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 for path in kwargs.get("extra_paths_cli", [])
             ]
             update_extra_paths(conn)
+            app_fe_setting = GlobalSetting.get_all_settings(conn)
         except Exception as e:
             print(e)
         return {
@@ -285,7 +288,18 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             "enable_access_control": enable_access_control,
             "launch_mode": kwargs.get("launch_mode", "sd"),
             "export_fe_fn": bool(kwargs.get("export_fe_fn")),
+            "app_fe_setting": app_fe_setting,
         }
+    
+    
+    class AppFeSettingReq(BaseModel):
+        name: str
+        value: str
+    
+    @app.post(f"{api_base}/app_fe_setting", dependencies=[Depends(verify_secret)])
+    async def app_fe_setting(req: AppFeSettingReq):
+        conn = DataBase.get_conn()
+        GlobalSetting.save_setting(conn, req.name, req.value)
     
     @app.get(f"{api_base}/version", dependencies=[Depends(verify_secret)])
     async def get_version():

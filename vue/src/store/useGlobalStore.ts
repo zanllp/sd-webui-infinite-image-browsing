@@ -150,6 +150,25 @@ export const copyTab = (tab: Tab) => {
 
 export type ActionConfirmRequired = 'deleteOneOnly'
 
+export const presistKeys = [
+  'defaultChangeIndchecked',
+  'defaultSeedChangeChecked',
+  'darkModeControl',
+  'dontShowAgainNewImgOpts',
+  'defaultSortingMethod',
+  'defaultGridCellWidth',
+  'dontShowAgain',
+  'lang',
+  'enableThumbnail',
+  'tabListHistoryRecord',
+  'recent',
+  'gridThumbnailResolution',
+  'longPressOpenContextMenu',
+  'onlyFoldersAndImages',
+  'shortcut',
+  'ignoredConfirmActions'
+]
+
 export const useGlobalStore = defineStore(
   'useGlobalStore',
   () => {
@@ -315,24 +334,7 @@ export const useGlobalStore = defineStore(
   {
     persist: {
       // debug: true,
-      paths: [
-        'defaultChangeIndchecked',
-        'defaultSeedChangeChecked',
-        'darkModeControl',
-        'dontShowAgainNewImgOpts',
-        'defaultSortingMethod',
-        'defaultGridCellWidth',
-        'dontShowAgain',
-        'lang',
-        'enableThumbnail',
-        'tabListHistoryRecord',
-        'recent',
-        'gridThumbnailResolution',
-        'longPressOpenContextMenu',
-        'onlyFoldersAndImages',
-        'shortcut',
-        'ignoredConfirmActions'
-      ]
+      paths: presistKeys
     }
   }
 )

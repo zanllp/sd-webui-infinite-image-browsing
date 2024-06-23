@@ -101,6 +101,7 @@ export interface GlobalConf {
   enable_access_control: boolean
   launch_mode: 'server' | 'sd'
   export_fe_fn: boolean
+  app_fe_setting: Record<'global', any> 
 }
 
 export const getGlobalSetting = async () => {
@@ -154,4 +155,8 @@ export interface Top4MediaInfo extends FileNodeInfo {
 export const batchGetDirTop4MediaInfo = async (paths: string[]) => {
   const resp = await axiosInst.value.post('/batch_top_4_media_info', { paths })
   return resp.data as Dict<Top4MediaInfo[]>
+}
+
+export const setAppFeSetting = async (name: keyof GlobalConf['app_fe_setting'], setting: Record<string, any>) => {
+  await axiosInst.value.post('/app_fe_setting', { name, value: JSON.stringify(setting) })
 }

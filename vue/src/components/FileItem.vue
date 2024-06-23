@@ -175,7 +175,7 @@ const taggleLikeTag = () => {
           <folder-open-outlined class="icon center" v-else />
         </div>
         <div class="profile" v-if="cellWidth > 128">
-          <div class="name line-clamp-1">
+          <div class="name line-clamp-1" :title="file.name">
             {{ file.name }}
           </div>
           <div class="basic-info">
