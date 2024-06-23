@@ -21,7 +21,7 @@ const presistKeysFiltered = presistKeys.filter(v => !['tabListHistoryRecord', 'r
 let lastConf = null as any
 const watchGlobalSettingChange = once(async () => {
   if (isTauri) return
-  globalStore.$subscribe((debounce(async (mutation, state) => {
+  globalStore.$subscribe((debounce(async () => {
     const conf = {} as Dict
     presistKeysFiltered.forEach((key) => {
       conf[key] = cloneDeep((globalStore as any)[key])
@@ -29,7 +29,7 @@ const watchGlobalSettingChange = once(async () => {
     if (JSON.stringify(conf) === JSON.stringify(lastConf)) {
       return
     }
-    console.log('save global setting', conf, mutation, state)
+    console.log('save global setting', conf)
     await setAppFeSetting('global', conf)
     lastConf = cloneDeep(conf)
   }, 500)))

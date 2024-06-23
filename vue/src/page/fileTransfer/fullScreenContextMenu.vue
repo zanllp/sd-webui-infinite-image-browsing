@@ -25,6 +25,7 @@ import { useWatchDocument } from 'vue3-ts-util'
 import { useTagStore } from '@/store/useTagStore'
 import { parse } from '@/util/stable-diffusion-image-metadata'
 
+
 const global = useGlobalStore()
 
 const tagStore = useTagStore()
@@ -146,6 +147,12 @@ const copyPositivePrompt = () => {
   copy2clipboardI18n(unescapeHtml(text.trim()))
 }
 const requestFullscreen = () => document.body.requestFullscreen()
+
+const copy = (val: any) => {
+  copy2clipboardI18n(typeof val === 'object' ? JSON.stringify(val, null, 4) : val)
+}
+
+
 </script>
 
 <template>
@@ -250,10 +257,10 @@ const requestFullscreen = () => document.body.requestFullscreen()
               <table>
                 <tr v-for="txt, key in geninfoStructNoPrompts" :key="key" class="gen-info-frag">
                   <td style="font-weight: 600;text-transform: capitalize;">{{ key }}</td>
-                  <td v-if="typeof txt == 'object'">
+                  <td style="cursor: pointer;" v-if="typeof txt == 'object'" @dblclick="copy(txt)">
                     <code>{{ txt }}</code>
                   </td>
-                  <td v-else>
+                  <td v-else style="cursor: pointer;"  @dblclick="copy(unescapeHtml(txt))">
                     {{ unescapeHtml(txt) }}
                   </td>
                 </tr>
