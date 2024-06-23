@@ -296,7 +296,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         name: str
         value: str
     
-    @app.post(f"{api_base}/app_fe_setting", dependencies=[Depends(verify_secret)])
+    @app.post(f"{api_base}/app_fe_setting", dependencies=[Depends(verify_secret), Depends(write_permission_required)])
     async def app_fe_setting(req: AppFeSettingReq):
         conn = DataBase.get_conn()
         GlobalSetting.save_setting(conn, req.name, req.value)
