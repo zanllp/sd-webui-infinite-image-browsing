@@ -1,19 +1,41 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
-import { getGlobalSetting } from './api'
-import { useGlobalStore } from './store/useGlobalStore'
+import { getGlobalSetting, setAppFeSetting } from './api'
+import { useGlobalStore, presistKeys } from './store/useGlobalStore'
 import { getQuickMovePaths } from '@/page/taskRecord/autoComplete'
 import SplitViewTab from '@/page/SplitViewTab/SplitViewTab.vue'
-import { createReactiveQueue, globalEvents, useGlobalEventListen } from './util'
+import { Dict, createReactiveQueue, globalEvents, useGlobalEventListen } from './util'
 import { resolveQueryActions } from './queryActions'
 import { refreshTauriConf, tauriConf } from './util/tauriAppConf'
 import { openModal } from './taurilaunchModal'
 import { isTauri } from './util/env'
 import { delay } from 'vue3-ts-util'
 import { exportFn } from './defineExportFunc'
+import { debounce, once, cloneDeep } from 'lodash-es'
 
 const globalStore = useGlobalStore()
 const queue = createReactiveQueue()
+
+const presistKeysFiltered = presistKeys.filter(v => !['tabListHistoryRecord', 'recent'].includes(v))
+
+let lastConf = null as any
+const watchGlobalSettingChange = once(async () => {
+  if (isTauri) return
+  globalStore.$subscribe((debounce(async (mutation, state) => {
+    const conf = {} as Dict
+    presistKeysFiltered.forEach((key) => {
+      conf[key] = cloneDeep((globalStore as any)[key])
+    })
+    if (JSON.stringify(conf) === JSON.stringify(lastConf)) {
+      return
+    }
+    console.log('save global setting', conf, mutation, state)
+    await setAppFeSetting('global', conf)
+    lastConf = cloneDeep(conf)
+  }, 500)))
+
+
+})
 
 useGlobalEventListen('updateGlobalSetting', async () => {
   await refreshTauriConf()
@@ -22,9 +44,23 @@ useGlobalEventListen('updateGlobalSetting', async () => {
   globalStore.conf = resp
   const r = await getQuickMovePaths(resp)
   globalStore.quickMovePaths = r.filter((v) => v?.dir?.trim?.())
+  const restoreFeGlobalSetting = globalStore?.conf?.app_fe_setting?.global
+  if (!isTauri && restoreFeGlobalSetting) {
+    console.log('restoreFeGlobalSetting', restoreFeGlobalSetting)
+    lastConf = cloneDeep(restoreFeGlobalSetting)
+    presistKeysFiltered.forEach((key) => {
+      const v = restoreFeGlobalSetting[key]
+      if (v !== undefined) {
+        (globalStore as any)[key] = v
+      }
+    })
+  }
+  watchGlobalSettingChange()
   exportFn(globalStore)
   resolveQueryActions(globalStore)
 })
+
+
 
 useGlobalEventListen('returnToIIB', async () => {
   const conf = globalStore.conf
@@ -71,6 +107,7 @@ onMounted(async () => {
     openModal()
   }
   globalEvents.emit('updateGlobalSetting')
+
 })
 </script>
 

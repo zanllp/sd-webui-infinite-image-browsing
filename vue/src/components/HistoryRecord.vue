@@ -29,6 +29,11 @@ defineEmits<{
 
 </script>
 <style scoped lang="scss">
+:deep() {
+  .ant-row .ant-col:nth-child(1) {
+    font-weight: bold;
+  }
+}
 .record-container {
   list-style: none;
   padding: 8px;
