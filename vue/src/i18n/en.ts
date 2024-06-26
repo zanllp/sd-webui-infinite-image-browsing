@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  previewMaskBackgroundOpacity: 'Preview Mask Background Opacity',
   experimentalLRLayout: 'Experimental Side-by-Side Layout',
   width: 'Width',
   alwaysOnTooltipInfo: 'If this is turned off, the info panel will be hidden until you move the mouse to the right side of the screen',

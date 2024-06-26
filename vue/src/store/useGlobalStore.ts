@@ -166,7 +166,8 @@ export const presistKeys = [
   'longPressOpenContextMenu',
   'onlyFoldersAndImages',
   'shortcut',
-  'ignoredConfirmActions'
+  'ignoredConfirmActions',
+  'previewBgOpacity'
 ]
 
 export const useGlobalStore = defineStore(
@@ -298,6 +299,7 @@ export const useGlobalStore = defineStore(
         return loc
       }
     }
+    const previewBgOpacity = ref(0.6)
     return {
       computedTheme,
       darkModeControl,
@@ -328,7 +330,8 @@ export const useGlobalStore = defineStore(
       dontShowAgainNewImgOpts: ref(false),
       ignoredConfirmActions,
       getShortPath,
-      extraPathAliasMap
+      extraPathAliasMap,
+      previewBgOpacity
     }
   },
   {

@@ -1,4 +1,5 @@
 export const zhHans = {
+  previewMaskBackgroundOpacity: '预览遮罩背景透明度',
   experimentalLRLayout: '实验性并列布局',
   width: '宽度',
   alwaysOnTooltipInfo: '若关闭此项，信息面板将收起，直至鼠标移动至屏幕右侧时才打开',

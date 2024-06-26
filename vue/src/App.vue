@@ -101,6 +101,10 @@ watch(
   { immediate: true }
 )
 
+watch(() => globalStore.previewBgOpacity, (v) => {
+  document.documentElement.style.setProperty('--iib-preview-mask-bg', `rgba(0, 0, 0, ${v})`)
+}, { immediate: true })
+
 onMounted(async () => {
   if (isTauri) {
     openModal()

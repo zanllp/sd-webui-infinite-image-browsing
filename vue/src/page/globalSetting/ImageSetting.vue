@@ -53,5 +53,8 @@ watch(() => [g.enableThumbnail, g.gridThumbnailResolution], debounce(async () =>
   <a-form-item v-if="g.defaultChangeIndchecked" :label="t('defaultSeedAsChange')">
     <a-switch v-model:checked="g.defaultSeedChangeChecked" />
   </a-form-item>
+  <a-form-item :label="t('previewMaskBackgroundOpacity')">
+    <NumInput :min="0" :max="1" :step="0.05" v-model="g.previewBgOpacity" />
+  </a-form-item>
 </template>
 <style lang="scss" scoped></style>
