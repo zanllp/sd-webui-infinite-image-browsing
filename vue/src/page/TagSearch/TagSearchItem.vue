@@ -34,6 +34,12 @@ const toTagDisplayName = (v: Tag, withType = false) =>
   (withType ? `[${v.type}] ` : '') + (v.display_name ? `${v.display_name} : ${v.name}` : v.name)
 </script>
 <style lang="scss" scoped>
+body.dark .tag-wrap .float-actions {
+
+  box-shadow: 0px 4px 16px #28f5213d;
+  border-bottom: 3px solid #29f56d;
+}
+
 .tag-wrap {
   display: inline-block;
   position: relative;
@@ -66,9 +72,9 @@ const toTagDisplayName = (v: Tag, withType = false) =>
     transition-duration: 0.5s;
     transition-timing-function: ease-in-out;
     padding: 4px;
-    box-shadow: 0px 4px 16px var(--zp-luminous-deep);
+    box-shadow: 0px 4px 16px #0069ff3d;
 
-    border-bottom: 3px solid var(--zp-luminous);
+    border-bottom: 3px solid #0069ff;
 
 
     div {

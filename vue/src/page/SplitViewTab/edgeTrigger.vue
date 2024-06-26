@@ -58,7 +58,7 @@ const onDrop = (payload: DragEvent, type: 'add-right' | 'insert') => {
     @drop.prevent="onDrop($event, 'insert')"
   >
     <div
-      class="iib-tab-edge-trigger"
+      class="trigger"
       ref="edgeTrigger"
       :class="{ accept: edgeAccpet }"
       @dragover.prevent
@@ -76,7 +76,7 @@ const onDrop = (payload: DragEvent, type: 'add-right' | 'insert') => {
   background: #188fff00;
   transition: all 0.3s ease;
 
-  .iib-tab-edge-trigger {
+  .trigger {
     position: absolute;
     top: 0;
     bottom: 0;

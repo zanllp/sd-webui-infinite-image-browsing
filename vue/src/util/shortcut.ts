@@ -12,9 +12,6 @@ export const getShortcutStrFromEvent = (e: KeyboardEvent) => {
   if (e.code.startsWith('Key') || e.code.startsWith('Digit')) {
     keys.push(e.code)
   }
-  if (e.key ==='Escape') {
-    keys.push('Esc')
-  }
   const keysStr = keys.join(' + ')
   return keysStr
 }
