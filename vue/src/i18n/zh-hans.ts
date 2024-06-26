@@ -1,4 +1,8 @@
 export const zhHans = {
+  experimentalLRLayout: '实验性并列布局',
+  width: '宽度',
+  alwaysOnTooltipInfo: '若关闭此项，信息面板将收起，直至鼠标移动至屏幕右侧时才打开',
+  alwaysOn: '常驻',
   time: '时间',
   pin: '置顶',
   unpin: '取消置顶',  
