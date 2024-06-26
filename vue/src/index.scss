@@ -207,6 +207,13 @@ ul.ant-dropdown-menu  {
   }
 }
 
+
+.ant-image-preview-root {
+  .ant-image-preview-mask {
+    background-color: var(--iib-preview-mask-bg, rgba(0, 0, 0, 0.6));
+  }
+}
+
 .preview-switch {
   position: fixed;
   top: 0;

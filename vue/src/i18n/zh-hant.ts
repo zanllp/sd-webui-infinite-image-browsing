@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  previewMaskBackgroundOpacity: '預覽遮罩背景透明度',
   experimentalLRLayout: '實驗性並列布局',
   width: '寬度',
   alwaysOnTooltipInfo: '若關閉此項，信息面板將收起，直至滑鼠移動至屏幕右側時才打開',
