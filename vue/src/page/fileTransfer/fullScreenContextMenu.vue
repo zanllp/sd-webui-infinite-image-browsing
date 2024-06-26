@@ -180,10 +180,30 @@ const copy = (val: any) => {
 }
 
 
+
+const onKeydown = (e: KeyboardEvent) => {
+  if (e.key.startsWith('Arrow')) {
+    e.stopPropagation()
+    e.preventDefault()
+    document.dispatchEvent(new KeyboardEvent('keydown', e))
+  }
+  else if (e.key === 'Escape') {
+  // 判断是不是全屏如果是退出
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else {
+    // 如果不是全屏则触发esc
+      document.dispatchEvent(new KeyboardEvent('keydown', e))
+    }
+  
+  }
+}
+
 </script>
 
 <template>
   <div ref="el" class="full-screen-menu" @wheel.capture.stop
+  @keydown.capture="onKeydown"
     :class="{ 'unset-size': !state.expanded, lr, 'always-on': lrMenuAlwaysOn, 'mouse-in': isInside }">
     <div v-if="lr">
 
