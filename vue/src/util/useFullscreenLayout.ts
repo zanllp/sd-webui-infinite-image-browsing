@@ -3,10 +3,10 @@ import { debounce } from 'lodash-es'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { setAppFeSetting } from '@/api'
 type LayoutConf = { enable: boolean, panelWidth: number, alwaysOn: boolean }
-
+let lastState: LayoutConf | null = null
 export const useFullscreenLayout = () => {
   const g = useGlobalStore()
-  const state =  reactive<LayoutConf>(g.conf?.app_fe_setting?.fullscreen_layout ?? { enable: false, panelWidth: 384, alwaysOn: true })
+  const state =  reactive<LayoutConf>(lastState ?? g.conf?.app_fe_setting?.fullscreen_layout ?? { enable: false, panelWidth: 384, alwaysOn: true })
   
   const panelwidtrhStyleVarName = '--iib-lr-layout-info-panel-width'
   const lrLayoutContainerOffset = computed(() => state.alwaysOn && state.enable ? state.panelWidth : 0)
@@ -14,6 +14,7 @@ export const useFullscreenLayout = () => {
   watch(state, () => {
     onUpdate(state, panelwidtrhStyleVarName, lrLayoutContainerOffset)
     sync(state)
+    lastState = state
   }, { deep: true })
 
 
