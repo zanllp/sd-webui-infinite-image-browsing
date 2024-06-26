@@ -513,7 +513,7 @@ const onKeydown = (e: KeyboardEvent) => {
 }
 
 .full-screen-menu.lr {
-  top: 0 !important;
+  top: v-bind("lrMenuAlwaysOn ? 0 : '46px'") !important;
   right: 0 !important;
   bottom: 0 !important;
   left: 100vw !important;
