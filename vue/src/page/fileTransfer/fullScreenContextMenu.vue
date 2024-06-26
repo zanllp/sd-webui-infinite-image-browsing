@@ -4,7 +4,7 @@ import type { FileNodeInfo } from '@/api/files'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { useLocalStorage } from '@vueuse/core'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
-import { debounce, throttle } from 'lodash-es'
+import { debounce } from 'lodash-es'
 import { computed, watch } from 'vue'
 import { ref } from 'vue'
 import { copy2clipboardI18n } from '@/util'
@@ -24,8 +24,6 @@ import ContextMenu from '@/components/ContextMenu.vue'
 import { useWatchDocument } from 'vue3-ts-util'
 import { useTagStore } from '@/store/useTagStore'
 import { parse } from '@/util/stable-diffusion-image-metadata'
-import { useFullscreenLayout } from '@/util/useFullscreenLayout'
-import { useMouseInElement } from '@vueuse/core'
 
 
 const global = useGlobalStore()
@@ -54,8 +52,6 @@ const geninfoStructNoPrompts = computed(() => {
   delete p.negativePrompt
   return p
 })
-
-
 const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
 }>()
@@ -88,11 +84,7 @@ if (state.value && (state.value.left < 0 || state.value.top < 0)) {
   state.value = { ...dragInitParams }
 }
 
-
-const { isLeftRightLayout, lrLayoutInfoPanelWidth, lrMenuAlwaysOn } = useFullscreenLayout()
-const lr = isLeftRightLayout
 useResizeAndDrag(el, resizeHandle, dragHandle, {
-  disbaled: lr,
   ...state.value,
   onDrag: debounce(function (left, top) {
     state.value = {
@@ -109,25 +101,6 @@ useResizeAndDrag(el, resizeHandle, dragHandle, {
     }
   }, 300)
 })
-
-
-// 处理在isOutside赋值前引用
-const isInside = ref(false)
-
-const { isOutside } = useMouseInElement(computed(() => {
-  if (!lr.value || lrMenuAlwaysOn.value) {
-    return null as any
-  }
-
-  const isIn = isInside.value as boolean
-  return isIn ? el.value : document.querySelector('.iib-tab-edge-trigger')
-}))
-
-
-watch(isOutside, throttle((v) => {
-  isInside.value = !v
-}, 300))
-
 
 function getParNode (p: any) {
   return p.parentNode as HTMLDivElement
@@ -183,24 +156,19 @@ const copy = (val: any) => {
 </script>
 
 <template>
-  <div ref="el" class="full-screen-menu" @wheel.capture.stop
-    :class="{ 'unset-size': !state.expanded, lr, 'always-on': lrMenuAlwaysOn, 'mouse-in': isInside }">
-    <div v-if="lr">
-
-    </div>
+  <div ref="el" class="full-screen-menu" @wheel.capture.stop :class="{ 'unset-size': !state.expanded }">
     <div class="container">
       <div class="action-bar">
-        <div v-if="!lr" ref="dragHandle" class="icon" style="cursor: grab" :title="t('dragToMovePanel')">
+        <div ref="dragHandle" class="icon" style="cursor: grab" :title="t('dragToMovePanel')">
           <DragOutlined />
         </div>
 
-        <div v-if="!lr" class="icon" style="cursor: pointer" @click="state.expanded = !state.expanded"
+        <div class="icon" style="cursor: pointer" @click="state.expanded = !state.expanded"
           :title="t('clickToToggleMaximizeMinimize')">
           <FullscreenExitOutlined v-if="state.expanded" />
           <FullscreenOutlined v-else />
         </div>
-        <div style="display: flex; flex-direction: column; align-items: center; cursor: grab" class="icon"
-          :title="t('fullscreenview')" @click="requestFullscreen">
+        <div style="display: flex; flex-direction: column; align-items: center; cursor: grab" class="icon" :title="t('fullscreenview')" @click="requestFullscreen">
           <img :src="fullscreen" style="width: 21px;height: 21px;padding-bottom: 2px;" alt="">
         </div>
         <a-dropdown :get-popup-container="getParNode">
@@ -242,13 +210,13 @@ const copy = (val: any) => {
             </template>
           </a-dropdown>
           <AButton @click="emit('contextMenuClick', { key: 'download' } as MenuInfo, props.file, props.idx)">{{
-      $t('download') }}</AButton>
+            $t('download') }}</AButton>
           <a-button @click="copy2clipboardI18n(imageGenInfo)" v-if="imageGenInfo">{{
-      $t('copyPrompt')
-    }}</a-button>
+            $t('copyPrompt')
+          }}</a-button>
           <a-button @click="copyPositivePrompt" v-if="imageGenInfo">{{
-      $t('copyPositivePrompt')
-    }}</a-button>
+            $t('copyPositivePrompt')
+          }}</a-button>
         </div>
       </div>
       <div class="gen-info" v-if="state.expanded">
@@ -269,23 +237,6 @@ const copy = (val: any) => {
             :style="{ '--tag-color': tagStore.getColor(tag.name) }">
             {{ tag.name }}
           </div>
-        </div>
-        <div class="lr-layout-control">
-          <div class="ctrl-item">
-            {{$t('experimentalLRLayout')}}： <a-switch v-model:checked="lr" size="small" />
-          </div>
-          <template v-if="lr">
-
-            <div class="ctrl-item">
-              {{ $t('width') }}: <a-input-number v-model:value="lrLayoutInfoPanelWidth" style="width:64px" :step="16" :min="128"
-                :max="1024" />
-            </div>
-            <a-tooltip :title="$t('alwaysOnTooltipInfo')">
-              <div class="ctrl-item">
-                {{$t('alwaysOn')}}： <a-switch v-model:checked="lrMenuAlwaysOn" size="small" />
-              </div>
-            </a-tooltip>
-          </template>
         </div>
         <a-tabs v-model:activeKey="promptTabActivedKey">
           <a-tab-pane key="structedData" :tab="$t('structuredData')">
@@ -309,7 +260,7 @@ const copy = (val: any) => {
                   <td style="cursor: pointer;" v-if="typeof txt == 'object'" @dblclick="copy(txt)">
                     <code>{{ txt }}</code>
                   </td>
-                  <td v-else style="cursor: pointer;" @dblclick="copy(unescapeHtml(txt))">
+                  <td v-else style="cursor: pointer;"  @dblclick="copy(unescapeHtml(txt))">
                     {{ unescapeHtml(txt) }}
                   </td>
                 </tr>
@@ -323,7 +274,7 @@ const copy = (val: any) => {
       </div>
     </div>
 
-    <div class="mouse-sensor" ref="resizeHandle" v-if="state.expanded && !lr" :title="t('dragToResizePanel')">
+    <div class="mouse-sensor" ref="resizeHandle" v-if="state.expanded" :title="t('dragToResizePanel')">
       <ArrowsAltOutlined />
     </div>
   </div>
@@ -332,7 +283,7 @@ const copy = (val: any) => {
 <style scoped lang="scss">
 .full-screen-menu {
   position: fixed;
-  z-index: 9999;
+  z-index: 99999;
   background: var(--zp-primary-background);
   padding: 8px 16px;
   box-shadow: 0px 0px 4px var(--zp-secondary);
@@ -439,7 +390,6 @@ const copy = (val: any) => {
         background-color: var(--zp-primary);
         color: var(--zp-primary-background);
         padding: 4px;
-        border-bottom-right-radius: 4px;
       }
 
       .value {
@@ -489,39 +439,6 @@ const copy = (val: any) => {
     &>* {
       flex-wrap: wrap;
     }
-  }
-}
-
-.full-screen-menu.lr {
-  top: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  left: 100vw !important;
-  height: unset !important;
-  width: v-bind("lrLayoutInfoPanelWidth + 'px'") !important;
-  transition: left ease 0.3s;
-
-  &.always-on,
-  &.mouse-in {
-    left: v-bind("`calc(100vw - ${lrLayoutInfoPanelWidth}px)`") !important;
-  }
-}
-
-.lr-layout-control {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 4px 8px;
-  flex-wrap: wrap;
-  border-radius: 2px;
-  border-left: 3px solid var(--zp-luminous);
-  background-color: var(--zp-secondary-background);
-
-  .ctrl-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-wrap: nowrap;
   }
 }
 </style>

@@ -151,6 +151,33 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
   </div>
 </template>
 <style scoped lang="scss">
+.preview-switch {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 11111;
+  pointer-events: none;
+
+  & > * {
+    color: white;
+    margin: 16px;
+    font-size: 4em;
+    pointer-events: all;
+    cursor: pointer;
+
+    &.disable {
+      opacity: 0;
+      pointer-events: none;
+      cursor: none;
+    }
+  }
+}
+
 .container {
   background: var(--zp-secondary-background);
   position: relative;

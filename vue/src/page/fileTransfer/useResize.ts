@@ -1,4 +1,4 @@
-import { onMounted, onBeforeUnmount, type Ref, watch, nextTick } from 'vue'
+import { onMounted, onBeforeUnmount, type Ref, watch } from 'vue'
 
 interface ResizeHandle {
   x: number
@@ -12,7 +12,6 @@ interface UseResizeAndDragOptions {
   top?: number
   width?: number
   height?: number
-  disbaled?: Ref<boolean>
 }
 
 export function useResizeAndDrag(
@@ -162,8 +161,7 @@ export function useResizeAndDrag(
     elementRef.value.style.width = `${width}px`
     elementRef.value.style.height = `${height}px`
   }
-
-  const init = () => {
+  onMounted(() => {
     if (!elementRef.value || !options) return
     if (typeof options.width === 'number') {
       elementRef.value.style.width = `${options.width}px`
@@ -179,9 +177,9 @@ export function useResizeAndDrag(
     }
     handleWindowResize()
     window.addEventListener('resize', handleWindowResize)
-  }
+  })
 
-  const destroy = () => {
+  onBeforeUnmount(() => {
     document.documentElement.removeEventListener('mousemove', handleResizeMouseMove)
     document.documentElement.removeEventListener('touchmove', handleResizeMouseMove)
     document.documentElement.removeEventListener('mouseup', handleResizeMouseUp)
@@ -191,20 +189,6 @@ export function useResizeAndDrag(
     document.documentElement.removeEventListener('mouseup', handleDragMouseUp)
     document.documentElement.removeEventListener('touchend', handleDragMouseUp)
     window.removeEventListener('resize', handleWindowResize)
-  }
-
-  onMounted(init)
-
-  onBeforeUnmount(destroy)
-
-  watch(() => options?.disbaled, async (disabled) => {
-    await nextTick()
-    if (disabled === undefined) return
-    if (disabled) {
-      destroy()
-    } else {
-      init()
-    }
   })
 
   watch(

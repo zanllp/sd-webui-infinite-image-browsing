@@ -101,6 +101,7 @@ watch(
   { immediate: true }
 )
 
+
 onMounted(async () => {
   if (isTauri) {
     openModal()
