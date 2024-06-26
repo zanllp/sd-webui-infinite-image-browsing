@@ -61,6 +61,13 @@ $success-color: #28a745;
   --zp-secondary-background: var(--zp-grey4);
   --zp-tertiary-background: var(--zp-white);
   --zp-secondary-variant-background: var(--zp-grey7);
+  --zp-luminous-blue:#0069ff;
+  --zp-luminous-blue-deep:#0069ff3d;
+  --zp-luminous-green:#29f56d;
+  --zp-luminous-green-deep:#28f5213d;
+  --zp-luminous: var(--zp-luminous-blue);
+  --zp-luminous-deep: var(--zp-luminous-blue-deep);
+  --zp-brand-primary: var(--primary-color);
   // 边框颜色
   --zp-border: var(--zp-grey20);
   --zp-icon-bg: #0004;
@@ -75,6 +82,9 @@ $success-color: #28a745;
       --zp-tertiary-background: var(--zp-grey4);
       --zp-border: var(--zp-grey96);
       --zp-icon-bg: #fff4;
+      --zp-luminous: var(--zp-luminous-green);
+      --zp-luminous-deep: var(--zp-luminous-green-deep);
+      --zp-brand-primary: #1890ff;
     }
   }
   body.dark {
@@ -87,6 +97,11 @@ $success-color: #28a745;
     --zp-tertiary-background: var(--zp-grey4);
     --zp-border: var(--zp-grey96);
     --zp-icon-bg: #fff4;
+    
+    --zp-luminous: var(--zp-luminous-green);
+    --zp-luminous-deep: var(--zp-luminous-green-deep);
+    
+    --zp-brand-primary: #1890ff;
   }
 }
 
@@ -131,13 +146,10 @@ body {
   .ant-tabs > div.ant-tabs-nav {
     margin: 0;
   }
-  .ant-modal-wrap {
+  .ant-modal-wrap,.ant-message, .ant-tooltip  {
     z-index: 10000;
   }
-
-  .ant-message {
-    z-index: 10000;
-  }
+  
   .hidden-antd-btns-modal .ant-modal-confirm-btns {
     display: none;
   }
@@ -174,4 +186,50 @@ body {
 ul.ant-dropdown-menu  {
   max-height:80vh;
   overflow: auto;
+}
+
+.ant-tabs-tab-active {
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--zp-brand-primary);
+  }
+}
+
+.fullscreen-lr-layout 
+.ant-image-preview-root {
+  .ant-image-preview-mask, .ant-image-preview-wrap {
+    right: var(--iib-lr-layout-container-offset);
+  }
+}
+
+.preview-switch {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: var(--iib-lr-layout-container-offset, 0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 11111;
+  pointer-events: none;
+
+  &>* {
+    color: white;
+    margin: 16px;
+    font-size: 4em;
+    pointer-events: all;
+    cursor: pointer;
+
+    &.disable {
+      opacity: 0;
+      pointer-events: none;
+      cursor: none;
+    }
+  }
 }

@@ -101,7 +101,7 @@ export interface GlobalConf {
   enable_access_control: boolean
   launch_mode: 'server' | 'sd'
   export_fe_fn: boolean
-  app_fe_setting: Record<'global', any> 
+  app_fe_setting: Record<'global'|'fullscreen_layout', any> 
 }
 
 export const getGlobalSetting = async () => {

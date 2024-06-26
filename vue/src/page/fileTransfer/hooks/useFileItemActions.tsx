@@ -325,6 +325,9 @@ export function useFileItemActions (
   useWatchDocument('keydown', (e) => {
     const keysStr = getShortcutStrFromEvent(e)
     if (previewing.value) {
+      if (keysStr === 'Esc') {
+        previewing.value = false
+      }
       const action = Object.entries(global.shortcut).find(
         (v) => v[1] === keysStr && v[1]
       )?.[0] as keyof Shortcut
