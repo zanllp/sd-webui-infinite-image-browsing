@@ -4,7 +4,7 @@ import type { FileNodeInfo } from '@/api/files'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { useLocalStorage } from '@vueuse/core'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
-import { debounce, throttle } from 'lodash-es'
+import { debounce, throttle, last } from 'lodash-es'
 import { computed, watch } from 'vue'
 import { ref } from 'vue'
 import { copy2clipboardI18n } from '@/util'
@@ -120,7 +120,7 @@ const { isOutside } = useMouseInElement(computed(() => {
   }
 
   const isIn = isInside.value as boolean
-  return isIn ? el.value : document.querySelector('.iib-tab-edge-trigger')
+  return isIn ? el.value : last(document.querySelectorAll('.iib-tab-edge-trigger'))
 }))
 
 
