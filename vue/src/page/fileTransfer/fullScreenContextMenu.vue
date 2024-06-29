@@ -19,13 +19,13 @@ import {
 } from '@/icon'
 import { t } from '@/i18n'
 import { createReactiveQueue, unescapeHtml } from '@/util'
-import { toRawFileUrl } from '@/util/file'
 import ContextMenu from '@/components/ContextMenu.vue'
 import { useWatchDocument } from 'vue3-ts-util'
 import { useTagStore } from '@/store/useTagStore'
 import { parse } from '@/util/stable-diffusion-image-metadata'
 import { useFullscreenLayout } from '@/util/useFullscreenLayout'
 import { useMouseInElement } from '@vueuse/core'
+import { closeImageFullscreenPreview }   from '@/util/imagePreviewOperation'
 
 
 const global = useGlobalStore()
@@ -191,13 +191,17 @@ const onKeydown = (e: KeyboardEvent) => {
   // 判断是不是全屏如果是退出
     if (document.fullscreenElement) {
       document.exitFullscreen()
-    } else {
-    // 如果不是全屏则触发esc
-      document.dispatchEvent(new KeyboardEvent('keydown', e))
     }
   
   }
 }
+
+useWatchDocument('dblclick', e => {
+  if ((e.target as HTMLDivElement)?.className === 'ant-image-preview-img') {
+    closeImageFullscreenPreview()
+  }
+})
+
 
 </script>
 
@@ -229,7 +233,6 @@ const onKeydown = (e: KeyboardEvent) => {
           </div>
           <template #overlay>
             <context-menu :file="file" :idx="idx" :selected-tag="selectedTag"
-              :disable-delete="toRawFileUrl(file) === global.fullscreenPreviewInitialUrl"
               @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)" />
           </template>
         </a-dropdown>
@@ -253,7 +256,7 @@ const onKeydown = (e: KeyboardEvent) => {
                 </template>
                 <a-menu-item key="send2BatchDownload">{{ $t('sendToBatchDownload') }}</a-menu-item>
                 <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
-                <a-menu-item key="deleteFiles" :disabled="toRawFileUrl(file) === global.fullscreenPreviewInitialUrl">
+                <a-menu-item key="deleteFiles" >
                   {{ $t('deleteSelected') }}
                 </a-menu-item>
                 <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
@@ -545,3 +548,4 @@ const onKeydown = (e: KeyboardEvent) => {
   }
 }
 </style>
+@/util/imagePreviewOperation

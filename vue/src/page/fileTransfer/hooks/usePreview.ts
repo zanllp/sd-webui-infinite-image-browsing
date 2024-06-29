@@ -1,8 +1,9 @@
 import { t } from '@/i18n'
 import { isImageFile } from '@/util'
 import { message } from 'ant-design-vue'
-import { useWatchDocument, delay } from 'vue3-ts-util'
+import { useWatchDocument } from 'vue3-ts-util'
 import { useHookShareState, useEventListen } from '.'
+import { closeImageFullscreenPreview } from '@/util/imagePreviewOperation'
 
 /**
  * 全屏查看
@@ -103,14 +104,7 @@ export function usePreview () {
 
   useEventListen('removeFiles', async () => {
     if (previewing.value && !state.sortedFiles[previewIdx.value]) {
-      message.info(t('manualExitFullScreen'), 5)
-      await delay(500)
-      ; (
-        document.querySelector(
-          '.ant-image-preview-operations-operation .anticon-close'
-        ) as HTMLDivElement
-      )?.click()
-      previewIdx.value = -1
+      closeImageFullscreenPreview()
     }
   })
 
