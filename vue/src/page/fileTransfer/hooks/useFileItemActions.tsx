@@ -3,6 +3,7 @@ import { useMouseInElement } from '@vueuse/core'
 import { ref } from 'vue'
 import { genInfoCompleted, getImageGenerationInfo, openFolder, openWithDefaultApp, setImgPath } from '@/api'
 import {
+  delay,
   useWatchDocument} from 'vue3-ts-util'
 import {
   createReactiveQueue,
@@ -19,6 +20,7 @@ import { downloadFileInfoJSON, downloadFiles, toRawFileUrl } from '@/util/file'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { MultiSelectTips, openRenameFileModal } from '@/components/functionalCallableComp'
 import { batchDownload, events, imgTransferBus, stackCache, tagStore, useEventListen, useHookShareState, global } from '.'
+import { closeImageFullscreenPreview, openImageFullscreenPreview } from '@/util/imagePreviewOperation'
 
 
 export function useFileItemActions (
@@ -290,6 +292,18 @@ export function useFileItemActions (
           const paths = selectedFiles.map((v) => v.fullpath)
           await deleteFiles(paths)
           message.success(t('deleteSuccess'))
+          if (previewing.value) {
+            const isFullscreenFirst = toRawFileUrl(file) === global.fullscreenPreviewInitialUrl
+            const isEnd = previewIdx.value === sortedFiles.value.length - 1
+            if (isFullscreenFirst || isEnd) {
+              closeImageFullscreenPreview()
+              await delay(100)
+              if (isFullscreenFirst && sortedFiles.value.length > 1) {
+                const nextIdx = previewIdx.value
+                delay(0).then(() => openImageFullscreenPreview(nextIdx, stackViewEl.value!))
+              }
+            }
+          }
           events.emit('removeFiles', { paths: paths, loc: currLocation.value })
         }
         if (selectedFiles.length === 1 && global.ignoredConfirmActions.deleteOneOnly) {
@@ -326,7 +340,7 @@ export function useFileItemActions (
     const keysStr = getShortcutStrFromEvent(e)
     if (previewing.value) {
       if (keysStr === 'Esc') {
-        previewing.value = false
+        closeImageFullscreenPreview()
       }
       const action = Object.entries(global.shortcut).find(
         (v) => v[1] === keysStr && v[1]
@@ -338,9 +352,6 @@ export function useFileItemActions (
         const file = sortedFiles.value[idx]
         switch (action) {
           case 'delete': {
-            if (toRawFileUrl(file) === global.fullscreenPreviewInitialUrl) {
-              return message.warn(t('fullscreenRestriction'))
-            }
             return onContextMenuClick({ key: 'deleteFiles' } as MenuInfo, file, idx)
           }
           case 'download': {
