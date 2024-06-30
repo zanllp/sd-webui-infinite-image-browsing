@@ -1,4 +1,10 @@
 export const zhHans = {
+  openFileLocationInNewTab: '在新标签页打开文件位置',
+  copyTo: '复制到',
+  moveTo: '移动到',
+  moveSuccess: '移动成功',
+  copySuccess: '复制成功',
+  copyFilePath: '复制文件路径',
   previewMaskBackgroundOpacity: '预览遮罩背景透明度',
   experimentalLRLayout: '实验性并列布局',
   width: '宽度',

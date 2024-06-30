@@ -25,7 +25,7 @@ export const useImageSearch = (iter: ReturnType<typeof createImageSearchIter>) =
   const deletedImagePahts = reactive(new Set<String>())
   const images = computed(() => (iter.res ?? []).filter((v) => !deletedImagePahts.has(v.fullpath)))
   const queue = createReactiveQueue()
-  const { stackViewEl, multiSelectedIdxs, stack, scroller } = useHookShareState({
+  const { stackViewEl, multiSelectedIdxs, stack, scroller, props } = useHookShareState({
     images: images as any
   }).toRefs()
   const { itemSize, gridItems, cellWidth, onScroll } = useFilesDisplay({ fetchNext: () => iter.next() })
@@ -87,6 +87,7 @@ export const useImageSearch = (iter: ReturnType<typeof createImageSearchIter>) =
     cellWidth,
     onScroll,
     saveLoadedFileAsJson,
-    saveAllFileAsJson
+    saveAllFileAsJson,
+    props
   }
 }

@@ -9,7 +9,7 @@ import {
   createReactiveQueue,
   isImageFile,
   copy2clipboardI18n} from '@/util'
-import { type FileNodeInfo, deleteFiles, moveFiles } from '@/api/files'
+import { type FileNodeInfo, deleteFiles, moveFiles, copyFiles } from '@/api/files'
 import { last, range, uniqueId } from 'lodash-es'
 import * as Path from '@/util/path'
 import { Checkbox, Modal, message } from 'ant-design-vue'
@@ -153,10 +153,30 @@ export function useFileItemActions (
       await tagStore.refreshTags(paths)
       message.success(t(action === 'add' ? 'addCompleted' : 'removeCompleted'))
       return 
+    } else if (key.startsWith('copy-to-')){
+      const targetPath = key.split('copy-to-')[1]
+      const selectedFiles = getSelectedImg()
+      const paths = selectedFiles.map((v) => v.fullpath)
+      await copyFiles(paths, targetPath, true)
+      events.emit('addFiles', { files: selectedFiles, loc: targetPath })
+      message.success(t('copySuccess'))
+      return
+    } else if (key.startsWith('move-to-')){
+      const targetPath = key.split('move-to-')[1]
+      const selectedFiles = getSelectedImg()
+      const paths = selectedFiles.map((v) => v.fullpath)
+      await moveFiles(paths, targetPath, true)
+      events.emit('removeFiles', { paths, loc: currLocation.value })
+      events.emit('addFiles', { files: selectedFiles, loc: targetPath })
+      message.success(t('moveSuccess'))
+      return
     }
+
     switch (e.key) {
       case 'previewInNewWindow':
         return window.open(url)
+      case 'copyFilePath':
+        return copy2clipboardI18n(file.fullpath)
       case 'saveSelectedAsJson':
         return downloadFileInfoJSON(getSelectedImg())
       case 'openWithDefaultApp':
@@ -241,15 +261,15 @@ export function useFileItemActions (
         tab.key = pane.key
         break
       }
+      case 'openFileLocationInNewTab':
       case 'openInNewTab': {
-        stackCache.set(path, stack.value)
         const tab = global.tabList[props.value.tabIdx]
         const pane: FileTransferTabPane = {
           type: 'local',
           key: uniqueId(),
-          path: file.fullpath,
+          path: e.key === 'openInNewTab' ? file.fullpath : Path.getParentDirectory(file.fullpath),
           name: t('local'),
-          stackKey: path
+          mode: 'scanned-fixed'
         }
         tab.panes.push(pane)
         tab.key = pane.key

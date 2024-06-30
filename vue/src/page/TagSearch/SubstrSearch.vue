@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import fileItemCell from '@/components/FileItem.vue'
 import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 // @ts-ignore
@@ -57,7 +57,8 @@ const {
   cellWidth,
   onScroll,
   saveAllFileAsJson,
-  saveLoadedFileAsJson
+  saveLoadedFileAsJson,
+  props: propsUpstream
 } = useImageSearch(iter)
 
 
@@ -72,6 +73,17 @@ onMounted(async () => {
     await query()
   }
 })
+
+
+
+watch(
+  () => props,
+  async (v) => {
+    propsUpstream.value = v
+  },
+  { deep: true, immediate: true}
+)
+
 
 const onUpdateBtnClick = makeAsyncFunctionSingle(
   () =>

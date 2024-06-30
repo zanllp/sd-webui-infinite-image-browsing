@@ -25,9 +25,9 @@ const tags = computed(() => {
 </script>
 <template>
   <a-menu @click="emit('contextMenuClick', $event, file, idx)">
-    <a-menu-item key="deleteFiles" >{{ $t('deleteSelected') }}</a-menu-item>
-    <a-menu-item key="openWithDefaultApp" >{{ $t('openWithDefaultApp') }}</a-menu-item>
-    <a-menu-item key="saveSelectedAsJson" >{{ $t('saveSelectedAsJson') }}</a-menu-item>
+    <a-menu-item key="deleteFiles">{{ $t('deleteSelected') }}</a-menu-item>
+    <a-menu-item key="openWithDefaultApp">{{ $t('openWithDefaultApp') }}</a-menu-item>
+    <a-menu-item key="saveSelectedAsJson">{{ $t('saveSelectedAsJson') }}</a-menu-item>
     <template v-if="file.type === 'dir'">
       <a-menu-item key="openInNewTab">{{ $t('openInNewTab') }}</a-menu-item>
       <a-menu-item key="openOnTheRight">{{ $t('openOnTheRight') }}</a-menu-item>
@@ -48,11 +48,21 @@ const tags = computed(() => {
             <a-menu-item key="send2outpaint">openOutpaint</a-menu-item>
           </a-sub-menu>
         </template>
-        
-        <a-menu-item key="rename">{{ $t('rename') }}</a-menu-item>
+
         <a-menu-item key="send2BatchDownload">{{ $t('sendToBatchDownload') }}</a-menu-item>
-        <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
+
+        <a-sub-menu key="copy2target" :title="$t('copyTo')">
+          <a-menu-item v-for="path in global.quickMovePaths" :key="`copy-to-${path.dir}`">{{ path.zh }}
+          </a-menu-item>
+
+        </a-sub-menu>
+        <a-sub-menu key="move2target" :title="$t('moveTo')">
+          <a-menu-item v-for="path in global.quickMovePaths" :key="`move-to-${path.dir}`">{{ path.zh }}
+          </a-menu-item>
+        </a-sub-menu>
+
         <a-menu-divider />
+        
         <template v-if="isSelectedMutilFiles">
           <a-sub-menu key="batch-add-tag" :title="$t('batchAddTag')">
             <a-menu-item v-for="tag in tags" :key="`batch-add-tag-${tag.id}`">{{ tag.name }}
@@ -68,11 +78,18 @@ const tags = computed(() => {
               v-if="tag.selected" /><star-outlined v-else />
           </a-menu-item>
         </a-sub-menu>
+        <a-menu-divider />
+        <a-menu-item key="openFileLocationInNewTab">{{ $t('openFileLocationInNewTab') }}</a-menu-item>
         <a-menu-item key="openWithLocalFileBrowser">{{ $t('openWithLocalFileBrowser') }}</a-menu-item>
       </template>
+      
+      <a-menu-divider />
+      <a-menu-item key="rename" >{{ $t('rename') }}</a-menu-item>
       <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
       <a-menu-item key="download">{{ $t('download') }}</a-menu-item>
       <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
+      <a-menu-item key="copyFilePath">{{ $t('copyFilePath') }}</a-menu-item>
+
     </template>
   </a-menu>
 </template>
