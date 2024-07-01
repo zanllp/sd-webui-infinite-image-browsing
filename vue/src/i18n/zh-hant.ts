@@ -1,6 +1,13 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  openFileLocationInNewTab: '在新標籤頁打開文件位置',
+  copyTo: '複製到',
+  moveTo: '移動到',
+  moveSuccess: '移動成功',
+  copySuccess: '複製成功',
+  copyFilePath: '複製文件路徑',
+  
   previewMaskBackgroundOpacity: '預覽遮罩背景透明度',
   experimentalLRLayout: '實驗性並列布局',
   width: '寬度',

@@ -106,6 +106,10 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
     }
   })
 
+  state.useEventListen('refresh', async () => {
+    state.eventEmitter.emit('viewableAreaFilesChange')
+  })
+
   const onViewableAreaChangeDebounced = debounce(() => state.eventEmitter.emit('viewableAreaFilesChange'), 300)
   watch(currLocation, onViewableAreaChangeDebounced)
 

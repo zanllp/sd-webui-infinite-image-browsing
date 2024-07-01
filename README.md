@@ -6,7 +6,7 @@
 
 #  Stable Diffusion webui Infinite Image Browsing
 
-<p>It's not just an image/video browser, but also a powerful image manager. Precise image search combined with multi-selection operations allows for filtering/archiving/packaging, greatly increasing efficiency. It also supports running in standalone mode, without the need for SD-Webui.
+<p>It's not just an image/video browser, but also a powerful image manager. Precise image search combined with multi-selection operations allows for filtering/archiving/packaging ...etc, greatly increasing efficiency. It also supports running in standalone mode, without the need for SD-Webui.
 
 It is also suitable for managing regular photos and videos, allowing you to tag or search them. We have made numerous optimizations to ensure performance under extreme conditions.</p>
 
@@ -51,6 +51,7 @@ You can add your own parser through https://github.com/zanllp/sd-webui-infinite-
 - You can install it as an extension on SD-webui. 
 - You can run it independently using Python.
 - The desktop app version is also available.
+- Supports multiple popular AI software.
 
 
 ### 🚶‍♀️ Walk Mode
@@ -62,9 +63,12 @@ You can add your own parser through https://github.com/zanllp/sd-webui-infinite-
 - Supports automatic refreshing.
 - Supports basic file operations, such as multiple selection for deleting/moving/copying, and creating new folders.
 - Hold down the Ctrl, Shift, or Cmd key to select multiple items.
+  - Supported multi-select operations include: delete, move, copy, pack download, add tags, remove tags, move to another folder, copy to another folder, drag and drop.
+  - You can keep the multi-select state by clicking the "Keep Multi-Select" button in the lower right corner, allowing you to perform multiple operations on the selected file collection conveniently.
 
 ### 🆚 image comparison (similar to Imgsli)
 - Provides a side-by-side comparison of two images.
+- Provides a comparison of image generation information at the same time.
 
 ### 🌐 Multilingual Support
 - Currently supports Simplified Chinese/Traditional Chinese/English/German.

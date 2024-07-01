@@ -1,6 +1,13 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  openFileLocationInNewTab: 'Open File Location in New Tab',
+  copyTo: 'Copy to',
+  moveTo: 'Move to',
+  moveSuccess: 'Move success',
+  copySuccess: 'Copy success',
+  copyFilePath: 'Copy file path',
+  
   previewMaskBackgroundOpacity: 'Preview Mask Background Opacity',
   experimentalLRLayout: 'Experimental Side-by-Side Layout',
   width: 'Width',

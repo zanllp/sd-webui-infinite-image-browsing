@@ -116,9 +116,11 @@ class Image:
             )
             self.id = cur.lastrowid
 
-    def update_path(self, conn: Connection, new_path: str):
+    def update_path(self, conn: Connection, new_path: str, force=False):
         self.path = os.path.normpath(new_path)
         with closing(conn.cursor()) as cur:
+            if force: # force update path
+                cur.execute("DELETE FROM image WHERE path = ?", (self.path,))
             cur.execute("UPDATE image SET path = ? WHERE id = ?", (self.path, self.id))
 
     @classmethod

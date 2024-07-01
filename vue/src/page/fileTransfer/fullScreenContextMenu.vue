@@ -25,7 +25,7 @@ import { useTagStore } from '@/store/useTagStore'
 import { parse } from '@/util/stable-diffusion-image-metadata'
 import { useFullscreenLayout } from '@/util/useFullscreenLayout'
 import { useMouseInElement } from '@vueuse/core'
-import { closeImageFullscreenPreview }   from '@/util/imagePreviewOperation'
+import { closeImageFullscreenPreview } from '@/util/imagePreviewOperation'
 
 
 const global = useGlobalStore()
@@ -188,11 +188,11 @@ const onKeydown = (e: KeyboardEvent) => {
     document.dispatchEvent(new KeyboardEvent('keydown', e))
   }
   else if (e.key === 'Escape') {
-  // 判断是不是全屏如果是退出
+    // 判断是不是全屏如果是退出
     if (document.fullscreenElement) {
       document.exitFullscreen()
     }
-  
+
   }
 }
 
@@ -203,11 +203,12 @@ useWatchDocument('dblclick', e => {
 })
 
 
+const showFullContent = computed(() => lr.value || state.value.expanded)
+
 </script>
 
 <template>
-  <div ref="el" class="full-screen-menu" @wheel.capture.stop
-  @keydown.capture="onKeydown"
+  <div ref="el" class="full-screen-menu" @wheel.capture.stop @keydown.capture="onKeydown"
     :class="{ 'unset-size': !state.expanded, lr, 'always-on': lrMenuAlwaysOn, 'mouse-in': isInside }">
     <div v-if="lr">
 
@@ -220,7 +221,7 @@ useWatchDocument('dblclick', e => {
 
         <div v-if="!lr" class="icon" style="cursor: pointer" @click="state.expanded = !state.expanded"
           :title="t('clickToToggleMaximizeMinimize')">
-          <FullscreenExitOutlined v-if="state.expanded" />
+          <FullscreenExitOutlined v-if="showFullContent" />
           <FullscreenOutlined v-else />
         </div>
         <div style="display: flex; flex-direction: column; align-items: center; cursor: grab" class="icon"
@@ -236,8 +237,8 @@ useWatchDocument('dblclick', e => {
               @context-menu-click="(e, f, i) => emit('contextMenuClick', e, f, i)" />
           </template>
         </a-dropdown>
-        <div flex-placeholder v-if="state.expanded" />
-        <div v-if="state.expanded" class="action-bar">
+        <div flex-placeholder v-if="showFullContent" />
+        <div v-if="showFullContent" class="action-bar">
 
           <a-dropdown :trigger="['hover']" :get-popup-container="getParNode">
             <a-button>{{ t('openContextMenu') }}</a-button>
@@ -255,12 +256,21 @@ useWatchDocument('dblclick', e => {
                   </a-sub-menu>
                 </template>
                 <a-menu-item key="send2BatchDownload">{{ $t('sendToBatchDownload') }}</a-menu-item>
-                <a-menu-item key="send2savedDir">{{ $t('send2savedDir') }}</a-menu-item>
-                <a-menu-item key="deleteFiles" >
+                <a-sub-menu key="copy2target" :title="$t('copyTo')">
+                  <a-menu-item v-for="path in global.quickMovePaths" :key="`copy-to-${path.dir}`">{{ path.zh }}
+                  </a-menu-item>
+                </a-sub-menu>
+                <a-sub-menu key="move2target" :title="$t('moveTo')">
+                  <a-menu-item v-for="path in global.quickMovePaths" :key="`move-to-${path.dir}`">{{ path.zh }}
+                  </a-menu-item>
+                </a-sub-menu>
+                <a-menu-divider />
+                <a-menu-item key="deleteFiles">
                   {{ $t('deleteSelected') }}
                 </a-menu-item>
                 <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
                 <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
+                <a-menu-item key="copyFilePath">{{ $t('copyFilePath') }}</a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
@@ -274,7 +284,7 @@ useWatchDocument('dblclick', e => {
     }}</a-button>
         </div>
       </div>
-      <div class="gen-info" v-if="state.expanded">
+      <div class="gen-info" v-if="showFullContent">
         <div class="info-tags">
           <span class="info-tag" v-for="tag in baseInfoTags" :key="tag.name">
             <span class="name">
@@ -295,17 +305,17 @@ useWatchDocument('dblclick', e => {
         </div>
         <div class="lr-layout-control">
           <div class="ctrl-item">
-            {{$t('experimentalLRLayout')}}： <a-switch v-model:checked="lr" size="small" />
+            {{ $t('experimentalLRLayout') }}： <a-switch v-model:checked="lr" size="small" />
           </div>
           <template v-if="lr">
 
             <div class="ctrl-item">
-              {{ $t('width') }}: <a-input-number v-model:value="lrLayoutInfoPanelWidth" style="width:64px" :step="16" :min="128"
-                :max="1024" />
+              {{ $t('width') }}: <a-input-number v-model:value="lrLayoutInfoPanelWidth" style="width:64px" :step="16"
+                :min="128" :max="1024" />
             </div>
             <a-tooltip :title="$t('alwaysOnTooltipInfo')">
               <div class="ctrl-item">
-                {{$t('alwaysOn')}}： <a-switch v-model:checked="lrMenuAlwaysOn" size="small" />
+                {{ $t('alwaysOn') }}： <a-switch v-model:checked="lrMenuAlwaysOn" size="small" />
               </div>
             </a-tooltip>
           </template>

@@ -21,6 +21,7 @@ const props = defineProps<{
   id: string
 }>()
 
+
 const iter = createImageSearchIter(cursor => getImagesByTags(props.selectedTagIds, cursor))
 const {
   queue,
@@ -46,6 +47,7 @@ const {
   cellWidth,
   onScroll,
   saveAllFileAsJson,
+  props: propsUpstream,
   saveLoadedFileAsJson
 } = useImageSearch(iter)
 
@@ -59,6 +61,16 @@ watch(
   },
   { immediate: true }
 )
+
+
+watch(
+  () => props,
+  async (v) => {
+    propsUpstream.value = v
+  },
+  { deep: true, immediate: true}
+)
+
 
 const g = useGlobalStore()
 const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect()

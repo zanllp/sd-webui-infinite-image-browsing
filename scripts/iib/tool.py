@@ -228,7 +228,8 @@ def is_valid_media_path(path):
         return False
     return is_image_file(abs_path) or is_video_file(abs_path)
 
-
+def is_media_file(file_path):
+    return is_image_file(file_path) or is_video_file(file_path)
 
 def create_zip_file(file_paths: List[str], zip_file_name: str):
     """

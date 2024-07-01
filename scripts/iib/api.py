@@ -11,6 +11,7 @@ from scripts.iib.tool import (
     get_video_type,
     human_readable_size,
     is_valid_media_path,
+    is_media_file,
     temp_path,
     get_formatted_date,
     is_win,
@@ -403,19 +404,42 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             )
             raise HTTPException(400, detail=error_msg)
 
-        conn = DataBase.get_conn()
+        conn = DataBase.get_conn()        
+
+        def move_file_with_geninfo(path: str, dest: str):
+            path = os.path.normpath(path)
+            txt_path = get_img_geninfo_txt_path(path)
+            if txt_path:
+                shutil.move(txt_path, dest)
+            img = DbImg.get(conn, path)
+            new_path = os.path.normpath(os.path.join(dest, os.path.basename(path)))
+            if img:
+                logger.info(f"update file path: {path} -> {new_path} in db")
+                img.update_path(conn, new_path, force=True)
+
         for path in req.file_paths:
             check_path_trust(path)
+            path = os.path.normpath(path)
+            base_dir = os.path.dirname(path)
             try:
-                ret_path = shutil.move(path, req.dest)
-                txt_path = get_img_geninfo_txt_path(path)
-                if txt_path:
-                    shutil.move(txt_path, req.dest)
-                img = DbImg.get(conn, os.path.normpath(path))
-                if img:
-                    img.update_path(conn, ret_path)
-                    conn.commit()
+                files = list(os.walk(path))
+                is_dir = os.path.isdir(path)
+                shutil.move(path, req.dest)
+                if is_dir:
+                    for root, _, files in files:
+                        relative_path = root[len(base_dir) + 1 :]
+                        dest = os.path.join(req.dest, relative_path)
+                        for file in files:
+                            is_valid = is_media_file(file)
+                            if is_valid:
+                                move_file_with_geninfo(os.path.join(root, file), dest)
+                else:
+                    move_file_with_geninfo(path, req.dest)
+                            
+                conn.commit()
             except OSError as e:
+                
+                conn.rollback()
                 error_msg = (
                     f"Error moving file {path} to {req.dest}: {e}"
                     if locale == "en"
