@@ -57,6 +57,7 @@ You can add your own parser through [parsers](https://github.com/zanllp/sd-webui
 ### 🚶‍♀️ Walk Mode
 - Automatically load the next folder `(similar to os.walk)`, allowing you to browse all images without paging.
 - Tested to work properly with over 27,000 files.
+- When there are folders, you can switch to walk mode from other modes by clicking the walk button in the upper right corner. It will flatten all the folders, avoiding the tedious operation of going in and out of folders.
 
 ### 🌳 Preview based on File Tree Structure & File operations
 - Supports file tree-based preview.
