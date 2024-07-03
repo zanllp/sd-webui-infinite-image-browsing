@@ -14,6 +14,7 @@ from scripts.iib.tool import (
 from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 from scripts.iib.logger import logger
 from scripts.iib.parsers.index import parse_image_info
+from scripts.iib.plugin import plugin_inst_map
 
 # 定义一个函数来获取图片文件的EXIF数据
 def get_exif_data(file_path):
@@ -109,6 +110,16 @@ def rebuild_image_index(search_dirs: List[str]):
         conn.commit()
         update_image_data(search_dirs=search_dirs, is_rebuild=True)
 
+
+def get_extra_meta_keys_from_plugins(source_identifier: str):
+    try:
+        plugin = plugin_inst_map.get(source_identifier)
+        if plugin:
+            return plugin.extra_convert_to_tag_meta_keys
+    except Exception as e:
+        logger.error("get_extra_meta_keys_from_plugins %s", e)
+    return []
+
 def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
     img = DbImg.get(conn, file_path)
     parsed_params = None
@@ -153,7 +164,7 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
     safe_save_img_tag(ImageTag(img.id, size_tag.id))
     media_type_tag = Tag.get_or_create(conn, "Image" if is_image_file(file_path) else "Video", 'Media Type')
     safe_save_img_tag(ImageTag(img.id, media_type_tag.id))
-    for k in [
+    keys = [
         "Model",
         "Sampler",
         "Source Identifier",
@@ -162,8 +173,9 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
         "Size",
         "Refiner",
         "Hires upscaler"
-    ]:
-        
+    ]
+    keys += get_extra_meta_keys_from_plugins(meta.get("Source Identifier", ""))
+    for k in keys:
         v = case_insensitive_get(meta, k)
         if not v:
             continue

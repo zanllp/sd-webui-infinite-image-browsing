@@ -62,7 +62,7 @@ from scripts.iib.seq import seq
 import urllib.parse
 from scripts.iib.fastapi_video import range_requests_response, close_video_file_reader
 from scripts.iib.parsers.index import parse_image_info
-
+import scripts.iib.plugin
 
 try:
     import pillow_avif

@@ -6,11 +6,12 @@ from scripts.iib.parsers.model import ImageGenerationInfo
 from scripts.iib.parsers.stable_swarm_ui import StableSwarmUIParser
 from scripts.iib.logger import logger
 from PIL import Image
+from scripts.iib.plugin import plugin_insts
 import traceback
 
 
 def parse_image_info(image_path: str) -> ImageGenerationInfo:
-    parsers = [
+    parsers = plugin_insts + [
         ComfyUIParser,
         FooocusParser,
         NovelAIParser,

@@ -1,4 +1,3 @@
-
 *.log
 __pycache__
 iib.db
@@ -17,3 +16,5 @@ venv/**/*
 zip_temp/*.zip
 iib_db_backup
 db_migrate_temp.db
+plugins/*
+!plugins/.gitkeep

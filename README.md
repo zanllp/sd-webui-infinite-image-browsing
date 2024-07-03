@@ -14,16 +14,16 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 
 
 ### Software Support and Development Progress Overview
+| Software               | Support          | Development Progress | Provided by |
+| ---------------------- | ---------------- | -------------------- | ----------- |
+| Stable Diffusion web UI| Supported        | --                   | Built-in    |
+| ComfyUI                | Partially supported | --                | Built-in    |
+| Fooocus                | Supported        | --                   | Built-in    |
+| NovelAI                | Supported    | --            | Built-in    |
+| StableSwarmUI          | Supported    | --              | Built-in    |
+| Pixiv                  | Supported        | --                   | [Plugin](https://github.com/zanllp/pixiv_iib_plugin) |
 
-| Software               | Support          | Development Progress |
-| ---------------------- | ---------------- | -------------------- |
-| Stable Diffusion web UI| Supported        | --                   |
-| ComfyUI                | Partially supported | --                |
-| Fooocus                | Supported        | --                   |
-| NovelAI                | Supported    | --            |
-| StableSwarmUI          | Supported    | --              |
-
-You can add your own parser through https://github.com/zanllp/sd-webui-infinite-image-browsing/tree/main/scripts/iib/parsers
+You can add your own parser through [parsers](https://github.com/zanllp/sd-webui-infinite-image-browsing/tree/main/scripts/iib/parsers), You can also implement parsing for more formats by writing plugins. For reference, see [pixiv_iib_plugin](https://github.com/zanllp/pixiv_iib_plugin)
 
 ## Key Features
 
