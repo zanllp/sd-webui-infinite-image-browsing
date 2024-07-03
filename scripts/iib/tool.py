@@ -660,3 +660,15 @@ def case_insensitive_get(d, key, default=None):
         if k.lower() == key.lower():
             return v
     return default
+
+def build_sd_webui_style_img_gen_info(prompt, negative_prompt = 'None', meta = {}):
+    res = f"{prompt}\nNegative prompt: {negative_prompt}\n"
+    for k, v in meta.items():
+        res += f"{k}: {v}, "
+    return res
+
+def map_dict_keys(value_dict, map_dict=None):
+    if map_dict is None:
+        return value_dict
+    else:
+        return {map_dict.get(key, key): value for key, value in value_dict.items()}
