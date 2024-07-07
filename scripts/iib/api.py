@@ -12,7 +12,7 @@ from scripts.iib.tool import (
     human_readable_size,
     is_valid_media_path,
     is_media_file,
-    temp_path,
+    get_cache_dir,
     get_formatted_date,
     is_win,
     cwd,
@@ -115,6 +115,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     backup_db_file(DataBase.get_db_file_path())
     api_base = kwargs.get("base") if isinstance(kwargs.get("base"), str) else DEFAULT_BASE
     fe_public_path = kwargs.get("fe_public_path") if isinstance(kwargs.get("fe_public_path"), str) else api_base
+    cache_base_dir = get_cache_dir()
+
     # print(f"IIB api_base:{api_base} fe_public_path:{fe_public_path}")
     if IIB_DEBUG or is_nuitka:
         @app.exception_handler(Exception)
@@ -507,12 +509,12 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     @app.get(api_base + "/image-thumbnail", dependencies=[Depends(verify_secret)])
     async def thumbnail(path: str, t: str, size: str = "256x256"):
         check_path_trust(path)
-        if not temp_path:
+        if not cache_base_dir:
             return
         # 生成缓存文件的路径
         hash_dir = hashlib.md5((path + t).encode("utf-8")).hexdigest()
         hash = hash_dir + size
-        cache_dir = os.path.join(temp_path, "iib_cache", hash_dir)
+        cache_dir = os.path.join(cache_base_dir, "iib_cache", hash_dir)
         cache_path = os.path.join(cache_dir, f"{size}.webp")
 
         # 如果缓存文件存在，则直接返回该文件
@@ -592,7 +594,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     @app.get(api_base + "/video_cover", dependencies=[Depends(verify_secret)])
     async def video_cover(path: str, t: str):        
         check_path_trust(path)
-        if not temp_path:
+        if not cache_base_dir:
             return
         
         if not os.path.exists(path):
@@ -602,7 +604,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         # 生成缓存文件的路径
         hash_dir = hashlib.md5((path + t).encode("utf-8")).hexdigest()
         hash = hash_dir
-        cache_dir = os.path.join(temp_path, "iib_cache", "video_cover", hash_dir)
+        cache_dir = os.path.join(cache_base_dir, "iib_cache", "video_cover", hash_dir)
         cache_path = os.path.join(cache_dir, "cover.webp")
 
         # 如果缓存文件存在，则直接返回该文件

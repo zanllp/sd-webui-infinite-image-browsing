@@ -20,6 +20,8 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 - 存在缓存的情况下后，图像可以在几毫秒内显示。
 - 默认使用缩略图显示图像，默认大小为512像素，您可以在全局设置页中调整缩略图分辨率。
 - 你还可以控制网格图像的宽度，允许以64px到1024px的宽度范围进行显示
+- 支持通过`--generate_video_cover`和`--generate_image_cache`来预先生成缩略图和视频封面，以提高性能。
+- 支持通过`IIB_CACHE_DIR`环境变量来指定缓存目录。
 
 ### 🔍 图像搜索和收藏
 - 将会把Prompt、Model、Lora等信息转成标签，将根据使用频率排序以供进行精确的搜索。

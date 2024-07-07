@@ -1,19 +1,20 @@
 import hashlib
 import os
 from typing import List
-from scripts.iib.tool import get_formatted_date, get_temp_path, is_video_file
+from scripts.iib.tool import get_formatted_date, get_cache_dir, is_video_file
 from concurrent.futures import ThreadPoolExecutor
 import time
 
 
-def generate_video_covers(dirs):
+def generate_video_covers(dirs,verbose=False):
   start_time = time.time()
   import imageio.v3 as iio
-  temp_path = get_temp_path()
+  
+  cache_base_dir = get_cache_dir()
 
   def process_video(item):
     if item.is_dir():
-      print(f"Processing directory: {item.path}")
+      verbose and print(f"Processing directory: {item.path}")
       for sub_item in os.scandir(item.path):
         process_video(sub_item)
       return
@@ -25,7 +26,7 @@ def generate_video_covers(dirs):
       stat = item.stat()
       t = get_formatted_date(stat.st_mtime)
       hash_dir = hashlib.md5((path + t).encode("utf-8")).hexdigest()
-      cache_dir = os.path.join(temp_path, "iib_cache", "video_cover", hash_dir)
+      cache_dir = os.path.join(cache_base_dir, "iib_cache", "video_cover", hash_dir)
       cache_path = os.path.join(cache_dir, "cover.webp")
 
       # 如果缓存文件存在，则直接返回该文件
@@ -41,7 +42,7 @@ def generate_video_covers(dirs):
 
       os.makedirs(cache_dir, exist_ok=True)
       iio.imwrite(cache_path, frame, extension=".webp")
-      print(f"Video cover generated: {path}")
+      verbose and print(f"Video cover generated: {path}")
     except Exception as e:
       print(f"Error generating video cover: {path}")
       print(e)

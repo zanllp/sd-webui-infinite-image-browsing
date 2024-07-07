@@ -22,6 +22,16 @@ tag = "\033[31m[warn]\033[0m"
 default_port = 8000
 default_host = "127.0.0.1"
 
+def get_all_img_dirs(sd_webui_config: str, relative_to_config: bool):
+    dirs = get_valid_img_dirs(
+        get_sd_webui_conf(
+            sd_webui_config=sd_webui_config,
+            sd_webui_path_relative_to_config=relative_to_config,
+        )
+    )
+    dirs += list(map(lambda x: x.path, ExtraPath.get_extra_paths(DataBase.get_conn())))
+    return dirs
+
 
 def sd_webui_paths_check(sd_webui_config: str, relative_to_config: bool):
     conf = {}
@@ -50,12 +60,7 @@ def paths_check(paths):
 
 
 def do_update_image_index(sd_webui_config: str, relative_to_config=False):
-    dirs = get_valid_img_dirs(
-        get_sd_webui_conf(
-            sd_webui_config=sd_webui_config,
-            sd_webui_path_relative_to_config=relative_to_config,
-        )
-    )
+    dirs = get_all_img_dirs(sd_webui_config, relative_to_config)
     if not len(dirs):
         return print(f"{tag} no valid image directories, skipped")
     conn = DataBase.get_conn()
@@ -186,6 +191,22 @@ def setup_parser() -> argparse.ArgumentParser:
         help="Pre-generate video cover images to speed up browsing.",
     )
     parser.add_argument(
+        "--generate_image_cache",
+        action="store_true",
+        help="Pre-generate image cache to speed up browsing.",
+    )
+    parser.add_argument(
+        "--generate_image_cache_size",
+        type=str,
+        default="512x512",
+        help="The size of the image cache to generate. Default is 512x512",
+    )
+    parser.add_argument(
+        "--gen_cache_verbose",
+        action="store_true",
+        help="Verbose mode for cache generation.",
+    )
+    parser.add_argument(
         "--extra_paths",
         nargs="+",
         help="Extra paths to use, will be added to Quick Move.",
@@ -258,10 +279,21 @@ if __name__ == "__main__":
     args_dict = vars(args)
 
     if args_dict.get("generate_video_cover"):
-        from scripts.iib.video_cover import generate_video_covers
+        from scripts.iib.video_cover_gen import generate_video_covers
 
         conn = DataBase.get_conn()
-        generate_video_covers(map(lambda x: x.path, ExtraPath.get_extra_paths(conn)))
+        generate_video_covers(
+            dirs = map(lambda x: x.path, ExtraPath.get_extra_paths(conn)),
+            verbose=args.gen_cache_verbose,
+        )
+        exit(0)
+    if args_dict.get("generate_image_cache"):
+        from scripts.iib.img_cache_gen import generate_image_cache
+        generate_image_cache(
+            dirs = get_all_img_dirs(args.sd_webui_config, args.sd_webui_path_relative_to_config), 
+            size = args.generate_image_cache_size,
+            verbose = args.gen_cache_verbose
+        )
         exit(0)
 
     launch_app(**vars(args))

@@ -280,7 +280,11 @@ def get_temp_path():
     return temp_path
 
 
-temp_path = get_temp_path()
+_temp_path = get_temp_path()
+
+
+def get_cache_dir():
+    return os.getenv("IIB_CACHE_DIR") or _temp_path
 
 def get_secret_key_required():
     try:
