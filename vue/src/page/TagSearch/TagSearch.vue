@@ -426,7 +426,7 @@ const tagIdsToString = (tagIds: TagId[]) => {
     padding: 8px;
 
 
-    :deep() .tag {
+    .tag {
       border: 2px solid var(--zp-secondary);
       color: var(--zp-primary);
       border-radius: 999px;
@@ -434,16 +434,8 @@ const tagIdsToString = (tagIds: TagId[]) => {
       margin: 4px;
       display: inline-block;
       cursor: pointer;
-      max-width: 256px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
       position: relative;
 
-      &.selected {
-        color: var(--primary-color);
-        border: 2px solid var(--primary-color);
-      }
     }
   }
 }

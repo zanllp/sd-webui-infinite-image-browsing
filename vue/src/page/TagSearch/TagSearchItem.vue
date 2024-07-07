@@ -3,14 +3,16 @@
     <div class="float-actions">
       <div @click="$emit('toggleAnd')">{{ $t('exactMatch') }}
       </div>
-      <div  @click="$emit('toggleOr')">{{ $t('anyMatch')
+      <div @click="$emit('toggleOr')">{{ $t('anyMatch')
         }}</div>
       <div @click="$emit('toggleNot')">{{ $t('exclude')
         }}</div>
     </div>
     <li class="tag" :title="toTagDisplayName(tag)" :class="{ selected }" @click="$emit('click')">
       <CheckOutlined v-if="selected" />
-      {{ toTagDisplayName(tag) }}
+      <div class="tag-name">
+        {{ toTagDisplayName(tag) }}
+      </div>
       <span v-if="name === 'custom' && idx !== 0" class="remove" @click.capture.stop="$emit('remove')">
         <CloseOutlined />
       </span>
@@ -44,6 +46,33 @@ const toTagDisplayName = (v: Tag, withType = false) =>
     flex-wrap: nowrap;
     opacity: 1;
     max-height: 100px;
+  }
+
+
+  .tag {
+    border: 2px solid var(--zp-secondary);
+    color: var(--zp-primary);
+    border-radius: 999px;
+    padding: 4px 16px;
+    margin: 4px;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    gap: 4px ;
+    &.selected {
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+    }
+  }
+
+  .tag-name {
+    max-width: 192px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .float-actions {
