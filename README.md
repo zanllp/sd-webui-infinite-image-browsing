@@ -31,6 +31,8 @@ You can add your own parser through [parsers](https://github.com/zanllp/sd-webui
 - Once caching is generated, images can be displayed in just a few milliseconds.
 - Images are displayed with thumbnails by default, with a default size of 512 pixels. You can adjust the thumbnail resolution on the global settings page.
 - You can also control the width of the grid images, allowing them to be displayed in widths ranging from 64px to 1024px.
+- Supports pre-generating thumbnails and video covers to improve performance using `--generate_video_cover` and `--generate_image_cache`.
+- Supports specifying the cache directory through the `IIB_CACHE_DIR` environment variable.
 
 ### 🔍 Image Search & Favorite
 - The prompt, model, Lora, and other information will be converted into tags and sorted by frequency of use for precise searching.
