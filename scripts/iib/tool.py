@@ -643,7 +643,7 @@ def get_current_commit_hash():
             return result.stdout.strip()
         else:
             return None
-    except subprocess.CalledProcessError:
+    except Exception:
         return None
 
 def get_current_tag():
@@ -653,7 +653,7 @@ def get_current_tag():
             return result.stdout.strip()
         else:
             return None
-    except subprocess.CalledProcessError:
+    except Exception:
         return None
     
     
