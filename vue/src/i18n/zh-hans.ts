@@ -1,4 +1,5 @@
 export const zhHans = {
+  selectFolder: '选择文件夹',
   openFileLocationInNewTab: '在新标签页打开文件位置',
   copyTo: '复制到',
   moveTo: '移动到',

@@ -4,7 +4,6 @@ import os
 import platform
 import re
 import tempfile
-import imghdr
 import subprocess
 from typing import Dict, List
 import sys
@@ -29,7 +28,10 @@ sd_img_dirs = [
 
 is_dev = os.getenv("APP_ENV") == "dev"
 is_nuitka = "__compiled__" in globals()
-cwd = os.getcwd() if is_nuitka else os.path.normpath(os.path.join(__file__, "../../../"))
+is_pyinstaller_bundle = bool(getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'))
+is_exe_ver = is_nuitka or is_pyinstaller_bundle
+
+cwd = os.getcwd() if is_exe_ver else os.path.normpath(os.path.join(__file__, "../../../"))
 is_win = platform.system().lower().find("windows") != -1
 
 

@@ -1,6 +1,7 @@
 import os
 import importlib.util
 import sys
+from scripts.iib.tool import cwd
 
 def load_plugins(plugin_dir):
     plugins = []
@@ -18,7 +19,7 @@ plugin_insts = []
 plugin_inst_map = {}
 # 使用插件
 try:
-    plugin_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../', 'plugins'))
+    plugin_dir = os.path.normpath(os.path.join(cwd, 'plugins'))
     plugins = load_plugins(plugin_dir)
     sys.path.append(plugin_dir)
     for plugin in plugins:
