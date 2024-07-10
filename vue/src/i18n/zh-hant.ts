@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  selectFolder: '選擇文件夾',
   openFileLocationInNewTab: '在新標籤頁打開文件位置',
   copyTo: '複製到',
   moveTo: '移動到',
@@ -93,7 +94,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   previewInNewWindow: '在新窗口預覽',
   copySourceFilePreviewLink: '複製源文件預覽連結',
   viewGenerationInfo: '檢視生成信息(提示等)',
-  sendToTxt2img: '发送到文生圖',
+  sendToTxt2img: '發送到文生圖',
   sendToImg2img: '發送到圖生圖',
   sendToInpaint: '發送到局部重繪',
   sendToControlNet: '發送到ControlNet',

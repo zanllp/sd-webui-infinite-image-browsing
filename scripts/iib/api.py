@@ -29,7 +29,7 @@ from scripts.iib.tool import (
     to_abs_path,
     is_secret_key_required,
     open_file_with_default_app,
-    is_nuitka,
+    is_exe_ver,
     backup_db_file,
     get_current_commit_hash,
     get_current_tag
@@ -118,7 +118,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     cache_base_dir = get_cache_dir()
 
     # print(f"IIB api_base:{api_base} fe_public_path:{fe_public_path}")
-    if IIB_DEBUG or is_nuitka:
+    if IIB_DEBUG or is_exe_ver:
         @app.exception_handler(Exception)
         async def exception_handler(request: Request, exc: Exception):
             error_msg = f"An exception occurred while processing {request.method} {request.url}: {exc}"

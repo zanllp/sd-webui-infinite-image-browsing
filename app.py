@@ -193,7 +193,7 @@ def setup_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--generate_image_cache",
         action="store_true",
-        help="Pre-generate image cache to speed up browsing.",
+        help="Pre-generate image cache to speed up browsing. By default, only the extra paths added by the user are processed, not the paths in sd_webui_config. If you need to process paths in sd_webui_config, you must use the --sd_webui_config and --sd_webui_path_relative_to_config parameters.",
     )
     parser.add_argument(
         "--generate_image_cache_size",

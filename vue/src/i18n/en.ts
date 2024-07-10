@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  selectFolder: 'Select Folder',
   openFileLocationInNewTab: 'Open File Location in New Tab',
   copyTo: 'Copy to',
   moveTo: 'Move to',
