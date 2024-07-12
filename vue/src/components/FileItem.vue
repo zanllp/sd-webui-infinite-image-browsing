@@ -93,6 +93,7 @@ const taggleLikeTag = () => {
   emit('contextMenuClick', { key: `toggle-tag-${likeTag.value.id}` } as MenuInfo, props.file, props.idx)
 }
 
+const minShowDetailWidth = 160
 </script>
 <template>
   <a-dropdown :trigger="['contextmenu']" :visible="!global.longPressOpenContextMenu ? undefined : typeof idx === 'number' && showMenuIdx === idx
@@ -145,7 +146,7 @@ const taggleLikeTag = () => {
     src: fullScreenPreviewImageUrl,
     onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
   }" />
-          <div class="tags-container" v-if="customTags && cellWidth > 128">
+          <div class="tags-container" v-if="customTags && cellWidth > minShowDetailWidth">
             <a-tag v-for="tag in extraTags ?? customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
               {{ tag.name }}
             </a-tag>
@@ -158,7 +159,7 @@ const taggleLikeTag = () => {
           <div class="play-icon">
             <img :src="play" style="width: 40px;height: 40px;">
           </div>
-          <div class="tags-container" v-if="customTags && cellWidth > 128">
+          <div class="tags-container" v-if="customTags && cellWidth > minShowDetailWidth">
             <a-tag v-for="tag in customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
               {{ tag.name }}
             </a-tag>
@@ -174,12 +175,12 @@ const taggleLikeTag = () => {
 
           <folder-open-outlined class="icon center" v-else />
         </div>
-        <div class="profile" v-if="cellWidth > 128">
+        <div class="profile" v-if="cellWidth > minShowDetailWidth">
           <div class="name line-clamp-1" :title="file.name">
             {{ file.name }}
           </div>
           <div class="basic-info">
-            <div>
+            <div style="margin-right: 4px;">
               {{ file.type }} {{ file.size }}
             </div>
             <div>
@@ -328,6 +329,10 @@ const taggleLikeTag = () => {
           flex-direction: row;
           margin: 0;
           font-size: 0.7em;
+          * {
+            white-space: nowrap;
+            overflow: hidden;
+          }
         }
       }
 

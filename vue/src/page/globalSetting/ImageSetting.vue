@@ -34,7 +34,7 @@ watch(() => [g.enableThumbnail, g.gridThumbnailResolution], debounce(async () =>
 </script>
 <template>
   <a-form-item :label="t('defaultGridCellWidth')">
-    <NumInput :min="64" :max="1024" :step="32" v-model="g.defaultGridCellWidth" />
+    <NumInput :min="64" :max="1024" :step="16" v-model="g.defaultGridCellWidth" />
   </a-form-item>
   <a-form-item :label="t('useThumbnailPreview')">
     <a-switch v-model:checked="g.enableThumbnail" />

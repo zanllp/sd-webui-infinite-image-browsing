@@ -170,6 +170,15 @@ export const presistKeys = [
   'previewBgOpacity'
 ]
 
+function cellWidthMap(x: number): number {
+  if (x < 768) {
+    return 176;
+  } else {
+    const y = 160 + Math.floor((x - 768) / 128) * 16;
+    return Math.min(y, 256);
+  }
+}
+
 export const useGlobalStore = defineStore(
   'useGlobalStore',
   () => {
@@ -179,7 +188,8 @@ export const useGlobalStore = defineStore(
     const enableThumbnail = ref(true)
     const gridThumbnailResolution = ref(512)
     const defaultSortingMethod = ref(SortMethod.CREATED_TIME_DESC)
-    const defaultGridCellWidth = ref(256)
+    const defaultGridCellWidth = ref(cellWidthMap(parent.window.innerHeight))
+    
     const darkModeControl = ref<'light' | 'dark' | 'auto'>('auto')
 
     const createEmptyPane = (): TabPane => ({
