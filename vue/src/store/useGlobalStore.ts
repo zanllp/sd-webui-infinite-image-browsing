@@ -188,7 +188,8 @@ export const useGlobalStore = defineStore(
     const enableThumbnail = ref(true)
     const gridThumbnailResolution = ref(512)
     const defaultSortingMethod = ref(SortMethod.CREATED_TIME_DESC)
-    const defaultGridCellWidth = ref(cellWidthMap(window.innerHeight))
+    const defaultGridCellWidth = ref(cellWidthMap(parent.window.innerHeight))
+    
     const darkModeControl = ref<'light' | 'dark' | 'auto'>('auto')
 
     const createEmptyPane = (): TabPane => ({
