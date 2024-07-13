@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  readonly: 'Read-only',
+  accessLimited: 'Access Limited',
   selectFolder: 'Select Folder',
   openFileLocationInNewTab: 'Open File Location in New Tab',
   copyTo: 'Copy to',

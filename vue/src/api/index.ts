@@ -102,6 +102,7 @@ export interface GlobalConf {
   launch_mode: 'server' | 'sd'
   export_fe_fn: boolean
   app_fe_setting: Record<'global'|'fullscreen_layout', any> 
+  is_readonly: boolean
 }
 
 export const getGlobalSetting = async () => {

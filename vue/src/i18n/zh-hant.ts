@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  readonly: '只讀',
+  accessLimited: '訪問受限',
   selectFolder: '選擇文件夾',
   openFileLocationInNewTab: '在新標籤頁打開文件位置',
   copyTo: '複製到',

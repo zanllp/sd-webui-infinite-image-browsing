@@ -1,4 +1,6 @@
 export const zhHans = {
+  readonly: '只读',
+  accessLimited: '访问受限',
   selectFolder: '选择文件夹',
   openFileLocationInNewTab: '在新标签页打开文件位置',
   copyTo: '复制到',
