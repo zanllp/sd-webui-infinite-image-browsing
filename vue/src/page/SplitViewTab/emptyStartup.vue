@@ -276,7 +276,7 @@ const modes = computed(() => {
       </div>
     </div>
     <div class="ver-info">
-      <div>
+      <div v-if="modes">
         Mode: {{ modes }}
       </div>
       <div>
