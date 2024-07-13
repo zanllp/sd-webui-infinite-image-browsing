@@ -1,6 +1,6 @@
 > 🌍 i18n Advisory: Some translations may be incomplete or inaccurate. Pull requests are welcome for improvements!
 
-> 🌐 Online experience: http://39.105.110.128:0721, this is one of my idle cloud servers with 2c2g3m, and no CDN.
+> 🌐 Try our application online at: http://39.105.110.128:0721. This is my idle 2c2g3m cloud server without CDN.
 
 [中文文档](./README-zh.md)
 [Change log](https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log)
