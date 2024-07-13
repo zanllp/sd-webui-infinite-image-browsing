@@ -292,6 +292,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             "launch_mode": kwargs.get("launch_mode", "sd"),
             "export_fe_fn": bool(kwargs.get("export_fe_fn")),
             "app_fe_setting": app_fe_setting,
+            "is_readonly": not is_api_writeable,
         }
     
     

@@ -123,6 +123,17 @@ const modePrefix = (mode?: FileTransModeIn) => {
 
 }
 
+const modes = computed(() => {
+  const modes = [] as string[]
+  if (global.conf?.enable_access_control) {
+    modes.push('accessLimited')
+  }
+  if(global.conf?.is_readonly) {
+    modes.push('readonly')
+  }
+  return modes.map(v => t(v)).join(' + ')
+})
+
 </script>
 <template>
   <div class="container">
@@ -265,6 +276,9 @@ const modePrefix = (mode?: FileTransModeIn) => {
       </div>
     </div>
     <div class="ver-info">
+      <div>
+        Mode: {{ modes }}
+      </div>
       <div>
         Version: {{ version.tag }} ({{machine}})
       </div>
