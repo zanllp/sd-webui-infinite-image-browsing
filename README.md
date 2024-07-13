@@ -1,8 +1,11 @@
 > 🌍 i18n Advisory: Some translations may be incomplete or inaccurate. Pull requests are welcome for improvements!
 
+> 🌐 Online experience: http://39.105.110.128:0721, this is one of my idle cloud servers with 2c2g3m, and no CDN.
+
 [中文文档](./README-zh.md)
 [Change log](https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log)
 [Installation / Running](#installation--running)
+
 
 #  Stable Diffusion webui Infinite Image Browsing
 
@@ -14,14 +17,14 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 
 
 ### Software Support and Development Progress Overview
-| Software               | Support          | Development Progress | Provided by |
-| ---------------------- | ---------------- | -------------------- | ----------- |
-| Stable Diffusion web UI| Supported        | --                   | Built-in    |
-| ComfyUI                | Partially supported | --                | Built-in    |
-| Fooocus                | Supported        | --                   | Built-in    |
-| NovelAI                | Supported    | --            | Built-in    |
-| StableSwarmUI          | Supported    | --              | Built-in    |
-| Pixiv                  | Supported        | --                   | [Plugin](https://github.com/zanllp/pixiv_iib_plugin) |
+| Software               | Support          | Provided by |
+| ---------------------- | ---------------- |  ----------- |
+| Stable Diffusion web UI| Supported        |  Built-in    |
+| ComfyUI                | Partially supported |  Built-in    |
+| Fooocus                | Supported        |  Built-in    |
+| NovelAI                | Supported    |  Built-in    |
+| StableSwarmUI          | Supported    |  Built-in    |
+| Pixiv                  | Supported        |  [pixiv_iib_plugin](https://github.com/zanllp/pixiv_iib_plugin) |
 
 You can add your own parser through [parsers](https://github.com/zanllp/sd-webui-infinite-image-browsing/tree/main/scripts/iib/parsers), You can also implement parsing for more formats by writing plugins. For reference, see [pixiv_iib_plugin](https://github.com/zanllp/pixiv_iib_plugin)
 
