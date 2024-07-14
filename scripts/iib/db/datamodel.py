@@ -822,6 +822,13 @@ class GlobalSetting:
             )
             conn.commit()
 
+
+    @classmethod
+    def remove_setting(cls, conn, name: str):
+        with closing(conn.cursor()) as cur:
+            cur.execute("DELETE FROM global_setting WHERE name = ?", (name,))
+            conn.commit()
+
     @classmethod
     def get_all_settings(cls, conn):
         with closing(conn.cursor()) as cur:

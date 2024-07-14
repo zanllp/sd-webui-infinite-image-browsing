@@ -8,7 +8,7 @@ import { Props as FileTransferProps } from '@/page/fileTransfer/hooks'
 import type { getQuickMovePaths } from '@/page/taskRecord/autoComplete'
 import { type Dict, type ReturnTypeAsync } from '@/util'
 import { AnyFn, usePreferredDark } from '@vueuse/core'
-import { cloneDeep, uniqueId } from 'lodash-es'
+import { cloneDeep, uniqueId, last } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { VNode, computed, onMounted, reactive, toRaw, watch } from 'vue'
 import { ref } from 'vue'
@@ -22,7 +22,7 @@ interface TabPaneBase {
 }
 
 interface OtherTabPane extends TabPaneBase {
-  type: 'global-setting' | 'tag-search' |  'batch-download'
+  type: 'global-setting' | 'tag-search' |  'batch-download' | 'workspace-snapshot'
 }
 
 export interface EmptyStartTabPane extends TabPaneBase  {
@@ -134,6 +134,8 @@ export interface Tab {
 
 export type Shortcut = Record<`toggle_tag_${string}` | 'delete' | 'download', string | undefined> 
 
+export type DefaultInitinalPage = `workspace_snapshot_${string}` | 'empty' | 'last-workspace-state'
+
 export const copyPane = (pane: TabPane) => {
   return cloneDeep({
     ...pane,
@@ -141,12 +143,25 @@ export const copyPane = (pane: TabPane) => {
   })
 }
 
-export const copyTab = (tab: Tab) => {
+export const copyTab = (tab: Tab): Tab => {
   return {
     ...tab,
     panes: tab.panes.map(copyPane)
   }
 }
+
+export const copyTabFilterWorkspaceSnapShot = (tab: Tab): Tab => {
+  if (!tab.panes.some(v => v.type === 'workspace-snapshot')) {
+    return copyTab(tab)
+  }
+  const newPanes = tab.panes.filter(v => v.type !== 'workspace-snapshot').map(copyPane)
+  return {
+    ...tab,
+    panes: newPanes,
+    key: last(newPanes)?.key ?? ''
+  }
+}
+
 
 export type ActionConfirmRequired = 'deleteOneOnly'
 
@@ -167,7 +182,8 @@ export const presistKeys = [
   'onlyFoldersAndImages',
   'shortcut',
   'ignoredConfirmActions',
-  'previewBgOpacity'
+  'previewBgOpacity',
+  'defaultInitinalPage'
 ]
 
 function cellWidthMap(x: number): number {
@@ -341,7 +357,8 @@ export const useGlobalStore = defineStore(
       ignoredConfirmActions,
       getShortPath,
       extraPathAliasMap,
-      previewBgOpacity
+      previewBgOpacity,
+      defaultInitinalPage: ref<DefaultInitinalPage>('empty')
     }
   },
   {

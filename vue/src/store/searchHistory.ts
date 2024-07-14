@@ -29,3 +29,4 @@ export const tagSearchHistory = useLocalStorage(`${prefix}tag-search-HistoryReco
     write: JSON.stringify,
   },
 }) as Ref<HistoryRecord<MatchImageByTagsReq>>
+

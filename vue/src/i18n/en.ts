@@ -1,6 +1,21 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  restoreLastWorkspaceStateSuccess: 'Restore Last Workspace State Success',
+  restoreWorkspaceSnapshotSuccess: 'Restore Workspace Snapshot Success',
+  openOnAppStart: 'Open on app start',
+  confirmThisAction: 'Confirm this action?',
+  WorkspaceSnapshotDesc: `Using the Workspace Snapshot feature, you can save the current state of the workspace so that you can quickly restore to the current state the next time you open IIB.
+You can specify which snapshot to restore to when starting IIB in the global settings page, or restore to the last workspace state before closing.`,
+  saveWorkspaceSnapshot: 'Save Workspace Snapshot',
+  WorkspaceSnapshot: 'Workspace Snapshot',
+  restoreLastWorkspaceState: 'Restore Last Workspace State',
+  restoreWorkspaceSnapshot: 'Restore Workspace Snapshot: {0}',
+  nameRequired: 'Name is required',
+  save: 'Save',
+  name: 'Name',
+  saveCompleted: 'Save completed',
+  openThisAppInNewWindow: 'Open IIB in a new window',
   readonly: 'Read-only',
   accessLimited: 'Access Limited',
   selectFolder: 'Select Folder',

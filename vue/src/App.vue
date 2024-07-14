@@ -2,6 +2,7 @@
 import { onMounted, watch } from 'vue'
 import { getGlobalSetting, setAppFeSetting } from './api'
 import { useGlobalStore, presistKeys } from './store/useGlobalStore'
+import { useWorkspeaceSnapshot } from './store/useWorkspeaceSnapshot'
 import { getQuickMovePaths } from '@/page/taskRecord/autoComplete'
 import SplitViewTab from '@/page/SplitViewTab/SplitViewTab.vue'
 import { Dict, createReactiveQueue, globalEvents, useGlobalEventListen } from './util'
@@ -12,15 +13,17 @@ import { isTauri } from './util/env'
 import { delay } from 'vue3-ts-util'
 import { exportFn } from './defineExportFunc'
 import { debounce, once, cloneDeep } from 'lodash-es'
+import { message } from 'ant-design-vue'
+import { t } from './i18n'
 
 const globalStore = useGlobalStore()
+const wsStore = useWorkspeaceSnapshot()
 const queue = createReactiveQueue()
 
 const presistKeysFiltered = presistKeys.filter(v => !['tabListHistoryRecord', 'recent'].includes(v))
 
 let lastConf = null as any
 const watchGlobalSettingChange = once(async () => {
-  if (isTauri) return
   globalStore.$subscribe((debounce(async () => {
     const conf = {} as Dict
     presistKeysFiltered.forEach((key) => {
@@ -37,6 +40,33 @@ const watchGlobalSettingChange = once(async () => {
 
 })
 
+const restoreWorkspaceSnapshot = once( async () => {
+  await delay(100)
+  const initPage = globalStore.defaultInitinalPage
+  if (initPage === 'empty') {
+    return
+  }
+  if (initPage === 'last-workspace-state') {
+    const last = globalStore.tabListHistoryRecord?.[1]
+    if (!last?.tabs) {
+      return
+    }
+    globalStore.tabList = cloneDeep(last.tabs)
+    message.success(t('restoreLastWorkspaceStateSuccess'))
+  } else {
+    const id = initPage.split('_')?.[2]
+    const shot = wsStore.snapshots.find(v => v.id === id)
+    if (!shot?.tabs) {
+      return
+    }
+    globalStore.tabList = cloneDeep(shot.tabs)
+    message.success(t('restoreWorkspaceSnapshotSuccess'))
+  }
+
+})
+
+
+
 useGlobalEventListen('updateGlobalSetting', async () => {
   await refreshTauriConf()
   console.log(tauriConf.value)
@@ -44,8 +74,9 @@ useGlobalEventListen('updateGlobalSetting', async () => {
   globalStore.conf = resp
   const r = await getQuickMovePaths(resp)
   globalStore.quickMovePaths = r.filter((v) => v?.dir?.trim?.())
+
   const restoreFeGlobalSetting = globalStore?.conf?.app_fe_setting?.global
-  if (!isTauri && restoreFeGlobalSetting) {
+  if (restoreFeGlobalSetting) {
     console.log('restoreFeGlobalSetting', restoreFeGlobalSetting)
     lastConf = cloneDeep(restoreFeGlobalSetting)
     presistKeysFiltered.forEach((key) => {
@@ -56,6 +87,7 @@ useGlobalEventListen('updateGlobalSetting', async () => {
     })
   }
   watchGlobalSettingChange()
+  restoreWorkspaceSnapshot()
   exportFn(globalStore)
   resolveQueryActions(globalStore)
 })

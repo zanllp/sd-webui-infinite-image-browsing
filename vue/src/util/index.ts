@@ -1,6 +1,8 @@
 import { t } from '@/i18n'
 import { message } from 'ant-design-vue'
 import { reactive } from 'vue'
+
+import { Modal } from 'ant-design-vue'
 import { FetchQueue, idKey, typedEventEmitter, type UniqueId} from 'vue3-ts-util'
 export * from './file'
 
@@ -190,4 +192,12 @@ export function unescapeHtml (string: string) {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"',)
     .replace(/&#39;/g, '\'')
+}
+
+
+export const actionConfirm = <T extends (...args: any[]) => void> (fn: T, msg ?: string) => {
+  if (!msg) {
+    msg = t('confirmThisAction')
+  }
+  return (...args: Parameters<T>) => Modal.confirm({ content: msg, onOk: () => fn(...args) })
 }
