@@ -101,7 +101,7 @@ export interface GlobalConf {
   enable_access_control: boolean
   launch_mode: 'server' | 'sd'
   export_fe_fn: boolean
-  app_fe_setting: Record<'global'|'fullscreen_layout', any> 
+  app_fe_setting: Record<'global'|'fullscreen_layout'| `workspace_snapshot_${string}`, any> 
   is_readonly: boolean
 }
 
@@ -160,4 +160,8 @@ export const batchGetDirTop4MediaInfo = async (paths: string[]) => {
 
 export const setAppFeSetting = async (name: keyof GlobalConf['app_fe_setting'], setting: Record<string, any>) => {
   await axiosInst.value.post('/app_fe_setting', { name, value: JSON.stringify(setting) })
+}
+
+export const removeAppFeSetting = async (name: keyof GlobalConf['app_fe_setting']) => {
+  await axiosInst.value.delete('/app_fe_setting', { data: { name } })
 }

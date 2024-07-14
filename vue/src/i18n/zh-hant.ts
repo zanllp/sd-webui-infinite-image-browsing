@@ -1,6 +1,21 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  restoreLastWorkspaceStateSuccess: '成功恢復上次工作區狀態',
+  restoreWorkspaceSnapshotSuccess: '成功恢復工作區快照',
+  openOnAppStart: '啟動時打開',
+  confirmThisAction: '確認這個操作？',
+  WorkspaceSnapshotDesc: `使用工作區快照功能你可以保存當前工作區的狀態，以便下次打開IIB時快速恢復到當前狀態。
+你可以在全局設置頁面中指定啟動IIB時恢復到哪一個快照，或者恢復到最後關閉前的工作區狀態。`,
+  WorkspaceSnapshot: '工作區快照',
+  restoreLastWorkspaceState: '恢復上次工作區狀態',
+  restoreWorkspaceSnapshot: '恢復工作區快照: {0}',
+  saveWorkspaceSnapshot: '保存工作區快照',
+  save: '保存',
+  name: '名稱',
+  nameRequired: '名稱不能為空',
+  saveCompleted: '保存完成',
+  openThisAppInNewWindow: '在新窗口打開本應用',
   readonly: '只讀',
   accessLimited: '訪問受限',
   selectFolder: '選擇文件夾',

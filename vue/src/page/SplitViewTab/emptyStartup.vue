@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
+import { Snapshot, useWorkspeaceSnapshot } from '@/store/useWorkspeaceSnapshot'
 import { uniqueId } from 'lodash-es'
 import { computed } from 'vue'
 import { ok } from 'vue3-ts-util'
@@ -16,6 +17,7 @@ import { isTauri } from '@/util/env'
 
 const global = useGlobalStore()
 const imgsli = useImgSliStore()
+const workspaceSnapshot = useWorkspeaceSnapshot()
 const props = defineProps<{
   tabIdx: number; paneIdx: number, popAddPathModal?: {
     path: string
@@ -33,8 +35,10 @@ const compCnMap: Partial<Record<TabPane['type'], string>> = {
   local: t('local'),
   'tag-search': t('imgSearch'),
   'fuzzy-search': t('fuzzy-search'),
+  'batch-download': t('batchDownload') + ' / ' + t('archive'),
+  'workspace-snapshot': t('WorkspaceSnapshot'),
+  
   'global-setting': t('globalSettings'),
-  'batch-download': t('batchDownload') + ' / ' + t('archive')
 }
 type FileTransModeIn = 'preset' | ExtraPathType
 const createPane = (type: TabPane['type'], path?: string, mode?: FileTransModeIn) => {
@@ -47,6 +51,7 @@ const createPane = (type: TabPane['type'], path?: string, mode?: FileTransModeIn
     case 'global-setting':
     case 'tag-search':
     case 'batch-download':
+    case 'workspace-snapshot':
     case 'fuzzy-search':
     case 'empty':
       pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId() }
@@ -108,6 +113,10 @@ const previewInNewWindow = () => window.parent.open('/infinite_image_browsing' +
 const restoreRecord = () => {
   ok(lastRecord.value)
   global.tabList = cloneDeep(lastRecord.value.tabs)
+}
+
+const restoreWorkspaceSnapshot = (item: Snapshot) => {
+  global.tabList = cloneDeep(item.tabs)
 }
 
 const machine = computed(() => {
@@ -254,10 +263,13 @@ const modes = computed(() => {
             <span class="text line-clamp-1">{{ $t('imgCompare') }}</span>
           </li>
           <li class="item" v-if="canpreviewInNewWindow" @click="previewInNewWindow">
-            <span class="text line-clamp-1">{{ $t('openInNewWindow') }}</span>
+            <span class="text line-clamp-1">{{ $t('openThisAppInNewWindow') }}</span>
           </li>
           <li class="item" v-if="lastRecord?.tabs.length" @click="restoreRecord">
-            <span class="text line-clamp-1">{{ $t('restoreLastRecord') }}</span>
+            <span class="text line-clamp-1">{{ $t('restoreLastWorkspaceState') }}</span>
+          </li>
+          <li class="item" v-for="item in workspaceSnapshot.snapshots" :key="item.id" @click="restoreWorkspaceSnapshot(item)">
+            <span class="text line-clamp-1">{{ $t('restoreWorkspaceSnapshot', [item.name]) }}</span>
           </li>
         </ul>
       </div>
@@ -346,7 +358,7 @@ const modes = computed(() => {
 
 .content {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(384px, 1fr));
   grid-gap: 20px;
   margin-top: 16px;
 }

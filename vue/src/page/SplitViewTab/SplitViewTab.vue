@@ -25,7 +25,8 @@ const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> 
   'fuzzy-search': defineAsyncComponent(() => import('@/page/TagSearch/SubstrSearch.vue')),
   'img-sli': defineAsyncComponent(() => import('@/page/ImgSli/ImgSliPagePane.vue')),
   'batch-download': defineAsyncComponent(() => import('@/page/batchDownload/batchDownload.vue')),
-  'grid-view': defineAsyncComponent(() => import('@/page/gridView/gridView.vue'))
+  'grid-view': defineAsyncComponent(() => import('@/page/gridView/gridView.vue')),
+  'workspace-snapshot': defineAsyncComponent(() => import('@/page/WorkspeaceSnapshot/index.vue'))
 }
 const onEdit = (idx: number, targetKey: any, action: string) => {
   const tab = global.tabList[idx]

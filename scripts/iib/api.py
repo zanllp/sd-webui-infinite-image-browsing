@@ -304,6 +304,14 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def app_fe_setting(req: AppFeSettingReq):
         conn = DataBase.get_conn()
         GlobalSetting.save_setting(conn, req.name, req.value)
+
+    class AppFeSettingDelReq(BaseModel):
+        name: str
+
+    @app.delete(f"{api_base}/app_fe_setting", dependencies=[Depends(verify_secret), Depends(write_permission_required)])
+    async def remove_app_fe_setting(req: AppFeSettingDelReq):
+        conn = DataBase.get_conn()
+        GlobalSetting.remove_setting(conn, req.name)
     
     @app.get(f"{api_base}/version", dependencies=[Depends(verify_secret)])
     async def get_version():

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { t } from '@/i18n'
-import { useGlobalStore, type Shortcut } from '@/store/useGlobalStore'
-import { ref } from 'vue'
+import { useGlobalStore, type Shortcut, type DefaultInitinalPage } from '@/store/useGlobalStore'
+import { useWorkspeaceSnapshot } from '@/store/useWorkspeaceSnapshot'
+import { computed, ref } from 'vue'
 import { SearchSelect } from 'vue3-ts-util'
 import { sortMethodConv, sortMethods } from '@/page/fileTransfer/fileSort'
 import { relaunch } from '@tauri-apps/api/process'
@@ -14,6 +15,7 @@ import { openRebuildImageIndexModal } from '@/components/functionalCallableComp'
 
 
 const globalStore = useGlobalStore()
+const wsStore = useWorkspeaceSnapshot()
 
 const langChanged = ref(false)
 const reload = async () => {
@@ -37,6 +39,15 @@ const oninitTauriLaunchConf = async () => {
   await fs.removeFile(appConfFilename)
   await relaunch()
 }
+
+const defaultInitinalPageOptions =  computed(() => {
+  const r: { text: string, value: DefaultInitinalPage }[] = [
+    { value: 'empty', text: t('emptyStartPage') },
+    { value: 'last-workspace-state', text: t('restoreLastWorkspaceState') },
+    ...wsStore.snapshots.map(item => ({ value: `workspace_snapshot_${item.id}` as `workspace_snapshot_${string}`, text: t('restoreWorkspaceSnapshot', [item.name]) }))
+  ]
+  return r
+})
 </script>
 <template>
   <div class="panel">
@@ -59,6 +70,9 @@ const oninitTauriLaunchConf = async () => {
 
       <a-form-item :label="$t('longPressOpenContextMenu')">
         <a-switch v-model:checked="globalStore.longPressOpenContextMenu" />
+      </a-form-item>
+      <a-form-item :label="$t('openOnAppStart')">
+        <search-select v-model:value="globalStore.defaultInitinalPage"  :options="defaultInitinalPageOptions" />
       </a-form-item>
       <a-form-item :label="$t('lang')">
         <div class="lang-select-wrap">
