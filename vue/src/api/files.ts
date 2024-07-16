@@ -1,3 +1,4 @@
+import { Dict } from '@/util'
 import { axiosInst } from '.'
 
 export interface FileNodeInfo {
@@ -50,4 +51,10 @@ export const copyFiles = async (
 
 export const mkdirs = async (dest_folder: string) => {
   await axiosInst.value.post('/mkdirs', { dest_folder })
+}
+
+
+export const  batchGetFilesInfo = async (paths: string[]) => {
+  const resp = await axiosInst.value.post('/batch_get_files_info', { paths }) 
+  return  resp.data as Dict<FileNodeInfo>
 }

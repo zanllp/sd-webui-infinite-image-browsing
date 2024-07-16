@@ -32,7 +32,8 @@ from scripts.iib.tool import (
     is_exe_ver,
     backup_db_file,
     get_current_commit_hash,
-    get_current_tag
+    get_current_tag,
+    get_file_info_by_path
 )
 from fastapi import FastAPI, HTTPException, Header, Response
 from fastapi.staticfiles import StaticFiles
@@ -258,6 +259,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         return [x for x in files if is_path_trusted(x["fullpath"])]
 
 
+
+    class PathsReq(BaseModel):
+        paths: List[str]
 
     @app.get(f"{api_base}/hello")
     async def greeting():
@@ -514,6 +518,15 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             raise HTTPException(status_code=400, detail=str(e))
 
         return {"files": filter_allowed_files(files)}
+    
+
+    @app.post(api_base + "/batch_get_files_info", dependencies=[Depends(verify_secret)])
+    async def batch_get_files_info(req: PathsReq):
+        res = {}
+        for path in req.paths:
+            check_path_trust(path)
+            res[path] = get_file_info_by_path(path)
+        return res
 
     @app.get(api_base + "/image-thumbnail", dependencies=[Depends(verify_secret)])
     async def thumbnail(path: str, t: str, size: str = "256x256"):
@@ -709,9 +722,6 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             return Response(content=content, media_type="text/javascript")
         else:
             return FileResponse(file_full_path)
-
-    class PathsReq(BaseModel):
-        paths: List[str]
 
     class OpenFolderReq(BaseModel):
         path: str

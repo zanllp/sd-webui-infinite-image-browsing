@@ -50,14 +50,12 @@ const genDiffToPrevious = ref<GenDiffInfo>()
 const genDiffToNext = ref<GenDiffInfo>()
 const calcGenInfoDiff = debounce(() => {
   const { getGenDiff, file, idx } = props
-  if (!getGenDiff) return
+  if (!getGenDiff) return 
   genDiffToNext.value = getGenDiff(file.gen_info_obj, idx, 1, file)
   genDiffToPrevious.value = getGenDiff(file.gen_info_obj, idx, -1, file)
 }, 200 + 100 * Math.random())
 
 watch(() => props.getGenDiffWatchDep?.(props.idx), () => {
-  genDiffToNext.value = undefined
-  genDiffToPrevious.value = undefined
   calcGenInfoDiff()
 }, { immediate: true, deep: true })
 
