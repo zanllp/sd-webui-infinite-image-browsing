@@ -1,5 +1,5 @@
 import { FileNodeInfo, getTargetFolderFiles, batchGetFilesInfo } from '@/api/files'
-import { first } from 'lodash-es'
+import { first, isEqual } from 'lodash-es'
 import { SortMethod, sortFiles } from './fileSort'
 import { isMediaFile } from '@/util'
 
@@ -11,6 +11,7 @@ interface TreeNode {
 export class Walker {
   root: TreeNode
   execQueue: { fn: () => Promise<TreeNode>; info: FileNodeInfo }[] = []
+  walkerInitPromsie: Promise<void>
   constructor(private entryPath: string, private sortMethod = SortMethod.CREATED_TIME_DESC) {
     this.root = {
       children: [],
@@ -25,7 +26,14 @@ export class Walker {
         fullpath: this.entryPath
       }
     }
-    this.fetchChildren(this.root)
+    this.walkerInitPromsie = new Promise((resolve) => {
+      batchGetFilesInfo([this.entryPath]).then(async (res) => {
+        this.root.info = res[this.entryPath]
+        await this.fetchChildren(this.root)
+        resolve()
+      })
+    })
+
   }
 
 
@@ -74,9 +82,7 @@ export class Walker {
     return par
   }
   async next () {
-    if (this.root.info.date === '') {
-      this.root.info = (await batchGetFilesInfo([this.entryPath]))[this.entryPath]
-    }
+    await this.walkerInitPromsie
     const pkg = first(this.execQueue)
     if (!pkg) {
       return null
@@ -110,7 +116,7 @@ export class Walker {
     const currNodesinfo = await batchGetFilesInfo(Alldirs.map((v) => v.fullpath))
 
     for (const node of Alldirs) {
-      if (JSON.stringify(node) !== JSON.stringify(currNodesinfo[node.fullpath])) {
+      if (!isEqual(node, currNodesinfo[node.fullpath])) {
         return true
       }
     }
@@ -119,7 +125,7 @@ export class Walker {
 
 
   /**
-   * 丝滑更新
+   * 丝滑更新, 需要在在面接受新的walker
    * currPos: 当前浏览到的位置， 如果太多可能导致加载太慢，需要避免
    */
   async seamlessRefresh (currPos: number) {
@@ -129,8 +135,7 @@ export class Walker {
     while (!newWalker.isCompleted || newWalker.images.length < currPos) {
       await newWalker.next()
     }
-    this.root = { ...newWalker.root }
-    this.execQueue = newWalker.execQueue.slice()
+    return newWalker
   }
 
 }

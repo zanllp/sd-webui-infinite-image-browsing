@@ -1,4 +1,8 @@
 export const zhHans = {
+  pollRefresh: '轮询刷新',
+  pollInterval: '轮询间隔',
+  stopPollRefresh: '停止轮询刷新',
+  pollRefreshTip: '默认情况下你从其他TAB返回IIB时或者IIB的可见性发生改变时IIB都会自动刷新。这个功能是为了让你一直呆在IIB内时他也能自动刷新，请慎重使用',
   restoreLastWorkspaceStateSuccess: '成功恢复上次工作区状态',
   restoreWorkspaceSnapshotSuccess: '成功恢复工作区快照',
   openOnAppStart: '启动时打开', 

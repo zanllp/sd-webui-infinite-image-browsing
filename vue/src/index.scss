@@ -240,3 +240,14 @@ ul.ant-dropdown-menu  {
     }
   }
 }
+
+.uni-desc {
+  border-left: 2px solid var(--primary-color);
+  background: var(--zp-primary-background);
+  padding: 8px;
+  white-space: pre-wrap;
+  color: var(--zp-secondary);
+  &.primary-bg {
+    background: var(--primary-color-1);
+  }
+}

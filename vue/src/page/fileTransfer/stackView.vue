@@ -55,7 +55,7 @@ const {
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, quickMoveTo,
   addToSearchScanPathAndQuickMove, locInputValue, isLocationEditing,
   onLocEditEnter, onEditBtnClick, share, selectAll, onCreateFloderBtnClick, onWalkBtnClick,
-  showWalkButton, searchInCurrentDir, backToLastUseTo
+  showWalkButton, searchInCurrentDir, backToLastUseTo, polling, onPollRefreshClick
 } = useLocation()
 const {
   gridItems,
@@ -136,6 +136,7 @@ watch(
         </div>
         <div class="actions">
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
+          <a class="opt" @click.prevent="onPollRefreshClick"> {{ polling ? $t('stopPollRefresh') : $t('pollRefresh')  }} </a>
           <a-dropdown>
             <a class="opt" @click.prevent>
               {{ $t('search') }}
