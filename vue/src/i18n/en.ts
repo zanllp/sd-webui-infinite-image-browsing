@@ -1,6 +1,11 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  pollInterval: 'Poll Interval',
+  pollRefresh: 'Polling refresh',
+  pollRefreshTip: 'By default, IIB will automatically refresh when you return to IIB from other tabs or when the visibility of IIB changes. This feature is designed to keep IIB refreshed even when you stay in IIB all the time, please use it with caution',
+  
+  stopPollRefresh: 'Stop Polling refresh',
   restoreLastWorkspaceStateSuccess: 'Restore Last Workspace State Success',
   restoreWorkspaceSnapshotSuccess: 'Restore Workspace Snapshot Success',
   openOnAppStart: 'Open on app start',

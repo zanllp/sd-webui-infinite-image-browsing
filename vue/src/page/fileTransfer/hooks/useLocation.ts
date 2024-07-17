@@ -4,10 +4,11 @@ import { t } from '@/i18n'
 import { DatabaseOutlined } from '@/icon'
 import { TagSearchTabPane, FuzzySearchTabPane, FileTransferTabPane, EmptyStartTabPane } from '@/store/useGlobalStore'
 import { copy2clipboardI18n, makeAsyncFunctionSingle, useGlobalEventListen } from '@/util'
-import { message } from 'ant-design-vue'
-import { ref, watch, onMounted, h, computed } from 'vue'
-import { delay, ok, useWatchDocument } from 'vue3-ts-util'
+import { message, Modal } from 'ant-design-vue'
+import { ref, watch, onMounted, h, computed, onUnmounted } from 'vue'
+import { delay, ok, Task, useWatchDocument } from 'vue3-ts-util'
 import { useHookShareState, stackCache, global } from '.'
+import NumInput from '@/components/numInput.vue'
 
 import * as Path from '@/util/path'
 import type Progress from 'nprogress'
@@ -15,6 +16,8 @@ import type Progress from 'nprogress'
 import NProgress from 'multi-nprogress'
 
 import { cloneDeep, debounce, last, uniqueId } from 'lodash-es'
+import { useLocalStorage } from '@vueuse/core'
+import { prefix } from '@/util/const'
 
 
 /**
@@ -223,40 +226,44 @@ export function useLocation () {
     }
   })
 
-  useGlobalEventListen(
-    'returnToIIB',
-    makeAsyncFunctionSingle(async () => {
-      if (props.value.mode === 'walk' && walker.value) {
-        const currpos = scroller.value?.$_endIndex ?? 64
-        if (currpos < 128 && await walker.value.isExpired()) {
-          const hide = message.loading(t('autoUpdate'), 0)
-          try {
-            const updatePromsie = new Promise<void>(resolve => {
-              walker.value!.seamlessRefresh(currpos).then(() => {
-                eventEmitter.value.emit('loadNextDir') // 确认铺满和更新tag，显示期间还能执行
-                resolve()
-              })
+
+  /**
+   * 上面那个是Force
+   */
+  const lazyRefresh = (async () => {
+    if (props.value.mode === 'walk' && walker.value) {
+      const currpos = scroller.value?.$_endIndex ?? 64
+      if (currpos < 128 && await walker.value.isExpired()) {
+        const hide = message.loading(t('autoUpdate'), 0)
+        try {
+          const updatePromsie = new Promise<void>(resolve => {
+            walker.value!.seamlessRefresh(currpos).then((newWalker) => {
+              walker.value = newWalker
+              eventEmitter.value.emit('loadNextDir') // 确认铺满和更新tag，显示期间还能执行
+              resolve()
             })
-            await Promise.all([updatePromsie, delay(1500)]) // 最少显示1.5s
-          } finally {
-            hide()
-          }
+          })
+          await Promise.all([updatePromsie, delay(1500)]) // 最少显示1.5s
+        } finally {
+          hide()
         }
-        return
       }
-      try {
-        np.value?.start()
-        const { files } = await getTargetFolderFiles(currLocation.value)
-        const currFiles = last(stack.value)!.files
-        if (currFiles.map((v) => v.date).join() !== files.map((v) => v.date).join()) {
-          last(stack.value)!.files = files
-          message.success(t('autoUpdate'))
-        }
-      } finally {
-        np.value?.done()
+      return
+    }
+    try {
+      np.value?.start()
+      const { files } = await getTargetFolderFiles(currLocation.value)
+      const currFiles = last(stack.value)!.files
+      if (currFiles.map((v) => v.date).join() !== files.map((v) => v.date).join()) {
+        last(stack.value)!.files = files
+        message.success(t('autoUpdate'))
       }
-    })
-  )
+    } finally {
+      np.value?.done()
+    }
+  })
+
+  useGlobalEventListen('returnToIIB', lazyRefresh)
 
   useEventListen.value('refresh', refresh)
 
@@ -378,6 +385,50 @@ export function useLocation () {
     onWalkBtnClick,
     showWalkButton,
     searchInCurrentDir,
-    backToLastUseTo
+    backToLastUseTo,
+    ...usePollRefresh(lazyRefresh)
+  }
+}
+
+const usePollRefresh = (lazyRefresh: () => Promise<any>) => {
+  const clearCbs = ref([] as (() => void)[])
+  const polling = computed(() => clearCbs.value.length > 0)
+  onUnmounted(() => {
+    clearCbs.value.forEach(v => v())
+
+  })
+  const interval = useLocalStorage(prefix + 'poll-interval', 3)
+  const onPollRefreshClick = () => {
+    if (clearCbs.value.length) {
+      clearCbs.value.forEach(v => v())
+      clearCbs.value = []
+      return
+    }
+    Modal.confirm({
+      title: t('pollRefresh'),
+      width: 640,
+      content: () => h('div', {}, [
+        h('p', { class: 'uni-desc primary-bg' }, t('pollRefreshTip')),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '4px' } }, [
+          h('span', {}, t('pollInterval') + '(s): '),
+          h(NumInput as any, {
+            min: 1,
+            max: 60 * 10,
+            modelValue: interval.value,
+            'onUpdate:modelValue': (v: number) => {
+              interval.value = v
+            }
+          })
+        ])
+      ]),
+      onOk: () => {
+        const { clearTask } = Task.run({ pollInterval: interval.value * 1000, action: lazyRefresh })
+        clearCbs.value.push(clearTask)
+      }
+    })
+  }
+  return {
+    onPollRefreshClick,
+    polling
   }
 }

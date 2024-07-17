@@ -49,7 +49,7 @@ const onCreate = async () => {
       <a-input v-model:value="name" :placeholder="$t('name')" style="max-width: 300px;" />
       <a-button type="primary" @click="onCreate">{{ $t('saveWorkspaceSnapshot') }}</a-button>
     </div>
-    <p class="desc">
+    <p class="uni-desc">
      {{ $t('WorkspaceSnapshotDesc') }}
     </p>
     <ul class="snapshot">
@@ -82,13 +82,6 @@ const onCreate = async () => {
   }
 }
 
-.desc {
-  border-left: 2px solid var(--primary-color);
-  background: var(--zp-primary-background);
-  padding: 8px;
-  white-space: pre-wrap;
-  color: var(--zp-secondary)
-}
 
 .snapshot {
   list-style: none;

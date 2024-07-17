@@ -15,6 +15,7 @@ const props = defineProps<{ min: number, max: number, step: number }>()
   display: flex;
   .slide {
     flex: 1;
+    min-width: 128px;
     max-width: 256px;
     margin-left: 8px;
   }

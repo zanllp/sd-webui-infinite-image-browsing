@@ -1,6 +1,10 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  pollInterval: '輪詢間隔',
+  pollRefresh: '輪詢刷新',
+  stopPollRefresh: '停止輪詢刷新',
+  pollRefreshTip: '默認情況下你從其他TAB返回IIB時或者IIB的可見性發生改變時IIB都會自動刷新。這個功能是為了讓你一直呆在IIB內時他也能自動刷新，請慎重使用',
   restoreLastWorkspaceStateSuccess: '成功恢復上次工作區狀態',
   restoreWorkspaceSnapshotSuccess: '成功恢復工作區快照',
   openOnAppStart: '啟動時打開',
