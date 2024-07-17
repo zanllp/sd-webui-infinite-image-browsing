@@ -93,7 +93,7 @@ export function useLocation () {
       ])
       pane.nameFallbackStr = title
       global.recent = global.recent.filter((v) => v.key !== pane.key)
-      global.recent.unshift({ path: loc, key: pane.key, mode: props.value.mode})
+      global.recent.unshift({ path: loc, key: pane.key, mode: props.value.mode })
       if (global.recent.length > 20) {
         global.recent = global.recent.slice(0, 20)
       }
@@ -159,7 +159,7 @@ export function useLocation () {
       await handleToScannedOnly(path)
     }
     // 初始化页面的tag,diff,文件夹方面，有些加载时间长的无法依靠watch location
-    delay(500).then(() => eventEmitter.value.emit('viewableAreaFilesChange')) 
+    delay(500).then(() => eventEmitter.value.emit('viewableAreaFilesChange'))
   }
 
 
@@ -226,7 +226,24 @@ export function useLocation () {
   useGlobalEventListen(
     'returnToIIB',
     makeAsyncFunctionSingle(async () => {
-      if (props.value.mode === 'walk') return
+      if (props.value.mode === 'walk' && walker.value) {
+        const currpos = scroller.value?.$_endIndex ?? 64
+        if (currpos < 128 && await walker.value.isExpired()) {
+          const hide = message.loading(t('autoUpdate'), 0)
+          try {
+            const updatePromsie = new Promise<void>(resolve => {
+              walker.value!.seamlessRefresh(currpos).then(() => {
+                eventEmitter.value.emit('loadNextDir') // 确认铺满和更新tag，显示期间还能执行
+                resolve()
+              })
+            })
+            await Promise.all([updatePromsie, delay(1500)]) // 最少显示1.5s
+          } finally {
+            hide()
+          }
+        }
+        return
+      }
       try {
         np.value?.start()
         const { files } = await getTargetFolderFiles(currLocation.value)
