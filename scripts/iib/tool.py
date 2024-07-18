@@ -5,6 +5,7 @@ import platform
 import re
 import tempfile
 import subprocess
+import threading
 from typing import Dict, List
 import sys
 import piexif
@@ -46,10 +47,14 @@ try:
 except Exception as e:
     print(e)
 
+is_running_within_uvicorn = 'uvicorn' in sys.argv[0]
 
 
 def backup_db_file(db_file_path):
+    if not is_running_within_uvicorn:
+        backup_db_file_base(db_file_path)
 
+def backup_db_file_base(db_file_path):
     if not os.path.exists(db_file_path):
         return
     max_backup_count = int(os.environ.get('IIB_DB_FILE_BACKUP_MAX', '8'))
