@@ -10,7 +10,7 @@ import { closeImageFullscreenPreview } from '@/util/imagePreviewOperation'
  * @param props
  * @returns
  */
-export function usePreview () {
+export function usePreview (spec?: { loadNext?: () => void }) {
   const {
     previewIdx,
     eventEmitter,
@@ -32,8 +32,14 @@ export function usePreview () {
   }
 
   const loadNextIfNeeded = () => {
+    if (canPreview('next')) {
+      return
+    }
+    if (spec?.loadNext) {
+      return spec.loadNext()
+    }
     if (props.value.mode === 'walk') {
-      if (!canPreview('next') && canLoadNext) {
+      if (canLoadNext.value) {
         message.info(t('loadingNextFolder'))
         eventEmitter.value.emit('loadNextDir', true) // 如果在全屏查看时外面scroller可能还停留在很久之前，使用全屏查看的索引
       }
@@ -99,7 +105,7 @@ export function usePreview () {
         next--
       }
     }
-    return isImageFile(files.value[next]?.name) ?? ''
+    return isImageFile(files.value[next]?.name)
   }
 
   useEventListen('removeFiles', async () => {

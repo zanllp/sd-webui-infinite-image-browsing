@@ -14,6 +14,7 @@ import { ExtraPathType } from '@/api/db'
 import { onMounted } from 'vue'
 import { hasNewRelease, version, latestCommit } from '@/util/versionManager'
 import { isTauri } from '@/util/env'
+import { message } from 'ant-design-vue'
 
 const global = useGlobalStore()
 const imgsli = useImgSliStore()
@@ -287,7 +288,7 @@ const modes = computed(() => {
         </ul>
       </div>
     </div>
-    <div class="ver-info">
+    <div class="ver-info" @dblclick="message.info('Ciallo～(∠・ω< )⌒☆')">
       <div v-if="modes">
         Mode: {{ modes }}
       </div>
