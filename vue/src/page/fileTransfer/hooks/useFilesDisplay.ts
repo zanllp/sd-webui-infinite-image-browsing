@@ -7,6 +7,7 @@ import { sortMethodConv } from '../fileSort'
 import { debounce } from 'lodash-es'
 import { isMediaFile } from '@/util/file'
 import { useHookShareState, global, tagStore } from '.'
+import { makeAsyncFunctionSingle } from '@/util'
 
 export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>} = {  }) {
   const {
@@ -78,12 +79,12 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
     }
   }
 
-  state.useEventListen('loadNextDir', async () => {
-    await fetchDataUntilViewFilled()
+  state.useEventListen('loadNextDir', makeAsyncFunctionSingle(async (isFullScreenPreview = false) => {
+    await fetchDataUntilViewFilled(isFullScreenPreview)
     if (props.value.mode === 'walk') {
       onViewableAreaChangeDebounced()
     }
-  })
+  }))
 
   state.useEventListen('viewableAreaFilesChange', () => {
     const files = getViewableAreaFiles.value()

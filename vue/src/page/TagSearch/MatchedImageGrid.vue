@@ -48,7 +48,11 @@ const {
   onScroll,
   saveAllFileAsJson,
   props: propsUpstream,
-  saveLoadedFileAsJson
+  saveLoadedFileAsJson,
+  changeIndchecked,
+  seedChangeChecked,
+  getGenDiff,
+  getGenDiffWatchDep
 } = useImageSearch(iter)
 
 watch(
@@ -134,6 +138,10 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
             @context-menu-click="onContextMenuClickU"
             @preview-visible-change="onPreviewVisibleChange"
             :is-selected-mutil-files="multiSelectedIdxs.length > 1"
+            :enable-change-indicator="changeIndchecked"
+            :seed-change-checked="seedChangeChecked"
+            :get-gen-diff="getGenDiff"
+            :get-gen-diff-watch-dep="getGenDiffWatchDep"
           />
         </template>
       </RecycleScroller>

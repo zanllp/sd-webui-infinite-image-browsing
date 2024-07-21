@@ -8,7 +8,8 @@ import {
   useFileTransfer,
   useFileItemActions,
   usePreview,
-  useEventListen
+  useEventListen,
+  useGenInfoDiff
 } from '../fileTransfer/hook'
 import { makeAsyncIterator } from 'vue3-ts-util'
 import { getImagesByTags } from '@/api/db'
@@ -38,7 +39,9 @@ export const useImageSearch = (iter: ReturnType<typeof createImageSearchIter>) =
     onContextMenuClick,
     onFileItemClick
   } = useFileItemActions({ openNext: identity })
-  const { previewIdx, previewing, onPreviewVisibleChange, previewImgMove, canPreview } = usePreview()
+  const { previewIdx, previewing, onPreviewVisibleChange, previewImgMove, canPreview } = usePreview({
+    loadNext: () => iter.next()
+  })
 
   const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
     stack.value = [{ curr: '', files: images.value! }] // hack，for delete multi files
@@ -59,7 +62,6 @@ export const useImageSearch = (iter: ReturnType<typeof createImageSearchIter>) =
     }
     saveLoadedFileAsJson()
   }
-
 
   return {
     images,
@@ -88,6 +90,7 @@ export const useImageSearch = (iter: ReturnType<typeof createImageSearchIter>) =
     onScroll,
     saveLoadedFileAsJson,
     saveAllFileAsJson,
-    props
+    props,
+    ...useGenInfoDiff()
   }
 }
