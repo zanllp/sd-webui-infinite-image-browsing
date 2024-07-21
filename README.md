@@ -9,13 +9,6 @@
 
 #  Stable Diffusion webui Infinite Image Browsing
 
-<p>It's not just an image/video browser, but also a powerful image manager. Precise image search combined with multi-selection operations allows for filtering/archiving/packaging ...etc, greatly increasing efficiency. It also supports running in standalone mode, without the need for SD-Webui.
-
-It is also suitable for managing regular photos and videos, allowing you to tag or search them. We have made numerous optimizations to ensure performance under extreme conditions.</p>
-
-https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b890b-7be8-4816-abba-f3ad340a2232
-
-
 ### Software Support and Development Progress Overview
 | Software               | Support          | Provided by |
 | ---------------------- | ---------------- |  ----------- |
@@ -26,7 +19,7 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 | StableSwarmUI          | Supported    |  Built-in    |
 | Pixiv                  | Supported        |  [pixiv_iib_plugin](https://github.com/zanllp/pixiv_iib_plugin) |
 
-You can add your own parser through [parsers](https://github.com/zanllp/sd-webui-infinite-image-browsing/tree/main/scripts/iib/parsers), You can also implement parsing for more formats by writing plugins. For reference, see [pixiv_iib_plugin](https://github.com/zanllp/pixiv_iib_plugin)
+If you would like to support more software, please refer to: [parsers](https://github.com/zanllp/sd-webui-infinite-image-browsing/tree/main/scripts/iib/parsers) or [pixiv_iib_plugin](https://github.com/zanllp/pixiv_iib_plugin)
 
 ## Key Features
 
@@ -137,7 +130,7 @@ Use iframe to access IIB and use it as a file browser for your application. Refe
 
 ## Image Search
 
-During the first use, you need to click and wait for the index generation. For my case with 20,000 images, it took about 15 seconds (with an AMD 5600X CPU and PCIe SSD). For subsequent uses, it will check whether there are changes in the folder, and if so, it needs to regenerate the index. Usually, this process is very fast.
+During the first use, you need to click and wait for the index generation. For my case with 20,000 images, it took about 45 seconds (with an AMD 5600X CPU and PCIe SSD). For subsequent uses, it will check whether there are changes in the folder, and if so, it needs to regenerate the index. Usually, this process is very fast.
 
 Image search supports translation, see https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/39 for more detail. Feel free to share files for other languages to facilitate everyone's use.
 <img width="1109" alt="image" src="https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/62d1ffe3-2d1f-4449-803a-970273753855">

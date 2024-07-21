@@ -8,14 +8,6 @@
 [安装/运行](#安装运行)
 
 
-
-<p >不仅仅是图像浏览器，更是一个强大的图像管理器。精确的图像搜索配合多选操作进行筛选/归档/打包，成倍提高效率。更是支持以独立模式运行，无需SD-Webui。同时它也适合用于对普通图片和视频的管理，你可以对它们打标签或者搜索，我们做了诸多优化保证在极端情况的下的性能</p>
-
-
-
-https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b890b-7be8-4816-abba-f3ad340a2232
-
-
 ## 主要特性
 
 ### 🔥 极佳性能
@@ -87,10 +79,12 @@ https://github.com/zanllp/sd-webui-infinite-image-browsing/assets/25872019/807b8
 
 
 [在微信上赞助我](.github/wechat_funding.jpg)
+
 <a href='https://ko-fi.com/zanllp' target='_blank'><img height='35' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />
 
 
 [视频演示可以在Bilibili上观看](https://space.bilibili.com/27227392/channel/series)
+
 # 安装/运行
 
 ## 作为SD-webui的扩展程序:
