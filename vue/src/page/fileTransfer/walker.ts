@@ -129,12 +129,14 @@ export class Walker {
    * currPos: 当前浏览到的位置， 如果太多可能导致加载太慢，需要避免
    */
   async seamlessRefresh (currPos: number) {
-    console.log('seamlessRefresh', currPos)
-
+    const startTime = performance.now();
     const newWalker = new Walker(this.entryPath, this.sortMethod)
-    while (!newWalker.isCompleted || newWalker.images.length < currPos) {
+    await newWalker.walkerInitPromsie
+    while (!newWalker.isCompleted && newWalker.images.length < currPos) {
       await newWalker.next()
     }
+    const endTime = performance.now();
+    console.log('seamlessRefresh currPos:', currPos, 'Time taken:', (endTime - startTime).toFixed(0), 'ms');
     return newWalker
   }
 
