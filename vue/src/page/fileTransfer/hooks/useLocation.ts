@@ -233,11 +233,24 @@ export function useLocation () {
   const lazyRefresh = (async () => {
     if (props.value.mode === 'walk' && walker.value) {
       const currpos = scroller.value?.$_endIndex ?? 64
-      if (currpos < 128 && await walker.value.isExpired()) {
-        const hide = message.loading(t('autoUpdate'), 0)
+      if (global.autoRefreshWalkMode &&
+        currpos < global.autoRefreshWalkModePosLimit &&
+        await walker.value.isExpired()) {
+        const taskCancelled = ref(false)
+        const onDisable = () => {
+          taskCancelled.value = true
+          global.autoRefreshWalkMode = false
+          hide()
+          message.success(t('walkModeAutoRefreshDisabled'))
+        }
+        const hide = message.loading(h('span', {}, [
+          t('autoUpdate'),
+          h('span', { onClick: onDisable, style: { paddingLeft: '16px', cursor: 'pointer', color: 'var(--primary-color)' } }, t('disable'))
+        ]), 0)
         try {
           const updatePromsie = new Promise<void>(resolve => {
-            walker.value!.seamlessRefresh(currpos).then((newWalker) => {
+            walker.value!.seamlessRefresh(currpos, taskCancelled).then((newWalker) => {
+              if (taskCancelled.value) return
               walker.value = newWalker
               eventEmitter.value.emit('loadNextDir') // 确认铺满和更新tag，显示期间还能执行
               resolve()
@@ -251,6 +264,9 @@ export function useLocation () {
       return
     }
     try {
+      if (!global.autoRefreshNormalFixedMode) {
+        return
+      }
       np.value?.start()
       const { files } = await getTargetFolderFiles(currLocation.value)
       const currFiles = last(stack.value)!.files

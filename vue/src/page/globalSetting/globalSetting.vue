@@ -40,7 +40,7 @@ const oninitTauriLaunchConf = async () => {
   await relaunch()
 }
 
-const defaultInitinalPageOptions =  computed(() => {
+const defaultInitinalPageOptions = computed(() => {
   const r: { text: string, value: DefaultInitinalPage }[] = [
     { value: 'empty', text: t('emptyStartPage') },
     { value: 'last-workspace-state', text: t('restoreLastWorkspaceState') },
@@ -58,7 +58,18 @@ const defaultInitinalPageOptions =  computed(() => {
       <ImageSetting />
       <h2>{{ t('imgSearch') }}</h2>
       <a-form-item :label="$t('rebuildImageIndex')">
-        <AButton @click="openRebuildImageIndexModal" >{{ $t('start') }}</AButton>
+        <AButton @click="openRebuildImageIndexModal">{{ $t('start') }}</AButton>
+      </a-form-item>
+
+      <h2>{{ t('autoRefresh') }}</h2>
+      <a-form-item :label="$t('autoRefreshWalkMode')">
+        <a-switch v-model:checked="globalStore.autoRefreshWalkMode" />
+      </a-form-item>
+      <a-form-item :label="$t('autoRefreshNormalFixedMode')">
+        <a-switch v-model:checked="globalStore.autoRefreshNormalFixedMode" />
+      </a-form-item>
+      <a-form-item :label="t('autoRefreshWalkModePosLimit')">
+        <NumInput :min="0" :max="1024" :step="16" v-model="globalStore.autoRefreshWalkModePosLimit" />
       </a-form-item>
       <h2>{{ t('other') }}</h2>
       <a-form-item :label="$t('onlyFoldersAndImages')">
@@ -72,20 +83,20 @@ const defaultInitinalPageOptions =  computed(() => {
         <a-switch v-model:checked="globalStore.longPressOpenContextMenu" />
       </a-form-item>
       <a-form-item :label="$t('openOnAppStart')">
-        <search-select v-model:value="globalStore.defaultInitinalPage"  :options="defaultInitinalPageOptions" />
+        <search-select v-model:value="globalStore.defaultInitinalPage" :options="defaultInitinalPageOptions" />
       </a-form-item>
       <a-form-item :label="$t('lang')">
         <div class="lang-select-wrap">
           <SearchSelect :options="langs" v-model:value="globalStore.lang" @change="langChanged = true" />
         </div>
         <a-button type="primary" @click="reload" v-if="langChanged" ghost>{{
-          t('langChangeReload')
-        }}</a-button>
+      t('langChangeReload')
+    }}</a-button>
       </a-form-item>
       <a-form-item :label="$t(key + 'SkipConfirm')" v-for="_, key in globalStore.ignoredConfirmActions" :key="key">
         <ACheckbox v-model:checked="globalStore.ignoredConfirmActions[key]"></ACheckbox>
       </a-form-item>
-      <h2>{{ t('shortcutKey') }}</h2> 
+      <h2>{{ t('shortcutKey') }}</h2>
       <a-form-item :label="$t('download')">
         <div class="col">
           <a-input :value="globalStore.shortcut.download" @keydown.stop.prevent="onShortcutKeyDown($event, 'download')"

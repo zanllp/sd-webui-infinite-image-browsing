@@ -137,20 +137,26 @@ function spanWrap (text: string) {
   if (!text) {
     return ''
   }
-  let result = ''
-  const values = text.split(/[\n,]+/).map(v => v.trim()).filter(v => v)
+  const frags = [] as string[]
+  const specBreakTag = 'BREAK'
+  const values = text.replace(/\sBREAK\s/g, ',' + specBreakTag + ',').split(/[\n,]+/).map(v => v.trim()).filter(v => v)
   let parenthesisActive = false
   for (let i = 0; i < values.length; i++) {
+    if (values[i] === specBreakTag) {
+      frags.push('<br><span class="tag" style="color:var(--zp-secondary)">BREAK</span><br>')
+      continue
+
+    }
     const trimmedValue = values[i]
     if (!parenthesisActive) parenthesisActive = trimmedValue.includes('(')
-    const cssClass = parenthesisActive ? 'has-parentheses' : ''
-    result += `<span class="${cssClass}">${trimmedValue}</span>`
-    if (i < values.length - 1) {
-      result += ','
-    }
+    const classList = ['tag']
+    if (parenthesisActive) classList.push('has-parentheses')
+    if (trimmedValue.length < 32) classList.push('short-tag')
+
+    frags.push(`<span class="${classList.join(' ')}">${trimmedValue}</span>`)
     if (parenthesisActive) parenthesisActive = !trimmedValue.includes(')')
   }
-  return result
+  return frags.join('')
 }
 
 useWatchDocument('load', e => {
@@ -423,20 +429,31 @@ const showFullContent = computed(() => lr.value || state.value.expanded)
       word-break: break-word;
       line-height: 1.78em;
 
-      :deep(span) {
-        background: var(--zp-secondary-variant-background);
-        color: var(--zp-primary);
-        padding: 2px 4px;
-        border-radius: 4px;
-        margin-right: 4px;
-      }
+      :deep() {
+        .short-tag {
+          word-break: break-all;
+          white-space: nowrap;
+        }
 
-      :deep(.has-parentheses) {
-        background: rgba(255, 100, 100, 0.14);
-      }
+        span.tag {
 
-      :deep(span:hover) {
-        background: rgba(120, 0, 0, 0.15);
+          background: var(--zp-secondary-variant-background);
+          color: var(--zp-primary);
+          padding: 2px 4px;
+          border-radius: 6px;
+          margin-right: 6px;
+          margin-top: 4px;
+          line-height: 1.3em;
+          display: inline-block;
+        }
+
+        .has-parentheses.tag {
+          background: rgba(255, 100, 100, 0.14);
+        }
+
+        span.tag:hover {
+          background: rgba(120, 0, 0, 0.15);
+        }
       }
     }
 

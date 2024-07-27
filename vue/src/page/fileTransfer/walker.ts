@@ -2,6 +2,7 @@ import { FileNodeInfo, getTargetFolderFiles, batchGetFilesInfo } from '@/api/fil
 import { first, isEqual } from 'lodash-es'
 import { SortMethod, sortFiles } from './fileSort'
 import { isMediaFile } from '@/util'
+import { ref, Ref } from 'vue'
 
 interface TreeNode {
   children: TreeNode[]
@@ -128,11 +129,15 @@ export class Walker {
    * 丝滑更新, 需要在在面接受新的walker
    * currPos: 当前浏览到的位置， 如果太多可能导致加载太慢，需要避免
    */
-  async seamlessRefresh (currPos: number) {
+  async seamlessRefresh (currPos: number, cannelled: Ref<boolean> = ref(false)) {
     const startTime = performance.now();
     const newWalker = new Walker(this.entryPath, this.sortMethod)
     await newWalker.walkerInitPromsie
     while (!newWalker.isCompleted && newWalker.images.length < currPos) {
+      if (cannelled.value) {
+        throw new Error('canceled')
+        
+      }
       await newWalker.next()
     }
     const endTime = performance.now();
