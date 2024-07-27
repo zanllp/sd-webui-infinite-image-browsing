@@ -1,4 +1,10 @@
 export const zhHans = {
+  walkModeAutoRefreshDisabled: 'Walk模式下自动刷新已停用',
+  disable: '停用',
+  autoRefresh: '自动刷新',
+  autoRefreshNormalFixedMode: '启用自动刷新 (Normal/Fixed模式)',
+  autoRefreshWalkMode: '启用自动刷新 (Walk模式)',
+  autoRefreshWalkModePosLimit: 'Walk模式下触发自动刷新的位置极限',
   pollRefresh: '轮询刷新',
   pollInterval: '轮询间隔',
   stopPollRefresh: '停止轮询刷新',

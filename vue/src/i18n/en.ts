@@ -1,6 +1,12 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  walkModeAutoRefreshDisabled: 'Auto Refresh in Walk Mode Disabled',
+  disable: 'Disable',
+  autoRefresh: 'Auto Refresh',
+  autoRefreshNormalFixedMode: 'Enable Auto Refresh (Normal/Fixed Mode)',
+  autoRefreshWalkMode: 'Enable Auto Refresh (Walk Mode)',
+  autoRefreshWalkModePosLimit: 'Position Limit for Auto Refresh in Walk Mode',
   pollInterval: 'Poll Interval',
   pollRefresh: 'Polling refresh',
   pollRefreshTip: 'By default, IIB will automatically refresh when you return to IIB from other tabs or when the visibility of IIB changes. This feature is designed to keep IIB refreshed even when you stay in IIB all the time, please use it with caution',

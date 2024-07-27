@@ -1,6 +1,12 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  walkModeAutoRefreshDisabled: 'Walk模式下自動刷新已停用',
+  disable: '停用',
+  autoRefresh: '自動刷新',
+  autoRefreshNormalFixedMode: '啟用自動刷新 (Normal/Fixed模式)',
+  autoRefreshWalkMode: '啟用自動刷新 (Walk模式)',
+  autoRefreshWalkModePosLimit: 'Walk模式下觸發自動刷新的位置極限',
   pollInterval: '輪詢間隔',
   pollRefresh: '輪詢刷新',
   stopPollRefresh: '停止輪詢刷新',

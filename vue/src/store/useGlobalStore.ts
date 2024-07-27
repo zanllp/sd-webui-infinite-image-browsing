@@ -183,7 +183,10 @@ export const presistKeys = [
   'shortcut',
   'ignoredConfirmActions',
   'previewBgOpacity',
-  'defaultInitinalPage'
+  'defaultInitinalPage',
+  'autoRefreshWalkMode',
+  'autoRefreshWalkModePosLimit',
+  'autoRefreshNormalFixedMode'
 ]
 
 function cellWidthMap(x: number): number {
@@ -358,7 +361,10 @@ export const useGlobalStore = defineStore(
       getShortPath,
       extraPathAliasMap,
       previewBgOpacity,
-      defaultInitinalPage: ref<DefaultInitinalPage>('empty')
+      defaultInitinalPage: ref<DefaultInitinalPage>('empty'),
+      autoRefreshWalkMode: ref(true),
+      autoRefreshWalkModePosLimit: ref(128),
+      autoRefreshNormalFixedMode: ref(true),
     }
   },
   {

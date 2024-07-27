@@ -499,6 +499,7 @@ def lora_extract(lora: str):
 
 
 def parse_prompt(x: str):
+    x = re.sub(r'\sBREAK\s', ' , BREAK , ', x)
     x = re.sub(
         re_parens, "", x.replace("，", ",").replace("-", " ").replace("_", " ")
     )
@@ -537,6 +538,7 @@ def parse_generation_parameters(x: str):
     done_with_prompt = False
     if not x:
         return {"meta": {}, "pos_prompt": [], "lora": [], "lyco": []}
+    
     *lines, lastline = x.strip().split("\n")
     if len(re_param.findall(lastline)) < 3:
         lines.append(lastline)
