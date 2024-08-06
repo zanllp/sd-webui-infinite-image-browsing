@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  syncHistoryToLocal: '同步歷史到本地',
+  showCommaInGenInfoPanel: '在生成信息面板中顯示逗號',
   walkModeAutoRefreshDisabled: 'Walk模式下自動刷新已停用',
   disable: '停用',
   autoRefresh: '自動刷新',

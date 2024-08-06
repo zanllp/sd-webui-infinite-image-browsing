@@ -103,6 +103,7 @@ export const { useEventListen: useGlobalEventListen, eventEmitter: globalEvents 
     updateGlobalSetting(): void
     searchIndexExpired(): void
     closeTabPane(tabIdx: number, key: string): void
+    updateGlobalSettingDone(): void
   }>()
 
 type AsyncFunction<T> = (...args: any[]) => Promise<T>
