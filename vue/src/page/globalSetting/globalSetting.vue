@@ -72,8 +72,20 @@ const defaultInitinalPageOptions = computed(() => {
         <NumInput :min="0" :max="1024" :step="16" v-model="globalStore.autoRefreshWalkModePosLimit" />
       </a-form-item>
       <h2>{{ t('other') }}</h2>
+      <a-form-item :label="$t('lang')">
+        <div class="lang-select-wrap">
+          <SearchSelect :options="langs" v-model:value="globalStore.lang" @change="langChanged = true" />
+        </div>
+        <a-button type="primary" @click="reload" v-if="langChanged" ghost>{{
+      t('langChangeReload')
+    }}</a-button>
+      </a-form-item>
       <a-form-item :label="$t('onlyFoldersAndImages')">
         <a-switch v-model:checked="globalStore.onlyFoldersAndImages" />
+      </a-form-item>
+      <!--在生成信息面板显示逗号-->
+      <a-form-item :label="$t('showCommaInGenInfoPanel')">
+        <a-switch v-model:checked="globalStore.showCommaInInfoPanel" />
       </a-form-item>
       <a-form-item :label="$t('defaultSortingMethod')">
         <search-select v-model:value="globalStore.defaultSortingMethod" :conv="sortMethodConv" :options="sortMethods" />
@@ -84,14 +96,6 @@ const defaultInitinalPageOptions = computed(() => {
       </a-form-item>
       <a-form-item :label="$t('openOnAppStart')">
         <search-select v-model:value="globalStore.defaultInitinalPage" :options="defaultInitinalPageOptions" />
-      </a-form-item>
-      <a-form-item :label="$t('lang')">
-        <div class="lang-select-wrap">
-          <SearchSelect :options="langs" v-model:value="globalStore.lang" @change="langChanged = true" />
-        </div>
-        <a-button type="primary" @click="reload" v-if="langChanged" ghost>{{
-      t('langChangeReload')
-    }}</a-button>
       </a-form-item>
       <a-form-item :label="$t(key + 'SkipConfirm')" v-for="_, key in globalStore.ignoredConfirmActions" :key="key">
         <ACheckbox v-model:checked="globalStore.ignoredConfirmActions[key]"></ACheckbox>

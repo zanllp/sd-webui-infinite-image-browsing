@@ -209,7 +209,7 @@ def setup_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--extra_paths",
         nargs="+",
-        help="Extra paths to use, will be added to Quick Move.",
+        help="Extra paths to use, these paths will be added to the homepage but the images in these paths will not be indexed. They are only used for browsing. If you need to index them, please add them via the '+ Add' button on the homepage.",
         default=[],
     )
     parser.add_argument(

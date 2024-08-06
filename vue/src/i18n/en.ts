@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  syncHistoryToLocal: 'Sync History to Local',
+  showCommaInGenInfoPanel: 'Show Comma in Generation Info Panel',
   walkModeAutoRefreshDisabled: 'Auto Refresh in Walk Mode Disabled',
   disable: 'Disable',
   autoRefresh: 'Auto Refresh',

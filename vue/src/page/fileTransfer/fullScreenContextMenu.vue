@@ -156,7 +156,7 @@ function spanWrap (text: string) {
     frags.push(`<span class="${classList.join(' ')}">${trimmedValue}</span>`)
     if (parenthesisActive) parenthesisActive = !trimmedValue.includes(')')
   }
-  return frags.join('')
+  return frags.join(global.showCommaInInfoPanel ? ',' : ' ')
 }
 
 useWatchDocument('load', e => {

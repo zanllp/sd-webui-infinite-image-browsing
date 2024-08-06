@@ -90,6 +90,7 @@ useGlobalEventListen('updateGlobalSetting', async () => {
   restoreWorkspaceSnapshot()
   exportFn(globalStore)
   resolveQueryActions(globalStore)
+  // globalEvents.emit('updateGlobalSettingDone')
 })
 
 
