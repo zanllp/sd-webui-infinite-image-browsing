@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  readonlyModeSettingPageDesc: 'You are currently in read-only mode. You can adjust the settings, but these changes will not be saved.',
   syncHistoryToLocal: 'Sync History to Local',
   showCommaInGenInfoPanel: 'Show Comma in Generation Info Panel',
   walkModeAutoRefreshDisabled: 'Auto Refresh in Walk Mode Disabled',

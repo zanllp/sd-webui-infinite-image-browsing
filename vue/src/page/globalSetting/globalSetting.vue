@@ -51,6 +51,7 @@ const defaultInitinalPageOptions = computed(() => {
 </script>
 <template>
   <div class="panel">
+    <a-alert :message="$t('readonlyModeSettingPageDesc')" v-if="globalStore.conf?.is_readonly" type="warning" />
     <a-select v-if="false" />
 
     <a-form>

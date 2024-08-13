@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  readonlyModeSettingPageDesc: '當前為只讀模式，你可以調整調整設置，但這些更改不會被保存',
   syncHistoryToLocal: '同步歷史到本地',
   showCommaInGenInfoPanel: '在生成信息面板中顯示逗號',
   walkModeAutoRefreshDisabled: 'Walk模式下自動刷新已停用',

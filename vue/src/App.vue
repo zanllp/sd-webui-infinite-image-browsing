@@ -25,6 +25,9 @@ const presistKeysFiltered = presistKeys.filter(v => !['tabListHistoryRecord', 'r
 let lastConf = null as any
 const watchGlobalSettingChange = once(async () => {
   globalStore.$subscribe((debounce(async () => {
+    if (globalStore.conf?.is_readonly === true) {
+      return
+    }
     const conf = {} as Dict
     presistKeysFiltered.forEach((key) => {
       conf[key] = cloneDeep((globalStore as any)[key])
