@@ -1,4 +1,5 @@
 export const zhHans = {
+  readonlyModeSettingPageDesc: '当前为只读模式，你可以调整调整设置，但这些更改不会被保存',
   syncHistoryToLocal: '同步历史到本地',
   showCommaInGenInfoPanel: '在生成信息面板中显示逗号',
   walkModeAutoRefreshDisabled: 'Walk模式下自动刷新已停用',
