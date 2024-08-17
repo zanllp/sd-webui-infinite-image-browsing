@@ -4,7 +4,7 @@ import { Snapshot, useWorkspeaceSnapshot } from '@/store/useWorkspeaceSnapshot'
 import { uniqueId } from 'lodash-es'
 import { computed } from 'vue'
 import { ok } from 'vue3-ts-util'
-import { FileDoneOutlined, LockOutlined, PlusOutlined } from '@/icon'
+import { FileDoneOutlined, LockOutlined, PlusOutlined, QuestionCircleOutlined } from '@/icon'
 import { t } from '@/i18n'
 import { cloneDeep } from 'lodash-es'
 import { useImgSliStore } from '@/store/useImgSli'
@@ -15,6 +15,7 @@ import { onMounted } from 'vue'
 import { hasNewRelease, version, latestCommit } from '@/util/versionManager'
 import { isTauri } from '@/util/env'
 import { message } from 'ant-design-vue'
+import { useSettingSync } from '@/util'
 
 const global = useGlobalStore()
 const imgsli = useImgSliStore()
@@ -31,6 +32,9 @@ onMounted(() => {
     addToExtraPath(props.popAddPathModal.type, props.popAddPathModal.path)
   }
 })
+
+const sync = useSettingSync()
+
 
 const compCnMap: Partial<Record<TabPane['type'], string>> = {
   local: t('local'),
@@ -154,19 +158,23 @@ const modes = computed(() => {
         <LockOutlined title="Access Control mode" style="vertical-align: text-bottom;" />
       </div>
       <div flex-placeholder />
-
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing" target="_blank"
-        class="last-record">Github</a>
+        class="quick-action">Github</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/.env.example" target="_blank"
-        class="last-record">{{ $t('privacyAndSecurity') }}</a>
+        class="quick-action">{{ $t('privacyAndSecurity') }}</a>
       <a-badge :count="hasNewRelease ? 'new' : null" :offset="[2,0]" color="geekblue">
         <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/releases" target="_blank"
-          class="last-record">Releases</a>
+          class="quick-action">Releases</a>
       </a-badge>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log" target="_blank"
-        class="last-record">{{ $t('changlog') }}</a>
+        class="quick-action">{{ $t('changlog') }}</a>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank"
-        class="last-record">{{ $t('faq') }}</a>
+        class="quick-action">{{ $t('faq') }}</a>
+      <div class="quick-action" v-if="!isTauri">
+        {{ $t('sync') }}  <a-tooltip :title="$t('syncDesc')">
+          <QuestionCircleOutlined/>
+        </a-tooltip>  :  <a-switch v-model:checked="sync" />
+      </div>
       <a-radio-group v-model:value="global.darkModeControl" button-style="solid">
         <a-radio-button value="light">Light</a-radio-button>
         <a-radio-button value="auto">Auto</a-radio-button>
@@ -341,19 +349,23 @@ const modes = computed(() => {
   margin: 0;
 }
 
-.last-record {
+.quick-action {
   margin-right: 16px;
   font-size: 14px;
   color: var(--zp-secondary);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
 }
 
-.last-record a {
+.quick-action a {
   text-decoration: none;
   color: var(--zp-secondary);
 }
 
-.last-record a:hover {
+.quick-action a:hover {
   color: var(--zp-primary);
 }
 

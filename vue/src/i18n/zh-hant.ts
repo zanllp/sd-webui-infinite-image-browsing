@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  sync: '同步',
+  syncDesc: '當你需要實現多設備或者多用戶之間的簡單設置隔離時你可以關閉這個選項, IIB的大部分設置將只會保存到當前瀏覽器上(跨域的情況下也是隔離)，不會同步到服務器',
   readonlyModeSettingPageDesc: '當前為只讀模式，你可以調整調整設置，但這些更改不會被保存',
   syncHistoryToLocal: '同步歷史到本地',
   showCommaInGenInfoPanel: '在生成信息面板中顯示逗號',
