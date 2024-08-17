@@ -207,7 +207,8 @@ export const actionConfirm = <T extends (...args: any[]) => void> (fn: T, msg ?:
 
 export const settingSyncKey = prefix + 'sync'
 export const isSync = () => {
-  return localStorage.getItem(settingSyncKey) === 'true'
+  const r = localStorage.getItem(settingSyncKey)
+  return r === 'true' || r === null
 }
 export const useSettingSync = () => {
   const sync = useLocalStorage(settingSyncKey, true)
