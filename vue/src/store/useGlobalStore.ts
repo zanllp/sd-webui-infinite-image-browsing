@@ -14,6 +14,7 @@ import { VNode, computed, onMounted, reactive, toRaw, watch } from 'vue'
 import { ref } from 'vue'
 import { WithRequired } from 'vue3-ts-util'
 import * as Path from '../util/path'
+import { prefix } from '@/util/const'
 
 interface TabPaneBase {
   name: string | VNode
@@ -200,7 +201,7 @@ function cellWidthMap(x: number): number {
 }
 
 export const useGlobalStore = defineStore(
-  'useGlobalStore',
+  prefix + 'useGlobalStore',
   () => {
     const conf = ref<GlobalConf>()
     const quickMovePaths = ref([] as ReturnTypeAsync<typeof getQuickMovePaths>)

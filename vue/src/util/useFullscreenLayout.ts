@@ -1,17 +1,25 @@
 import { Ref, computed, onMounted, reactive, toRefs, watch } from 'vue'
-import { debounce } from 'lodash-es'
+import { debounce, cloneDeep } from 'lodash-es'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { setAppFeSetting } from '@/api'
+import { useLocalStorage } from '@vueuse/core'
+import { prefix } from './const'
+
 type LayoutConf = { enable: boolean, panelWidth: number, alwaysOn: boolean }
 let lastState: LayoutConf | null = null
+
+
 export const useFullscreenLayout = () => {
   const g = useGlobalStore()
-  const state =  reactive<LayoutConf>(lastState ?? g.conf?.app_fe_setting?.fullscreen_layout ?? { enable: false, panelWidth: 384, alwaysOn: true })
-  
+  // 只存储和提供给state的值
+  const storageState = useLocalStorage(prefix + 'fullscreen_layout', { enable: false, panelWidth: 384, alwaysOn: true })
+  const state = reactive<LayoutConf>(lastState ?? g.conf?.app_fe_setting?.fullscreen_layout ?? cloneDeep(storageState.value))
+
   const panelwidtrhStyleVarName = '--iib-lr-layout-info-panel-width'
   const lrLayoutContainerOffset = computed(() => state.alwaysOn && state.enable ? state.panelWidth : 0)
 
-  watch(state, () => {
+  watch(state, (val) => {
+    storageState.value = cloneDeep(val)
     onUpdate(state, panelwidtrhStyleVarName, lrLayoutContainerOffset)
     sync(state)
     lastState = state

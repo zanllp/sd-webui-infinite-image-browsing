@@ -4,7 +4,9 @@ import { reactive } from 'vue'
 
 import { Modal } from 'ant-design-vue'
 import { FetchQueue, idKey, typedEventEmitter, type UniqueId} from 'vue3-ts-util'
+import { useLocalStorage } from '@vueuse/core'
 export * from './file'
+import { prefix } from './const'
 
 export const parentWindow = () => {
   return parent.window as any as Window & {
@@ -201,4 +203,13 @@ export const actionConfirm = <T extends (...args: any[]) => void> (fn: T, msg ?:
     msg = t('confirmThisAction')
   }
   return (...args: Parameters<T>) => Modal.confirm({ content: msg, onOk: () => fn(...args) })
+}
+
+export const settingSyncKey = prefix + 'sync'
+export const isSync = () => {
+  return localStorage.getItem(settingSyncKey) === 'true'
+}
+export const useSettingSync = () => {
+  const sync = useLocalStorage(settingSyncKey, true)
+  return sync
 }

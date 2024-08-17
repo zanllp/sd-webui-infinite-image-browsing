@@ -9,7 +9,7 @@ import { computed, h, ref } from 'vue'
 import 'ant-design-vue/es/input/style/index.css'
 import sjcl from 'sjcl'
 import { tauriConf } from '@/util/tauriAppConf'
-import { Dict } from '@/util'
+import { Dict, isSync } from '@/util'
 import { FileNodeInfo } from './files'
 
 export const apiBase = computed(() =>
@@ -107,7 +107,15 @@ export interface GlobalConf {
 
 export const getGlobalSetting = async () => {
   const resp = await axiosInst.value.get('/global_setting')
-  return resp.data as GlobalConf
+  const data = resp.data as GlobalConf
+  try {
+    if (!isSync()) {
+      data.app_fe_setting = {} as any
+    }
+  } catch (error) {
+    console.error(error)
+  }
+  return data
 }
 
 export const getVersion = async () => {
@@ -159,9 +167,11 @@ export const batchGetDirTop4MediaInfo = async (paths: string[]) => {
 }
 
 export const setAppFeSetting = async (name: keyof GlobalConf['app_fe_setting'], setting: Record<string, any>) => {
+  if (!isSync()) return 
   await axiosInst.value.post('/app_fe_setting', { name, value: JSON.stringify(setting) })
 }
 
 export const removeAppFeSetting = async (name: keyof GlobalConf['app_fe_setting']) => {
+  if (!isSync()) return 
   await axiosInst.value.delete('/app_fe_setting', { data: { name } })
 }

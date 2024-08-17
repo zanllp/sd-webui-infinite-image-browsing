@@ -4,6 +4,7 @@ import { toRaw, watch } from 'vue'
 import { ref } from 'vue'
 import { prefix } from '@/util/const'
 import { Tab, copyTabFilterWorkspaceSnapShot, useGlobalStore } from './useGlobalStore'
+import { isSync } from '@/util'
 
 export interface Snapshot {
   id: string
@@ -28,7 +29,7 @@ export const useWorkspeaceSnapshot = defineStore(
     const snapshots = ref<Snapshot[]>([])
 
     watch(() => g.conf?.app_fe_setting, setting => {
-      if (setting) {
+      if (setting && isSync()) {
         const keys = Object.keys(setting)
         const snapshotKeys = keys.filter((v) => v.startsWith('workspace_snapshot_'))
         const snapshotList = snapshotKeys.map((key) => (setting as any)[key])
@@ -45,6 +46,12 @@ export const useWorkspeaceSnapshot = defineStore(
       createSnapshot,
       snapshots,
       addSnapshot
+    }
+  },
+  {
+    persist: {
+      // debug: true,
+      paths: ['snapshots']
     }
   }
 )
