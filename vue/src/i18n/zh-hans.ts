@@ -1,4 +1,6 @@
 export const zhHans = {
+  success: '成功',
+  setCurrFrameAsVideoPoster: '设置当前帧为视频封面',
   sync: '同步',
   syncDesc: '当你需要实现多设备或者多用户之间的简单设置隔离时你可以关闭这个选项, IIB的大部分设置将只会保存到当前浏览器上(跨域的情况下也是隔离)，不会同步到服务器',
   readonlyModeSettingPageDesc: '当前为只读模式，你可以调整调整设置，但这些更改不会被保存',

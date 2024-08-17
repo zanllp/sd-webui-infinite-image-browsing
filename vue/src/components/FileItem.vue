@@ -150,8 +150,8 @@ const minShowDetailWidth = 160
             </a-tag>
           </div>
         </div>
-        <div :class="`idx-${idx} item-content video`" :urld="toVideoCoverUrl(file)"
-          :style="{ 'background-image': `url('${toVideoCoverUrl(file)}')` }" v-else-if="isVideoFile(file.name)"
+        <div :class="`idx-${idx} item-content video`" :url="toVideoCoverUrl(file)"
+          :style="{ 'background-image': `url('${file.cover_url ?? toVideoCoverUrl(file)}')` }" v-else-if="isVideoFile(file.name)"
           @click="openVideoModal(file, (id) => emit('contextMenuClick', { key: `toggle-tag-${id}` } as any, file, idx))">
 
           <div class="play-icon">
@@ -212,6 +212,7 @@ const minShowDetailWidth = 160
     width: v-bind('$props.cellWidth + "px"');
     height: v-bind('$props.cellWidth + "px"');
     background-size: cover;
+    background-position: center;
     cursor: pointer;
   }
 

@@ -1,4 +1,6 @@
+import base64
 from datetime import datetime, timedelta
+import io
 import os
 from pathlib import Path
 import shutil
@@ -33,7 +35,8 @@ from scripts.iib.tool import (
     backup_db_file,
     get_current_commit_hash,
     get_current_tag,
-    get_file_info_by_path
+    get_file_info_by_path,
+    get_frame_at_second
 )
 from fastapi import FastAPI, HTTPException, Header, Response
 from fastapi.staticfiles import StaticFiles
@@ -628,13 +631,14 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         hash = hash_dir
         cache_dir = os.path.join(cache_base_dir, "iib_cache", "video_cover", hash_dir)
         cache_path = os.path.join(cache_dir, "cover.webp")
-
+        if path.find("kuking") != -1:
+            print("--- get cache_path", path, cache_path)
         # 如果缓存文件存在，则直接返回该文件
         if os.path.exists(cache_path):
             return FileResponse(
                 cache_path,
                 media_type="image/webp",
-                headers={"Cache-Control": "max-age=31536000", "ETag": hash},
+                headers={"ETag": hash},
             )
         # 如果缓存文件不存在，则生成缩略图并保存
         
@@ -652,7 +656,35 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         return FileResponse(
             cache_path,
             media_type="image/webp",
-            headers={"Cache-Control": "max-age=31536000", "ETag": hash},
+            headers={"ETag": hash},
+        )
+    
+    class SetTargetFrameAsCoverReq(BaseModel):
+        base64_img: str
+        path: str
+        updated_time: str
+
+    def save_base64_image(base64_str, file_path):
+        if base64_str.startswith('data:image'):
+            base64_str = base64_str.split(',')[1]
+        image_data = base64.b64decode(base64_str)
+        with open(file_path, 'wb') as file:
+            file.write(image_data)
+
+    @app.post(api_base+ "/set_target_frame_as_video_cover", dependencies=[Depends(verify_secret), Depends(write_permission_required)])
+    async def set_target_frame_as_video_cover(req: SetTargetFrameAsCoverReq):
+        hash_dir = hashlib.md5((req.path + req.updated_time).encode("utf-8")).hexdigest()
+        hash = hash_dir
+        cache_dir = os.path.join(cache_base_dir, "iib_cache", "video_cover", hash_dir)
+        cache_path = os.path.join(cache_dir, "cover.webp")
+
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        save_base64_image(req.base64_img, cache_path)
+        return FileResponse(
+            cache_path,
+            media_type="image/webp",
+            headers={"ETag": hash},
         )
 
     @app.post(api_base + "/send_img_path", dependencies=[Depends(verify_secret)])
