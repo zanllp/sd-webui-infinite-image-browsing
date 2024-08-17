@@ -631,8 +631,6 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         hash = hash_dir
         cache_dir = os.path.join(cache_base_dir, "iib_cache", "video_cover", hash_dir)
         cache_path = os.path.join(cache_dir, "cover.webp")
-        if path.find("kuking") != -1:
-            print("--- get cache_path", path, cache_path)
         # 如果缓存文件存在，则直接返回该文件
         if os.path.exists(cache_path):
             return FileResponse(

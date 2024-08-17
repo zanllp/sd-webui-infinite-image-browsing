@@ -2,7 +2,7 @@ import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
   success: 'Success',
-  setCurrFrameAsVideoPoster: 'Set Current Frame as Video Poster',
+  setCurrFrameAsVideoPoster: 'Set Current Frame as Video Cover',
   sync: 'Sync',
   syncDesc: 'When you need to achieve simple setting isolation between multiple devices or users, you can turn off this option. Most of the settings of IIB will only be saved to the current browser (isolation in the case of cross-domain), and will not be synchronized to the server.',
   readonlyModeSettingPageDesc: 'You are currently in read-only mode. You can adjust the settings, but these changes will not be saved.',
