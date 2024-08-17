@@ -175,3 +175,7 @@ export const removeAppFeSetting = async (name: keyof GlobalConf['app_fe_setting'
   if (!isSync()) return 
   await axiosInst.value.delete('/app_fe_setting', { data: { name } })
 }
+
+export const setTargetFrameAsCover = async (body: {path: string, base64_img: string, updated_time: string}) => {
+  await axiosInst.value.post('/set_target_frame_as_video_cover', body)
+}

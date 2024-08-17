@@ -12,6 +12,7 @@ export interface FileNodeInfo {
   is_under_scanned_path: boolean
   gen_info_raw?: string
   gen_info_obj?: object
+  cover_url?: string
 }
 
 export interface GenDiffInfo {

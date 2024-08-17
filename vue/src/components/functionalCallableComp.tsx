@@ -2,6 +2,7 @@ import { Button, Input, Modal, message } from 'ant-design-vue'
 import { ref } from 'vue'
 import * as Path from '@/util/path'
 import { FileNodeInfo, mkdirs } from '@/api/files'
+import { setTargetFrameAsCover } from '@/api'
 import { t } from '@/i18n'
 import { downloadFiles, globalEvents, toRawFileUrl, toStreamVideoUrl } from '@/util'
 import { DownloadOutlined } from '@/icon'
@@ -9,6 +10,7 @@ import { isStandalone } from '@/util/env'
 import { rebuildImageIndex, renameFile } from '@/api/db'
 import { useTagStore } from '@/store/useTagStore'
 import { useGlobalStore } from '@/store/useGlobalStore'
+import { base64ToFile, video2base64 } from '@/util/video'
 
 export const openCreateFlodersModal = (base: string) => {
   const floderName = ref('')
@@ -40,12 +42,23 @@ export const MultiSelectTips = () => (
   </p>
 )
 
-
 export const openVideoModal = (file: FileNodeInfo, onTagClick?: (id: string| number) => void) => {
   const tagStore = useTagStore()
   const global = useGlobalStore()
   const isSelected = (id: string | number) => {
     return !!tagStore.tagMap.get(file.fullpath)?.some(v => v.id === id)
+  }
+  const videoRef = ref<HTMLVideoElement | null>(null)
+  const onSetCurrFrameAsVideoPoster = async  () => {
+    if (!videoRef.value) {
+      return
+    }
+    const video = videoRef.value
+    video.pause()
+    const base64 = video2base64(video)
+    await setTargetFrameAsCover({ path: file.fullpath, base64_img: base64, updated_time: file.date } )
+    file.cover_url = URL.createObjectURL(await base64ToFile(base64, 'cover'))
+    message.success(t('success') + '!')
   }
   Modal.confirm({
     width: '80vw',
@@ -60,7 +73,7 @@ export const openVideoModal = (file: FileNodeInfo, onTagClick?: (id: string| num
           flexDirection: 'column'
         }}
       >
-        <video style={{ maxHeight: isStandalone ? '80vh' : '60vh', maxWidth: '100%', minWidth: '70%' }} src={toStreamVideoUrl(file)} controls autoplay></video>
+        <video ref={videoRef} style={{ maxHeight: isStandalone ? '80vh' : '60vh', maxWidth: '100%', minWidth: '70%' }} src={toStreamVideoUrl(file)} controls autoplay></video>
         <div style={{ marginTop: '4px' }}>
           {global.conf!.all_custom_tags.map((tag) => 
             <div key={tag.id} onClick={() => onTagClick?.(tag.id)}  style={{
@@ -84,6 +97,11 @@ export const openVideoModal = (file: FileNodeInfo, onTagClick?: (id: string| num
             {{
               icon: <DownloadOutlined/>,
               default: t('download')
+            }}
+          </Button>
+          <Button onClick={onSetCurrFrameAsVideoPoster}>
+            {{
+              default: t('setCurrFrameAsVideoPoster')
             }}
           </Button>
         </div>
