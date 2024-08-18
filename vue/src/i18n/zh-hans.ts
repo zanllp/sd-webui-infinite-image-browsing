@@ -1,4 +1,5 @@
 export const zhHans = {
+  clearCacheIfNotTakeEffect: '如果更改没有生效，请尝试清理页面缓存',
   success: '成功',
   setCurrFrameAsVideoPoster: '设置当前帧为视频封面',
   sync: '同步',

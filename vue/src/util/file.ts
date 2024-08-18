@@ -17,7 +17,7 @@ export const toStreamVideoUrl = (file: FileNodeInfo) =>
   `${apiBase.value}/stream_video?path=${encode(file.fullpath)}`
 
 export const toVideoCoverUrl = (file: FileNodeInfo) =>
-  (isTauri ? '' : parent.document.location.origin) + `${apiBase.value}/video_cover?path=${encode(file.fullpath)}&t=${encode(file.date)}`
+  (isTauri ? '' : parent.document.location.origin) + `${apiBase.value}/video_cover?path=${encode(file.fullpath)}&mt=${encode(file.date)}`
 
 export type FileTransferData = {
   path: string[]
