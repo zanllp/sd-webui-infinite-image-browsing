@@ -58,7 +58,7 @@ export const openVideoModal = (file: FileNodeInfo, onTagClick?: (id: string| num
     const base64 = video2base64(video)
     await setTargetFrameAsCover({ path: file.fullpath, base64_img: base64, updated_time: file.date } )
     file.cover_url = URL.createObjectURL(await base64ToFile(base64, 'cover'))
-    message.success(t('success') + '!')
+    message.success(t('success') + '!  ' + t('clearCacheIfNotTakeEffect'))
   }
   Modal.confirm({
     width: '80vw',
