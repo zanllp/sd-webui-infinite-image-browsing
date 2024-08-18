@@ -617,7 +617,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         )
 
     @app.get(api_base + "/video_cover", dependencies=[Depends(verify_secret)])
-    async def video_cover(path: str, t: str):        
+    async def video_cover(path: str, mt: str):        
         check_path_trust(path)
         if not cache_base_dir:
             return
@@ -627,7 +627,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         if not os.path.isfile(path) and get_video_type(path):
             raise HTTPException(status_code=400, detail=f"{path} is not a video file")
         # 生成缓存文件的路径
-        hash_dir = hashlib.md5((path + t).encode("utf-8")).hexdigest()
+        hash_dir = hashlib.md5((path + mt).encode("utf-8")).hexdigest()
         hash = hash_dir
         cache_dir = os.path.join(cache_base_dir, "iib_cache", "video_cover", hash_dir)
         cache_path = os.path.join(cache_dir, "cover.webp")
@@ -636,7 +636,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             return FileResponse(
                 cache_path,
                 media_type="image/webp",
-                headers={"ETag": hash},
+                headers={
+                    "Cache-Control": "no-store",
+                },
             )
         # 如果缓存文件不存在，则生成缩略图并保存
         
@@ -654,7 +656,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         return FileResponse(
             cache_path,
             media_type="image/webp",
-            headers={"ETag": hash},
+            headers={
+                "Cache-Control": "no-store",
+            },
         )
     
     class SetTargetFrameAsCoverReq(BaseModel):

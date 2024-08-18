@@ -1,6 +1,7 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  clearCacheIfNotTakeEffect:  '如果更改沒有生效，請嘗試清理頁面緩存',
   success: '成功',
   setCurrFrameAsVideoPoster: '設置當前幀為視頻封面',
   sync: '同步',
