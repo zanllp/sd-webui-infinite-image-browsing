@@ -104,7 +104,7 @@
 ## 作为桌面应用程序（不需要SD-webui和Python）:
 exe版本同样支持ComfyUI/Fooocus/NovelAI
 
-从仓库页面右侧的`releases`部分下载并安装程序。如果提示检测到病毒忽略即可这是误报。
+从仓库页面右侧的`releases`部分下载并安装程序。如果提示检测到病毒忽略即可这是误报。在windows下的编译有两个版本, pyinstaller版本拥有比较低的误报率。
 
 如果你需要自行编译请参考 https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/.github/workflows/tauri_app_build.yml
 ## 作为库使用
