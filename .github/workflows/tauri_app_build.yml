@@ -54,7 +54,7 @@ jobs:
       - name: Upload Server Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: iib_app_cli
+          name: iib_app_cli_${{ runner.os }}
           path: |
             out/iib_app_cli-${{ env.VERSION }}_${{ runner.os }}
             out/iib_app_cli-${{ env.VERSION }}-${{ runner.os }}.exe
@@ -213,7 +213,12 @@ jobs:
       
       - uses: actions/download-artifact@v3
         with:
-          name: iib_app_cli
+          name: iib_app_cli_Windows
+          path: artifacts
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: iib_app_cli_Linux
           path: artifacts
 
       - name: Release
