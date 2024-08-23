@@ -36,7 +36,7 @@ from scripts.iib.tool import (
     get_current_commit_hash,
     get_current_tag,
     get_file_info_by_path,
-    get_frame_at_second
+    get_data_file_path
 )
 from fastapi import FastAPI, HTTPException, Header, Response
 from fastapi.staticfiles import StaticFiles
@@ -73,7 +73,8 @@ try:
 except Exception as e:
     logger.error(e)
 
-index_html_path = os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
+
+index_html_path = get_data_file_path("vue/dist/index.html") if is_exe_ver else os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 
 
 send_img_path = {"value": ""}
@@ -746,7 +747,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 return Response(content=content, media_type="text/html")
         return FileResponse(index_html_path)
     
-    static_dir = f"{cwd}/vue/dist"
+    static_dir = get_data_file_path("vue/dist") if is_exe_ver else f"{cwd}/vue/dist" 
     @app.get(api_base + "/fe-static/{file_path:path}")
     async def serve_static_file(file_path: str):
         file_full_path = f"{static_dir}/{file_path}"

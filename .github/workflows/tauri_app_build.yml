@@ -34,6 +34,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          
           pip install -r requirements.txt
 
       - name: Build Executable
@@ -43,7 +44,22 @@ jobs:
           script-name: app.py
           output-file: iib_api_server
           output-dir: out
+          include-data-dir: |
+            vue/dist=vue/dist
       
+      - run: cp out/iib_api_server out/iib_app_cli-${{ env.VERSION }}-${{ runner.os }}
+        if: matrix.os == 'ubuntu-20.04'
+      - run: cp out/iib_api_server.exe out/iib_app_cli-${{ env.VERSION }}-${{ runner.os }}.exe
+        if: matrix.os == 'windows-latest'
+      
+      - name: Upload Server Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: iib_app_cli_${{ runner.os }}
+          path: |
+            out/iib_app_cli-${{ env.VERSION }}-${{ runner.os }}
+            out/iib_app_cli-${{ env.VERSION }}-${{ runner.os }}.exe
+
       - name: Upload Server Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -194,6 +210,16 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: bundle-${{ env.VERSION }}-Linux
+          path: artifacts
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: iib_app_cli_Windows
+          path: artifacts
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: iib_app_cli_Linux
           path: artifacts
 
       - name: Release

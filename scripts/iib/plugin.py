@@ -4,6 +4,8 @@ import sys
 from scripts.iib.tool import cwd
 
 def load_plugins(plugin_dir):
+    if not os.path.exists(plugin_dir):
+        return []
     plugins = []
     for filename in os.listdir(plugin_dir):
         main_module_path = os.path.join(plugin_dir, filename, 'main.py')
