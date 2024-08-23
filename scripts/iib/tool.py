@@ -724,3 +724,13 @@ def get_frame_at_second(video_path, second):
         container.seek(frame_container_pts, backward=True, stream=container.streams.video[0])
         frame = next(container.decode(video=0))
         return frame
+    
+def get_data_file_path(filename):
+    if hasattr(sys, '_MEIPASS'):
+        # Running in a PyInstaller bundle
+        base_path = os.path.join(sys._MEIPASS)
+    else:
+        # Running in a normal Python environment
+        base_path = os.path.join(os.path.dirname(__file__))
+    
+    return os.path.normpath(os.path.join(base_path, "../../", filename))
