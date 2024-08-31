@@ -488,6 +488,7 @@ re_lora_prompt = re.compile("<lora:([\w_\s.]+)(?::([\d.]+))+>", re.IGNORECASE)
 re_lora_extract = re.compile(r"([\w_\s.]+)(?:\d+)?")
 re_lyco_prompt = re.compile("<lyco:([\w_\s.]+):([\d.]+)>", re.IGNORECASE)
 re_parens = re.compile(r"[\\/\[\](){}]+")
+re_lora_white_symbol= re.compile(r">\s+")
 
 
 def lora_extract(lora: str):
@@ -500,9 +501,9 @@ def lora_extract(lora: str):
 
 def parse_prompt(x: str):
     x = re.sub(r'\sBREAK\s', ' , BREAK , ', x)
-    x = re.sub(
-        re_parens, "", x.replace("，", ",").replace("-", " ").replace("_", " ")
-    )
+    x = re.sub(re_lora_white_symbol, "> , ", x)
+    x = x.replace("，", ",").replace("-", " ").replace("_", " ")
+    x = re.sub(re_parens, "", x)
     tag_list = [x.strip() for x in x.split(",")]
     res = []
     lora_list = []
