@@ -139,7 +139,7 @@ function spanWrap (text: string) {
   }
   const frags = [] as string[]
   const specBreakTag = 'BREAK'
-  const values = text.replace(/\sBREAK\s/g, ',' + specBreakTag + ',').split(/[\n,]+/).map(v => v.trim()).filter(v => v)
+  const values = text.replace(/&gt;\s/g, '> ,').replace(/\sBREAK\s/g, ',' + specBreakTag + ',').split(/[\n,]+/).map(v => v.trim()).filter(v => v)
   let parenthesisActive = false
   for (let i = 0; i < values.length; i++) {
     if (values[i] === specBreakTag) {
