@@ -18,7 +18,7 @@ import { t } from '@/i18n'
 import { batchUpdateImageTag, toggleCustomTagToImg } from '@/api/db'
 import { downloadFileInfoJSON, downloadFiles, toRawFileUrl } from '@/util/file'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
-import { MultiSelectTips, openRenameFileModal } from '@/components/functionalCallableComp'
+import { MultiSelectTips, openAddNewTagModal, openRenameFileModal } from '@/components/functionalCallableComp'
 import { batchDownload, events, imgTransferBus, stackCache, tagStore, useEventListen, useHookShareState, global } from '.'
 import { closeImageFullscreenPreview, openImageFullscreenPreview } from '@/util/imagePreviewOperation'
 
@@ -141,6 +141,8 @@ export function useFileItemActions (
       await tagStore.refreshTags([file.fullpath])
       message.success(t(is_remove ? 'removedTagFromImage' : 'addedTagToImage', { tag }))
       return
+    } else if (key === 'add-custom-tag') {
+      openAddNewTagModal()
     } else if (key.startsWith('batch-add-tag-') || key.startsWith('batch-remove-tag-')) {
       const tagId = +key.split('-tag-')[1]
       const action = key.includes('add') ? 'add' : 'remove'

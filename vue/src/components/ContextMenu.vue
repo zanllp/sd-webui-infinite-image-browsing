@@ -65,6 +65,7 @@ const tags = computed(() => {
         
         <template v-if="isSelectedMutilFiles">
           <a-sub-menu key="batch-add-tag" :title="$t('batchAddTag')">
+            <a-menu-item key="add-custom-tag" >+ {{ $t('addNewCustomTag') }}</a-menu-item>
             <a-menu-item v-for="tag in tags" :key="`batch-add-tag-${tag.id}`">{{ tag.name }}
             </a-menu-item>
           </a-sub-menu>
@@ -74,6 +75,7 @@ const tags = computed(() => {
           </a-sub-menu>
         </template>
         <a-sub-menu v-else key="toggle-tag" :title="$t('toggleTag')">
+          <a-menu-item key="add-custom-tag" >+ {{ $t('addNewCustomTag') }}</a-menu-item>
           <a-menu-item v-for="tag in tags" :key="`toggle-tag-${tag.id}`">{{ tag.name }} <star-filled
               v-if="tag.selected" /><star-outlined v-else />
           </a-menu-item>

@@ -1,4 +1,7 @@
+
 export const zhHans = {
+  pinnedSearchHistoryDesc: '你可以通过点击置顶的搜索历史来快速还原到之前的搜索状态',
+  addNewCustomTag: '添加新的自定义标签',
   clearCacheIfNotTakeEffect: '如果更改没有生效，请尝试清理页面缓存',
   success: '成功',
   setCurrFrameAsVideoPoster: '设置当前帧为视频封面',

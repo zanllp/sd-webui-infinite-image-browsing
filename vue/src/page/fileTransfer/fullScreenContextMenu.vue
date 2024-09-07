@@ -26,6 +26,7 @@ import { parse } from '@/util/stable-diffusion-image-metadata'
 import { useFullscreenLayout } from '@/util/useFullscreenLayout'
 import { useMouseInElement } from '@vueuse/core'
 import { closeImageFullscreenPreview } from '@/util/imagePreviewOperation'
+import { openAddNewTagModal } from '@/components/functionalCallableComp'
 
 
 const global = useGlobalStore()
@@ -302,6 +303,7 @@ const showFullContent = computed(() => lr.value || state.value.expanded)
           </span>
         </div>
         <div class="tags-container" v-if="global.conf?.all_custom_tags">
+          <div class="tag" @click="openAddNewTagModal" :style="{ '--tag-color': 'var(--zp-luminous)' }">+ {{ $t('add') }}</div>
           <div class="tag" v-for="tag in global.conf.all_custom_tags"
             @click="emit('contextMenuClick', { key: `toggle-tag-${tag.id}` } as any, file, idx)"
             :class="{ selected: selectedTag.some(v => v.id === tag.id) }" :key="tag.id"
