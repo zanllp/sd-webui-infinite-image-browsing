@@ -268,6 +268,9 @@ const tagIdsToString = (tagIds: TagId[]) => {
         {{ $t('needGenerateIdx') }}
       </p>
       <div class="list-container">
+      <div class="pinned-search">
+        Tips: {{ $t('pinnedSearchHistoryDesc') }}
+      </div>
       <template :key="name" v-for="[name, list] in classifyTags">
          <ul class="tag-list" v-if="name !== 'Media Type' || list.length > 1">
           <h3 class="cat-name"
@@ -415,6 +418,14 @@ const tagIdsToString = (tagIds: TagId[]) => {
         transform: rotate(90deg);
       }
     }
+  }
+
+  .pinned-search {
+    padding: 0;
+    margin: 16px;
+    border-radius: 16px;
+    background: var(--zp-primary-background);
+    padding: 8px;
   }
 
   .tag-list {

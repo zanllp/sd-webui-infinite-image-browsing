@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  pinnedSearchHistoryDesc: 'You can quickly restore to the previous search state by clicking the pinned search history.',
+  addNewCustomTag: 'Add New Custom Tag',
   clearCacheIfNotTakeEffect: 'If the changes do not take effect, try clearing the page cache',
   success: 'Success',
   setCurrFrameAsVideoPoster: 'Set Current Frame as Video Cover',
