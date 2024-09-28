@@ -8,12 +8,17 @@
       <div @click="$emit('toggleNot')">{{ $t('exclude')
         }}</div>
     </div>
-    <li class="tag" :title="toTagDisplayName(tag)" :class="{ selected }" @click="$emit('click')">
+
+    <li class="tag" :title="toTagDisplayName(tag)" 
+      :class="{ selected }" @click="$emit('click')">
+      <div style="width: 24px;height: 24px;overflow: hidden;border-radius: 6px; margin-right: 8px;" @click.stop>
+        <ColorPicker v-if="isCustomTag" :pureColor="tagStore.getColor(tag)" @update:pureColor="onTagColorChange" />
+      </div>
       <CheckOutlined v-if="selected" />
       <div class="tag-name">
         {{ toTagDisplayName(tag) }}
       </div>
-      <span v-if="name === 'custom' && idx !== 0" class="remove" @click.capture.stop="$emit('remove')">
+      <span v-if="isCustomTag && idx !== 0" class="remove" @click.capture.stop="$emit('remove')">
         <CloseOutlined />
       </span>
     </li>
@@ -25,15 +30,29 @@ import { CheckOutlined, CloseOutlined } from '@/icon'
 import {
   type Tag,
 } from '@/api/db'
-defineProps<{
+import { ColorPicker } from 'vue3-colorpicker'
+import 'vue3-colorpicker/style.css'
+import { useTagStore } from '@/store/useTagStore'
+import { computed } from 'vue'
+
+const tagStore = useTagStore()
+
+const onTagColorChange = (color: string) => {
+  emit('tagColorChange', color)
+}
+
+const props = defineProps<{
   tag: Tag,
   name: string,
   selected: boolean,
   idx: number
 }>()
-defineEmits(['remove', 'toggleAnd', 'toggleNot', 'toggleOr', 'click'])
+
+const isCustomTag = computed(() => props.name === 'custom')
+const emit = defineEmits(['remove', 'toggleAnd', 'toggleNot', 'toggleOr', 'click', 'tagColorChange'])
 const toTagDisplayName = (v: Tag, withType = false) =>
   (withType ? `[${v.type}] ` : '') + (v.display_name ? `${v.display_name} : ${v.name}` : v.name)
+
 </script>
 <style lang="scss" scoped>
 .tag-wrap {
@@ -61,7 +80,8 @@ const toTagDisplayName = (v: Tag, withType = false) =>
     align-items: center;
     justify-content: space-between;
     flex-direction: row;
-    gap: 4px ;
+    gap: 4px;
+
     &.selected {
       color: var(--primary-color);
       border: 2px solid var(--primary-color);

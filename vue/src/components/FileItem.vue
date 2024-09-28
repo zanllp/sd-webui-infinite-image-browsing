@@ -145,7 +145,7 @@ const minShowDetailWidth = 160
     onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
   }" />
           <div class="tags-container" v-if="customTags && cellWidth > minShowDetailWidth">
-            <a-tag v-for="tag in extraTags ?? customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
+            <a-tag v-for="tag in extraTags ?? customTags" :key="tag.id" :color="tagStore.getColor(tag)">
               {{ tag.name }}
             </a-tag>
           </div>
@@ -158,7 +158,7 @@ const minShowDetailWidth = 160
             <img :src="play" style="width: 40px;height: 40px;">
           </div>
           <div class="tags-container" v-if="customTags && cellWidth > minShowDetailWidth">
-            <a-tag v-for="tag in customTags" :key="tag.id" :color="tagStore.getColor(tag.name)">
+            <a-tag v-for="tag in customTags" :key="tag.id" :color="tagStore.getColor(tag)">
               {{ tag.name }}
             </a-tag>
           </div>

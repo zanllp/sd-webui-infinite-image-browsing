@@ -257,19 +257,20 @@ class Image:
 
 
 class Tag:
-    def __init__(self, name: str, score: int, type: str, count=0):
+    def __init__(self, name: str, score: int, type: str, count=0, color = ""):
         self.name = name
         self.score = score
         self.type = type
         self.count = count
         self.id = None
+        self.color = color
         self.display_name = tags_translate.get(name)
 
     def save(self, conn):
         with closing(conn.cursor()) as cur:
             cur.execute(
-                "INSERT OR REPLACE INTO tag (id, name, score, type, count) VALUES (?, ?, ?, ?, ?)",
-                (self.id, self.name, self.score, self.type, self.count),
+                "INSERT OR REPLACE INTO tag (id, name, score, type, count, color) VALUES (?, ?, ?, ?, ?, ?)",
+                (self.id, self.name, self.score, self.type, self.count, self.color),
             )
             self.id = cur.lastrowid
 
@@ -326,7 +327,7 @@ class Tag:
 
     @classmethod
     def from_row(cls, row: tuple):
-        tag = cls(name=row[1], score=row[2], type=row[3], count=row[4])
+        tag = cls(name=row[1], score=row[2], type=row[3], count=row[4], color=row[5])
         tag.id = row[0]
         return tag
 
@@ -350,6 +351,14 @@ class Tag:
                 VALUES ("like", 0, "custom", 0);
                 """
             )
+            try:
+                cur.execute(
+                    """ALTER TABLE tag
+                    ADD COLUMN color TEXT DEFAULT ''"""
+                )
+            except sqlite3.OperationalError as e:
+                print(e)
+                pass
 
 
 class ImageTag:

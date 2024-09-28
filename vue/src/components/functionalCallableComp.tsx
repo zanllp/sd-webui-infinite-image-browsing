@@ -95,9 +95,9 @@ export const openVideoModal = (file: FileNodeInfo, onTagClick?: (id: string| num
           </div>
           {global.conf!.all_custom_tags.map((tag) => 
             <div key={tag.id} onClick={() => onTagClick?.(tag.id)}  style={{
-              background: isSelected(tag.id) ? tagStore.getColor(tag.name) : 'var(--zp-primary-background)', 
-              color: !isSelected(tag.id) ? tagStore.getColor(tag.name) : 'white', 
-              border: `2px solid ${tagStore.getColor(tag.name)}`,
+              background: isSelected(tag.id) ? tagStore.getColor(tag) : 'var(--zp-primary-background)', 
+              color: !isSelected(tag.id) ? tagStore.getColor(tag) : 'white', 
+              border: `2px solid ${tagStore.getColor(tag)}`,
               ...tagBaseStyle
             }}>
               { tag.name }

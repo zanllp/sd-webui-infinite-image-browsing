@@ -9,7 +9,8 @@ import {
   removeCustomTag,
   getExpiredDirs,
   type MatchImageByTagsReq,
-  type TagId
+  type TagId,
+  updateTag
 } from '@/api/db'
 import { SearchSelect, delay } from 'vue3-ts-util'
 import { PlusOutlined, ArrowRightOutlined } from '@/icon'
@@ -23,9 +24,11 @@ import TagSearchItem from './TagSearchItem.vue'
 import { reactive, nextTick } from 'vue'
 import { watch } from 'vue'
 import { tagSearchHistory } from '@/store/searchHistory'
+import { useTagStore } from '@/store/useTagStore'
 
 const props = defineProps<{ tabIdx: number; paneIdx: number, searchScope?: string }>()
 const global = useGlobalStore()
+const tagStore = useTagStore()
 const queue = createReactiveQueue()
 const loading = computed(() => !queue.isIdle)
 const info = ref<DataBaseBasicInfo>()
@@ -181,6 +184,13 @@ const toggleTag = (tag_id: TagId, taglist: TagId[]) => {
   } else {
     taglist.splice(idx, 1)
   }
+  
+}
+
+const onTagColorChange = async (tag: Tag, color: string) => {
+  tag.color = color
+  tagStore.notifyCacheUpdate(tag)
+  await updateTag(tag)
 }
 
 const tagListFilter = (list: Tag[], name: string) => {
@@ -286,6 +296,7 @@ const tagIdsToString = (tagIds: TagId[]) => {
             <template #expandIcon></template>
             <a-collapse-panel :key="name">
               <tag-search-item @click="onTagClick(tag)" @remove="onTagRemoveClick(tag.id)"
+                @TagColorChange="onTagColorChange(tag, $event)"
                 @toggle-and="toggleTag(tag.id, matchIds.and_tags)" @toggle-or="toggleTag(tag.id, matchIds.or_tags)"
                 @toggle-not="toggleTag(tag.id, matchIds.not_tags)" v-for="(tag, idx) in tagListFilter(list, name)"
                 :key="tag.id" :idx="idx" :name="name" :tag="tag" :selected="selectedTagIds.has(tag.id)" />

@@ -307,7 +307,7 @@ const showFullContent = computed(() => lr.value || state.value.expanded)
           <div class="tag" v-for="tag in global.conf.all_custom_tags"
             @click="emit('contextMenuClick', { key: `toggle-tag-${tag.id}` } as any, file, idx)"
             :class="{ selected: selectedTag.some(v => v.id === tag.id) }" :key="tag.id"
-            :style="{ '--tag-color': tagStore.getColor(tag.name) }">
+            :style="{ '--tag-color': tagStore.getColor(tag) }">
             {{ tag.name }}
           </div>
         </div>
