@@ -11,8 +11,8 @@
 
     <li class="tag" :title="toTagDisplayName(tag)" 
       :class="{ selected }" @click="$emit('click')">
-      <div style="width: 24px;height: 24px;overflow: hidden;border-radius: 6px; margin-right: 8px;" @click.stop>
-        <ColorPicker v-if="isCustomTag" :pureColor="tagStore.getColor(tag)" @update:pureColor="onTagColorChange" />
+      <div v-if="isCustomTag" style="width: 24px;height: 24px;overflow: hidden;border-radius: 6px; margin-right: 8px;" @click.stop>
+        <ColorPicker  :pureColor="tagStore.getColor(tag)" @update:pureColor="onTagColorChange" />
       </div>
       <CheckOutlined v-if="selected" />
       <div class="tag-name">
