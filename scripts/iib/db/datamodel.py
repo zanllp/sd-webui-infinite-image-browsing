@@ -357,7 +357,6 @@ class Tag:
                     ADD COLUMN color TEXT DEFAULT ''"""
                 )
             except sqlite3.OperationalError as e:
-                print(e)
                 pass
 
 
