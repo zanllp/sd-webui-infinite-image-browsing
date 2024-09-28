@@ -1,7 +1,7 @@
 import { Tag, batchGetTagsByPath } from '@/api/db'
 import { defineStore } from 'pinia'
 import sjcl from 'sjcl'
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import type { GridViewFileTag } from './useGlobalStore'
 function generateColors() {
   const colors = []
@@ -36,14 +36,28 @@ export const useTagStore = defineStore('useTagStore', () => {
       paths.forEach((v) => tagMap.delete(v))
     }
   }
-  const colorCache = new Map<string, string>()
-  const getColor = (tag: string) => {
-    let color = colorCache.get(tag)
+  const colorCache = ref(new Map<string, string>())
+  const notifyCacheUpdate = (updateTag?: Tag) => {
+    // colorCache.value = cloneDeep(colorCache.value)
+    if (updateTag) {
+      colorCache.value.set(updateTag.id.toString(), updateTag.color)
+    }
+  }
+  const getColor = (tag: Tag) => {
+    const idStr = tag.id.toString()
+    let color = colorCache.value.get(idStr)
+    if (color) {
+      return color
+    }
+    if (!color && tag.color) {
+      colorCache.value.set(idStr, tag.color)
+      return tag.color
+    }
     if (!color) {
-      const hash = sjcl.hash.sha256.hash(tag)
+      const hash = sjcl.hash.sha256.hash(idStr)
       const num = parseInt(sjcl.codec.hex.fromBits(hash), 16) % tagColors.length
       color = tagColors[num]
-      colorCache.set(tag, color)
+      colorCache.value.set(idStr, color)
     }
     return color
   }
@@ -56,6 +70,7 @@ export const useTagStore = defineStore('useTagStore', () => {
     count: 0,
     display_name: null,
     type: 'temp',
+    color: '',
     ...tag
   })
   const set = (path: string, tags: (string|Tag| GridViewFileTag)[]) => {
@@ -69,6 +84,7 @@ export const useTagStore = defineStore('useTagStore', () => {
     getColor,
     fetchImageTags,
     refreshTags,
-    tagConvert
+    tagConvert,
+    notifyCacheUpdate
   }
 })

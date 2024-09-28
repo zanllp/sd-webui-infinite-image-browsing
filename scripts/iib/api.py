@@ -939,6 +939,25 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def get_img_tags(req: PathsReq):
         conn = DataBase.get_conn()
         return ImageTag.batch_get_tags_by_path(conn, req.paths)
+    
+
+    # update tag
+    class UpdateTagReq(BaseModel):
+        id: int
+        color: str
+
+    @app.post(
+        db_api_base + "/update_tag",
+        dependencies=[Depends(verify_secret), Depends(write_permission_required)],
+    )
+    async def update_tag(req: UpdateTagReq):
+        conn = DataBase.get_conn()
+        tag = Tag.get(conn, req.id)
+        if tag:
+            tag.color = req.color
+            tag.save(conn)
+        conn.commit()
+
 
     class ToggleCustomTagToImgReq(BaseModel):
         img_path: str

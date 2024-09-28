@@ -8,6 +8,7 @@ export interface Tag {
   id: number | string
   display_name: string | null
   type: string
+  color: string
   count: number
 }
 
@@ -31,6 +32,11 @@ export const getExpiredDirs = async () => {
 export const updateImageData = async () => {
   await axiosInst.value.post('/db/update_image_data', {}, { timeout: Infinity })
 }
+
+export const updateTag = async (tag: Tag) => {
+  await axiosInst.value.post('/db/update_tag', tag)
+}
+
 export type TagId = number | string
 export interface MatchImageByTagsReq {
   folder_paths_str?: string
