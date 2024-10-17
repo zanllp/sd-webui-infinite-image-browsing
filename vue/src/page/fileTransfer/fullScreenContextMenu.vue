@@ -27,6 +27,7 @@ import { useFullscreenLayout } from '@/util/useFullscreenLayout'
 import { useMouseInElement } from '@vueuse/core'
 import { closeImageFullscreenPreview } from '@/util/imagePreviewOperation'
 import { openAddNewTagModal } from '@/components/functionalCallableComp'
+import { prefix } from '@/util/const'
 
 
 const global = useGlobalStore()
@@ -168,7 +169,7 @@ useWatchDocument('load', e => {
 }, { capture: true })
 
 const baseInfoTags = computed(() => {
-  const tags: { val: string, name: string }[] = [{ name: t('fileName'), val: props.file.name }, { name: t('fileSize'), val: props.file.size }]
+  const tags: { val: string, name: string }[] = [ { name: t('fileSize'), val: props.file.size }]
   if (currImgResolution.value) {
     tags.push({ name: t('resolution'), val: currImgResolution.value })
   }
@@ -211,7 +212,8 @@ useWatchDocument('dblclick', e => {
 
 
 const showFullContent = computed(() => lr.value || state.value.expanded)
-
+const showFullPath = useLocalStorage(prefix + 'contextShowFullPath', false)
+const fileTagValue = computed(() => showFullPath.value? props.file.fullpath : props.file.name)
 </script>
 
 <template>
@@ -293,11 +295,21 @@ const showFullContent = computed(() => lr.value || state.value.expanded)
       </div>
       <div class="gen-info" v-if="showFullContent">
         <div class="info-tags">
+          <span class="info-tag" >
+            <span class="name">
+              {{ $t('fileName') }}
+            </span>
+            <span class="value" :title="fileTagValue" @dblclick="copy2clipboardI18n(fileTagValue)">
+              {{ fileTagValue }}
+            </span>
+            <span :style="{ margin: '0 8px', cursor: 'pointer' }" title="Click to expand full path" @click="showFullPath = !showFullPath"
+            ><EllipsisOutlined/></span>
+          </span>
           <span class="info-tag" v-for="tag in baseInfoTags" :key="tag.name">
             <span class="name">
               {{ tag.name }}
             </span>
-            <span class="value">
+            <span class="value" :title="tag.val" @dblclick="copy2clipboardI18n(tag.val)">
               {{ tag.val }}
             </span>
           </span>
