@@ -41,7 +41,7 @@ export function isImageFile (filename: string): boolean {
   if (typeof filename !== 'string') {
     return false
   }
-  const exts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.avif']
+  const exts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.avif', '.jpe']
   const extension = filename.split('.').pop()?.toLowerCase()
   return extension !== undefined && exts.includes(`.${extension}`)
 }
