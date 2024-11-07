@@ -229,13 +229,14 @@ const tagAlphabet = computed(() => {
     }
   }).reduce((p: Dict<Tag[]>, c: Tag & { char: string }) => {
     let pos = '#'
-    if (/[a-z]/.test(c.char)) {
+    if (/[a-z]/i.test(c.char)) {
       pos = c.char.toUpperCase()
     } else if (/[\u4e00-\u9fa5]/.test(c.char)) {
       try {
-        pos = /^]?(\w)/.exec((Pinyin.getSpell(c.char) + ''))?.[1] ?? '#'
+        pos = /^\[?(\w)/.exec((Pinyin.getSpell(c.char) + ''))?.[1] ?? '#'
         // eslint-disable-next-line no-empty
       } catch (error) {
+        console.log('err', error)
       }
     }
     pos = pos.toUpperCase()
@@ -358,14 +359,14 @@ const tagAlphabet = computed(() => {
             }}
           </div>
           <template v-if="tagA2ZClassify">
-            <div v-for="([char, item]) in tagAlphabet" :key="char">
+            <div v-for="([char, item]) in tagAlphabet" :key="char" class="tag-alpha-item">
               <h4 style="display: inline-block; width: 32px;">{{ char }} : </h4>
-              <div class="tag" v-for="tag in item"
+              <div><div class="tag" v-for="tag in item"
                 @click="emit('contextMenuClick', { key: `toggle-tag-${tag.id}` } as any, file, idx)"
                 :class="{ selected: selectedTag.some(v => v.id === tag.id) }" :key="tag.id"
                 :style="{ '--tag-color': tagStore.getColor(tag) }">
                 {{ tag.name }}
-              </div>
+              </div></div>
             </div>
           </template>
           <template v-else>
@@ -625,7 +626,14 @@ const tagAlphabet = computed(() => {
     left: v-bind("`calc(100vw - ${lrLayoutInfoPanelWidth}px)`") !important;
   }
 }
-
+.tag-alpha-item {
+  display: flex;
+  h4 {
+    width: 32px;
+    flex-shrink: 0;
+  }
+  margin-top: 4px;
+}
 .sort-tag-switch {
   display: inline-block;
   padding-right: 16px;

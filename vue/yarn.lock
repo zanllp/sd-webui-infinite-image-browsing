@@ -2032,6 +2032,11 @@ isexe@^2.0.0:
   resolved "https://registry.yarnpkg.com/isexe/-/isexe-2.0.0.tgz#e8fbf374dc556ff8947a10dcb0572d633f2cfa10"
   integrity sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==
 
+jian-pinyin@^0.2.3:
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/jian-pinyin/-/jian-pinyin-0.2.3.tgz#1fc6bff7088ac388283f31a6fd4481169f85e0e2"
+  integrity sha512-FjE1EaE3A+/xtsJ+UyOma7dqYzuqWsM4AOlFO9TMHq/5KjQcwiMbntCCp7A4Crta7vJC4+TC2thM+ry2RNL6UQ==
+
 js-cookie@^3.0.5:
   version "3.0.5"
   resolved "https://registry.yarnpkg.com/js-cookie/-/js-cookie-3.0.5.tgz#0b7e2fd0c01552c58ba86e0841f94dc2557dcdbc"
