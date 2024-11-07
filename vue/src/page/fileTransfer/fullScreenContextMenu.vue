@@ -7,7 +7,7 @@ import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { debounce, throttle, last } from 'lodash-es'
 import { computed, watch } from 'vue'
 import { ref } from 'vue'
-import { copy2clipboardI18n } from '@/util'
+import { copy2clipboardI18n, type Dict } from '@/util'
 import { useResizeAndDrag } from './useResize'
 import {
   DragOutlined,
@@ -15,7 +15,9 @@ import {
   FullscreenOutlined,
   ArrowsAltOutlined,
   EllipsisOutlined,
-  fullscreen
+  fullscreen,
+  SortAscendingOutlined,
+  AppstoreOutlined
 } from '@/icon'
 import { t } from '@/i18n'
 import { createReactiveQueue, unescapeHtml } from '@/util'
@@ -28,7 +30,9 @@ import { useMouseInElement } from '@vueuse/core'
 import { closeImageFullscreenPreview } from '@/util/imagePreviewOperation'
 import { openAddNewTagModal } from '@/components/functionalCallableComp'
 import { prefix } from '@/util/const'
-
+// @ts-ignore
+import * as Pinyin from 'jian-pinyin'
+import { Tag } from '@/api/db'
 
 const global = useGlobalStore()
 
@@ -169,7 +173,7 @@ useWatchDocument('load', e => {
 }, { capture: true })
 
 const baseInfoTags = computed(() => {
-  const tags: { val: string, name: string }[] = [ { name: t('fileSize'), val: props.file.size }]
+  const tags: { val: string, name: string }[] = [{ name: t('fileSize'), val: props.file.size }]
   if (currImgResolution.value) {
     tags.push({ name: t('resolution'), val: currImgResolution.value })
   }
@@ -213,14 +217,43 @@ useWatchDocument('dblclick', e => {
 
 const showFullContent = computed(() => lr.value || state.value.expanded)
 const showFullPath = useLocalStorage(prefix + 'contextShowFullPath', false)
-const fileTagValue = computed(() => showFullPath.value? props.file.fullpath : props.file.name)
+const fileTagValue = computed(() => showFullPath.value ? props.file.fullpath : props.file.name)
+
+const tagA2ZClassify = useLocalStorage(prefix + 'tagA2ZClassify', false)
+const tagAlphabet = computed(() => {
+  const tags = global.conf?.all_custom_tags.map(v => {
+    const char = v.display_name?.[0] || v.name?.[0]
+    return {
+      char,
+      ...v
+    }
+  }).reduce((p: Dict<Tag[]>, c: Tag & { char: string }) => {
+    let pos = '#'
+    if (/[a-z]/.test(c.char)) {
+      pos = c.char.toUpperCase()
+    } else if (/[\u4e00-\u9fa5]/.test(c.char)) {
+      try {
+        pos = /^]?(\w)/.exec((Pinyin.getSpell(c.char) + ''))?.[1] ?? '#'
+        // eslint-disable-next-line no-empty
+      } catch (error) {
+      }
+    }
+    pos = pos.toUpperCase()
+    p[pos] ||= []
+    p[pos].push(c)
+    return p
+  }, {} as Dict<Tag[]>)
+  const res = Object.entries(tags ?? {}).sort((a, b) => a[0].charCodeAt(0) - b[0].charCodeAt(0))
+  return res
+})
+
 </script>
 
 <template>
   <div ref="el" class="full-screen-menu" @wheel.capture.stop @keydown.capture="onKeydown"
     :class="{ 'unset-size': !state.expanded, lr, 'always-on': lrMenuAlwaysOn, 'mouse-in': isInside }">
-    <div v-if="lr">
 
+    <div v-if="lr">
     </div>
     <div class="container">
       <div class="action-bar">
@@ -284,26 +317,28 @@ const fileTagValue = computed(() => showFullPath.value? props.file.fullpath : pr
             </template>
           </a-dropdown>
           <AButton @click="emit('contextMenuClick', { key: 'download' } as MenuInfo, props.file, props.idx)">{{
-      $t('download') }}</AButton>
+            $t('download') }}</AButton>
           <a-button @click="copy2clipboardI18n(imageGenInfo)" v-if="imageGenInfo">{{
-      $t('copyPrompt')
-    }}</a-button>
+            $t('copyPrompt')
+          }}</a-button>
           <a-button @click="copyPositivePrompt" v-if="imageGenInfo">{{
-      $t('copyPositivePrompt')
-    }}</a-button>
+            $t('copyPositivePrompt')
+          }}</a-button>
         </div>
       </div>
       <div class="gen-info" v-if="showFullContent">
         <div class="info-tags">
-          <span class="info-tag" >
+          <span class="info-tag">
             <span class="name">
               {{ $t('fileName') }}
             </span>
             <span class="value" :title="fileTagValue" @dblclick="copy2clipboardI18n(fileTagValue)">
               {{ fileTagValue }}
             </span>
-            <span :style="{ margin: '0 8px', cursor: 'pointer' }" title="Click to expand full path" @click="showFullPath = !showFullPath"
-            ><EllipsisOutlined/></span>
+            <span :style="{ margin: '0 8px', cursor: 'pointer' }" title="Click to expand full path"
+              @click="showFullPath = !showFullPath">
+              <EllipsisOutlined />
+            </span>
           </span>
           <span class="info-tag" v-for="tag in baseInfoTags" :key="tag.name">
             <span class="name">
@@ -315,13 +350,33 @@ const fileTagValue = computed(() => showFullPath.value? props.file.fullpath : pr
           </span>
         </div>
         <div class="tags-container" v-if="global.conf?.all_custom_tags">
-          <div class="tag" @click="openAddNewTagModal" :style="{ '--tag-color': 'var(--zp-luminous)' }">+ {{ $t('add') }}</div>
-          <div class="tag" v-for="tag in global.conf.all_custom_tags"
-            @click="emit('contextMenuClick', { key: `toggle-tag-${tag.id}` } as any, file, idx)"
-            :class="{ selected: selectedTag.some(v => v.id === tag.id) }" :key="tag.id"
-            :style="{ '--tag-color': tagStore.getColor(tag) }">
-            {{ tag.name }}
+          <div class="sort-tag-switch" @click="tagA2ZClassify = !tagA2ZClassify">
+            <SortAscendingOutlined v-if="!tagA2ZClassify" />
+            <AppstoreOutlined v-else />
           </div>
+          <div class="tag" @click="openAddNewTagModal" :style="{ '--tag-color': 'var(--zp-luminous)' }">+ {{ $t('add')
+            }}
+          </div>
+          <template v-if="tagA2ZClassify">
+            <div v-for="([char, item]) in tagAlphabet" :key="char">
+              <h4 style="display: inline-block; width: 32px;">{{ char }} : </h4>
+              <div class="tag" v-for="tag in item"
+                @click="emit('contextMenuClick', { key: `toggle-tag-${tag.id}` } as any, file, idx)"
+                :class="{ selected: selectedTag.some(v => v.id === tag.id) }" :key="tag.id"
+                :style="{ '--tag-color': tagStore.getColor(tag) }">
+                {{ tag.name }}
+              </div>
+            </div>
+          </template>
+          <template v-else>
+
+            <div class="tag" v-for="tag in global.conf.all_custom_tags"
+              @click="emit('contextMenuClick', { key: `toggle-tag-${tag.id}` } as any, file, idx)"
+              :class="{ selected: selectedTag.some(v => v.id === tag.id) }" :key="tag.id"
+              :style="{ '--tag-color': tagStore.getColor(tag) }">
+              {{ tag.name }}
+            </div>
+          </template>
         </div>
         <div class="lr-layout-control">
           <div class="ctrl-item">
@@ -571,6 +626,23 @@ const fileTagValue = computed(() => showFullPath.value? props.file.fullpath : pr
   }
 }
 
+.sort-tag-switch {
+  display: inline-block;
+  padding-right: 16px;
+  padding-left: 8px;
+  cursor: pointer;
+  user-select: none;
+
+  span {
+    transition: all ease .3s;
+    transform: scale(1.2);
+  }
+
+  &:hover span {
+    transform: scale(1.3);
+  }
+}
+
 .lr-layout-control {
   display: flex;
   align-items: center;
@@ -589,4 +661,3 @@ const fileTagValue = computed(() => showFullPath.value? props.file.fullpath : pr
   }
 }
 </style>
-@/util/imagePreviewOperation
