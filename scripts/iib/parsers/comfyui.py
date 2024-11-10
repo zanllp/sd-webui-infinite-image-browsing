@@ -30,7 +30,7 @@ class ComfyUIParser:
             else:
                 params = get_comfyui_exif_data(img)
                 info = comfyui_exif_data_to_str(params)
-        except Exception:                        
+        except Exception as e:                        
             logger.error('parse comfyui image failed. prompt:')
             logger.error(img.info.get('prompt'))
             return ImageGenerationInfo()

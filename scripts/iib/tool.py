@@ -422,7 +422,8 @@ def get_comfyui_exif_data(img: Image):
     meta["Model"] = data[KSampler_entry["model"][0]]["inputs"]["ckpt_name"]
     meta["Source Identifier"] = "ComfyUI"
     def get_text_from_clip(idx: str) :
-        text = data[idx]["inputs"]["text"]
+        inputs = data[idx]["inputs"]
+        text = inputs["text"] if "text" in inputs else inputs["t5xxl"]
         if isinstance(text, list): # type:CLIPTextEncode (NSP) mode:Wildcards
             text = data[text[0]]["inputs"]["text"]
         return text.strip()
