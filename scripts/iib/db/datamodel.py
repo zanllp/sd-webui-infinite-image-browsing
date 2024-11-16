@@ -369,14 +369,14 @@ class ImageTag:
     def save(self, conn):
         with closing(conn.cursor()) as cur:
             cur.execute(
-                "INSERT INTO image_tag (image_id, tag_id) VALUES (?, ?)",
+                "INSERT INTO image_tag (image_id, tag_id, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
                 (self.image_id, self.tag_id),
             )
 
     def save_or_ignore(self, conn):
         with closing(conn.cursor()) as cur:
             cur.execute(
-                "INSERT OR IGNORE INTO image_tag (image_id, tag_id) VALUES (?, ?)",
+                "INSERT OR IGNORE INTO image_tag (image_id, tag_id, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
                 (self.image_id, self.tag_id),
             )
 
@@ -426,7 +426,20 @@ class ImageTag:
                             PRIMARY KEY (image_id, tag_id)
                         )"""
             )
-
+            try:
+                cur.execute(
+                    """ALTER TABLE image_tag
+                    ADD COLUMN created_at TIMESTAMP"""
+                )
+                
+                cur.execute(
+                    """UPDATE image_tag
+                    SET created_at = CURRENT_TIMESTAMP
+                    WHERE created_at IS NULL"""
+                )
+            except sqlite3.OperationalError as e:
+                pass
+            
     @classmethod
     def get_images_by_tags(
         cls,

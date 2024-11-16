@@ -3,7 +3,7 @@ import { t } from '@/i18n'
 import { useGlobalStore, type Shortcut, type DefaultInitinalPage } from '@/store/useGlobalStore'
 import { useWorkspeaceSnapshot } from '@/store/useWorkspeaceSnapshot'
 import { computed, ref } from 'vue'
-import { SearchSelect } from 'vue3-ts-util'
+import { SearchSelect} from 'vue3-ts-util'
 import { sortMethodConv, sortMethods } from '@/page/fileTransfer/fileSort'
 import { relaunch } from '@tauri-apps/api/process'
 import { appConfFilename } from '@/taurilaunchModal'
@@ -12,6 +12,9 @@ import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { isTauri } from '@/util/env'
 import ImageSetting from './ImageSetting.vue'
 import { openRebuildImageIndexModal } from '@/components/functionalCallableComp'
+import { Dict } from '@/util'
+import { message } from 'ant-design-vue'
+import { throttle, debounce } from 'lodash-es'
 
 
 const globalStore = useGlobalStore()
@@ -27,8 +30,22 @@ const langs: { text: string, value: string }[] = [
   { value: 'zhHant', text: '繁體中文' },
   { value: 'de', text: 'Deutsch' }
 ]
+const doubleCheck = debounce((key: keyof Shortcut) => {
+  
+  const keysStr = globalStore.shortcut[key] as string
+  if (['ctrl', 'shift'].includes(keysStr.toLowerCase())) {
+    globalStore.shortcut[key] = ''
+  }
+}, 700)
+const simpleKeyWarn = throttle(() => {
+  message.warn(t('notAllowSingleCtrlOrShiftAsShortcut'))
+}, 3000)
 const onShortcutKeyDown = (e: KeyboardEvent, key: keyof Shortcut) => {
   const keysStr = getShortcutStrFromEvent(e)
+  if (['ctrl', 'shift'].includes(keysStr.toLowerCase())) {
+    simpleKeyWarn()
+    doubleCheck(key)
+  }
   if (keysStr) {
     globalStore.shortcut[key] = keysStr
   }
@@ -48,6 +65,33 @@ const defaultInitinalPageOptions = computed(() => {
   ]
   return r
 })
+const shortCutsCountRec = computed(() => {
+  const rec = globalStore.shortcut
+  const res = {} as Dict<number>
+  Object.entries(rec).forEach(([_k, v]) => {
+    res[v + ''] ??= 0
+    res[v + '']++
+  })
+  return res
+})
+
+const shortcutsList = computed(() => {
+  const res = [{ key: 'download', label: t('download') }, { key: 'delete', label: t('deleteSelected') }] as { key: keyof Shortcut, label: string }[]
+  globalStore.conf?.all_custom_tags.forEach(tag => {
+    res.push({ key: `toggle_tag_${tag.name}`, label: t('toggleTagSelection', { tag: tag.name }) })
+  })
+  globalStore.quickMovePaths.forEach(item => {
+    res.push({ key: `copy_to_${item.dir}`, label: t('copyTo') + ' ' + item.zh })
+  })
+  globalStore.quickMovePaths.forEach(item => {
+    res.push({ key: `move_to_${item.dir}`, label: t('moveTo') + ' ' + item.zh })
+  })
+  return res
+})
+
+const isShortcutConflict = (keyStr: string) => {
+  return keyStr && keyStr in shortCutsCountRec.value && shortCutsCountRec.value[keyStr] > 1
+}
 </script>
 <template>
   <div class="panel">
@@ -78,8 +122,8 @@ const defaultInitinalPageOptions = computed(() => {
           <SearchSelect :options="langs" v-model:value="globalStore.lang" @change="langChanged = true" />
         </div>
         <a-button type="primary" @click="reload" v-if="langChanged" ghost>{{
-      t('langChangeReload')
-    }}</a-button>
+          t('langChangeReload')
+          }}</a-button>
       </a-form-item>
       <a-form-item :label="$t('onlyFoldersAndImages')">
         <a-switch v-model:checked="globalStore.onlyFoldersAndImages" />
@@ -102,27 +146,13 @@ const defaultInitinalPageOptions = computed(() => {
         <ACheckbox v-model:checked="globalStore.ignoredConfirmActions[key]"></ACheckbox>
       </a-form-item>
       <h2>{{ t('shortcutKey') }}</h2>
-      <a-form-item :label="$t('download')">
-        <div class="col">
-          <a-input :value="globalStore.shortcut.download" @keydown.stop.prevent="onShortcutKeyDown($event, 'download')"
+      <a-form-item :label="item.label" v-for="item in shortcutsList" :key="item.key">
+        <div class="col" :class="{ conflict: isShortcutConflict(globalStore.shortcut[item.key] + '') }"
+
+          @keydown.stop.prevent>
+          <a-input :value="globalStore.shortcut[item.key]" @keydown.stop.prevent="onShortcutKeyDown($event, item.key)"
             :placeholder="$t('shortcutKeyDescription')" />
-          <a-button @click="globalStore.shortcut.download = ''" class="clear-btn">{{ $t('clear') }}</a-button>
-        </div>
-      </a-form-item>
-      <a-form-item :label="$t('deleteSelected')">
-        <div class="col">
-          <a-input :value="globalStore.shortcut.delete" @keydown.stop.prevent="onShortcutKeyDown($event, 'delete')"
-            :placeholder="$t('shortcutKeyDescription')" />
-          <a-button @click="globalStore.shortcut.delete = ''" class="clear-btn">{{ $t('clear') }}</a-button>
-        </div>
-      </a-form-item>
-      <a-form-item :label="$t('toggleTagSelection', { tag: tag.name })"
-        v-for="tag in globalStore.conf?.all_custom_tags ?? []" :key="tag.id">
-        <div class="col">
-          <a-input :value="globalStore.shortcut[`toggle_tag_${tag.name}`]"
-            @keydown.stop.prevent="onShortcutKeyDown($event, `toggle_tag_${tag.name}`)"
-            :placeholder="$t('shortcutKeyDescription')" />
-          <a-button @click="globalStore.shortcut[`toggle_tag_${tag.name}`] = ''" class="clear-btn">
+          <a-button @click="globalStore.shortcut[item.key] = ''" class="clear-btn">
             {{ $t('clear') }}
           </a-button>
         </div>
@@ -173,6 +203,19 @@ h2 {
 .col {
   display: flex;
 
+  &.conflict {
+    border-bottom: 1px solid red;
+    position: relative;
+
+    &::after {
+      position: absolute;
+      top: -16px;
+      left: 0;
+      background: white;
+      color: red;
+      content: 'conflict';
+    }
+  }
 }
 
 .clear-btn {
