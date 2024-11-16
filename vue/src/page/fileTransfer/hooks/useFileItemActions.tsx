@@ -382,8 +382,18 @@ export function useFileItemActions (
           default: {
             const name = /^toggle_tag_(.*)$/.exec(action)?.[1]
             const tag = global.conf?.all_custom_tags.find((v) => v.name === name)
-            if (!tag) return
-            return onContextMenuClick({ key: `toggle-tag-${tag.id}` } as MenuInfo, file, idx)
+            if (tag) {
+              return onContextMenuClick({ key: `toggle-tag-${tag.id}` } as MenuInfo, file, idx)
+            }
+            if (action.startsWith('copy_to_')) {
+              const path = action.split('copy_to_')[1]
+              return onContextMenuClick({ key: `copy-to-${path}` } as MenuInfo, file, idx)
+            }
+            if (action.startsWith('move_to_')) {
+              const path = action.split('move_to_')[1]
+              return onContextMenuClick({ key: `move-to-${path}` } as MenuInfo, file, idx)
+              
+            }
           }
         }
       }

@@ -133,7 +133,7 @@ export interface Tab {
   key: string
 }
 
-export type Shortcut = Record<`toggle_tag_${string}` | 'delete' | 'download', string | undefined> 
+export type Shortcut = Record<`toggle_tag_${string}` | 'delete' | 'download' | `copy_to_${string}`| `move_to_${string}`, string | undefined> 
 
 export type DefaultInitinalPage = `workspace_snapshot_${string}` | 'empty' | 'last-workspace-state'
 

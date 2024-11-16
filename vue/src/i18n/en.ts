@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  notAllowSingleCtrlOrShiftAsShortcut: '不允許使用單獨的 Ctrl 或者 Shift 作為快速鍵',
+  conflictWithOtherShortcuts:  'Conflict with other shortcuts',
   pinnedSearchHistoryDesc: 'You can quickly restore to the previous search state by clicking the pinned search history.',
   addNewCustomTag: 'Add New Custom Tag',
   clearCacheIfNotTakeEffect: 'If the changes do not take effect, try clearing the page cache',

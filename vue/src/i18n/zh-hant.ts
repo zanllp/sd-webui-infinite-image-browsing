@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  notAllowSingleCtrlOrShiftAsShortcut: '不允許使用單獨的 Ctrl 或者 Shift 作為快速鍵',
+  conflictWithOtherShortcuts: '與其他快速鍵衝突',
   pinnedSearchHistoryDesc: '你可以通過點擊置頂的搜索歷史來快速還原到之前的搜索狀態。',
   addNewCustomTag: '添加新的自定義標籤',
   clearCacheIfNotTakeEffect:  '如果更改沒有生效，請嘗試清理頁面緩存',
