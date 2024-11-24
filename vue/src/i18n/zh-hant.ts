@@ -1,6 +1,9 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  
+  compressFile: '對文件壓縮',
+  packOnlyNotDownload: '僅打包不下載',
   notAllowSingleCtrlOrShiftAsShortcut: '不允許使用單獨的 Ctrl 或者 Shift 作為快速鍵',
   conflictWithOtherShortcuts: '與其他快速鍵衝突',
   pinnedSearchHistoryDesc: '你可以通過點擊置頂的搜索歷史來快速還原到之前的搜索狀態。',

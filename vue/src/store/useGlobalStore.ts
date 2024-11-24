@@ -188,7 +188,9 @@ export const presistKeys = [
   'autoRefreshWalkMode',
   'autoRefreshWalkModePosLimit',
   'autoRefreshNormalFixedMode',
-  'showCommaInInfoPanel'
+  'showCommaInInfoPanel',
+  'batchDownloadCompress',
+  'batchDownloadPackOnly'
 ]
 
 function cellWidthMap(x: number): number {
@@ -368,6 +370,8 @@ export const useGlobalStore = defineStore(
       autoRefreshWalkModePosLimit: ref(128),
       autoRefreshNormalFixedMode: ref(true),
       showCommaInInfoPanel: ref(false),
+      batchDownloadCompress: ref(false),
+      batchDownloadPackOnly: ref(false)
     }
   },
   {

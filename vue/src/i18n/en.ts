@@ -1,6 +1,8 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  compressFile: 'Compress File',
+  packOnlyNotDownload: 'Pack Only, Not Download',
   notAllowSingleCtrlOrShiftAsShortcut: '不允許使用單獨的 Ctrl 或者 Shift 作為快速鍵',
   conflictWithOtherShortcuts:  'Conflict with other shortcuts',
   pinnedSearchHistoryDesc: 'You can quickly restore to the previous search state by clicking the pinned search history.',
