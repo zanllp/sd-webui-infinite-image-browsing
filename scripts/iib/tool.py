@@ -234,7 +234,7 @@ def is_valid_media_path(path):
 def is_media_file(file_path):
     return is_image_file(file_path) or is_video_file(file_path)
 
-def create_zip_file(file_paths: List[str], zip_file_name: str):
+def create_zip_file(file_paths: List[str], zip_file_name: str, compress = False):
     """
     将文件打包成一个压缩包
 
@@ -245,7 +245,7 @@ def create_zip_file(file_paths: List[str], zip_file_name: str):
     Returns:
         无返回值
     """
-    with zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+    with zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED if compress else zipfile.ZIP_STORED) as zip_file:
         for file_path in file_paths:
             if os.path.isfile(file_path):
                 zip_file.write(file_path, os.path.basename(file_path))

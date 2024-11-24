@@ -4,13 +4,17 @@ import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
 import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import FileItem from '@/components/FileItem.vue'
 import { useBatchDownloadStore } from '@/store/useBatchDownloadStore'
+import { useGlobalStore } from '@/store/useGlobalStore'
 import { storeToRefs } from 'pinia'
 import { useFilesDisplay, useHookShareState } from '@/page/fileTransfer/hook'
 import { getFileTransferDataFromDragEvent, toRawFileUrl } from '@/util/file'
 import { axiosInst } from '@/api'
 import { createReactiveQueue } from '@/util'
+import { message } from 'ant-design-vue'
+import { t } from '@/i18n'
 const { stackViewEl } = useHookShareState().toRefs()
 const { itemSize, gridItems, cellWidth } = useFilesDisplay()
+const gs = useGlobalStore()
 const store = useBatchDownloadStore()
 const { selectdFiles } = storeToRefs(store)
 const q = createReactiveQueue()
@@ -28,9 +32,10 @@ const onDrop = async (e: DragEvent) => {
 
 const onDownloadClick = async () => {
   q.pushAction(async () => {
-    const resp = await axiosInst.value.post('/zip', { paths: selectdFiles.value.map(v => v.fullpath) }, {
+    const resp = await axiosInst.value.post('/zip', { paths: selectdFiles.value.map(v => v.fullpath), compress: gs.batchDownloadCompress, pack_only: false }, {
       responseType: 'blob',
     })
+    
     const url = window.URL.createObjectURL(new Blob([resp.data]))
     const link = document.createElement('a')
     link.href = url
@@ -39,6 +44,16 @@ const onDownloadClick = async () => {
     link.click()
   })
 }
+
+const onPackClick = async () => {
+  q.pushAction(async () => {
+    await axiosInst.value.post('/zip', { paths: selectdFiles.value.map(v => v.fullpath), compress: gs.batchDownloadCompress, pack_only: true }, {
+      responseType: 'blob',
+    })
+    message.success(t('success'))
+  })
+}
+
 const onDeleteClick = (idx: number) => {
   selectdFiles.value.splice(idx, 1)
 }
@@ -47,6 +62,8 @@ const onDeleteClick = (idx: number) => {
   <div class="container" ref="stackViewEl" @drop="onDrop">
     <div class="actions-panel actions">
       <AButton @click="store.selectdFiles = []">{{ $t('clear') }}</AButton>
+      <div class="item">{{ $t('compressFile') }}: <ASwitch v-model:checked="gs.batchDownloadCompress"/></div>
+      <AButton @click="onPackClick" type="primary" :loading="!q.isIdle">{{ $t('packOnlyNotDownload') }}</AButton>
       <AButton @click="onDownloadClick" type="primary" :loading="!q.isIdle">{{ $t('zipDownload') }}</AButton>
     </div>
     <div v-if="!selectdFiles.length" class="file-list">
@@ -74,10 +91,17 @@ const onDeleteClick = (idx: number) => {
   .actions-panel {
     padding: 8px;
     background-color: var(--zp-primary-background);
+    &.actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 333;;
+    }
   }
 
   .file-list {
     flex: 1;
+    z-index: 222;
     list-style: none;
     padding: 8px;
     height: var(--pane-max-height);

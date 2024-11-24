@@ -1,5 +1,7 @@
 
 export const zhHans = {
+  compressFile: '对文件压缩',
+  packOnlyNotDownload: '仅打包不下载',
   notAllowSingleCtrlOrShiftAsShortcut:  '不允许使用单独的 Ctrl 或者 Shift 作为快捷键',
   conflictWithOtherShortcuts: '与其他快捷键冲突',
   pinnedSearchHistoryDesc: '你可以通过点击置顶的搜索历史来快速还原到之前的搜索状态',

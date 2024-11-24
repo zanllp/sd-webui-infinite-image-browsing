@@ -778,11 +778,18 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         os.kill(os.getpid(), 9)
         return {"message": "Application is shutting down."}
 
+
+    class PackReq(BaseModel):
+        paths: List[str]
+        compress: bool
+        pack_only: bool
+
+
     @app.post(
         api_base + "/zip",
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
-    def zip_files(req: PathsReq):
+    def zip_files(req: PackReq):
         for path in req.paths:
             check_path_trust(path)
             if not os.path.isfile(path):
@@ -792,8 +799,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         zip_temp_dir = os.path.join(cwd, "zip_temp")
         os.makedirs(zip_temp_dir, exist_ok=True)
         file_path = os.path.join(zip_temp_dir, f"iib_batch_download_{timestamp}.zip")
-        create_zip_file(req.paths, file_path)
-        return FileResponse(file_path, media_type="application/zip")
+        create_zip_file(req.paths, file_path, req.compress)
+        if not req.pack_only:
+            return FileResponse(file_path, media_type="application/zip")
     
     @app.post(
         api_base + "/open_with_default_app",
