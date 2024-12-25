@@ -15,6 +15,8 @@ import { openRebuildImageIndexModal } from '@/components/functionalCallableComp'
 import { Dict } from '@/util'
 import { message } from 'ant-design-vue'
 import { throttle, debounce } from 'lodash-es'
+import { useLocalStorage } from '@vueuse/core'
+import { prefix } from '@/util/const'
 
 
 const globalStore = useGlobalStore()
@@ -92,6 +94,7 @@ const shortcutsList = computed(() => {
 const isShortcutConflict = (keyStr: string) => {
   return keyStr && keyStr in shortCutsCountRec.value && shortCutsCountRec.value[keyStr] > 1
 }
+const disableMaximize = useLocalStorage(prefix+'disable_maximize', false)
 </script>
 <template>
   <div class="panel">
@@ -144,6 +147,10 @@ const isShortcutConflict = (keyStr: string) => {
       </a-form-item>
       <a-form-item :label="$t(key + 'SkipConfirm')" v-for="_, key in globalStore.ignoredConfirmActions" :key="key">
         <ACheckbox v-model:checked="globalStore.ignoredConfirmActions[key]"></ACheckbox>
+      </a-form-item>
+      <a-form-item :label="$t('disableMaximize')">
+        <a-switch v-model:checked="disableMaximize" />
+        <sub style="padding-left: 8px;color: #666;">{{ $t('takeEffectAfterReloadPage') }}</sub>
       </a-form-item>
       <h2>{{ t('shortcutKey') }}</h2>
       <a-form-item :label="item.label" v-for="item in shortcutsList" :key="item.key">

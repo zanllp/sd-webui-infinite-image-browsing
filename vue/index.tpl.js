@@ -6,7 +6,7 @@ Promise.resolve().then(async () => {
    */
   const html = `__built_html__`.replace(/\/infinite_image_browsing/g, (window.location.pathname + '/infinite_image_browsing').replace(/\/\//g, '/'))
   let containerSelector = '#infinite_image_browsing_container_wrapper'
-  let shouldMaximize = true
+  let shouldMaximize = localStorage.getItem('iib://disable_maximize') !== 'true'
 
   try {
     containerSelector = __iib_root_container__

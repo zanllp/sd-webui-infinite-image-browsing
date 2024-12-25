@@ -210,7 +210,7 @@ class Image:
 
     @classmethod
     def find_by_substring(
-        cls, conn: Connection, substring: str, limit: int = 500, cursor="", regexp="",
+        cls, conn: Connection, substring: str, limit: int = 500, cursor="", regexp="", path_only=False,
         folder_paths: List[str] = []
     ) -> tuple[List["Image"], Cursor]:
         api_cur = Cursor()
@@ -218,11 +218,19 @@ class Image:
             params = []
             where_clauses = []
             if regexp:
-                where_clauses.append("(exif REGEXP ?)")
-                params.append(regexp)
+                if path_only:
+                    where_clauses.append("(path REGEXP ?)")
+                    params.append(regexp)
+                else:
+                    where_clauses.append("((exif REGEXP ?) OR (path REGEXP ?))")
+                    params.extend((regexp, regexp))
             else:
-                where_clauses.append("(path LIKE ? OR exif LIKE ?)")
-                params.extend((f"%{substring}%", f"%{substring}%"))
+                if path_only:
+                    where_clauses.append("(path LIKE ?)")
+                    params.append(f"%{substring}%")
+                else:
+                    where_clauses.append("(path LIKE ? OR exif LIKE ?)")
+                    params.extend((f"%{substring}%", f"%{substring}%"))
             if cursor:
                 where_clauses.append("(date < ?)")
                 params.append(cursor)

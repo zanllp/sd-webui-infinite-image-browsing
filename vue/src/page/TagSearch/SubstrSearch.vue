@@ -8,7 +8,7 @@ import { toRawFileUrl } from '@/util/file'
 import { getDbBasicInfo, getExpiredDirs, getImagesBySubstr, updateImageData, type DataBaseBasicInfo, SearchBySubstrReq } from '@/api/db'
 import { copy2clipboardI18n, makeAsyncFunctionSingle, useGlobalEventListen } from '@/util'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
-import { LeftCircleOutlined, RightCircleOutlined, regex } from '@/icon'
+import { LeftCircleOutlined, RightCircleOutlined, regex, AimOutlined } from '@/icon'
 import { message } from 'ant-design-vue'
 import { t } from '@/i18n'
 import { createImageSearchIter, useImageSearch } from './hook'
@@ -21,6 +21,7 @@ import { fuzzySearchHistory, FuzzySearchHistoryRecord } from '@/store/searchHist
 const props = defineProps<{ tabIdx: number; paneIdx: number, searchScope?: string }>()
 const isRegex = ref(false)
 const substr = ref('')
+const pathOnly = ref(false)
 const folder_paths_str = ref(props.searchScope ?? '')
 const showHistoryRecord = ref(false)
 const searchCount = ref(0)
@@ -29,6 +30,7 @@ const iter = createImageSearchIter(cursor => {
     cursor,
     regexp: isRegex.value ? substr.value : '',
     surstr: !isRegex.value ? substr.value : '',
+    path_only: pathOnly.value,
     folder_paths: (folder_paths_str.value ?? '').split(/,|\n/).map(v => v.trim()).filter(v => v)
   }
   return getImagesBySubstr(req)
@@ -170,6 +172,8 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
     <div class="search-bar" v-if="info" @keydown.stop>
       <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder') + ' ' + $t('regexSearchEnabledHint')"
         :disabled="!queue.isIdle" @keydown.enter="query" allow-clear />
+        <div class="regex-icon" :class="{ selected: pathOnly }" @keydown.stop @click="pathOnly = !pathOnly"
+        :title="$t('pathOnly')"><AimOutlined /></div>
       <div class="regex-icon" :class="{ selected: isRegex }" @keydown.stop @click="onRegexpClick"
         title="Use Regular Expression"> <img :src="regex"></div>
       <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
