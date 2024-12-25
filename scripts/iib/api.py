@@ -874,6 +874,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         regexp: str
         folder_paths: List[str] = None
         size: Optional[int] = 200
+        path_only: Optional[bool] = False
 
     @app.post(db_api_base + "/search_by_substr", dependencies=[Depends(verify_secret)])
     async def search_by_substr(req: SearchBySubstrReq):
@@ -889,7 +890,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             cursor=req.cursor, 
             limit=req.size,
             regexp=req.regexp,
-            folder_paths=folder_paths
+            folder_paths=folder_paths,
+            path_only=req.path_only
         )
         return {
             "files": filter_allowed_files([x.to_file_info() for x in imgs]),

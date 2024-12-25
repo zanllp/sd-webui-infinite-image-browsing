@@ -1,6 +1,9 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  pathOnly: 'Path Only',
+  disableMaximize: 'Disable Maximize',
+  takeEffectAfterReloadPage: 'Take effect after reloading the page',
   compressFile: 'Compress File',
   packOnlyNotDownload: 'Pack Only, Not Download',
   notAllowSingleCtrlOrShiftAsShortcut: '不允許使用單獨的 Ctrl 或者 Shift 作為快速鍵',

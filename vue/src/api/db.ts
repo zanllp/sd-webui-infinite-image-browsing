@@ -84,6 +84,7 @@ export interface SearchBySubstrReq {
   surstr: string;
   cursor: string;
   regexp: string;
+  path_only?: boolean;
   folder_paths?: string[];
   size?: number;
 }

@@ -1,7 +1,9 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
-  
+  pathOnly: '僅路徑',
+  disableMaximize: '禁用最大化',
+  takeEffectAfterReloadPage: '需要重新載入頁面才能生效',
   compressFile: '對文件壓縮',
   packOnlyNotDownload: '僅打包不下載',
   notAllowSingleCtrlOrShiftAsShortcut: '不允許使用單獨的 Ctrl 或者 Shift 作為快速鍵',

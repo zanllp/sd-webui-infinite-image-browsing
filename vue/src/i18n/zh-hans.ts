@@ -1,5 +1,8 @@
 
 export const zhHans = {
+  pathOnly: '仅路径',
+  takeEffectAfterReloadPage: '更改将在重新加载页面后生效',
+  disableMaximize: '禁用最大化',
   compressFile: '对文件压缩',
   packOnlyNotDownload: '仅打包不下载',
   notAllowSingleCtrlOrShiftAsShortcut:  '不允许使用单独的 Ctrl 或者 Shift 作为快捷键',
