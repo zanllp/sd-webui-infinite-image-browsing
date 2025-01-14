@@ -394,7 +394,8 @@ def get_img_geninfo_txt_path(path: str):
         return txt_path
 
 def is_img_created_by_comfyui(img: Image):
-    return img.info.get('prompt') #and img.info.get('workflow') # ermanitu
+    prompt = img.info.get('prompt')
+    return prompt and (img.info.get('workflow') or ("class_type" in prompt)) # ermanitu
 
 def is_img_created_by_comfyui_with_webui_gen_info(img: Image):
     return is_img_created_by_comfyui(img) and img.info.get('parameters')
@@ -419,7 +420,7 @@ def get_comfyui_exif_data(img: Image):
 
     # As a workaround to bypass parsing errors in the parser.
     # https://github.com/jiw0220/stable-diffusion-image-metadata/blob/00b8d42d4d1a536862bba0b07c332bdebb2a0ce5/src/index.ts#L130
-    meta["Steps"] = KSampler_entry["steps"]
+    meta["Steps"] = KSampler_entry.get("steps", "Unknown")
     meta["Sampler"] = KSampler_entry["sampler_name"]
     meta["Model"] = data[KSampler_entry["model"][0]]["inputs"].get("ckpt_name") # ermanitu
     meta["Source Identifier"] = "ComfyUI"
