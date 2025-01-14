@@ -394,7 +394,7 @@ def get_img_geninfo_txt_path(path: str):
         return txt_path
 
 def is_img_created_by_comfyui(img: Image):
-    return img.info.get('prompt') and img.info.get('workflow')
+    return img.info.get('prompt') #and img.info.get('workflow') # ermanitu
 
 def is_img_created_by_comfyui_with_webui_gen_info(img: Image):
     return is_img_created_by_comfyui(img) and img.info.get('parameters')
@@ -415,11 +415,13 @@ def get_comfyui_exif_data(img: Image):
             pass
     meta = {}
     KSampler_entry = data[meta_key]["inputs"]
+    print(KSampler_entry)
+
     # As a workaround to bypass parsing errors in the parser.
     # https://github.com/jiw0220/stable-diffusion-image-metadata/blob/00b8d42d4d1a536862bba0b07c332bdebb2a0ce5/src/index.ts#L130
-    meta["Steps"] = "Unknown" 
+    meta["Steps"] = KSampler_entry["steps"]
     meta["Sampler"] = KSampler_entry["sampler_name"]
-    meta["Model"] = data[KSampler_entry["model"][0]]["inputs"]["ckpt_name"]
+    meta["Model"] = data[KSampler_entry["model"][0]]["inputs"].get("ckpt_name") # ermanitu
     meta["Source Identifier"] = "ComfyUI"
     def get_text_from_clip(idx: str) :
         inputs = data[idx]["inputs"]
@@ -427,7 +429,14 @@ def get_comfyui_exif_data(img: Image):
         if isinstance(text, list): # type:CLIPTextEncode (NSP) mode:Wildcards
             text = data[text[0]]["inputs"]["text"]
         return text.strip()
-    pos_prompt = get_text_from_clip(KSampler_entry["positive"][0])
+    
+    # added by ermanitu
+    in_node = data[str(KSampler_entry["positive"][0])]
+    if in_node["class_type"] != "FluxGuidance":
+        pos_prompt = get_text_from_clip(KSampler_entry["positive"][0])
+    else:
+        pos_prompt = get_text_from_clip(in_node["inputs"]["conditioning"][0])
+
     neg_prompt = get_text_from_clip(KSampler_entry["negative"][0])
     pos_prompt_arr = unique_by(parse_prompt(pos_prompt)["pos_prompt"])
     return {
