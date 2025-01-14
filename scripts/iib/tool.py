@@ -406,9 +406,8 @@ def get_comfyui_exif_data(img: Image):
         return {}
     meta_key = '3'
     data: Dict[str, any] = json.loads(prompt)
-    for i in range(3, 32):
+    for i in data.keys():
         try:
-            i = str(i)
             if data[i]["class_type"].startswith("KSampler"):
                 meta_key = i
                 break
@@ -416,13 +415,13 @@ def get_comfyui_exif_data(img: Image):
             pass
     meta = {}
     KSampler_entry = data[meta_key]["inputs"]
-    print(KSampler_entry)
+    #print(KSampler_entry) # for testing
 
     # As a workaround to bypass parsing errors in the parser.
     # https://github.com/jiw0220/stable-diffusion-image-metadata/blob/00b8d42d4d1a536862bba0b07c332bdebb2a0ce5/src/index.ts#L130
     meta["Steps"] = KSampler_entry.get("steps", "Unknown")
     meta["Sampler"] = KSampler_entry["sampler_name"]
-    meta["Model"] = data[KSampler_entry["model"][0]]["inputs"].get("ckpt_name") # ermanitu
+    meta["Model"] = data[KSampler_entry["model"][0]]["inputs"].get("ckpt_name")
     meta["Source Identifier"] = "ComfyUI"
     def get_text_from_clip(idx: str) :
         inputs = data[idx]["inputs"]
@@ -431,7 +430,6 @@ def get_comfyui_exif_data(img: Image):
             text = data[text[0]]["inputs"]["text"]
         return text.strip()
     
-    # added by ermanitu
     in_node = data[str(KSampler_entry["positive"][0])]
     if in_node["class_type"] != "FluxGuidance":
         pos_prompt = get_text_from_clip(KSampler_entry["positive"][0])
