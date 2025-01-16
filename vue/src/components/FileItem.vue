@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FileOutlined, FolderOpenOutlined, EllipsisOutlined, HeartOutlined, HeartFilled } from '@/icon'
+import { FileOutlined, FolderOpenOutlined, EllipsisOutlined, HeartOutlined, HeartFilled, EyeInvisibleOutlined, EyeOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { fallbackImage, ok } from 'vue3-ts-util'
 import type { FileNodeInfo } from '@/api/files'
@@ -10,7 +10,6 @@ import { computed, ref } from 'vue'
 import ContextMenu from './ContextMenu.vue'
 import ChangeIndicator from './ChangeIndicator.vue'
 import { useTagStore } from '@/store/useTagStore'
-import { CloseCircleOutlined, StarFilled, StarOutlined } from '@/icon'
 import { Tag } from '@/api/db'
 import { openVideoModal } from './functionalCallableComp'
 import type { GenDiffInfo } from '@/api/files'
@@ -50,7 +49,7 @@ const genDiffToPrevious = ref<GenDiffInfo>()
 const genDiffToNext = ref<GenDiffInfo>()
 const calcGenInfoDiff = debounce(() => {
   const { getGenDiff, file, idx } = props
-  if (!getGenDiff) return 
+  if (!getGenDiff) return
   genDiffToNext.value = getGenDiff(file.gen_info_obj, idx, 1, file)
   genDiffToPrevious.value = getGenDiff(file.gen_info_obj, idx, -1, file)
 }, 200 + 100 * Math.random())
@@ -85,10 +84,16 @@ const tags = computed(() => {
 })
 
 const likeTag = computed(() => tags.value.find(v => v.type === 'custom' && v.name === 'like'))
+const nsfwTag = computed(() => tags.value.find(v => v.type === 'custom' && v.name === 'nsfw'))
 
 const taggleLikeTag = () => {
   ok(likeTag.value)
   emit('contextMenuClick', { key: `toggle-tag-${likeTag.value.id}` } as MenuInfo, props.file, props.idx)
+}
+
+const taggleNSFWTag = () => {
+  ok(nsfwTag.value)
+  emit('contextMenuClick', { key: `toggle-tag-${nsfwTag.value.id}` } as MenuInfo, props.file, props.idx)
 }
 
 const minShowDetailWidth = 160
@@ -97,9 +102,9 @@ const minShowDetailWidth = 160
   <a-dropdown :trigger="['contextmenu']" :visible="!global.longPressOpenContextMenu ? undefined : typeof idx === 'number' && showMenuIdx === idx
     " @update:visible="(v: boolean) => typeof idx === 'number' && emit('update:showMenuIdx', v ? idx : -1)">
     <li class="file file-item-trigger grid" :class="{
-    clickable: file.type === 'dir',
-    selected
-  }" :data-idx="idx" :key="file.name" draggable="true" @dragstart="emit('dragstart', $event, idx)"
+      clickable: file.type === 'dir',
+      selected
+    }" :data-idx="idx" :key="file.name" draggable="true" @dragstart="emit('dragstart', $event, idx)"
       @dragend="emit('dragend', $event, idx)" @click.capture="emit('fileItemClick', $event, file, idx)">
 
       <div>
@@ -130,6 +135,10 @@ const minShowDetailWidth = 160
               </a-menu>
             </template>
           </a-dropdown>
+          <div class="float-btn-wrap" :class="{ 'nsfw-selected': nsfwTag?.selected }" @click="taggleNSFWTag">
+            <EyeInvisibleOutlined v-if="nsfwTag?.selected" />
+            <EyeOutlined v-else />
+          </div>
         </div>
         <!-- :key="fullScreenPreviewImageUrl ? undefined : file.fullpath" 
           这么复杂是因为再全屏查看时可能因为直接删除导致fullpath变化，然后整个预览直接退出-->
@@ -140,10 +149,11 @@ const minShowDetailWidth = 160
             :gen-diff-to-next="genDiffToNext" :gen-diff-to-previous="genDiffToPrevious" />
           <!-- change indicators END -->
 
-          <a-image :src="imageSrc" :fallback="fallbackImage" :preview="{
-    src: fullScreenPreviewImageUrl,
-    onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
-  }" />
+          <a-image :class="{ 'blur': (extraTags ?? customTags).find(v => v.type === 'custom' && v.name === 'nsfw') }"
+            :src="imageSrc" :fallback="fallbackImage" :preview="{
+              src: fullScreenPreviewImageUrl,
+              onVisibleChange: (v: boolean, lv: boolean) => emit('previewVisibleChange', v, lv)
+            }" />
           <div class="tags-container" v-if="customTags && cellWidth > minShowDetailWidth">
             <a-tag v-for="tag in extraTags ?? customTags" :key="tag.id" :color="tagStore.getColor(tag)">
               {{ tag.name }}
@@ -151,7 +161,8 @@ const minShowDetailWidth = 160
           </div>
         </div>
         <div :class="`idx-${idx} item-content video`" :url="toVideoCoverUrl(file)"
-          :style="{ 'background-image': `url('${file.cover_url ?? toVideoCoverUrl(file)}')` }" v-else-if="isVideoFile(file.name)"
+          :style="{ 'background-image': `url('${file.cover_url ?? toVideoCoverUrl(file)}')` }"
+          v-else-if="isVideoFile(file.name)"
           @click="openVideoModal(file, (id) => emit('contextMenuClick', { key: `toggle-tag-${id}` } as any, file, idx))">
 
           <div class="play-icon">
@@ -328,6 +339,7 @@ const minShowDetailWidth = 160
           flex-direction: row;
           margin: 0;
           font-size: 0.7em;
+
           * {
             white-space: nowrap;
             overflow: hidden;
@@ -341,6 +353,11 @@ const minShowDetailWidth = 160
         background-color: var(--zp-secondary-variant-background);
         border-radius: 8px;
         overflow: hidden;
+      }
+
+      .blur {
+        filter: blur(8px);
+        -webkit-filter: blur(8px);
       }
 
       img:not(.dir-cover-item),

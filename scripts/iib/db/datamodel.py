@@ -367,6 +367,12 @@ class Tag:
             except sqlite3.OperationalError as e:
                 pass
 
+            cur.execute(
+                """INSERT OR IGNORE INTO tag(name, score, type, count, color)
+                VALUES ("nsfw", 0, "custom", 0, "rgb(216, 27, 67)");
+                """
+            )
+          
 
 class ImageTag:
     def __init__(self, image_id: int, tag_id: int):
