@@ -1210,6 +1210,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def rebuild_index(request: Request):
         payload = await request.json()
         update_extra_paths(conn = DataBase.get_conn())
-        rebuild_image_index(search_dirs = get_img_search_dirs() + mem["extra_paths", payload)
+        
+        rebuild_image_index(search_dirs = get_img_search_dirs() + mem["extra_paths"], paylaod=payload) 
         return {"detail": "Index rebuilt successfully"}
 
