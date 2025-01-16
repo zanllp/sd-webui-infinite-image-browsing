@@ -109,7 +109,7 @@ def rebuild_image_index(search_dirs: List[str], paylaod):
         )
         cur.execute("""DELETE FROM tag WHERE tag.type <> 'custom'""")
         conn.commit()
-        update_image_data(search_dirs=search_dirs, is_rebuild=True, detect_nsfw=paylaod.get("detecautoDetectNsfwContent", False))
+        update_image_data(search_dirs=search_dirs, is_rebuild=True, detect_nsfw=paylaod.get("autoDetectNsfwContent", False))
 
 
 def get_extra_meta_keys_from_plugins(source_identifier: str):
