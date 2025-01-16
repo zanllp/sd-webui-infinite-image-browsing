@@ -15,6 +15,7 @@ from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 from scripts.iib.logger import logger
 from scripts.iib.parsers.index import parse_image_info
 from scripts.iib.plugin import plugin_inst_map
+from ifnude import detect
 
 # 定义一个函数来获取图片文件的EXIF数据
 def get_exif_data(file_path):
@@ -28,7 +29,7 @@ def get_exif_data(file_path):
     return ImageGenerationInfo()
 
 
-def update_image_data(search_dirs: List[str], is_rebuild = False):
+def update_image_data(search_dirs: List[str], is_rebuild = False, detect_nsfw = False):
     conn = DataBase.get_conn()
     tag_incr_count_rec: Dict[int, int] = {}
 
@@ -53,7 +54,7 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
                 if os.path.isdir(file_path):
                     process_folder(file_path)
                 elif is_valid_media_path(file_path):
-                    build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag)
+                    build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag, detect_nsfw)
                 # neg暂时跳过感觉个没人会搜索这个
             except Exception as e:
                 logger.error("Tag generation failed. Skipping this file. file:%s error: %s", file_path, e)
@@ -96,7 +97,7 @@ def add_image_data_single(file_path):
         tag.save(conn)
     conn.commit()
 
-def rebuild_image_index(search_dirs: List[str]):
+def rebuild_image_index(search_dirs: List[str], paylaod):
     conn = DataBase.get_conn()
     with closing(conn.cursor()) as cur:
         cur.execute(
@@ -108,7 +109,7 @@ def rebuild_image_index(search_dirs: List[str]):
         )
         cur.execute("""DELETE FROM tag WHERE tag.type <> 'custom'""")
         conn.commit()
-        update_image_data(search_dirs=search_dirs, is_rebuild=True)
+        update_image_data(search_dirs=search_dirs, is_rebuild=True, detect_nsfw=paylaod.get("detecautoDetectNsfwContent", False))
 
 
 def get_extra_meta_keys_from_plugins(source_identifier: str):
@@ -120,9 +121,10 @@ def get_extra_meta_keys_from_plugins(source_identifier: str):
         logger.error("get_extra_meta_keys_from_plugins %s", e)
     return []
 
-def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
+def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag, detect_nsfw=False):
     img = DbImg.get(conn, file_path)
     parsed_params = None
+
     if is_rebuild:
         info = get_exif_data(file_path)
         parsed_params = info.params
@@ -160,10 +162,17 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
         conn,
         str(meta.get("Size-1", 0)) + " * " + str(meta.get("Size-2", 0)),
         type="size",
-    )
+    )       
     safe_save_img_tag(ImageTag(img.id, size_tag.id))
     media_type_tag = Tag.get_or_create(conn, "Image" if is_image_file(file_path) else "Video", 'Media Type')
     safe_save_img_tag(ImageTag(img.id, media_type_tag.id))
+    
+    if detect_nsfw:
+        isNsfw = len(detect(file_path)) > 0
+        if(isNsfw):
+            nsfw_tag = Tag.get_or_create(conn, "nsfw", "custom")
+            safe_save_img_tag(ImageTag(img.id, nsfw_tag.id))
+            
     keys = [
         "Model",
         "Sampler",

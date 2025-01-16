@@ -1207,7 +1207,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         f"{db_api_base}/rebuild_index",
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
-    async def rebuild_index():
+    async def rebuild_index(request: Request):
+        payload = await request.json()
         update_extra_paths(conn = DataBase.get_conn())
-        rebuild_image_index(search_dirs = get_img_search_dirs() + mem["extra_paths"])
+        rebuild_image_index(search_dirs = get_img_search_dirs() + mem["extra_paths", payload)
+        return {"detail": "Index rebuilt successfully"}
 
