@@ -294,5 +294,7 @@ export const zhHans = {
   confirmRebuildImageIndex: '确认重建图像索引？',
   rebuildComplete: '重新构建完成',
   rebuildImageIndex: '重新构建图像索引',
-  tagSearchNoResultsMessage: '看起来没匹配到任何结果，尝试通过重新构建索引来去掉无用的tag？'
+  tagSearchNoResultsMessage: '看起来没匹配到任何结果，尝试通过重新构建索引来去掉无用的tag？',
+  autoDetectNsfwContent: '自动检测NSFW',
+  autoDetectNsfwContentTooltip: '自动检测NSFW内容。可能需要较长时间。'
 }

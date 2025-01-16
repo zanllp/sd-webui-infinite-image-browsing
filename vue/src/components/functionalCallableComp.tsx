@@ -1,11 +1,11 @@
-import { Button, Input, Modal, message } from 'ant-design-vue'
+import { Button, FormItem, Input, Modal, Switch, Tooltip, message } from 'ant-design-vue'
 import { StyleValue, ref } from 'vue'
 import * as Path from '@/util/path'
 import { FileNodeInfo, mkdirs } from '@/api/files'
 import { setTargetFrameAsCover } from '@/api'
 import { t } from '@/i18n'
 import { downloadFiles, globalEvents, toRawFileUrl, toStreamVideoUrl } from '@/util'
-import { DownloadOutlined } from '@/icon'
+import { DownloadOutlined, InfoCircleOutlined } from '@/icon'
 import { isStandalone } from '@/util/env'
 import { addCustomTag, getDbBasicInfo, rebuildImageIndex, renameFile } from '@/api/db'
 import { useTagStore } from '@/store/useTagStore'
@@ -124,16 +124,34 @@ export const openVideoModal = (file: FileNodeInfo, onTagClick?: (id: string| num
 }
 
 export const openRebuildImageIndexModal = () => {
+  const autoDetectNsfwContent = ref(false)
   Modal.confirm({
     title: t('confirmRebuildImageIndex'),
+    content: () => (
+      <div>
+        <FormItem
+          label={
+            <div>
+              {t('autoDetectNsfwContent')}{' '}
+              <Tooltip title={t('autoDetectNsfwContentTooltip')}>
+                <InfoCircleOutlined />
+              </Tooltip>
+            </div>
+          }
+        >
+          <Switch v-model:checked={autoDetectNsfwContent.value} />
+        </FormItem>
+      </div>
+    ),
     onOk: async () => {
-      await rebuildImageIndex()
+      await rebuildImageIndex({
+        autoDetectNsfwContent: autoDetectNsfwContent.value
+      })
       globalEvents.emit('searchIndexExpired')
       message.success(t('rebuildComplete'))
     }
   })
 }
-
 
 export const openRenameFileModal = (path: string) => {
   const name = ref(path.split(/[\\/]/).pop() ?? '')

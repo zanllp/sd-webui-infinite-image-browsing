@@ -315,5 +315,7 @@ You can specify which snapshot to restore to when starting IIB in the global set
   confirmRebuildImageIndex: 'Confirm rebuilding image index?',
   rebuildComplete: 'Rebuild complete',
   tagSearchNoResultsMessage:
-    'It seems like no results were found. Try rebuilding the index to remove unused tags?'
+    'It seems like no results were found. Try rebuilding the index to remove unused tags?',
+  autoDetectNsfwContent: 'Auto-detect NSFW content',
+  autoDetectNsfwContentTooltip: 'Automatically detects NSFW content in images. Takes long time.'
 }

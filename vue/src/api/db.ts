@@ -133,7 +133,9 @@ export const batchGetTagsByPath = async (paths: string[]) => {
   return resp.data as Dict<Tag[]>
 }
 
-export const rebuildImageIndex = () => axiosInst.value.post('/db/rebuild_index')
+export const rebuildImageIndex = (params: { autoDetectNsfwContent: boolean }) => {
+  return axiosInst.value.post('/db/rebuild_index', params)
+}
 
 export interface BatchUpdateTagParams {
   img_paths: string[]
