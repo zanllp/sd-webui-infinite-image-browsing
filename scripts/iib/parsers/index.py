@@ -4,6 +4,7 @@ from scripts.iib.parsers.fooocus import FooocusParser
 from scripts.iib.parsers.novelai import NovelAIParser
 from scripts.iib.parsers.model import ImageGenerationInfo
 from scripts.iib.parsers.stable_swarm_ui import StableSwarmUIParser
+from scripts.iib.parsers.invoke_ai import InvokeAIParser
 from scripts.iib.logger import logger
 from PIL import Image
 from scripts.iib.plugin import plugin_insts
@@ -15,6 +16,7 @@ def parse_image_info(image_path: str) -> ImageGenerationInfo:
         ComfyUIParser,
         FooocusParser,
         NovelAIParser,
+        InvokeAIParser,
         StableSwarmUIParser,
         SdWebUIParser,
     ]
