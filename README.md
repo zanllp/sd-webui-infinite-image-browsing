@@ -17,6 +17,7 @@
 | Fooocus                | Supported        |  Built-in    |
 | NovelAI                | Supported    |  Built-in    |
 | StableSwarmUI          | Supported    |  Built-in    |
+| Invoke.AI          | Supported    |  Built-in    |
 | Pixiv                  | Supported        |  [pixiv_iib_plugin](https://github.com/zanllp/pixiv_iib_plugin) |
 
 If you would like to support more software, please refer to: [parsers](https://github.com/zanllp/sd-webui-infinite-image-browsing/tree/main/scripts/iib/parsers) or [pixiv_iib_plugin](https://github.com/zanllp/pixiv_iib_plugin)
