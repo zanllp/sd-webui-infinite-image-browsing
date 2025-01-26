@@ -18,3 +18,5 @@ iib_db_backup
 db_migrate_temp.db
 plugins/*
 !plugins/.gitkeep
+test_data/*
+.DS_Store
