@@ -37,7 +37,8 @@ export function useLocation () {
     props,
     deletedFiles,
     walker,
-    sortedFiles
+    sortedFiles,
+    previewing
   } = useHookShareState().toRefs()
 
   watch(
@@ -230,7 +231,11 @@ export function useLocation () {
   /**
    * 上面那个是Force
    */
-  const lazyRefresh = (async () => {
+  const lazyRefresh = (async (isPollRefresh = false) => {
+    
+    if (isPollRefresh === true && previewing.value) {
+      return // fullscreen previewing时不刷新
+    }
     if (props.value.mode === 'walk' && walker.value) {
       const currpos = scroller.value?.$_endIndex ?? 64
       if (global.autoRefreshWalkMode &&
@@ -402,7 +407,7 @@ export function useLocation () {
     showWalkButton,
     searchInCurrentDir,
     backToLastUseTo,
-    ...usePollRefresh(lazyRefresh)
+    ...usePollRefresh(() => lazyRefresh(true))
   }
 }
 
