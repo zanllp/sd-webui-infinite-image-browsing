@@ -13,6 +13,7 @@ import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue
 
 import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 import { copy2clipboardI18n } from '@/util'
+import { message } from 'ant-design-vue'
 
 const g = useGlobalStore()
 
@@ -30,9 +31,13 @@ const fetch = async () => {
   try {
     loading.value = true
     const res = await getRandomImages()
+    if (res.length === 0) {
+      message.warn('No data, please generate index in image search page first')
+    }
     files.value = res
   } finally {
     loading.value = false
+    onScroll()
   }
 }
 onMounted(fetch)
