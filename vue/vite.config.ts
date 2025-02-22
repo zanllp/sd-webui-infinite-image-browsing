@@ -12,6 +12,7 @@ const isTauri = !!env.TAURI_ARCH
 
 export default defineConfig({
   base: isDev || isTauri ? '/' : '/infinite_image_browsing/fe-static',
+  
   css: {
     preprocessorOptions: {
       modules: true,
@@ -39,6 +40,7 @@ export default defineConfig({
     }
   },
   server: {
+    port: 3000,
     proxy: {
       '/infinite_image_browsing/': {
         target: 'http://127.0.0.1:7866/'

@@ -1,6 +1,10 @@
 import type { IIBI18nMap } from '.'
 
 export const zhHant: Partial<IIBI18nMap> = {
+  tryMyLuck: '隨便看看',
+  randomImage: '隨機圖片',
+  // 换一批
+  shuffle: '換一批',
   pathOnly: '僅路徑',
   disableMaximize: '禁用最大化',
   takeEffectAfterReloadPage: '需要重新載入頁面才能生效',

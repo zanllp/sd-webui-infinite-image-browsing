@@ -26,7 +26,8 @@ const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> 
   'img-sli': defineAsyncComponent(() => import('@/page/ImgSli/ImgSliPagePane.vue')),
   'batch-download': defineAsyncComponent(() => import('@/page/batchDownload/batchDownload.vue')),
   'grid-view': defineAsyncComponent(() => import('@/page/gridView/gridView.vue')),
-  'workspace-snapshot': defineAsyncComponent(() => import('@/page/WorkspeaceSnapshot/index.vue'))
+  'workspace-snapshot': defineAsyncComponent(() => import('@/page/WorkspeaceSnapshot/index.vue')),
+  'random-image': defineAsyncComponent(() => import('@/page/randomImage/randomImage.vue')),
 }
 const onEdit = (idx: number, targetKey: any, action: string) => {
   const tab = global.tabList[idx]

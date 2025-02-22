@@ -42,7 +42,7 @@ const compCnMap: Partial<Record<TabPane['type'], string>> = {
   'fuzzy-search': t('fuzzy-search'),
   'batch-download': t('batchDownload') + ' / ' + t('archive'),
   'workspace-snapshot': t('WorkspaceSnapshot'),
-  
+  'random-image': t('randomImage'),
   'global-setting': t('globalSettings'),
 }
 type FileTransModeIn = 'preset' | ExtraPathType
@@ -58,6 +58,7 @@ const createPane = (type: TabPane['type'], path?: string, mode?: FileTransModeIn
     case 'batch-download':
     case 'workspace-snapshot':
     case 'fuzzy-search':
+    case 'random-image':
     case 'empty':
       pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId() }
       break
@@ -215,6 +216,8 @@ const modes = computed(() => {
               <PlusOutlined /> {{ $t('add') }}
             </span>
           </li>
+            
+          <a-button @click="openInCurrentTab('random-image')" type="primary" style="border-radius:100vw;margin-bottom: 8px;" ghost><span style="margin:0 6px;"><span style="margin-right: 8px;">🎲</span>{{ $t('tryMyLuck') }}</span></a-button>
           <actionContextMenu v-for="dir in walkModeSupportedDir" :key="dir.key"
             @open-in-new-tab="openInNewTab('local', dir.dir, 'walk')"
             @open-on-the-right="openOnTheRight('local', dir.dir, 'walk')">
