@@ -80,6 +80,12 @@ export const getImageSelectedCustomTag = async (path: string) => {
   return resp.data as Tag[]
 }
 
+
+export const getRandomImages = async () => {
+  const resp = await axiosInst.value.get('/db/random_images')
+  return resp.data as FileNodeInfo[]
+}
+
 export interface SearchBySubstrReq {
   surstr: string;
   cursor: string;

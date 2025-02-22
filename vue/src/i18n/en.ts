@@ -1,6 +1,9 @@
 import type { IIBI18nMap } from '.'
 
 export const en: IIBI18nMap = {
+  tryMyLuck: 'Try My Luck',
+  randomImage: 'Random Image',
+  shuffle: 'Shuffle',
   pathOnly: 'Path Only',
   disableMaximize: 'Disable Maximize',
   takeEffectAfterReloadPage: 'Take effect after reloading the page',

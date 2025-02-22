@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import random
 from sqlite3 import Connection, connect
 from enum import Enum
 import sqlite3
@@ -262,6 +263,26 @@ class Image:
         if images:
             api_cur.next = str(images[-1].date)
         return images, api_cur
+    
+    @classmethod
+    def get_random_images(cls, conn: Connection, size: int) -> List["Image"]:
+        with closing(conn.cursor()) as cur:
+            cur.execute("SELECT COUNT(*) FROM image")
+            total_count = cur.fetchone()[0]
+
+            if total_count == 0 or size <= 0:
+                return []
+
+            step = max(1, total_count // size)
+
+            start_indices = [random.randint(i * step, min((i + 1) * step - 1, total_count - 1)) for i in range(size)]
+
+            placeholders = ",".join("?" * len(start_indices))
+            cur.execute(f"SELECT * FROM image WHERE id IN ({placeholders})", start_indices)
+            rows = cur.fetchall()
+
+        images = [cls.from_row(row) for row in rows if os.path.exists(row[1])]
+        return images
 
 
 class Tag:

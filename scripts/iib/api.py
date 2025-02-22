@@ -838,6 +838,15 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             "expired": len(expired_dirs) != 0,
             "expired_dirs": expired_dirs,
         }
+    
+    
+    
+
+    @app.get(db_api_base + "/random_images", dependencies=[Depends(verify_secret)])
+    async def random_image():
+        conn = DataBase.get_conn()
+        imgs = DbImg.get_random_images(conn, 128)
+        return filter_allowed_files([x.to_file_info() for x in imgs])
 
     @app.get(db_api_base + "/expired_dirs", dependencies=[Depends(verify_secret)])
     async def get_db_expired():

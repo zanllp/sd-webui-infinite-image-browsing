@@ -23,7 +23,7 @@ interface TabPaneBase {
 }
 
 interface OtherTabPane extends TabPaneBase {
-  type: 'global-setting' | 'tag-search' |  'batch-download' | 'workspace-snapshot'
+  type: 'global-setting' | 'tag-search' |  'batch-download' | 'workspace-snapshot' | 'random-image'
 }
 
 export interface EmptyStartTabPane extends TabPaneBase  {

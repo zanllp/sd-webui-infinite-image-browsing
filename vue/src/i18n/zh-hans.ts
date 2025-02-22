@@ -1,5 +1,8 @@
 
 export const zhHans = {
+  tryMyLuck: '试试手气',
+  randomImage: '随机图像',
+  shuffle: '换一批',
   pathOnly: '仅路径',
   takeEffectAfterReloadPage: '更改将在重新加载页面后生效',
   disableMaximize: '禁用最大化',
