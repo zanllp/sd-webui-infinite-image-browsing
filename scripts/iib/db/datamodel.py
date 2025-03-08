@@ -43,7 +43,7 @@ class DataBase:
 
     num = 0
 
-    path = "iib.db"
+    path = os.getenv("IIB_DB_PATH", "iib.db")
 
     @classmethod
     def get_conn(clz) -> Connection:
