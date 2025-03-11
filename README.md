@@ -13,6 +13,7 @@
 | Software               | Support          | Provided by |
 | ---------------------- | ---------------- |  ----------- |
 | Stable Diffusion web UI| Supported        |  Built-in    |
+| Stable Diffusion web UI (Stealth)| Supported  ([default: disabled](https://github.com/zanllp/sd-webui-infinite-image-browsing/blob/main/.env.example#L49))      |  Built-in    |
 | ComfyUI                | Partially supported |  Built-in    |
 | Fooocus                | Supported        |  Built-in    |
 | NovelAI                | Supported    |  Built-in    |
