@@ -165,6 +165,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             allow_origin_regex="^[\w./:-]+$",
             allow_methods=["*"],
             allow_headers=["*"],
+            allow_credentials=True,
         )
 
     def get_img_search_dirs():
