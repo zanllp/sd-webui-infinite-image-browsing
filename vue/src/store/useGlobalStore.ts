@@ -211,7 +211,15 @@ export const useGlobalStore = defineStore(
     const enableThumbnail = ref(true)
     const gridThumbnailResolution = ref(512)
     const defaultSortingMethod = ref(SortMethod.CREATED_TIME_DESC)
-    const defaultGridCellWidth = ref(cellWidthMap(parent.window.innerHeight))
+    const defaultGridCellWidth = ref(256)
+
+    try {
+      if (typeof parent !== 'undefined' && parent.window) {
+        defaultGridCellWidth.value = cellWidthMap(parent.window.innerHeight)
+      }
+    } catch (error) {
+      console.error(error)
+    }
     
     const darkModeControl = ref<'light' | 'dark' | 'auto'>('auto')
 
