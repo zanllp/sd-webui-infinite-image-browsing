@@ -16,14 +16,21 @@ class SdWebUIParser:
         if not clz.test(img, file_path):
             raise Exception("The input image does not match the current parser.")
         info = read_sd_webui_gen_info_from_image(img, file_path)
+        width, height = img.size
         if not info:
-            return ImageGenerationInfo()
+            return ImageGenerationInfo(
+                params=ImageGenerationParams(
+                    meta={"final_width": width, "final_height": height}
+                )
+            )
         info += ", Source Identifier: Stable Diffusion web UI"
         params = parse_generation_parameters(info)
         return ImageGenerationInfo(
             info,
             ImageGenerationParams(
-                meta=params["meta"], pos_prompt=params["pos_prompt"], extra=params
+                meta=params["meta"] | {"final_width": width, "final_height": height},
+                pos_prompt=params["pos_prompt"],
+                extra=params,
             ),
         )
 

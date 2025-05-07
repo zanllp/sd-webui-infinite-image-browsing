@@ -50,7 +50,8 @@ class InvokeAIParser:
         return ImageGenerationInfo(
             info,
             ImageGenerationParams(
-                meta=meta_obj,
+                meta=meta_obj
+                | {"final_width": img.size[0], "final_height": img.size[1]},
                 pos_prompt=parse_generation_parameters(info)["pos_prompt"],
                 # extra=params
             ),
