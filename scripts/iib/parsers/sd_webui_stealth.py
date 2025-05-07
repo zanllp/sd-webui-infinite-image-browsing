@@ -145,7 +145,10 @@ class SdWebUIStealthParser:
         return ImageGenerationInfo(
             info,
             ImageGenerationParams(
-                meta=params["meta"], pos_prompt=params["pos_prompt"], extra=params
+                meta=params["meta"]
+                | {"final_width": img.size[0], "final_height": img.size[1]},
+                pos_prompt=params["pos_prompt"],
+                extra=params,
             ),
         )
 

@@ -155,10 +155,14 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
     meta = parsed_params.meta
     lora = parsed_params.extra.get("lora", [])
     lyco = parsed_params.extra.get("lyco", [])
+    if "final_width" in meta and "final_height" in meta:
+        size_str = str(meta["final_width"]) + " × " + str(meta["final_height"])
+    else:
+        size_str = "Unknown Size"
     pos = parsed_params.pos_prompt
     size_tag = Tag.get_or_create(
         conn,
-        str(meta.get("Size-1", 0)) + " * " + str(meta.get("Size-2", 0)),
+        size_str,
         type="size",
     )
     safe_save_img_tag(ImageTag(img.id, size_tag.id))

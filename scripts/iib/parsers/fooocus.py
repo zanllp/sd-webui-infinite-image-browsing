@@ -60,7 +60,11 @@ class FooocusParser:
         return ImageGenerationInfo(
             info,
             ImageGenerationParams(
-                meta=params["meta"],
+                meta=params["meta"]
+                | {
+                    "final_width": img.size[0],
+                    "final_height": img.size[1],
+                },
                 pos_prompt=parse_generation_parameters(info)["pos_prompt"],
                 extra={
                     "lora": unique_by(lora_list, lambda x: x["name"].lower())
