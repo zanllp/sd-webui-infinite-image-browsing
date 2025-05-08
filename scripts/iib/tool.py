@@ -394,14 +394,39 @@ def get_img_geninfo_txt_path(path: str):
         return txt_path
 
 def is_img_created_by_comfyui(img: Image):
-    prompt = img.info.get('prompt')
-    return prompt and (img.info.get('workflow') or ("class_type" in prompt)) # ermanitu
+    if img.format == "PNG":
+        prompt = img.info.get('prompt')
+        return prompt and (img.info.get('workflow') or ("class_type" in prompt)) # ermanitu
+    elif img.format == "WEBP":
+        exif = img.info.get("exif")
+        split = [x.decode("utf-8", errors="ignore") for x in exif.split(b"\x00")]
+        workflow_str = find(split, lambda x: x.lower().startswith("workflow:"))
+        prompt_str = find(split, lambda x: x.lower().startswith("prompt:"))
+        if workflow_str and prompt_str:
+            workflow = json.loads(workflow_str.split(":", 1)[1])
+            prompt = json.loads(prompt_str.split(":", 1)[1])
+            return (
+                workflow
+                and prompt
+                and any("class_type" in x.keys() for x in prompt.values())
+            )
+        else:
+            return False
+    else:
+        return False  # unsupported format
 
 def is_img_created_by_comfyui_with_webui_gen_info(img: Image):
     return is_img_created_by_comfyui(img) and img.info.get('parameters')
 
 def get_comfyui_exif_data(img: Image):
-    prompt = img.info.get('prompt')
+    if img.format == "PNG":
+        prompt = img.info.get('prompt')
+    elif img.format == "WEBP":
+        exif = img.info.get("exif")
+        split = [x.decode("utf-8", errors="ignore") for x in exif.split(b"\x00")]
+        prompt_str = find(split, lambda x: x.lower().startswith("prompt:"))
+        if prompt_str:
+            prompt = prompt_str.split(":", 1)[1] if prompt_str else None
     if not prompt:
         return {}
     meta_key = '3'
