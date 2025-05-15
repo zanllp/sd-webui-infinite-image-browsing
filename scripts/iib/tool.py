@@ -518,7 +518,7 @@ def read_sd_webui_gen_info_from_image(image: Image, path="") -> str:
 re_param_code = r'\s*([\w ]+):\s*("(?:\\"[^,]|\\"|\\|[^\"])+"|[^,]*)(?:,|$)'
 re_param = re.compile(re_param_code)
 re_imagesize = re.compile(r"^(\d+)x(\d+)$")
-re_lora_prompt = re.compile("<lora:([\w_\s.]+)(?::([\d.]+))+>", re.IGNORECASE)
+re_lora_prompt = re.compile("<lora:([\w_\s.]+)(?::([\d.]+))*>", re.IGNORECASE)
 re_lora_extract = re.compile(r"([\w_\s.]+)(?:\d+)?")
 re_lyco_prompt = re.compile("<lyco:([\w_\s.]+):([\d.]+)>", re.IGNORECASE)
 re_parens = re.compile(r"[\\/\[\](){}]+")
@@ -549,8 +549,10 @@ def parse_prompt(x: str):
         if idx_colon != -1:
             if re.search(re_lora_prompt, tag):
                 lora_res = re.search(re_lora_prompt, tag)
+                # 修复 group(2) 可能为 None 的情况
+                lora_value = float(lora_res.group(2)) if lora_res.group(2) is not None else 1.0
                 lora_list.append(
-                    {"name": lora_res.group(1), "value": float(lora_res.group(2))}
+                    {"name": lora_res.group(1), "value": lora_value}
                 )
             elif re.search(re_lyco_prompt, tag):
                 lyco_res = re.search(re_lyco_prompt, tag)
