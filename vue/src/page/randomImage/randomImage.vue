@@ -120,7 +120,7 @@ const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
         <file-item :idx="idx" :file="file" :cell-width="cellWidth" :full-screen-preview-image-url="images[previewIdx] ? toRawFileUrl(images[previewIdx]) : ''
           " @context-menu-click="onContextMenuClickU" @preview-visible-change="onPreviewVisibleChange"
           :is-selected-mutil-files="multiSelectedIdxs.length > 1" :selected="multiSelectedIdxs.includes(idx)"
-          @file-item-click="onFileItemClick" @tiktok-view="(file, idx) => openTiktokViewWithFiles(files, idx)" />
+          @file-item-click="onFileItemClick" @tiktok-view="(_file, idx) => openTiktokViewWithFiles(files, idx)" />
       </template>
     </RecycleScroller>
     <div v-if="previewing" class="preview-switch">

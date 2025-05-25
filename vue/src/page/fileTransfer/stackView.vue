@@ -238,7 +238,7 @@ watch(
               v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :cell-width="cellWidth"
               @file-item-click="onFileItemClick" @dragstart="onFileDragStart" @dragend="onFileDragEnd"
               @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick"
-              @tiktok-view="(file, idx) => openTiktokViewWithFiles(sortedFiles, idx)"
+              @tiktok-view="(_file, idx) => openTiktokViewWithFiles(sortedFiles, idx)"
               :is-selected-mutil-files="multiSelectedIdxs.length > 1"
               :enable-change-indicator="changeIndchecked"
               :seed-change-checked="seedChangeChecked"

@@ -317,25 +317,25 @@ const resetToCenter = () => {
   }, 300) // 与 CSS 过渡时间一致
 }
 
-// 错位检测和修复函数
-const fixMisalignment = () => {
-  if (isDragging.value) return
+// // 错位检测和修复函数
+// const fixMisalignment = () => {
+//   if (isDragging.value) return
   
-  // 检测是否存在错位
-  if (bufferTransform.value !== 0 || dragOffset.value !== 0) {
-    // 强制重置到正确位置
-    bufferTransform.value = 0
-    dragOffset.value = 0
+//   // 检测是否存在错位
+//   if (bufferTransform.value !== 0 || dragOffset.value !== 0) {
+//     // 强制重置到正确位置
+//     bufferTransform.value = 0
+//     dragOffset.value = 0
     
-    // 重新更新 buffer 确保内容正确
-    updateBuffer()
-  }
+//     // 重新更新 buffer 确保内容正确
+//     updateBuffer()
+//   }
   
-  // 检查动画状态是否卡住
-  if (isAnimating.value) {
-    isAnimating.value = false
-  }
-}
+//   // 检查动画状态是否卡住
+//   if (isAnimating.value) {
+//     isAnimating.value = false
+//   }
+// }
 
 // 鼠标滚轮事件
 const handleWheel = throttle((e: WheelEvent) => {

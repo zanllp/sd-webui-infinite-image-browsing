@@ -142,7 +142,7 @@ const onTiktokViewClick = () => {
             @dragstart="onFileDragStart"
             @dragend="onFileDragEnd"
             @file-item-click="onFileItemClick"
-            @tiktok-view="(file, idx) => openTiktokViewWithFiles(images, idx)"
+            @tiktok-view="(_file, idx) => openTiktokViewWithFiles(images, idx)"
             :full-screen-preview-image-url="
               images[previewIdx] ? toRawFileUrl(images[previewIdx]) : ''
             "
