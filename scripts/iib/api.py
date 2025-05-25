@@ -641,6 +641,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     "Cache-Control": "no-store",
                 },
             )
+        if not is_media_file(path):
+            raise HTTPException(status_code=400, detail=f"{path} is not a video file")
         # 如果缓存文件不存在，则生成缩略图并保存
         
         import imageio.v3 as iio

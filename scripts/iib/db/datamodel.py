@@ -266,22 +266,27 @@ class Image:
     
     @classmethod
     def get_random_images(cls, conn: Connection, size: int) -> List["Image"]:
+        images = []
+        max_cyc = 10
+        curr_cyc = 0
         with closing(conn.cursor()) as cur:
-            cur.execute("SELECT COUNT(*) FROM image")
-            total_count = cur.fetchone()[0]
+            while len(images) < size and curr_cyc < max_cyc:
+                curr_cyc += 1
+                cur.execute("SELECT COUNT(*) FROM image")
+                total_count = cur.fetchone()[0]
 
-            if total_count == 0 or size <= 0:
-                return []
+                if total_count == 0 or size <= 0:
+                    return []
 
-            step = max(1, total_count // size)
+                step = max(1, total_count // size)
 
-            start_indices = [random.randint(i * step, min((i + 1) * step - 1, total_count - 1)) for i in range(size)]
-
-            placeholders = ",".join("?" * len(start_indices))
-            cur.execute(f"SELECT * FROM image WHERE id IN ({placeholders})", start_indices)
-            rows = cur.fetchall()
-
-        images = [cls.from_row(row) for row in rows if os.path.exists(row[1])]
+                start_indices = [random.randint(i * step, min((i + 1) * step - 1, total_count - 1)) for i in range(size)]
+                placeholders = ",".join("?" * len(start_indices))
+                cur.execute(f"SELECT * FROM image WHERE id IN ({placeholders})", start_indices)
+                rows = cur.fetchall()
+                curr_images = [cls.from_row(row) for row in rows if os.path.exists(row[1])]
+                images.extend(curr_images)
+                images = unique_by(images, lambda x: x.path)
         return images
 
 
