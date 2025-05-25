@@ -428,7 +428,31 @@ const toggleMute = () => {
 const handleFullscreenChange = () => {
   tiktokStore.isFullscreen = !!document.fullscreenElement
 }
-
+const videoPreloadList = ref([] as HTMLVideoElement[])
+const recVideo = (video?: HTMLVideoElement) => {
+  if (!video) return
+  video.src = ''
+  video.pause()
+  video.muted = true
+  if (video.parentNode) {
+    video.parentNode.removeChild(video)
+  }
+}
+watch(videoPreloadList, (newList) => {
+  // 清理已加载的视频元素
+  while (newList.length > 5) {
+    const video = newList.shift()
+    if (!video) continue
+    recVideo(video)
+  }
+}, { deep: true })
+watch(() => tiktokStore.visible ===false || tiktokStore.mediaList.length === 0, (isClose) => {
+  if (isClose)  return
+  // 组件隐藏时清理预加载列表
+  videoPreloadList.value.forEach(recVideo)
+  videoPreloadList.value = []
+  
+}, { immediate: true })
 // 预加载相邻媒体
 const preloadMedia = () => {
   bufferItems.value.forEach(item => {
@@ -438,12 +462,14 @@ const preloadMedia = () => {
       const video = document.createElement('video')
       video.preload = 'metadata'
       video.src = item.url
+      videoPreloadList.value.push(video)
     } else {
       const img = new Image()
       img.src = item.url
     }
   })
 }
+
 
 // 加载当前项的标签
 const loadCurrentItemTags = async () => {
@@ -469,9 +495,7 @@ onUnmounted(() => {
   
   // 清理：停止所有视频播放
   videoRefs.value.forEach(video => {
-    if (video) {
-      video.pause()
-    }
+    recVideo(video!)
   })
 })
 
@@ -548,13 +572,14 @@ watch(() => isMuted.value, (muted) => {
           <div v-if="item" class="media-content">
             <!-- 视频 -->
             <video
-              v-if="isVideoFile(item.url)"
+              v-if="isVideoFile(item.url) && tiktokStore.visible"
               class="tiktok-media"
               :src="item.url"
               :controls="index === 1" 
               :loop="index === 1"
               playsinline
               preload="metadata"
+              :key="item.url"
               :ref="(el) => { if (el) videoRefs[index] = el as HTMLVideoElement }"
             />
             
