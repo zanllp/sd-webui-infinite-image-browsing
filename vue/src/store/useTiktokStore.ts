@@ -49,10 +49,13 @@ export const useTiktokStore = defineStore('useTiktokStore', () => {
   }
   
   const closeView = () => {
-    visible.value = false
     isFullscreen.value = false
     mediaList.value = []
     currentIndex.value = 0
+    setTimeout(() => {
+      
+      visible.value = false
+    }, 300);
   }
   
   const next = () => {
