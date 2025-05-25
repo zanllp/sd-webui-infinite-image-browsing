@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import DraggingPort from './DraggingPort.vue'
+import TiktokViewer from './TiktokViewer.vue'
 import { useImgSliStore } from '@/store/useImgSli'
 import ImgSliSplitPane from './ImgSliComparePane.vue'
 import { ref } from 'vue'
@@ -20,6 +21,7 @@ const splitpane = ref<{ requestFullScreen (): void }>()
     </template>
   </ADrawer>
   <DraggingPort />
+  <TiktokViewer />
 </template>
 
 

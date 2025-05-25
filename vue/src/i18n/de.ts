@@ -126,4 +126,8 @@ export const de: Partial<IIBI18nMap> = {
   imgSearch: 'Bildsuche',
   send2savedDir: 'In den gespeicherten Ordner senden',
   promptcompare: 'Prompts vergleichen',
+  'TikTok View': 'TikTok-Ansicht',
+  rebuildImageIndex: 'Bildindex neu erstellen',
+  tagSearchNoResultsMessage: 'Es scheint, als wären keine Ergebnisse gefunden worden. Versuchen Sie, den Index neu zu erstellen, um unbenutzte Tags zu entfernen?',
+  tiktokView: 'TikTok-Ansicht'
 }

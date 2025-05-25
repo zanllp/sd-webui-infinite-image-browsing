@@ -58,7 +58,7 @@ You can specify which snapshot to restore to when starting IIB in the global set
   copyFilePath: 'Copy file path',
   
   previewMaskBackgroundOpacity: 'Preview Mask Background Opacity',
-  experimentalLRLayout: 'Experimental Side-by-Side Layout',
+  experimentalLRLayout: 'Side-by-Side Layout',
   width: 'Width',
   alwaysOnTooltipInfo: 'If this is turned off, the info panel will be hidden until you move the mouse to the right side of the screen',
   alwaysOn: 'Always On',
@@ -314,9 +314,10 @@ You can specify which snapshot to restore to when starting IIB in the global set
   send2savedDir: 'Send to saved folder',
   regexSearchEnabledHint:
     '(You can also enable regex search by clicking the regex icon on the right)',
-  rebuildImageIndex: 'Rebuild image index',
+  rebuildImageIndex: 'Rebuild Image Index',
   confirmRebuildImageIndex: 'Confirm rebuilding image index?',
   rebuildComplete: 'Rebuild complete',
-  tagSearchNoResultsMessage:
-    'It seems like no results were found. Try rebuilding the index to remove unused tags?'
+  tagSearchNoResultsMessage: 'It looks like no results were matched, try rebuilding the index to remove useless tags?',
+  'TikTok View': 'TikTok View',
+  tiktokView: 'TikTok View'
 }

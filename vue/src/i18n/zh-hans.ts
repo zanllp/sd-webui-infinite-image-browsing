@@ -1,4 +1,3 @@
-
 export const zhHans = {
   tryMyLuck: '试试手气',
   randomImage: '随机图像',
@@ -55,7 +54,7 @@ export const zhHans = {
   copySuccess: '复制成功',
   copyFilePath: '复制文件路径',
   previewMaskBackgroundOpacity: '预览遮罩背景透明度',
-  experimentalLRLayout: '实验性并列布局',
+  experimentalLRLayout: '并列布局',
   width: '宽度',
   alwaysOnTooltipInfo: '若关闭此项，信息面板将收起，直至鼠标移动至屏幕右侧时才打开',
   alwaysOn: '常驻',
@@ -198,7 +197,7 @@ export const zhHans = {
   copyPrompt: '复制提示',
   copyPositivePrompt: '复制正向提示',
   refreshCompleted: '刷新完成',
-  'walk-mode-move-message': '在walk模式下仅允许使用“快速移动”移动位置',
+  'walk-mode-move-message': '在walk模式下仅允许使用"快速移动"移动位置',
   manualExitFullScreen: '你删除了最后一张图片，也许需要你手动退出全屏查看',
   copied: '已复制！',
   'index.expired': '索引过期，正在自动更新',
@@ -270,7 +269,7 @@ export const zhHans = {
   livePreview: '实时预览',
   other: '其他',
   ImageBrowsingSettings: '图像浏览设置',
-  majorUpdateCustomCellSizeTips: '重大更新：你可以自定义网格图像的大小了，在全局设置页或者右上角的“更多”里面进行调整',
+  majorUpdateCustomCellSizeTips: '重大更新：你可以自定义网格图像的大小了，在全局设置页或者右上角的"更多"里面进行调整',
   desktop: '桌面',
   move: '移动',
   inputFolderName: '输入文件夹名',
@@ -278,7 +277,7 @@ export const zhHans = {
   sendToThirdPartyExtension: '发送到第三方拓展',
   lyco: 'LyCORIS',
   batchDownloaDDragAndDropHint:
-    '使用拖拽或者右键菜单中的“发送到批量下载”将其他页面的图片添加到这里，支持多选',
+    '使用拖拽或者右键菜单中的"发送到批量下载"将其他页面的图片添加到这里，支持多选',
   zipDownload: '打包成zip下载',
   archive: '归档',
   batchDownload: '批量下载',
@@ -292,10 +291,12 @@ export const zhHans = {
   dragToResizePanel: '按住并拖动来调整面板的大小',
   clickToToggleMaximizeMinimize: '单击切换最大化/最小化',
   dragToMovePanel: '按住并拖动来移动面板',
-  imageCompareTips: '拖拽文件时也会出现这个面板，可以不需要打开 “图像对比” 功能',
+  imageCompareTips: '拖拽文件时也会出现这个面板，可以不需要打开 "图像对比" 功能',
   regexSearchEnabledHint: '（你也可以通过点击右侧的正则式图标来启用正则式搜索）',
   confirmRebuildImageIndex: '确认重建图像索引？',
   rebuildComplete: '重新构建完成',
   rebuildImageIndex: '重新构建图像索引',
-  tagSearchNoResultsMessage: '看起来没匹配到任何结果，尝试通过重新构建索引来去掉无用的tag？'
+  tagSearchNoResultsMessage: '看起来没匹配到任何结果，尝试通过重新构建索引来去掉无用的tag？',
+  'TikTok View': '抖音式浏览',
+  tiktokView: '抖音式浏览'
 }

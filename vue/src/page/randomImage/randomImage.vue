@@ -10,6 +10,8 @@ import { GridViewFile, useGlobalStore } from '@/store/useGlobalStore'
 import { getRandomImages } from '@/api/db'
 import { identity } from '@vueuse/core'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
+import { openTiktokViewWithFiles } from '@/util/tiktokHelper'
+import MultiSelectKeep from '@/components/MultiSelectKeep.vue'
 
 import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 import { copy2clipboardI18n } from '@/util'
@@ -40,6 +42,17 @@ const fetch = async () => {
     onScroll()
   }
 }
+
+// TikTok View 按钮点击处理
+const onTiktokViewClick = () => {
+  if (files.value.length === 0) {
+    message.warn('没有图片可以浏览')
+    return
+  }
+  // 从当前预览索引开始，如果没有预览则从第一张开始
+  openTiktokViewWithFiles(files.value, previewIdx.value || 0)
+}
+
 onMounted(fetch)
 const { stackViewEl, multiSelectedIdxs, stack, scroller } = useHookShareState({
   images: files as any
@@ -67,7 +80,24 @@ const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
     <MultiSelectKeep :show="!!multiSelectedIdxs.length || g.keepMultiSelect" @clear-all-selected="onClearAllSelected"
       @select-all="onSelectAll" @reverse-select="onReverseSelect" />
     <div class="refresh-button">
-      <a-button @click="fetch" type="primary" :loading="loading" shape="round">{{ $t('shuffle') }}</a-button>
+      <a-button 
+        @click="fetch" 
+        @touchstart.prevent="fetch"
+        type="primary" 
+        :loading="loading" 
+        shape="round"
+      >
+        {{ $t('shuffle') }}
+      </a-button>
+      <a-button 
+        @click="onTiktokViewClick" 
+        @touchstart.prevent="onTiktokViewClick"
+        type="default" 
+        :disabled="!files?.length" 
+        shape="round"
+      >
+        {{ $t('tiktokView') }}
+      </a-button>
     </div>
     <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
       <template #cancelText />
@@ -90,7 +120,7 @@ const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
         <file-item :idx="idx" :file="file" :cell-width="cellWidth" :full-screen-preview-image-url="images[previewIdx] ? toRawFileUrl(images[previewIdx]) : ''
           " @context-menu-click="onContextMenuClickU" @preview-visible-change="onPreviewVisibleChange"
           :is-selected-mutil-files="multiSelectedIdxs.length > 1" :selected="multiSelectedIdxs.includes(idx)"
-          @file-item-click="onFileItemClick" />
+          @file-item-click="onFileItemClick" @tiktok-view="(_file, idx) => openTiktokViewWithFiles(files, idx)" />
       </template>
     </RecycleScroller>
     <div v-if="previewing" class="preview-switch">
@@ -124,6 +154,10 @@ const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
     background: white;
     border-radius: 9999px;
     box-shadow: 0 0 20px var(--zp-secondary);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .file-list {

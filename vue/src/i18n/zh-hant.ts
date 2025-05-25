@@ -58,7 +58,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   copyFilePath: '複製文件路徑',
   
   previewMaskBackgroundOpacity: '預覽遮罩背景透明度',
-  experimentalLRLayout: '實驗性並列布局',
+  experimentalLRLayout: '並列布局',
   width: '寬度',
   alwaysOnTooltipInfo: '若關閉此項，信息面板將收起，直至滑鼠移動至屏幕右側時才打開',
   alwaysOn: '常駐',
@@ -204,7 +204,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   copyPrompt: '複製提示',
   copyPositivePrompt: '複製正向提示',
   refreshCompleted: '重新整理完成',
-  'walk-mode-move-message': '在walk模式下僅允許使用“快速移動”移動位置',
+  'walk-mode-move-message': '在walk模式下僅允許使用"快速移動"移動位置',
   manualExitFullScreen: '你刪除了最後一張圖片,也許需要你手動退出全螢幕檢視',
   copied: '已複製!',
   'index.expired': '索引過期,正在自動更新',
@@ -274,7 +274,7 @@ export const zhHant: Partial<IIBI18nMap> = {
 
   ImageBrowsingSettings: '圖片瀏覽設置',
   majorUpdateCustomCellSizeTips:
-    '重大更新:你可以自定義網格圖像的大小了,在全域設置頁或者右上角的“更多”裡面進行調整',
+    '重大更新:你可以自定義網格圖像的大小了,在全域設置頁或者右上角的"更多"裡面進行調整',
   desktop: '桌面',
   move: '移動',
   inputFolderName: '輸入文件夾名稱',
@@ -282,7 +282,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   sendToThirdPartyExtension: '發送到第三方拓展',
   lyco: 'LyCORIS',
   batchDownloaDDragAndDropHint:
-    '使用拖拽或者右鍵功能表中的“發送到批量下載”將其他頁面的圖片添加到這裡,支持多選',
+    '使用拖拽或者右鍵功能表中的"發送到批量下載"將其他頁面的圖片添加到這裡,支持多選',
   zipDownload: '打包成zip下載',
   archive: '歸檔',
   batchDownload: '批量下載',
@@ -296,10 +296,12 @@ export const zhHant: Partial<IIBI18nMap> = {
   dragToResizePanel: '按住並拖動來調整面板的大小',
   clickToToggleMaximizeMinimize: '單擊切換最大化/最小化',
   dragToMovePanel: '按住並拖動來移動面板',
-  imageCompareTips: '拖拽文件時也會出現這個面板,可以不需要打開 “圖片對比” 功能',
+  imageCompareTips: '拖拽文件時也會出現這個面板,可以不需要打開 "圖片對比" 功能',
   regexSearchEnabledHint: '（你也可以通過點擊右側的正則式圖標來啟用正則式搜索）',
   confirmRebuildImageIndex: '確認重建圖像索引？',
   rebuildImageIndex: '重新構建圖像索引',
   rebuildComplete: '重新構建完成',
-  tagSearchNoResultsMessage: '看起來沒有匹配到任何結果，嘗試通過重新構建索引來去除無用的標籤？'
+  tagSearchNoResultsMessage: '看起來沒有匹配到任何結果，嘗試通過重新構建索引來去除無用的標籤？',
+  'TikTok View': '抖音式瀏覽',
+  tiktokView: '抖音式觀看'
 }
