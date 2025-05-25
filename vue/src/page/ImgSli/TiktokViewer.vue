@@ -777,7 +777,7 @@ watch(() => isMuted.value, (muted) => {
 
 .media-content {
   width: 100%;
-  height: 100%;
+  height: calc(100% - 32px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -882,13 +882,14 @@ watch(() => isMuted.value, (muted) => {
 
 .tiktok-progress {
   position: absolute;
-  bottom: 20px;
+  bottom: 5px;
   left: 20px;
   right: 20px;
   display: flex;
   align-items: center;
   gap: 12px;
   z-index: 10;
+  pointer-events: none;
 }
 
 .progress-bar {
