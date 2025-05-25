@@ -248,6 +248,14 @@ const tagAlphabet = computed(() => {
   return res
 })
 
+// 抖音风格浏览处理函数
+const onTiktokViewClick = () => {
+  // 从当前文件开始浏览，需要获取当前文件所在的文件列表
+  // 这里我们只能浏览单个文件，因为没有完整的文件列表上下文
+  closeImageFullscreenPreview()
+  emit('contextMenuClick', { key: 'tiktokView' } as any, props.file, props.idx)
+}
+
 </script>
 
 <template>
@@ -314,6 +322,8 @@ const tagAlphabet = computed(() => {
                 <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
                 <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
                 <a-menu-item key="copyFilePath">{{ $t('copyFilePath') }}</a-menu-item>
+                <a-menu-divider />
+                <a-menu-item key="tiktokView" @click="onTiktokViewClick">{{ $t('tiktokView') }}</a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
@@ -325,6 +335,13 @@ const tagAlphabet = computed(() => {
           <a-button @click="copyPositivePrompt" v-if="imageGenInfo">{{
             $t('copyPositivePrompt')
           }}</a-button>
+          <a-button 
+            @click="onTiktokViewClick" 
+            @touchstart.prevent="onTiktokViewClick"
+            type="default"
+          >
+            {{ $t('tiktokView') }}
+          </a-button>
         </div>
       </div>
       <div class="gen-info" v-if="showFullContent">

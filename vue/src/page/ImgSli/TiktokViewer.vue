@@ -199,20 +199,10 @@ const goToPrev = (isTriggerByTouch: boolean = false) => {
     updateBuffer()
     bufferTransform.value = 0
     
-    // 添加额外的状态检查和修正
-    nextTick(() => {
-      // 确保状态正确
-      if (bufferTransform.value !== 0) {
-        bufferTransform.value = 0
-      }
-      if (dragOffset.value !== 0) {
-        dragOffset.value = 0
-      }
-      
-      setTimeout(() => {
-        isAnimating.value = false
-      }, getAnimationDelay(isTriggerByTouch))
-    })
+    // 简化状态重置逻辑
+    setTimeout(() => {
+      isAnimating.value = false
+    }, getAnimationDelay(isTriggerByTouch))
   }, 200) // 动画一半时间后更新内容
 }
 
@@ -232,20 +222,10 @@ const goToNext = (isTriggerByTouch: boolean = false) => {
     updateBuffer()
     bufferTransform.value = 0
     
-    // 添加额外的状态检查和修正
-    nextTick(() => {
-      // 确保状态正确
-      if (bufferTransform.value !== 0) {
-        bufferTransform.value = 0
-      }
-      if (dragOffset.value !== 0) {
-        dragOffset.value = 0
-      }
-      
-      setTimeout(() => {
-        isAnimating.value = false
-      }, getAnimationDelay(isTriggerByTouch))
-    })
+    // 简化状态重置逻辑
+    setTimeout(() => {
+      isAnimating.value = false
+    }, getAnimationDelay(isTriggerByTouch))
   }, 200) // 动画一半时间后更新内容
 }
 
@@ -339,15 +319,10 @@ const resetToCenter = () => {
 
 // 错位检测和修复函数
 const fixMisalignment = () => {
-  if (isAnimating.value || isDragging.value) return
+  if (isDragging.value) return
   
   // 检测是否存在错位
   if (bufferTransform.value !== 0 || dragOffset.value !== 0) {
-    console.warn('检测到错位，正在修复...', { 
-      bufferTransform: bufferTransform.value, 
-      dragOffset: dragOffset.value 
-    })
-    
     // 强制重置到正确位置
     bufferTransform.value = 0
     dragOffset.value = 0
@@ -355,23 +330,10 @@ const fixMisalignment = () => {
     // 重新更新 buffer 确保内容正确
     updateBuffer()
   }
-}
-
-// 添加定期检查机制（仅在移动设备上）
-let alignmentCheckInterval: number | null = null
-
-const startAlignmentCheck = () => {
-  if (!tiktokStore.isMobile) return
   
-  alignmentCheckInterval = window.setInterval(() => {
-    fixMisalignment()
-  }, 1000) // 每秒检查一次
-}
-
-const stopAlignmentCheck = () => {
-  if (alignmentCheckInterval) {
-    clearInterval(alignmentCheckInterval)
-    alignmentCheckInterval = null
+  // 检查动画状态是否卡住
+  if (isAnimating.value) {
+    isAnimating.value = false
   }
 }
 
@@ -499,17 +461,11 @@ onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   updateBuffer()
-  
-  // 启动错位检查（仅移动设备）
-  startAlignmentCheck()
 })
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  
-  // 停止错位检查
-  stopAlignmentCheck()
   
   // 清理：停止所有视频播放
   videoRefs.value.forEach(video => {
@@ -543,9 +499,6 @@ watch(() => tiktokStore.visible, (visible) => {
       }
     })
     
-    // 停止错位检查
-    stopAlignmentCheck()
-    
     // 如果当前是全屏状态，退出全屏
     if (document.fullscreenElement) {
       exitFullscreen()
@@ -554,14 +507,6 @@ watch(() => tiktokStore.visible, (visible) => {
     // 组件显示时重新控制视频播放
     nextTick(() => {
       controlVideoPlayback()
-    })
-    
-    // 启动错位检查
-    startAlignmentCheck()
-    
-    // 立即检查一次错位
-    nextTick(() => {
-      fixMisalignment()
     })
   }
 })
@@ -682,25 +627,17 @@ watch(() => isMuted.value, (muted) => {
         <div 
           v-if="tiktokStore.hasPrev"
           class="nav-indicator nav-prev"
+          @touchstart.prevent="goToPrev(false)"
           @click="goToPrev(false)"
         >
           <UpOutlined />
         </div>
 
-        <!-- 修复错位按钮（仅移动设备显示） -->
-        <!-- <div 
-          v-if="tiktokStore.isMobile"
-          class="nav-indicator nav-fix"
-          @click="fixMisalignment"
-          title="修复错位"
-        >
-          <span style="font-size: 12px;">修复</span>
-        </div> -->
-
         <!-- 下一个指示器 -->
         <div 
           v-if="tiktokStore.hasNext"
           class="nav-indicator nav-next"
+          @touchstart.prevent="goToNext(false)"
           @click="goToNext(false)"
         >
           <DownOutlined />
@@ -902,6 +839,7 @@ watch(() => isMuted.value, (muted) => {
   justify-content: center;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
+  z-index: 999;
 
   &:hover {
     background: rgba(255, 255, 255, 0.5);

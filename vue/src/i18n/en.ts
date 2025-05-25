@@ -58,7 +58,7 @@ You can specify which snapshot to restore to when starting IIB in the global set
   copyFilePath: 'Copy file path',
   
   previewMaskBackgroundOpacity: 'Preview Mask Background Opacity',
-  experimentalLRLayout: 'Experimental Side-by-Side Layout',
+  experimentalLRLayout: 'Side-by-Side Layout',
   width: 'Width',
   alwaysOnTooltipInfo: 'If this is turned off, the info panel will be hidden until you move the mouse to the right side of the screen',
   alwaysOn: 'Always On',

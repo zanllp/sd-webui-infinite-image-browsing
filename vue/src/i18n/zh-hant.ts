@@ -58,7 +58,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   copyFilePath: '複製文件路徑',
   
   previewMaskBackgroundOpacity: '預覽遮罩背景透明度',
-  experimentalLRLayout: '實驗性並列布局',
+  experimentalLRLayout: '並列布局',
   width: '寬度',
   alwaysOnTooltipInfo: '若關閉此項，信息面板將收起，直至滑鼠移動至屏幕右側時才打開',
   alwaysOn: '常駐',

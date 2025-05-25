@@ -54,7 +54,7 @@ export const zhHans = {
   copySuccess: '复制成功',
   copyFilePath: '复制文件路径',
   previewMaskBackgroundOpacity: '预览遮罩背景透明度',
-  experimentalLRLayout: '实验性并列布局',
+  experimentalLRLayout: '并列布局',
   width: '宽度',
   alwaysOnTooltipInfo: '若关闭此项，信息面板将收起，直至鼠标移动至屏幕右侧时才打开',
   alwaysOn: '常驻',
@@ -298,5 +298,5 @@ export const zhHans = {
   rebuildImageIndex: '重新构建图像索引',
   tagSearchNoResultsMessage: '看起来没匹配到任何结果，尝试通过重新构建索引来去掉无用的tag？',
   'TikTok View': '抖音式浏览',
-  tiktokView: '抖音式观看'
+  tiktokView: '抖音式浏览'
 }

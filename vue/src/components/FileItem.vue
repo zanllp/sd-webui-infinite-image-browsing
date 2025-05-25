@@ -66,7 +66,8 @@ const emit = defineEmits<{
   'dragend': [event: DragEvent, idx: number],
   'previewVisibleChange': [value: boolean, last: boolean],
   'contextMenuClick': [e: MenuInfo, file: FileNodeInfo, idx: number],
-  'close-icon-click': []
+  'close-icon-click': [],
+  'tiktokView': [file: FileNodeInfo, idx: number]
 }>()
 
 const customTags = computed(() => {
@@ -152,7 +153,11 @@ const minShowDetailWidth = 160
         </div>
         <div :class="`idx-${idx} item-content video`" :url="toVideoCoverUrl(file)"
           :style="{ 'background-image': `url('${file.cover_url ?? toVideoCoverUrl(file)}')` }" v-else-if="isVideoFile(file.name)"
-          @click="openVideoModal(file, (id) => emit('contextMenuClick', { key: `toggle-tag-${id}` } as any, file, idx))">
+          @click="openVideoModal(
+            file, 
+            (id) => emit('contextMenuClick', { key: `toggle-tag-${id}` } as any, file, idx),
+            () => emit('tiktokView', file, idx)
+          )">
 
           <div class="play-icon">
             <img :src="play" style="width: 40px;height: 40px;">

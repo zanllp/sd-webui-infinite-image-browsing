@@ -17,6 +17,7 @@ import MultiSelectKeep from '@/components/MultiSelectKeep.vue'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import HistoryRecord from '@/components/HistoryRecord.vue'
 import { fuzzySearchHistory, FuzzySearchHistoryRecord } from '@/store/searchHistory'
+import { openTiktokViewWithFiles } from '@/util/tiktokHelper'
 
 const props = defineProps<{ tabIdx: number; paneIdx: number, searchScope?: string }>()
 const isRegex = ref(false)
@@ -249,6 +250,7 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
             :full-screen-preview-image-url="images[previewIdx] ? toRawFileUrl(images[previewIdx]) : ''"
             :cell-width="cellWidth" :selected="multiSelectedIdxs.includes(idx)"
             @context-menu-click="onContextMenuClickU" @dragstart="onFileDragStart" @dragend="onFileDragEnd"
+            @tiktok-view="(file, idx) => openTiktokViewWithFiles(images, idx)"
             :enable-change-indicator="changeIndchecked"
             :seed-change-checked="seedChangeChecked"
             :get-gen-diff="getGenDiff"

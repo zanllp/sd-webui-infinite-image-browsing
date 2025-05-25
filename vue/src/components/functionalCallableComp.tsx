@@ -11,6 +11,7 @@ import { addCustomTag, getDbBasicInfo, rebuildImageIndex, renameFile } from '@/a
 import { useTagStore } from '@/store/useTagStore'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { base64ToFile, video2base64 } from '@/util/video'
+import { closeImageFullscreenPreview } from '@/util/imagePreviewOperation'
 
 export const openCreateFlodersModal = (base: string) => {
   const floderName = ref('')
@@ -42,7 +43,11 @@ export const MultiSelectTips = () => (
   </p>
 )
 
-export const openVideoModal = (file: FileNodeInfo, onTagClick?: (id: string| number) => void) => {
+export const openVideoModal = (
+  file: FileNodeInfo, 
+  onTagClick?: (id: string| number) => void,
+  onTiktokView?: () => void
+) => {
   const tagStore = useTagStore()
   const global = useGlobalStore()
   const isSelected = (id: string | number) => {
@@ -70,7 +75,8 @@ export const openVideoModal = (file: FileNodeInfo, onTagClick?: (id: string| num
     transition: '.5s all ease',
     'user-select': 'none',
   }
-  Modal.confirm({
+  
+  const modal = Modal.confirm({
     width: '80vw',
     title: file.name,
     icon: null,
@@ -110,6 +116,13 @@ export const openVideoModal = (file: FileNodeInfo, onTagClick?: (id: string| num
               default: t('download')
             }}
           </Button>
+          {onTiktokView && (
+            <Button onClick={onTiktokViewWrapper} type="primary">
+              {{
+                default: t('tiktokView')
+              }}
+            </Button>
+          )}
           <Button onClick={onSetCurrFrameAsVideoPoster}>
             {{
               default: t('setCurrFrameAsVideoPoster')
@@ -121,6 +134,11 @@ export const openVideoModal = (file: FileNodeInfo, onTagClick?: (id: string| num
     maskClosable: true,
     wrapClassName: 'hidden-antd-btns-modal'
   })
+  function onTiktokViewWrapper() {
+    onTiktokView?.()
+    closeImageFullscreenPreview()
+    modal.destroy()
+  }
 }
 
 export const openRebuildImageIndexModal = () => {
