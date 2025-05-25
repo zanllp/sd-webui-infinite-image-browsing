@@ -1,0 +1,1 @@
+import{bT as i,b0 as t,dU as f,bK as n}from"./index-40ac36f2.js";function u(e,s,r){if(!i(r))return!1;var a=typeof s;return(a=="number"?t(r)&&f(s,r.length):a=="string"&&s in r)?n(r[s],e):!1}export{u as i};

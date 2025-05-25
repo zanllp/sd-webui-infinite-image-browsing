@@ -16,6 +16,7 @@ import {
 } from './hook'
 import { SearchSelect } from 'vue3-ts-util'
 import { toRawFileUrl } from '@/util/file'
+import { openTiktokViewWithFiles } from '@/util/tiktokHelper'
 
 import 'multi-nprogress/nprogress.css'
 // @ts-ignore
@@ -78,6 +79,15 @@ const { showMenuIdx } = useMobileOptimization()
 const { onClearAllSelected, onReverseSelect, onSelectAll } = useKeepMultiSelect()
 const { getGenDiff, changeIndchecked, seedChangeChecked, getRawGenParams, getGenDiffWatchDep } = useGenInfoDiff()
 
+// TikTok View 按钮点击处理
+const onTiktokViewClick = () => {
+  if (sortedFiles.value.length === 0) {
+    return
+  }
+  // 只传入图片和视频文件，从当前预览索引开始
+  openTiktokViewWithFiles(sortedFiles.value, previewIdx.value || 0)
+}
+
 watch(
   () => props,
   () => {
@@ -135,6 +145,7 @@ watch(
           </div>
         </div>
         <div class="actions">
+          <a class="opt" @click.prevent="onTiktokViewClick">{{ $t('TikTok View') }}</a>
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
           <a class="opt" @click.prevent="onPollRefreshClick"> {{ polling ? $t('stopPollRefresh') : $t('pollRefresh')  }} </a>
           <a-dropdown>

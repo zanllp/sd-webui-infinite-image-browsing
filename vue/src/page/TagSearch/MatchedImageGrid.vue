@@ -13,6 +13,7 @@ import { useImageSearch, createImageSearchIter } from './hook'
 import { openRebuildImageIndexModal } from '@/components/functionalCallableComp'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { useKeepMultiSelect } from '../fileTransfer/hook'
+import { openTiktokViewWithFiles } from '@/util/tiktokHelper'
 
 const props = defineProps<{
   tabIdx: number
@@ -78,6 +79,15 @@ watch(
 
 const g = useGlobalStore()
 const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect()
+
+// TikTok View 按钮点击处理
+const onTiktokViewClick = () => {
+  if (images.value.length === 0) {
+    return
+  }
+  // 从第一张图片开始播放
+  openTiktokViewWithFiles(images.value, 0)
+}
 </script>
 <template>
   <div class="container" ref="stackViewEl">
@@ -104,6 +114,7 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
         </ASkeleton>
       </AModal>
       <div class="action-bar">
+        <a-button @click="onTiktokViewClick" type="primary" :disabled="!images?.length">{{ $t('tiktokView') }}</a-button>
         <a-button @click="saveLoadedFileAsJson">{{ $t('saveLoadedImageAsJson') }}</a-button>
         <a-button @click="saveAllFileAsJson">{{ $t('saveAllAsJson') }}</a-button>
 

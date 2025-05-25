@@ -21,6 +21,7 @@ import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { MultiSelectTips, openAddNewTagModal, openRenameFileModal } from '@/components/functionalCallableComp'
 import { batchDownload, events, imgTransferBus, stackCache, tagStore, useEventListen, useHookShareState, global } from '.'
 import { closeImageFullscreenPreview, openImageFullscreenPreview } from '@/util/imagePreviewOperation'
+import { openTiktokViewWithFiles } from '@/util/tiktokHelper'
 
 
 export function useFileItemActions (
@@ -302,6 +303,11 @@ export function useFileItemActions (
       case 'viewGenInfo': {
         showGenInfo.value = true
         imageGenInfo.value = await q.pushAction(() => getImageGenerationInfo(file.fullpath)).res
+        break
+      }
+      case 'tiktokView': {
+        // 打开 TikTok 式观看，从当前文件开始
+        openTiktokViewWithFiles(sortedFiles.value, idx)
         break
       }
       case 'openWithLocalFileBrowser': {
