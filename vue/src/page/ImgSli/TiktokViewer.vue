@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useTiktokStore, type TiktokMediaItem } from '@/store/useTiktokStore'
 import { useTagStore } from '@/store/useTagStore'
 import { useGlobalStore } from '@/store/useGlobalStore'
+import { useLocalStorage } from '@vueuse/core'
 import { isVideoFile } from '@/util'
 import { openAddNewTagModal } from '@/components/functionalCallableComp'
 import { toggleCustomTagToImg } from '@/api/db'
@@ -13,7 +14,11 @@ import {
   FullscreenExitOutlined,
   UpOutlined,
   DownOutlined,
-  TagsOutlined
+  TagsOutlined,
+  SoundOutlined,
+  SoundFilled,
+  HeartOutlined,
+  HeartFilled
 } from '@/icon'
 import { t } from '@/i18n'
 import type { StyleValue } from 'vue'
@@ -23,6 +28,9 @@ import { delay } from 'vue3-ts-util'
 const tiktokStore = useTiktokStore()
 const tagStore = useTagStore()
 const global = useGlobalStore()
+
+// 使用 @vueuse 存储用户声音偏好
+const isMuted = useLocalStorage('tiktok-viewer-muted', true) // 默认静音
 
 // 设备检测
 const isMac = computed(() => {
@@ -87,7 +95,7 @@ const controlVideoPlayback = async () => {
       if (index === 1) {
         // 当前显示的视频：自动播放
         video.currentTime = 0 // 重置到开头
-        video.muted = true // 确保静音以避免自动播放策略限制
+        video.muted = isMuted.value // 根据用户偏好设置静音状态
         await video.play()
       } else {
         // 非当前显示的视频：暂停并重置
@@ -124,6 +132,21 @@ const isTagSelected = (tagId: string | number) => {
   
   const fullpath = (currentItem.value as any)?.fullpath || currentItem.value?.id
   return !!tagStore.tagMap.get(fullpath)?.some(v => v.id === tagId)
+}
+
+// Like 标签相关
+const likeTag = computed(() => {
+  return global.conf?.all_custom_tags?.find(v => v.type === 'custom' && v.name === 'like')
+})
+
+const isLiked = computed(() => {
+  if (!likeTag.value) return false
+  return isTagSelected(likeTag.value.id)
+})
+
+const toggleLike = async () => {
+  if (!likeTag.value) return
+  await onTagClick(likeTag.value.id)
 }
 
 const onTagClick = async (tagId: string | number) => {
@@ -165,15 +188,31 @@ const goToPrev = (isTriggerByTouch: boolean = false) => {
   if (isAnimating.value || !tiktokStore.hasPrev) return
   
   isAnimating.value = true
+  
+  // 重置拖拽偏移
+  dragOffset.value = 0
+  
   bufferTransform.value = 100 // 向下移动
   
   setTimeout(() => {
     tiktokStore.prev()
     updateBuffer()
     bufferTransform.value = 0
-    setTimeout(() => {
-      isAnimating.value = false
-    }, getAnimationDelay(isTriggerByTouch)) // Mac需要更长延迟避免触摸板惯性滚动
+    
+    // 添加额外的状态检查和修正
+    nextTick(() => {
+      // 确保状态正确
+      if (bufferTransform.value !== 0) {
+        bufferTransform.value = 0
+      }
+      if (dragOffset.value !== 0) {
+        dragOffset.value = 0
+      }
+      
+      setTimeout(() => {
+        isAnimating.value = false
+      }, getAnimationDelay(isTriggerByTouch))
+    })
   }, 200) // 动画一半时间后更新内容
 }
 
@@ -182,15 +221,31 @@ const goToNext = (isTriggerByTouch: boolean = false) => {
   if (isAnimating.value || !tiktokStore.hasNext) return
   
   isAnimating.value = true
+  
+  // 重置拖拽偏移
+  dragOffset.value = 0
+  
   bufferTransform.value = -100 // 向上移动
   
   setTimeout(() => {
     tiktokStore.next()
     updateBuffer()
     bufferTransform.value = 0
-    setTimeout(() => {
-      isAnimating.value = false
-    }, getAnimationDelay(isTriggerByTouch)) // Mac需要更长延迟避免触摸板惯性滚动
+    
+    // 添加额外的状态检查和修正
+    nextTick(() => {
+      // 确保状态正确
+      if (bufferTransform.value !== 0) {
+        bufferTransform.value = 0
+      }
+      if (dragOffset.value !== 0) {
+        dragOffset.value = 0
+      }
+      
+      setTimeout(() => {
+        isAnimating.value = false
+      }, getAnimationDelay(isTriggerByTouch))
+    })
   }, 200) // 动画一半时间后更新内容
 }
 
@@ -203,6 +258,11 @@ const handleTouchStart = (e: TouchEvent) => {
   touchCurrentY.value = e.touches[0].clientY
   isDragging.value = true
   dragOffset.value = 0
+  
+  // 确保 transform 状态正确
+  if (bufferTransform.value !== 0) {
+    bufferTransform.value = 0
+  }
 }
  
 const handleTouchMove = (e: TouchEvent) => {
@@ -220,26 +280,98 @@ const handleTouchMove = (e: TouchEvent) => {
 }
 
 const handleTouchEnd = () => {
-  if (!isDragging.value || isAnimating.value) return
+  if (!isDragging.value) return
   
-  isDragging.value = false
   const deltaY = touchCurrentY.value - touchStartY.value
   const threshold = 80 // 滑动阈值
+  
+  // 重置拖拽状态
+  isDragging.value = false
+  
+  if (isAnimating.value) {
+    // 如果正在动画中，强制重置到正确位置
+    dragOffset.value = 0
+    return
+  }
   
   if (Math.abs(deltaY) > threshold) {
     if (deltaY > 0 && tiktokStore.hasPrev) {
       // 向下滑动，上一个
-      goToPrev()
+      goToPrev(true)
     } else if (deltaY < 0 && tiktokStore.hasNext) {
       // 向上滑动，下一个
-      goToNext()
+      goToNext(true)
     } else {
-      // 回弹动画
-      dragOffset.value = 0
+      // 回弹动画 - 添加过渡效果
+      resetToCenter()
     }
   } else {
-    // 回弹动画
+    // 回弹动画 - 添加过渡效果
+    resetToCenter()
+  }
+}
+
+// 添加触摸取消处理
+const handleTouchCancel = () => {
+  if (!isDragging.value) return
+  
+  isDragging.value = false
+  
+  if (!isAnimating.value) {
+    resetToCenter()
+  }
+}
+
+// 重置到中心位置的函数
+const resetToCenter = () => {
+  if (isAnimating.value) return
+  
+  isAnimating.value = true
+  dragOffset.value = 0
+  
+  // 确保 bufferTransform 也是正确的
+  bufferTransform.value = 0
+  
+  setTimeout(() => {
+    isAnimating.value = false
+  }, 300) // 与 CSS 过渡时间一致
+}
+
+// 错位检测和修复函数
+const fixMisalignment = () => {
+  if (isAnimating.value || isDragging.value) return
+  
+  // 检测是否存在错位
+  if (bufferTransform.value !== 0 || dragOffset.value !== 0) {
+    console.warn('检测到错位，正在修复...', { 
+      bufferTransform: bufferTransform.value, 
+      dragOffset: dragOffset.value 
+    })
+    
+    // 强制重置到正确位置
+    bufferTransform.value = 0
     dragOffset.value = 0
+    
+    // 重新更新 buffer 确保内容正确
+    updateBuffer()
+  }
+}
+
+// 添加定期检查机制（仅在移动设备上）
+let alignmentCheckInterval: number | null = null
+
+const startAlignmentCheck = () => {
+  if (!tiktokStore.isMobile) return
+  
+  alignmentCheckInterval = window.setInterval(() => {
+    fixMisalignment()
+  }, 1000) // 每秒检查一次
+}
+
+const stopAlignmentCheck = () => {
+  if (alignmentCheckInterval) {
+    clearInterval(alignmentCheckInterval)
+    alignmentCheckInterval = null
   }
 }
 
@@ -278,6 +410,11 @@ const handleKeydown = (e: KeyboardEvent) => {
       e.preventDefault()
       handleFullscreenToggle()
       break
+    case 'l':
+    case 'L':
+      e.preventDefault()
+      if (likeTag.value) toggleLike()
+      break
   }
 }
 
@@ -311,6 +448,17 @@ const exitFullscreen = async () => {
     } catch (err) {
       console.warn('无法退出全屏模式:', err)
     }
+  }
+}
+
+// 切换声音
+const toggleMute = () => {
+  isMuted.value = !isMuted.value
+  
+  // 立即应用到当前播放的视频
+  const currentVideo = videoRefs.value[1]
+  if (currentVideo) {
+    currentVideo.muted = isMuted.value
   }
 }
 
@@ -351,11 +499,17 @@ onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   updateBuffer()
+  
+  // 启动错位检查（仅移动设备）
+  startAlignmentCheck()
 })
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  
+  // 停止错位检查
+  stopAlignmentCheck()
   
   // 清理：停止所有视频播放
   videoRefs.value.forEach(video => {
@@ -389,6 +543,9 @@ watch(() => tiktokStore.visible, (visible) => {
       }
     })
     
+    // 停止错位检查
+    stopAlignmentCheck()
+    
     // 如果当前是全屏状态，退出全屏
     if (document.fullscreenElement) {
       exitFullscreen()
@@ -398,7 +555,24 @@ watch(() => tiktokStore.visible, (visible) => {
     nextTick(() => {
       controlVideoPlayback()
     })
+    
+    // 启动错位检查
+    startAlignmentCheck()
+    
+    // 立即检查一次错位
+    nextTick(() => {
+      fixMisalignment()
+    })
   }
+})
+
+// 监听静音状态变化，同步所有视频
+watch(() => isMuted.value, (muted) => {
+  videoRefs.value.forEach(video => {
+    if (video) {
+      video.muted = muted
+    }
+  })
 })
 </script>
 
@@ -411,11 +585,15 @@ watch(() => tiktokStore.visible, (visible) => {
       @touchstart="handleTouchStart"
       @touchmove="handleTouchMove"
       @touchend="handleTouchEnd"
+      @touchcancel="handleTouchCancel"
       @wheel="handleWheel"
     >
       <!-- 媒体内容区域 -->
       <div ref="viewportRef" class="tiktok-viewport">
         <!-- 3位buffer渲染 -->
+
+
+        
         <div 
           v-for="(item, index) in bufferItems" 
           :key="item?.id || `empty-${index}`"
@@ -429,7 +607,6 @@ watch(() => tiktokStore.visible, (visible) => {
               class="tiktok-media"
               :src="item.url"
               :controls="index === 1" 
-              muted
               :loop="index === 1"
               playsinline
               preload="metadata"
@@ -467,6 +644,28 @@ watch(() => tiktokStore.visible, (visible) => {
           <FullscreenOutlined v-else />
         </button>
 
+        <!-- 声音切换按钮 -->
+        <button 
+          class="control-btn sound-btn"
+          @click="toggleMute"
+          :title="isMuted ? '开启声音' : '关闭声音'"
+        >
+          <SoundFilled v-if="!isMuted" />
+          <SoundOutlined v-else />
+        </button>
+
+        <!-- Like 按钮 -->
+        <button 
+          v-if="likeTag"
+          class="control-btn like-btn"
+          :class="{ 'like-active': isLiked }"
+          @click="toggleLike"
+          :title="isLiked ? '取消喜欢' : '喜欢'"
+        >
+          <HeartFilled v-if="isLiked" />
+          <HeartOutlined v-else />
+        </button>
+
         <!-- TAG 按钮 -->
         <button 
           class="control-btn tags-btn"
@@ -487,6 +686,16 @@ watch(() => tiktokStore.visible, (visible) => {
         >
           <UpOutlined />
         </div>
+
+        <!-- 修复错位按钮（仅移动设备显示） -->
+        <!-- <div 
+          v-if="tiktokStore.isMobile"
+          class="nav-indicator nav-fix"
+          @click="fixMisalignment"
+          title="修复错位"
+        >
+          <span style="font-size: 12px;">修复</span>
+        </div> -->
 
         <!-- 下一个指示器 -->
         <div 
@@ -652,6 +861,22 @@ watch(() => tiktokStore.visible, (visible) => {
   &:active {
     transform: scale(0.95);
   }
+  
+  &.like-btn {
+    &.like-active {
+      background: rgba(255, 20, 147, 0.3); // 深粉色背景
+      color: #ff1493; // 深粉色
+      
+      &:hover {
+        background: rgba(255, 20, 147, 0.5);
+        transform: scale(1.15); // 稍微大一点的缩放效果
+      }
+    }
+    
+    &:not(.like-active):hover {
+      color: #ff69b4; // 浅粉色
+    }
+  }
 }
 
 .tiktok-navigation {
@@ -681,6 +906,14 @@ watch(() => tiktokStore.visible, (visible) => {
   &:hover {
     background: rgba(255, 255, 255, 0.5);
     transform: scale(1.1);
+  }
+  
+  &.nav-fix {
+    background: rgba(255, 165, 0, 0.3); // 橙色背景以区分
+    
+    &:hover {
+      background: rgba(255, 165, 0, 0.5);
+    }
   }
 }
 
