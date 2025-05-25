@@ -13,7 +13,8 @@ import json
 import zipfile
 from PIL import Image
 import shutil
-
+# import magic
+import filetype
 
 sd_img_dirs = [
     "outdir_txt2img_samples",
@@ -200,6 +201,11 @@ def convert_to_bytes(file_size_str):
     else:
         raise ValueError(f"Invalid file size string '{file_size_str}'")
     
+
+def is_video_simple(filepath):
+    kind = filetype.guess(filepath)
+    return kind and kind.mime.startswith('video/')
+
 def get_video_type(file_path):
     video_extensions = ['.mp4', '.m4v', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.ts']
     file_extension = file_path[file_path.rfind('.'):].lower()
@@ -218,7 +224,7 @@ def is_image_file(filename: str) -> bool:
     return f".{extension}" in extensions
 
 def is_video_file(filename: str) -> bool:
-    return isinstance(get_video_type(filename), str)
+    return isinstance(get_video_type(filename), str) and is_video_simple(filename)
 
 def is_valid_media_path(path):
     """
