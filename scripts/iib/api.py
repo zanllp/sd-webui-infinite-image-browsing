@@ -162,7 +162,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     if kwargs.get("allow_cors"):
         app.add_middleware(
             CORSMiddleware,
-            allow_origin_regex="^[\w./:-]+$",
+            allow_origin_regex=r"^[\w./:-]+$",
             allow_methods=["*"],
             allow_headers=["*"],
             allow_credentials=True,

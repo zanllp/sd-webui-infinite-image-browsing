@@ -524,9 +524,9 @@ def read_sd_webui_gen_info_from_image(image: Image, path="") -> str:
 re_param_code = r'\s*([\w ]+):\s*("(?:\\"[^,]|\\"|\\|[^\"])+"|[^,]*)(?:,|$)'
 re_param = re.compile(re_param_code)
 re_imagesize = re.compile(r"^(\d+)x(\d+)$")
-re_lora_prompt = re.compile("<lora:([\w_\s.]+)(?::([\d.]+))*>", re.IGNORECASE)
+re_lora_prompt = re.compile(r"<lora:([\w_\s.]+)(?::([\d.]+))*>", re.IGNORECASE)
 re_lora_extract = re.compile(r"([\w_\s.]+)(?:\d+)?")
-re_lyco_prompt = re.compile("<lyco:([\w_\s.]+):([\d.]+)>", re.IGNORECASE)
+re_lyco_prompt = re.compile(r"<lyco:([\w_\s.]+):([\d.]+)>", re.IGNORECASE)
 re_parens = re.compile(r"[\\/\[\](){}]+")
 re_lora_white_symbol= re.compile(r">\s+")
 

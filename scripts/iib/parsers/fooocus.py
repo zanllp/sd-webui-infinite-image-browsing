@@ -15,7 +15,7 @@ def get_log_file(file_path: str):
     with open(os.path.join(dir, "log.html")) as f:
         return f.read()
 
-lora_re = re.compile("LoRA \d+", re.IGNORECASE)
+lora_re = re.compile(r"LoRA \d+", re.IGNORECASE)
 
 class FooocusParser:
     def __init__(self):
