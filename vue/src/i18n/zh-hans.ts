@@ -298,5 +298,30 @@ export const zhHans = {
   rebuildImageIndex: '重新构建图像索引',
   tagSearchNoResultsMessage: '看起来没匹配到任何结果，尝试通过重新构建索引来去掉无用的tag？',
   'TikTok View': '抖音式浏览',
-  tiktokView: '抖音式浏览'
+  tiktokView: '抖音式浏览',
+  magicSwitchTiktokView: 'TikTok 观看模式',
+  magicSwitchTiktokViewDesc: '开启后，点击图片/视频文件将直接进入TikTok式观看模式',
+  magicSwitchEnabled: '🎬 开启 - 点击媒体文件直接进入 TikTok 观看',
+  magicSwitchDisabled: '📁 关闭 - 点击媒体文件正常打开',
+  magicSwitchDetailDesc: '点击图片和视频文件时直接进入 TikTok 式浏览体验',
+  
+  // 自动轮播相关
+  autoPlay: '自动轮播',
+  autoPlayOff: '关闭',
+  autoPlay5s: '5秒',
+  autoPlay10s: '10秒',
+  autoPlay20s: '20秒',
+  autoPlayTooltip: '自动轮播: {mode} (A键切换)',
+  autoPlayStatus: '自动轮播：{mode}',
+  
+  // TikTok 查看器控制
+  exitFullscreen: '退出全屏',
+  fullscreen: '全屏',
+  soundOn: '开启声音',
+  soundOff: '关闭声音',
+  like: '喜欢',
+  unlike: '取消喜欢',
+  tags: '标签',
+  tag: '标签',
+  tagOperationFailed: '标签操作失败'
 }

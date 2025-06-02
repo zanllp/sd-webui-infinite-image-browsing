@@ -18,7 +18,8 @@ import {
   SoundOutlined,
   SoundFilled,
   HeartOutlined,
-  HeartFilled
+  HeartFilled,
+  PlayCircleOutlined
 } from '@/icon'
 import { t } from '@/i18n'
 import type { StyleValue } from 'vue'
@@ -31,6 +32,30 @@ const global = useGlobalStore()
 
 // 使用 @vueuse 存储用户声音偏好
 const isMuted = useLocalStorage('tiktok-viewer-muted', true) // 默认静音
+
+// 自动轮播设置
+type AutoPlayMode = 'off' | '5s' | '10s' | '20s'
+const autoPlayMode = useLocalStorage<AutoPlayMode>('iib://tiktok-viewer-autoplay', 'off')
+const autoPlayTimer = ref<number | null>(null)
+
+// 自动轮播模式配置
+const autoPlayOptions: AutoPlayMode[] = ['off', '5s', '10s', '20s']
+const autoPlayLabels = computed(() => ({
+  off: t('autoPlayOff'),
+  '5s': t('autoPlay5s'),
+  '10s': t('autoPlay10s'), 
+  '20s': t('autoPlay20s')
+}))
+
+// 获取自动轮播延迟时间（毫秒）
+const getAutoPlayDelay = (mode: AutoPlayMode): number => {
+  switch (mode) {
+    case '5s': return 5000
+    case '10s': return 10000
+    case '20s': return 20000
+    default: return 0
+  }
+}
 
 // 设备检测
 const isMac = computed(() => {
@@ -84,6 +109,49 @@ const getItemStyle = (index: number): StyleValue => {
   }
 }
 
+// 清除自动轮播计时器
+const clearAutoPlayTimer = () => {
+  if (autoPlayTimer.value) {
+    clearTimeout(autoPlayTimer.value)
+    autoPlayTimer.value = null
+  }
+}
+
+// 启动自动轮播计时器
+const startAutoPlayTimer = () => {
+  clearAutoPlayTimer()
+  
+  if (autoPlayMode.value === 'off' || !tiktokStore.hasNext) return
+  
+  const currentItem = bufferItems.value[1]
+  if (!currentItem) return
+  
+  // 如果是视频，不需要启动计时器（会在视频结束时自动切换）
+  if (isVideoFile(currentItem.url)) return
+  
+  const delay = getAutoPlayDelay(autoPlayMode.value)
+  if (delay > 0) {
+    autoPlayTimer.value = window.setTimeout(() => {
+      if (tiktokStore.hasNext && !isAnimating.value && !isDragging.value) {
+        goToNext()
+      }
+    }, delay)
+  }
+}
+
+// 处理视频播放结束事件
+const handleVideoEnded = (index: number) => {
+  if (index === 1) {
+    console.log('video ended', index)
+  }
+  // 只处理当前显示的视频（index === 1）
+  if (index === 1 && autoPlayMode.value !== 'off' && tiktokStore.hasNext && !isAnimating.value) {
+    setTimeout(() => {
+      goToNext()
+    }, 500) // 延迟500ms后切换，避免过于突兀
+  }
+}
+
 // 控制视频播放
 const controlVideoPlayback = async () => {
   await delay(30)
@@ -96,11 +164,16 @@ const controlVideoPlayback = async () => {
         // 当前显示的视频：自动播放
         video.currentTime = 0 // 重置到开头
         video.muted = isMuted.value // 根据用户偏好设置静音状态
+        
+        // 添加视频结束事件监听
+        video.onended = () => handleVideoEnded(index)
+        
         await video.play()
       } else {
         // 非当前显示的视频：暂停并重置
         video.pause()
         video.currentTime = 0
+        video.onended = null // 清除事件监听
       }
     } catch (err) {
       console.warn(`视频播放控制失败 (index: ${index}):`, err)
@@ -122,6 +195,7 @@ const updateBuffer = () => {
   // 等待DOM更新后控制视频播放
   nextTick(() => {
     controlVideoPlayback()
+    startAutoPlayTimer() // 启动自动轮播计时器
   })
 }
 
@@ -161,13 +235,13 @@ const onTagClick = async (tagId: string | number) => {
       img_path: fullpath 
     })
     
-    const tag = global.conf?.all_custom_tags.find((v) => v.id === tagId)?.name || '标签'
+    const tag = global.conf?.all_custom_tags.find((v) => v.id === tagId)?.name || t('tag')
     await tagStore.refreshTags([fullpath])
     
     message.success(t(is_remove ? 'removedTagFromImage' : 'addedTagToImage', { tag }))
   } catch (error) {
     console.error('Toggle tag error:', error)
-    message.error('标签操作失败')
+    message.error(t('tagOperationFailed'))
   }
 }
 
@@ -183,9 +257,24 @@ const tagBaseStyle: StyleValue = {
   fontSize: '14px'
 }
 
+// 切换自动轮播模式
+const toggleAutoPlay = () => {
+  const currentIndex = autoPlayOptions.indexOf(autoPlayMode.value)
+  const nextIndex = (currentIndex + 1) % autoPlayOptions.length
+  autoPlayMode.value = autoPlayOptions[nextIndex]
+  
+  // 重新启动计时器
+  startAutoPlayTimer()
+  
+  message.success(t('autoPlayStatus', { mode: autoPlayLabels.value[autoPlayMode.value] }))
+}
+
 // 滑动到上一个
 const goToPrev = (isTriggerByTouch: boolean = false) => {
   if (isAnimating.value || !tiktokStore.hasPrev) return
+  
+  // 清除自动轮播计时器
+  clearAutoPlayTimer()
   
   isAnimating.value = true
   
@@ -210,6 +299,9 @@ const goToPrev = (isTriggerByTouch: boolean = false) => {
 const goToNext = (isTriggerByTouch: boolean = false) => {
   if (isAnimating.value || !tiktokStore.hasNext) return
   
+  // 清除自动轮播计时器
+  clearAutoPlayTimer()
+  
   isAnimating.value = true
   
   // 重置拖拽偏移
@@ -233,6 +325,9 @@ const goToNext = (isTriggerByTouch: boolean = false) => {
 // 触摸事件处理
 const handleTouchStart = (e: TouchEvent) => {
   if (isAnimating.value) return
+  
+  // 清除自动轮播计时器
+  clearAutoPlayTimer()
   
   touchStartY.value = e.touches[0].clientY
   touchCurrentY.value = e.touches[0].clientY
@@ -314,6 +409,8 @@ const resetToCenter = () => {
   
   setTimeout(() => {
     isAnimating.value = false
+    // 重新启动自动轮播计时器
+    startAutoPlayTimer()
   }, 300) // 与 CSS 过渡时间一致
 }
 
@@ -342,6 +439,9 @@ const handleWheel = throttle((e: WheelEvent) => {
   if (isAnimating.value) return 
   
   e.preventDefault()
+  
+  // 清除自动轮播计时器
+  clearAutoPlayTimer()
   
   if (e.deltaY > 0 && tiktokStore.hasNext) {
     goToNext()
@@ -376,6 +476,11 @@ const handleKeydown = (e: KeyboardEvent) => {
     case 'L':
       e.preventDefault()
       if (likeTag.value) toggleLike()
+      break
+    case 'a':
+    case 'A':
+      e.preventDefault()
+      toggleAutoPlay()
       break
   }
 }
@@ -493,6 +598,9 @@ onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
   
+  // 清理自动轮播计时器
+  clearAutoPlayTimer()
+  
   // 清理：停止所有视频播放
   videoRefs.value.forEach(video => {
     recVideo(video!)
@@ -523,6 +631,9 @@ watch(() => tiktokStore.visible, (visible) => {
       }
     })
     
+    // 清除自动轮播计时器
+    clearAutoPlayTimer()
+    
     // 如果当前是全屏状态，退出全屏
     if (document.fullscreenElement) {
       exitFullscreen()
@@ -542,6 +653,11 @@ watch(() => isMuted.value, (muted) => {
       video.muted = muted
     }
   })
+})
+
+// 监听自动轮播模式变化
+watch(() => autoPlayMode.value, () => {
+  startAutoPlayTimer()
 })
 </script>
 
@@ -576,7 +692,7 @@ watch(() => isMuted.value, (muted) => {
               class="tiktok-media"
               :src="item.url"
               :controls="index === 1" 
-              :loop="index === 1"
+              :loop="index === 1 && autoPlayMode === 'off'"
               playsinline
               preload="metadata"
               :key="item.url"
@@ -618,7 +734,7 @@ watch(() => isMuted.value, (muted) => {
         <button 
           class="control-btn sound-btn"
           @click="toggleMute"
-          :title="isMuted ? '开启声音' : '关闭声音'"
+          :title="isMuted ? $t('soundOn') : $t('soundOff')"
         >
           <SoundFilled v-if="!isMuted" />
           <SoundOutlined v-else />
@@ -630,10 +746,21 @@ watch(() => isMuted.value, (muted) => {
           class="control-btn like-btn"
           :class="{ 'like-active': isLiked }"
           @click="toggleLike"
-          :title="isLiked ? '取消喜欢' : '喜欢'"
+          :title="isLiked ? $t('unlike') : $t('like')"
         >
           <HeartFilled v-if="isLiked" />
           <HeartOutlined v-else />
+        </button>
+
+        <!-- 自动轮播按钮 -->
+        <button 
+          class="control-btn autoplay-btn"
+          :class="{ 'autoplay-active': autoPlayMode !== 'off' }"
+          @click="toggleAutoPlay"
+          :title="$t('autoPlayTooltip', { mode: autoPlayLabels[autoPlayMode] })"
+        >
+          <PlayCircleOutlined />
+          <span class="autoplay-label">{{ autoPlayLabels[autoPlayMode] }}</span>
         </button>
 
         <!-- TAG 按钮 -->
@@ -801,8 +928,8 @@ watch(() => isMuted.value, (muted) => {
 }
 
 .control-btn {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.2);
@@ -811,7 +938,7 @@ watch(() => isMuted.value, (muted) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 18px;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
 
@@ -839,11 +966,56 @@ watch(() => isMuted.value, (muted) => {
       color: #ff69b4; // 浅粉色
     }
   }
+  
+  &.autoplay-btn {
+    width: 48px;
+    height: 48px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    
+    .autoplay-label {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      font-size: 10px;
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 2px 4px;
+      border-radius: 8px;
+      line-height: 1;
+      min-width: 20px;
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+    
+    &.autoplay-active {
+      background: rgba(76, 175, 80, 0.3); // 绿色背景
+      color: #4caf50; // 绿色
+      
+      .autoplay-label {
+        background: rgba(76, 175, 80, 0.9);
+        color: white;
+      }
+      
+      &:hover {
+        background: rgba(76, 175, 80, 0.5);
+        transform: scale(1.1);
+      }
+    }
+    
+    &:not(.autoplay-active):hover {
+      color: #81c784; // 浅绿色
+    }
+  }
 }
 
 .tiktok-navigation {
   position: absolute;
-  right: 20px;
+  right: 90px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -983,10 +1155,22 @@ watch(() => isMuted.value, (muted) => {
     width: 44px;
     height: 44px;
     font-size: 18px;
+    
+    &.autoplay-btn {
+      width: 44px;
+      height: 44px;
+      
+      .autoplay-label {
+        font-size: 8px;
+        padding: 1px 3px;
+        border-radius: 6px;
+        min-width: 16px;
+      }
+    }
   }
 
   .tiktok-navigation {
-    right: 15px;
+    right: 80px;
   }
 
   .nav-indicator {

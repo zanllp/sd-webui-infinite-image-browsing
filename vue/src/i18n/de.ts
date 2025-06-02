@@ -129,5 +129,10 @@ export const de: Partial<IIBI18nMap> = {
   'TikTok View': 'TikTok-Ansicht',
   rebuildImageIndex: 'Bildindex neu erstellen',
   tagSearchNoResultsMessage: 'Es scheint, als wären keine Ergebnisse gefunden worden. Versuchen Sie, den Index neu zu erstellen, um unbenutzte Tags zu entfernen?',
-  tiktokView: 'TikTok-Ansicht'
+  tiktokView: 'TikTok-Ansicht',
+  magicSwitchTiktokView: 'TikTok-Ansichtsmodus',
+  magicSwitchTiktokViewDesc: 'Wenn aktiviert, führt das Klicken auf Bild-/Videodateien direkt in den TikTok-Ansichtsmodus',
+  magicSwitchEnabled: '🎬 EIN - Klicken Sie auf Mediendateien, um die TikTok-Ansicht zu öffnen',
+  magicSwitchDisabled: '📁 AUS - Klicken Sie auf Mediendateien, um sie normal zu öffnen',
+  magicSwitchDetailDesc: 'Klicken Sie auf Bilder und Videos, um direkt in die TikTok-ähnliche Browsing-Erfahrung einzusteigen'
 }

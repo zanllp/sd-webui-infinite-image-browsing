@@ -303,5 +303,30 @@ export const zhHant: Partial<IIBI18nMap> = {
   rebuildComplete: '重新構建完成',
   tagSearchNoResultsMessage: '看起來沒有匹配到任何結果，嘗試通過重新構建索引來去除無用的標籤？',
   'TikTok View': '抖音式瀏覽',
-  tiktokView: '抖音式觀看'
+  tiktokView: '抖音式觀看',
+  magicSwitchTiktokView: 'TikTok 觀看模式',
+  magicSwitchTiktokViewDesc: '開啟後，點擊圖片/視頻文件將直接進入TikTok式觀看模式',
+  magicSwitchEnabled: '🎬 開啟 - 點擊媒體文件直接進入 TikTok 觀看',
+  magicSwitchDisabled: '📁 關閉 - 點擊媒體文件正常打開',
+  magicSwitchDetailDesc: '點擊圖片和視頻文件時直接進入 TikTok 式瀏覽體驗',
+  
+  // 自動輪播相關
+  autoPlay: '自動輪播',
+  autoPlayOff: '關閉',
+  autoPlay5s: '5秒',
+  autoPlay10s: '10秒',
+  autoPlay20s: '20秒',
+  autoPlayTooltip: '自動輪播: {mode} (A鍵切換)',
+  autoPlayStatus: '自動輪播：{mode}',
+  
+  // TikTok 查看器控制
+  exitFullscreen: '退出全螢幕',
+  fullscreen: '全螢幕',
+  soundOn: '開啟聲音',
+  soundOff: '關閉聲音',
+  like: '喜歡',
+  unlike: '取消喜歡',
+  tags: '標籤',
+  tag: '標籤',
+  tagOperationFailed: '標籤操作失敗'
 }

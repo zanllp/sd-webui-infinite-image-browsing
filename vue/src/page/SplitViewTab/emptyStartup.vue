@@ -153,7 +153,33 @@ const modes = computed(() => {
 <template>
   <div class="container">
     <div class="header">
-      <h1>{{ $t('welcome') }}</h1>
+      <div class="header-left">
+        <h1>{{ $t('welcome') }}</h1>
+        <!-- Compact Magic Switch with Welcome -->
+        <div class="magic-switch-compact">
+          <a-tooltip>
+            <template #title>
+              <div class="switch-tooltip">
+                <div class="tooltip-title">{{ $t('magicSwitchTiktokView') }}</div>
+                <div class="tooltip-status">{{ global.magicSwitchTiktokView ? $t('magicSwitchEnabled') : $t('magicSwitchDisabled') }}</div>
+                <div class="tooltip-desc">{{ $t('magicSwitchDetailDesc') }}</div>
+              </div>
+            </template>
+            <div class="ultra-cool-switch" :class="{ active: global.magicSwitchTiktokView }" @click="global.magicSwitchTiktokView = !global.magicSwitchTiktokView">
+              <div class="switch-bg">
+                <div class="switch-track"></div>
+                <div class="switch-thumb" :class="{ active: global.magicSwitchTiktokView }">
+                  <span class="switch-icon">{{ global.magicSwitchTiktokView ? '🎬' : '📁' }}</span>
+                </div>
+                <div class="switch-glow"></div>
+              </div>
+              <span class="switch-label">TikTok 视图</span>
+            </div>
+          </a-tooltip>
+        </div>
+        
+      </div>
+      
       <div v-if="global.conf?.enable_access_control && global.dontShowAgain"
         style="margin-left: 16px;font-size: 1.5em;">
         <LockOutlined title="Access Control mode" style="vertical-align: text-bottom;" />
@@ -237,7 +263,7 @@ const modes = computed(() => {
       <div class="feature-item" v-if="global.quickMovePaths.length">
         <h2>{{ $t('launchFromNormalAndFixed') }}</h2>
         <ul>
-          <li @click="addToExtraPath('scanned')" class="item">
+          <li @click="addToExtraPath('scanned-fixed')" class="item">
             <span class="text line-clamp-1">
               <PlusOutlined /> {{ $t('add') }}
             </span>
@@ -299,6 +325,7 @@ const modes = computed(() => {
         </ul>
       </div>
     </div>
+
     <div class="ver-info" @dblclick="message.info('Ciallo～(∠・ω< )⌒☆')">
       <div v-if="modes">
         Mode: {{ modes }}
@@ -315,7 +342,6 @@ const modes = computed(() => {
       <div v-if="latestCommit">
         Latest Commit: {{ latestCommit.sha }} (Updated at {{ latestCommit.commit.author?.date }})
       </div>
-
     </div>
   </div>
 </template>
@@ -465,5 +491,215 @@ const modes = computed(() => {
   padding: 32px;
   flex-wrap: wrap;
   font-size: 0.9em;
+}
+
+/* Compact Magic Switch Styles */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.magic-switch-compact {
+  flex-shrink: 0;
+}
+
+.ultra-cool-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--zp-primary-background);
+  border: 1px solid transparent;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 12px;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  &:hover {
+    background: var(--zp-secondary-background);
+    border-color: var(--primary-color);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &.active {
+    background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 50%, #ff4757 100%);
+    border-color: #ff8c42;
+    color: white;
+    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4), 0 4px 15px rgba(255, 140, 66, 0.3);
+    
+    &::before {
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    }
+    
+    .switch-label {
+      color: white;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+.switch-bg {
+  position: relative;
+  width: 44px;
+  height: 22px;
+  border-radius: 11px;
+  overflow: hidden;
+  background: linear-gradient(45deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05));
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.switch-track {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 42px;
+  height: 20px;
+  background: linear-gradient(45deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.08));
+  border-radius: 10px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ultra-cool-switch.active .switch-track {
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.15));
+  box-shadow: 0 0 10px rgba(255, 140, 66, 0.5);
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 50%;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &.active {
+    transform: translateX(22px) rotate(360deg);
+    background: linear-gradient(145deg, #fff, #ffeaa6);
+    box-shadow: 0 4px 12px rgba(255, 140, 66, 0.4), 0 2px 6px rgba(255, 107, 53, 0.3);
+  }
+}
+
+.switch-icon {
+  font-size: 10px;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.switch-label {
+  color: var(--zp-primary);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.switch-glow {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  background: linear-gradient(45deg, transparent, rgba(255, 140, 66, 0.2), transparent);
+  border-radius: 12px;
+  opacity: 0;
+  transition: all 0.4s ease;
+}
+
+.ultra-cool-switch.active .switch-glow {
+  opacity: 1;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+.switch-tooltip {
+  max-width: 240px;
+  line-height: 1.5;
+}
+
+.tooltip-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--primary-color);
+}
+
+.tooltip-status {
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.tooltip-desc {
+  font-size: 12px;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .header-left {
+    gap: 12px;
+  }
+  
+  .ultra-cool-switch {
+    padding: 6px 10px;
+    gap: 8px;
+    font-size: 11px;
+  }
+  
+  .switch-bg {
+    width: 36px;
+    height: 18px;
+  }
+  
+  .switch-track {
+    width: 34px;
+    height: 16px;
+  }
+  
+  .switch-thumb {
+    width: 16px;
+    height: 16px;
+    
+    &.active {
+      transform: translateX(18px) rotate(360deg);
+    }
+  }
+  
+  .switch-icon {
+    font-size: 8px;
+  }
 }
 </style>
