@@ -1,1 +1,0 @@
-import{bT as i,b0 as t,dY as f,bK as n}from"./index-6ab16bed.js";function u(e,s,r){if(!i(r))return!1;var a=typeof s;return(a=="number"?t(r)&&f(s,r.length):a=="string"&&s in r)?n(r[s],e):!1}export{u as i};

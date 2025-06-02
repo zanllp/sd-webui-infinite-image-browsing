@@ -35,7 +35,7 @@ const isMuted = useLocalStorage('tiktok-viewer-muted', true) // 默认静音
 
 // 自动轮播设置
 type AutoPlayMode = 'off' | '5s' | '10s' | '20s'
-const autoPlayMode = useLocalStorage<AutoPlayMode>('iib://tiktok-viewer-autoplay', 'off')
+const autoPlayMode = ref('off' as AutoPlayMode) // useLocalStorage<AutoPlayMode>('iib://tiktok-viewer-autoplay', 'off')
 const autoPlayTimer = ref<number | null>(null)
 
 // 自动轮播模式配置
@@ -589,6 +589,7 @@ watch(() => tiktokStore.visible ===false || tiktokStore.mediaList.length === 0, 
   videoPreloadList.value.forEach(recVideo)
   videoPreloadList.value = []
   
+  autoPlayMode.value = 'off' // 重置自动轮播模式
 }, { immediate: true })
 // 预加载相邻媒体
 const preloadMedia = () => {
