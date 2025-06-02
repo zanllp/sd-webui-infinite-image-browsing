@@ -121,7 +121,7 @@ const clearAutoPlayTimer = () => {
 const startAutoPlayTimer = () => {
   clearAutoPlayTimer()
   
-  if (autoPlayMode.value === 'off' || !tiktokStore.hasNext) return
+  if (autoPlayMode.value === 'off') return
   
   const currentItem = bufferItems.value[1]
   if (!currentItem) return
@@ -132,8 +132,13 @@ const startAutoPlayTimer = () => {
   const delay = getAutoPlayDelay(autoPlayMode.value)
   if (delay > 0) {
     autoPlayTimer.value = window.setTimeout(() => {
-      if (tiktokStore.hasNext && !isAnimating.value && !isDragging.value) {
-        goToNext()
+      if (!isAnimating.value && !isDragging.value) {
+        if (tiktokStore.hasNext) {
+          goToNext()
+        } else {
+          // 到达最后一个时跳回第一个
+          goToFirst()
+        }
       }
     }, delay)
   }
@@ -141,13 +146,15 @@ const startAutoPlayTimer = () => {
 
 // 处理视频播放结束事件
 const handleVideoEnded = (index: number) => {
-  if (index === 1) {
-    console.log('video ended', index)
-  }
   // 只处理当前显示的视频（index === 1）
-  if (index === 1 && autoPlayMode.value !== 'off' && tiktokStore.hasNext && !isAnimating.value) {
+  if (index === 1 && autoPlayMode.value !== 'off' && !isAnimating.value) {
     setTimeout(() => {
-      goToNext()
+      if (tiktokStore.hasNext) {
+        goToNext()
+      } else {
+        // 到达最后一个时跳回第一个
+        goToFirst()
+      }
     }, 500) // 延迟500ms后切换，避免过于突兀
   }
 }
@@ -321,6 +328,31 @@ const goToNext = (isTriggerByTouch: boolean = false) => {
   }, 200) // 动画一半时间后更新内容
 }
 
+// 跳转到第一个
+const goToFirst = (isTriggerByTouch: boolean = false) => {
+  if (isAnimating.value) return
+  
+  // 清除自动轮播计时器
+  clearAutoPlayTimer()
+  
+  isAnimating.value = true
+  
+  // 重置拖拽偏移
+  dragOffset.value = 0
+  
+  bufferTransform.value = 100 // 向下移动动画效果
+  
+  setTimeout(() => {
+    // 直接设置到第一个
+    tiktokStore.currentIndex = 0
+    updateBuffer()
+    bufferTransform.value = 0
+    
+    setTimeout(() => {
+      isAnimating.value = false
+    }, getAnimationDelay(isTriggerByTouch))
+  }, 200) // 动画一半时间后更新内容
+}
 
 // 触摸事件处理
 const handleTouchStart = (e: TouchEvent) => {
