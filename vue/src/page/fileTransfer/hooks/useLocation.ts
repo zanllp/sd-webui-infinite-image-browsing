@@ -311,7 +311,7 @@ export function useLocation () {
       key: Date.now() + uniqueId(),
       popAddPathModal: {
         path: currLocation.value,
-        type: 'scanned'
+        type: 'scanned-fixed'
       }
     }
     tab.panes.push(pane)

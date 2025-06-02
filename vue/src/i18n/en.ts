@@ -319,5 +319,30 @@ You can specify which snapshot to restore to when starting IIB in the global set
   rebuildComplete: 'Rebuild complete',
   tagSearchNoResultsMessage: 'It looks like no results were matched, try rebuilding the index to remove useless tags?',
   'TikTok View': 'TikTok View',
-  tiktokView: 'TikTok View'
+  tiktokView: 'TikTok View',
+  magicSwitchTiktokView: 'TikTok View Mode',
+  magicSwitchTiktokViewDesc: 'When enabled, clicking image/video files will directly enter TikTok-style viewing mode',
+  magicSwitchEnabled: '🎬 ON - Click media files to enter TikTok View',
+  magicSwitchDisabled: '📁 OFF - Click media files to open normally',
+  magicSwitchDetailDesc: 'Click images and videos to directly enter TikTok-style browsing experience',
+  
+  // Auto play related
+  autoPlay: 'Auto Play',
+  autoPlayOff: 'Off',
+  autoPlay5s: '5s',
+  autoPlay10s: '10s',
+  autoPlay20s: '20s',
+  autoPlayTooltip: 'Auto Play: {mode} (A to toggle)',
+  autoPlayStatus: 'Auto Play: {mode}',
+  
+  // TikTok viewer controls
+  exitFullscreen: 'Exit Fullscreen',
+  fullscreen: 'Fullscreen',
+  soundOn: 'Sound On',
+  soundOff: 'Sound Off',
+  like: 'Like',
+  unlike: 'Unlike',
+  tags: 'Tags',
+  tag: 'Tag',
+  tagOperationFailed: 'Tag operation failed'
 }

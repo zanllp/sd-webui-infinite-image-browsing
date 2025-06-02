@@ -280,13 +280,26 @@ class Image:
 
                 step = max(1, total_count // size)
 
-                start_indices = [random.randint(i * step, min((i + 1) * step - 1, total_count - 1)) for i in range(size)]
-                placeholders = ",".join("?" * len(start_indices))
-                cur.execute(f"SELECT * FROM image WHERE id IN ({placeholders})", start_indices)
-                rows = cur.fetchall()
-                curr_images = [cls.from_row(row) for row in rows if os.path.exists(row[1])]
-                images.extend(curr_images)
-                images = unique_by(images, lambda x: x.path)
+                start_indices = []
+                for i in range(size):
+                    min_val = i * step
+                    max_val = min((i + 1) * step - 1, total_count - 1)
+                    # 确保 max_val 不小于 min_val
+                    if max_val < min_val:
+                        max_val = min_val
+                    # 确保索引在有效范围内 (1 到 total_count)
+                    min_val = max(1, min(min_val, total_count))
+                    max_val = max(1, min(max_val, total_count))
+                    if min_val <= max_val:
+                        start_indices.append(random.randint(min_val, max_val))
+                
+                if start_indices:
+                    placeholders = ",".join("?" * len(start_indices))
+                    cur.execute(f"SELECT * FROM image WHERE id IN ({placeholders})", start_indices)
+                    rows = cur.fetchall()
+                    curr_images = [cls.from_row(row) for row in rows if os.path.exists(row[1])]
+                    images.extend(curr_images)
+                    images = unique_by(images, lambda x: x.path)
         return images
 
 

@@ -12,7 +12,7 @@ let lastState: LayoutConf | null = null
 export const useFullscreenLayout = () => {
   const g = useGlobalStore()
   // 只存储和提供给state的值
-  const storageState = useLocalStorage(prefix + 'fullscreen_layout', { enable: false, panelWidth: 384, alwaysOn: true })
+  const storageState = useLocalStorage(prefix + 'fullscreen_layout', { enable: true, panelWidth: 384, alwaysOn: true })
   const state = reactive<LayoutConf>(lastState ?? g.conf?.app_fe_setting?.fullscreen_layout ?? cloneDeep(storageState.value))
 
   const panelwidtrhStyleVarName = '--iib-lr-layout-info-panel-width'

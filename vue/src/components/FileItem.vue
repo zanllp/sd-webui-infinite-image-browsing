@@ -19,6 +19,8 @@ import { Top4MediaInfo } from '@/api'
 import { watch } from 'vue'
 import { debounce } from 'lodash-es'
 
+import { closeImageFullscreenPreview } from '@/util/imagePreviewOperation'
+
 const global = useGlobalStore()
 const tagStore = useTagStore()
 
@@ -93,6 +95,36 @@ const taggleLikeTag = () => {
 }
 
 const minShowDetailWidth = 160
+
+// 处理文件点击事件
+const handleFileClick = (event: MouseEvent) => {
+  // 检查magic switch是否开启且是图片文件（视频有自己的处理逻辑）
+  if (global.magicSwitchTiktokView && props.file.type === 'file' && isImageFile(props.file.name)) {
+    // 直接触发TikTok视图
+    emit('tiktokView', props.file, props.idx)
+    setTimeout(() => {
+      closeImageFullscreenPreview()
+    }, 500);
+  } else {
+    // 正常触发文件点击事件
+    emit('fileItemClick', event, props.file, props.idx)
+  }
+}
+
+// 处理视频点击事件
+const handleVideoClick = () => {
+  if (global.magicSwitchTiktokView) {
+    // 直接触发TikTok视图
+    emit('tiktokView', props.file, props.idx)
+  } else {
+    // 正常打开视频模态框
+    openVideoModal(
+      props.file, 
+      (id) => emit('contextMenuClick', { key: `toggle-tag-${id}` } as any, props.file, props.idx),
+      () => emit('tiktokView', props.file, props.idx)
+    )
+  }
+}
 </script>
 <template>
   <a-dropdown :trigger="['contextmenu']" :visible="!global.longPressOpenContextMenu ? undefined : typeof idx === 'number' && showMenuIdx === idx
@@ -101,7 +133,7 @@ const minShowDetailWidth = 160
     clickable: file.type === 'dir',
     selected
   }" :data-idx="idx" :key="file.name" draggable="true" @dragstart="emit('dragstart', $event, idx)"
-      @dragend="emit('dragend', $event, idx)" @click.capture="emit('fileItemClick', $event, file, idx)">
+      @dragend="emit('dragend', $event, idx)" @click.capture="handleFileClick($event)">
 
       <div>
         <div class="close-icon" v-if="enableCloseIcon" @click="emit('close-icon-click')">
@@ -153,11 +185,7 @@ const minShowDetailWidth = 160
         </div>
         <div :class="`idx-${idx} item-content video`" :url="toVideoCoverUrl(file)"
           :style="{ 'background-image': `url('${file.cover_url ?? toVideoCoverUrl(file)}')` }" v-else-if="isVideoFile(file.name)"
-          @click="openVideoModal(
-            file, 
-            (id) => emit('contextMenuClick', { key: `toggle-tag-${id}` } as any, file, idx),
-            () => emit('tiktokView', file, idx)
-          )">
+          @click="handleVideoClick">
 
           <div class="play-icon">
             <img :src="play" style="width: 40px;height: 40px;">
