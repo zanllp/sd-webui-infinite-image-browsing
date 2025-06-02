@@ -9,7 +9,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest,ubuntu-20.04]
+        os: [windows-latest,ubuntu-22.04]
 
     runs-on: ${{ matrix.os }}
 
@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v3
 
       - run: echo "VERSION=$(jq -r '.package.version' vue/src-tauri/tauri.conf.json)" >> "$GITHUB_ENV"
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
       - run: echo "VERSION=$(jq -r '.package.version' vue/src-tauri/tauri.conf.json)" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
 
@@ -48,7 +48,7 @@ jobs:
             vue/dist=vue/dist
       
       - run: cp out/iib_api_server out/iib_app_cli-${{ env.VERSION }}-${{ runner.os }}
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
       - run: cp out/iib_api_server.exe out/iib_app_cli-${{ env.VERSION }}-${{ runner.os }}.exe
         if: matrix.os == 'windows-latest'
       
@@ -72,7 +72,7 @@ jobs:
         if: matrix.os == 'windows-latest'
 
       - run: mv out/iib_api_server vue/src-tauri/iib_api_server-x86_64-unknown-linux-gnu
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
 
       - name: Install frontend dependencies
         run: yarn install
@@ -92,7 +92,7 @@ jobs:
           workspaces: './vue/src-tauri -> target'
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libayatana-appindicator3-dev librsvg2-dev patchelf
@@ -165,7 +165,7 @@ jobs:
           workspaces: './vue/src-tauri -> target'
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libayatana-appindicator3-dev librsvg2-dev patchelf
