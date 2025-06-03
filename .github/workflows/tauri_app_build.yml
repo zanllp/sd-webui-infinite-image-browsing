@@ -53,7 +53,7 @@ jobs:
         if: matrix.os == 'windows-latest'
       
       - name: Upload Server Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: iib_app_cli_${{ runner.os }}
           path: |
@@ -61,7 +61,7 @@ jobs:
             out/iib_app_cli-${{ env.VERSION }}-${{ runner.os }}.exe
 
       - name: Upload Server Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: iib_api_server-${{ env.VERSION }}-${{ runner.os }}
           path: |
@@ -104,7 +104,7 @@ jobs:
       
       
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bundle-${{ env.VERSION }}-${{ runner.os }}
           path: |
@@ -180,7 +180,7 @@ jobs:
          mv "Infinite Image Browsing_${{ env.VERSION }}_x64-setup.exe" "Infinite Image Browsing_${{ env.VERSION }}_x64-setup-pyinstaller.exe"
       
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bundle-${{ env.VERSION }}-${{ runner.os }}
           path: |
@@ -202,22 +202,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bundle-${{ env.VERSION }}-Windows
           path: artifacts
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bundle-${{ env.VERSION }}-Linux
           path: artifacts
       
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: iib_app_cli_Windows
           path: artifacts
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: iib_app_cli_Linux
           path: artifacts
