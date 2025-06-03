@@ -182,7 +182,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: bundle-${{ env.VERSION }}-${{ runner.os }}
+          name: bundle-${{ env.VERSION }}-${{ runner.os }}-pre
           path: |
             vue/src-tauri/target/release/bundle/nsis/Infinite Image Browsing_${{ env.VERSION }}_x64-setup-pyinstaller.exe
             
@@ -205,6 +205,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: bundle-${{ env.VERSION }}-Windows
+          path: artifacts
+          
+      - uses: actions/download-artifact@v4
+        with:
+          name: bundle-${{ env.VERSION }}-Windows-pre
           path: artifacts
 
       - uses: actions/download-artifact@v4
