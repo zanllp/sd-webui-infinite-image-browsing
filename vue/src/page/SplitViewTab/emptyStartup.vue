@@ -173,7 +173,7 @@ const modes = computed(() => {
                 </div>
                 <div class="switch-glow"></div>
               </div>
-              <span class="switch-label">TikTok 视图</span>
+              <span class="switch-label">{{ $t('tiktokView') }}</span>
             </div>
           </a-tooltip>
         </div>
