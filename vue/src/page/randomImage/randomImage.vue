@@ -16,6 +16,9 @@ import MultiSelectKeep from '@/components/MultiSelectKeep.vue'
 import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
 import { copy2clipboardI18n } from '@/util'
 import { message } from 'ant-design-vue'
+import { t } from '@/i18n'
+import { useLocalStorage } from '@vueuse/core'
+import { prefix } from '@/util/const'
 
 const g = useGlobalStore()
 
@@ -29,6 +32,22 @@ defineProps<{
 const loading = ref(false)
 const files = ref([] as GridViewFile[])
 const images = files
+
+// 使用VueUse的useLocalStorage hook
+const hasShownNotification = useLocalStorage(`${prefix}randomImageSettingNotificationShown`, false)
+
+// 显示一次性通知
+const showRandomImageSettingNotification = () => {
+  if (!hasShownNotification.value) {
+    message.info({
+      content: t('randomImageSettingNotification'),
+      duration: 6,
+      key: 'randomImageSetting'
+    })
+    hasShownNotification.value = true
+  }
+}
+
 const fetch = async () => {
   try {
     loading.value = true
@@ -53,7 +72,12 @@ const onTiktokViewClick = () => {
   openTiktokViewWithFiles(files.value, previewIdx.value || 0)
 }
 
-onMounted(fetch)
+onMounted(() => {
+  fetch()
+  setTimeout(() => {
+    showRandomImageSettingNotification()
+  }, 2000);
+})
 const { stackViewEl, multiSelectedIdxs, stack, scroller } = useHookShareState({
   images: files as any
 }).toRefs()
@@ -99,6 +123,7 @@ const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
         {{ $t('tiktokView') }}
       </a-button>
     </div>
+    
     <AModal v-model:visible="showGenInfo" width="70vw" mask-closable @ok="showGenInfo = false">
       <template #cancelText />
       <ASkeleton active :loading="!genInfoQueue.isIdle">

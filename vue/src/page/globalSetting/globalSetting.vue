@@ -135,6 +135,9 @@ const disableMaximize = useLocalStorage(prefix+'disable_maximize', false)
       <a-form-item :label="$t('showCommaInGenInfoPanel')">
         <a-switch v-model:checked="globalStore.showCommaInInfoPanel" />
       </a-form-item>
+      <a-form-item :label="$t('showRandomImageInStartup')">
+        <a-switch v-model:checked="globalStore.showRandomImageInStartup" />
+      </a-form-item>
       <a-form-item :label="$t('defaultSortingMethod')">
         <search-select v-model:value="globalStore.defaultSortingMethod" :conv="sortMethodConv" :options="sortMethods" />
       </a-form-item>

@@ -243,7 +243,7 @@ const modes = computed(() => {
             </span>
           </li>
             
-          <a-button @click="openInCurrentTab('random-image')" type="primary" style="border-radius:100vw;margin-bottom: 8px;" ghost><span style="margin:0 6px;"><span style="margin-right: 8px;">🎲</span>{{ $t('tryMyLuck') }}</span></a-button>
+          <a-button v-if="global.showRandomImageInStartup" @click="openInCurrentTab('random-image')" type="primary" style="border-radius:100vw;margin-bottom: 8px;" ghost><span style="margin:0 6px;"><span style="margin-right: 8px;">🎲</span>{{ $t('tryMyLuck') }}</span></a-button>
           <actionContextMenu v-for="dir in walkModeSupportedDir" :key="dir.key"
             @open-in-new-tab="openInNewTab('local', dir.dir, 'walk')"
             @open-on-the-right="openOnTheRight('local', dir.dir, 'walk')">
