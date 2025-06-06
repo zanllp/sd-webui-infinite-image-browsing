@@ -3,6 +3,10 @@ import type { IIBI18nMap } from '.'
 export const zhHant: Partial<IIBI18nMap> = {
   tryMyLuck: '隨便看看',
   randomImage: '隨機圖片',
+  randomImageSettings: '隨機圖片設定',
+  showRandomImageInStartup: '在啟動頁面顯示隨機圖片',
+  showRandomImageInStartupDesc: '控制隨機圖片選項是否在啟動頁面顯示',
+  randomImageSettingNotification: '提示：您可以在全域設定頁面中控制是否在啟動頁面顯示隨機圖片選項',
   // 换一批
   shuffle: '換一批',
   pathOnly: '僅路徑',

@@ -1,6 +1,10 @@
 export const zhHans = {
   tryMyLuck: '试试手气',
   randomImage: '随机图像',
+  randomImageSettings: '随机图像设置',
+  showRandomImageInStartup: '在启动页面显示随机图像',
+  showRandomImageInStartupDesc: '控制随机图像选项是否在启动页面显示',
+  randomImageSettingNotification: '提示：您可以在全局设置页面中控制是否在启动页面显示随机图像选项',
   shuffle: '换一批',
   pathOnly: '仅路径',
   takeEffectAfterReloadPage: '更改将在重新加载页面后生效',

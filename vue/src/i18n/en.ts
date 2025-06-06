@@ -3,6 +3,10 @@ import type { IIBI18nMap } from '.'
 export const en: IIBI18nMap = {
   tryMyLuck: 'Try My Luck',
   randomImage: 'Random Image',
+  randomImageSettings: 'Random Image Settings',
+  showRandomImageInStartup: 'Show Random Image in Startup',
+  showRandomImageInStartupDesc: 'Control whether the random image option is displayed on the startup page',
+  randomImageSettingNotification: 'Tip: You can control whether to show the random image option on the startup page in Global Settings',
   shuffle: 'Shuffle',
   pathOnly: 'Path Only',
   disableMaximize: 'Disable Maximize',

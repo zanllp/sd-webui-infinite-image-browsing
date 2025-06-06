@@ -485,7 +485,8 @@ const handleWheel = throttle((e: WheelEvent) => {
 
 // 键盘事件
 const handleKeydown = (e: KeyboardEvent) => {
-  if (isAnimating.value) return
+  // 仅在 TikTok 视图打开时生效
+  if (!tiktokStore.visible || isAnimating.value) return
   
   switch (e.key) {
     case 'ArrowUp':
@@ -500,20 +501,20 @@ const handleKeydown = (e: KeyboardEvent) => {
       e.preventDefault()
       tiktokStore.closeView()
       break
-    case 'F11':
-      e.preventDefault()
-      handleFullscreenToggle()
-      break
-    case 'l':
-    case 'L':
-      e.preventDefault()
-      if (likeTag.value) toggleLike()
-      break
-    case 'a':
-    case 'A':
-      e.preventDefault()
-      toggleAutoPlay()
-      break
+    // case 'F11':
+    //   e.preventDefault()
+    //   handleFullscreenToggle()
+    //   break
+    // case 'l':
+    // case 'L':
+    //   e.preventDefault()
+    //   if (likeTag.value) toggleLike()
+    //   break
+    // case 'a':
+    // case 'A':
+    //   e.preventDefault()
+    //   toggleAutoPlay()
+    //   break
   }
 }
 
