@@ -14,7 +14,6 @@ import zipfile
 from PIL import Image
 import shutil
 # import magic
-import filetype
 
 sd_img_dirs = [
     "outdir_txt2img_samples",
@@ -203,8 +202,14 @@ def convert_to_bytes(file_size_str):
     
 
 def is_video_simple(filepath):
-    kind = filetype.guess(filepath)
-    return kind and kind.mime.startswith('video/')
+    try:        
+        import filetype
+        kind = filetype.guess(filepath)
+        # print(f"File type guessed: {kind}")
+        return kind and kind.mime.startswith('video/')
+    except:
+        # 如果 filetype 模块不可用，使用简单的文件扩展名检查
+        return isinstance(get_video_type(filepath), str)
 
 def get_video_type(file_path):
     video_extensions = ['.mp4', '.m4v', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.ts']
