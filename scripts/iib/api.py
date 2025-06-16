@@ -491,6 +491,12 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     stat = item.stat()
                     date = get_formatted_date(stat.st_mtime)
                     created_time = get_created_date_by_stat(stat)
+                    mtime_ns = stat.st_mtime_ns if hasattr(stat, 'st_mtime_ns') else None
+                    creation_time_ns = (
+                        stat.st_birthtime_ns if hasattr(stat, 'st_birthtime_ns')
+                        else (stat.st_ctime_ns if hasattr(stat, 'st_ctime_ns') else None)
+                    )
+                    
                     if item.is_file():
                         bytes = stat.st_size
                         size = human_readable_size(bytes)
@@ -504,6 +510,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                                 "created_time": created_time,
                                 "fullpath": fullpath,
                                 "is_under_scanned_path": is_under_scanned_path,
+                                "mtime_ns": mtime_ns,
+                                "ctime_ns": creation_time_ns
                             }
                         )
                     elif item.is_dir():

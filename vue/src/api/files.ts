@@ -13,6 +13,8 @@ export interface FileNodeInfo {
   gen_info_raw?: string
   gen_info_obj?: object
   cover_url?: string
+  mtime_ns?: number       // 高精度修改时间戳（纳秒级）
+  ctime_ns?: number       // 高精度创建时间戳（纳秒级）
 }
 
 export interface GenDiffInfo {
