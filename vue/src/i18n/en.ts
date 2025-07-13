@@ -348,5 +348,8 @@ You can specify which snapshot to restore to when starting IIB in the global set
   unlike: 'Unlike',
   tags: 'Tags',
   tag: 'Tag',
-  tagOperationFailed: 'Tag operation failed'
+  tagOperationFailed: 'Tag operation failed',
+  mediaType: 'Media Type',
+  all: 'All',
+  video: 'Video'
 }

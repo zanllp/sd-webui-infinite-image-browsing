@@ -7,7 +7,8 @@ import { Ref } from 'vue'
 export type FuzzySearchHistoryRecord ={ 
   substr: string, 
   folder_paths_str: string,
-  isRegex: boolean
+  isRegex: boolean,
+  mediaType?: string
 }
 
 export const fuzzySearchHistory = useLocalStorage(`${prefix}fuzzy-search-HistoryRecord`, new HistoryRecord(), {

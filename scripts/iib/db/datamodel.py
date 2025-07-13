@@ -212,7 +212,7 @@ class Image:
     @classmethod
     def find_by_substring(
         cls, conn: Connection, substring: str, limit: int = 500, cursor="", regexp="", path_only=False,
-        folder_paths: List[str] = []
+        folder_paths: List[str] = [], media_type: str = None
     ) -> tuple[List["Image"], Cursor]:
         api_cur = Cursor()
         with closing(conn.cursor()) as cur:
@@ -241,7 +241,20 @@ class Image:
                     folder_clauses.append("(image.path LIKE ?)")
                     params.append(os.path.join(folder_path, "%"))
                 where_clauses.append("(" + " OR ".join(folder_clauses) + ")")
-            sql = "SELECT * FROM image"
+            
+            # 构建SQL查询
+            if media_type and media_type.lower() != "all":
+                # 需要JOIN到image_tag和tag表来过滤媒体类型
+                sql = """SELECT DISTINCT image.* FROM image 
+                        INNER JOIN image_tag ON image.id = image_tag.image_id 
+                        INNER JOIN tag ON image_tag.tag_id = tag.id"""
+                # 添加媒体类型过滤条件
+                media_type_name = "Image" if media_type.lower() == "image" else "Video"
+                where_clauses.append("(tag.type = 'Media Type' AND tag.name = ?)")
+                params.append(media_type_name)
+            else:
+                sql = "SELECT * FROM image"
+            
             if where_clauses:
                 sql += " WHERE "
                 sql += " AND ".join(where_clauses)

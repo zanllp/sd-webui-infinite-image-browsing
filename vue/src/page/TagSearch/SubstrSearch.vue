@@ -26,13 +26,15 @@ const pathOnly = ref(false)
 const folder_paths_str = ref(props.searchScope ?? '')
 const showHistoryRecord = ref(false)
 const searchCount = ref(0)
+const mediaType = ref('all')
 const iter = createImageSearchIter(cursor => {
   const req: SearchBySubstrReq = {
     cursor,
     regexp: isRegex.value ? substr.value : '',
     surstr: !isRegex.value ? substr.value : '',
     path_only: pathOnly.value,
-    folder_paths: (folder_paths_str.value ?? '').split(/,|\n/).map(v => v.trim()).filter(v => v)
+    folder_paths: (folder_paths_str.value ?? '').split(/,|\n/).map(v => v.trim()).filter(v => v),
+    media_type: mediaType.value
   }
   return getImagesBySubstr(req)
 })
@@ -106,6 +108,7 @@ const reuse = (rec: FuzzySearchHistoryRecord & { id: string; time: string }) => 
   substr.value = rec.substr
   folder_paths_str.value = rec.folder_paths_str
   isRegex.value = rec.isRegex
+  mediaType.value = rec.mediaType || 'all'
   showHistoryRecord.value = false
   query()
 }
@@ -115,7 +118,8 @@ const query = async () => {
   fuzzySearchHistory.value.add({
     substr: substr.value,
     folder_paths_str: folder_paths_str.value,
-    isRegex: isRegex.value
+    isRegex: isRegex.value,
+    mediaType: mediaType.value
   })
   await iter.reset({ refetch: true })
   await nextTick()
@@ -157,6 +161,10 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
             <a-col :span="4">{{ $t('historyRecordsisRegex') }}:</a-col>
             <a-col :span="20">{{ record.isRegex }}</a-col>
           </a-row>
+          <a-row v-if="record.mediaType">
+            <a-col :span="4">{{ $t('mediaType') }}:</a-col>
+            <a-col :span="20">{{ record.mediaType }}</a-col>
+          </a-row>
           <a-row>
             <a-col :span="4">{{ $t('time') }}:</a-col>
             <a-col :span="20">{{ record.time }}</a-col>
@@ -170,17 +178,22 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
   <div class="container" ref="stackViewEl">
     <MultiSelectKeep :show="!!multiSelectedIdxs.length || g.keepMultiSelect" @clear-all-selected="onClearAllSelected"
       @select-all="onSelectAll" @reverse-select="onReverseSelect" />
-    <div class="search-bar" v-if="info" @keydown.stop>
+    <div class="search-bar"  @keydown.stop>
       <a-input v-model:value="substr" :placeholder="$t('fuzzy-search-placeholder') + ' ' + $t('regexSearchEnabledHint')"
         :disabled="!queue.isIdle" @keydown.enter="query" allow-clear />
+      <ASelect v-model:value="mediaType" style="width: 100px; margin: 0 4px;" :disabled="!queue.isIdle">
+        <ASelectOption value="all">{{ $t('all') }}</ASelectOption>
+        <ASelectOption value="image">{{ $t('image') }}</ASelectOption>
+        <ASelectOption value="video">{{ $t('video') }}</ASelectOption>
+      </ASelect>
         <div class="regex-icon" :class="{ selected: pathOnly }" @keydown.stop @click="pathOnly = !pathOnly"
         :title="$t('pathOnly')"><AimOutlined /></div>
       <div class="regex-icon" :class="{ selected: isRegex }" @keydown.stop @click="onRegexpClick"
         title="Use Regular Expression"> <img :src="regex"></div>
-      <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info.expired || !info.img_count">
+      <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info && (info.expired || !info.img_count)">
         {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
       <AButton v-else type="primary" @click="query" :loading="!queue.isIdle || iter.loading"
-        :disabled="!substr && !folder_paths_str">{{ $t('search') }}
+         >{{ $t('search') }}
       </AButton>
     </div>
     <div class="search-bar">
@@ -228,6 +241,10 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
               <a-row>
                 <a-col :span="4">{{ $t('historyRecordsisRegex') }}:</a-col>
                 <a-col :span="20">{{ record.isRegex }}</a-col>
+              </a-row>
+              <a-row v-if="record.mediaType">
+                <a-col :span="4">{{ $t('mediaType') }}:</a-col>
+                <a-col :span="20">{{ record.mediaType }}</a-col>
               </a-row>
               <a-row>
                 <a-col :span="4">{{ $t('time') }}:</a-col>

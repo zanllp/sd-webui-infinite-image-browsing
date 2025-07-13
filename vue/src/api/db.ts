@@ -93,6 +93,7 @@ export interface SearchBySubstrReq {
   path_only?: boolean;
   folder_paths?: string[];
   size?: number;
+  media_type?: string;  // "all", "image", "video"
 }
 
 

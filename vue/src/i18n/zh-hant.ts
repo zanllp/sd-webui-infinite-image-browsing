@@ -332,5 +332,8 @@ export const zhHant: Partial<IIBI18nMap> = {
   unlike: '取消喜歡',
   tags: '標籤',
   tag: '標籤',
-  tagOperationFailed: '標籤操作失敗'
+  tagOperationFailed: '標籤操作失敗',
+  mediaType: '媒體類型',
+  all: '全部',
+  video: '視頻'
 }
