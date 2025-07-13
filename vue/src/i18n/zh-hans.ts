@@ -327,5 +327,8 @@ export const zhHans = {
   unlike: '取消喜欢',
   tags: '标签',
   tag: '标签',
-  tagOperationFailed: '标签操作失败'
+  tagOperationFailed: '标签操作失败',
+  mediaType: '媒体类型',
+  all: '全部',
+  video: '视频'
 }
