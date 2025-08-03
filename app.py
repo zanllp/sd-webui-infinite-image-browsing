@@ -19,7 +19,7 @@ import json
 
 tag = "\033[31m[warn]\033[0m"
 
-default_port = 8000
+default_port = 7866
 default_host = "127.0.0.1"
 
 def get_all_img_dirs(sd_webui_config: str, relative_to_config: bool):

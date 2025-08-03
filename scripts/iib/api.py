@@ -919,6 +919,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         cursor: str
         folder_paths: List[str] = None
         size: Optional[int] = 200
+        random_sort: Optional[bool] = False
 
     @app.post(db_api_base + "/match_images_by_tags", dependencies=[Depends(verify_secret)])
     async def match_image_by_tags(req: MatchImagesByTagsReq):
@@ -933,7 +934,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             tag_dict={"and": req.and_tags, "or": req.or_tags, "not": req.not_tags},
             cursor=req.cursor,
             folder_paths=folder_paths,
-            limit=req.size
+            limit=req.size,
+            random_sort=req.random_sort
         )
         return {
             "files": filter_allowed_files([x.to_file_info() for x in imgs]),
