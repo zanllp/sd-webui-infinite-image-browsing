@@ -32,6 +32,7 @@ export function usePreview (spec?: { loadNext?: () => void }) {
   const dragCurrentY = ref(0)
   const swipeThreshold = 50 // Minimum distance to trigger navigation
   const swipeDirection = ref<'left' | 'right' | null>(null)
+  const isZoomed = ref(false) // Track if image is zoomed in
   
   const onPreviewVisibleChange = (v: boolean, lv: boolean) => {
     previewing.value = v
@@ -64,6 +65,14 @@ export function usePreview (spec?: { loadNext?: () => void }) {
     console.log('Mouse down event')
     if (!previewing.value) return
     
+    // Check if image is zoomed before handling drag
+    isZoomed.value = checkIfZoomed()
+    
+    // If zoomed, don't prevent default behavior to allow panning
+    if (isZoomed.value) {
+      return
+    }
+    
     console.log('Mouse down detected on preview image')
     isDragging.value = true
     dragStartX.value = e.clientX
@@ -77,7 +86,7 @@ export function usePreview (spec?: { loadNext?: () => void }) {
   }
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging.value || !previewing.value) return
+    if (!isDragging.value || !previewing.value || isZoomed.value) return
     console.log('mouse move event')
     
     dragCurrentX.value = e.clientX
@@ -100,7 +109,7 @@ export function usePreview (spec?: { loadNext?: () => void }) {
 
 
   const handleMouseUp = (_e: MouseEvent) => {
-    if (!isDragging.value || !previewing.value) return
+    if (!isDragging.value || !previewing.value || isZoomed.value) return
     console.log('Mouse up event')
     
     console.log('Mouse up detected, checking for swipe')
@@ -135,14 +144,93 @@ export function usePreview (spec?: { loadNext?: () => void }) {
     swipeDirection.value = null
   }
 
-  //TODO
-  //disable swipe and touch control if picture zoomed in
-  //allow horizontal scrolling when pic zoomed in
+  /**
+   * Get the currently visible preview image element
+   * @returns HTMLElement of the active preview image or null
+   */
+  const getVisiblePreviewImage = () => {
+    // Try multiple selectors for Ant Design image preview
+    const elements = document.querySelectorAll('.ant-image-preview')
+    
+    // Find the visible preview mask (the one without display: none)
+    let previewMask: HTMLElement | null = null
+    for (let i = 0; i < elements.length; i++) {
+      const el = elements[i] as HTMLElement
+      const style = window.getComputedStyle(el)
+      if (style.display !== 'none') {
+        previewMask = el
+        break
+      }
+    }
+    
+    if (!previewMask) return null
+    
+    // Try to find the preview image within the mask
+    let previewImg = previewMask.querySelector('.ant-image-preview-img') as HTMLElement
+    
+    // Fallback selectors if the main one doesn't work
+    if (!previewImg) {
+      previewImg = previewMask.querySelector('.ant-image-preview img') as HTMLElement
+    }
+    if (!previewImg) {
+      previewImg = previewMask.querySelector('.ant-image-preview .ant-image-img') as HTMLElement
+    }
+    
+    return previewImg
+  }
+
+  /**
+   * Check if the preview image is currently zoomed in
+   * @returns boolean indicating if image is zoomed
+   */
+  const checkIfZoomed = () => {
+    const previewImg = getVisiblePreviewImage()
+    if (!previewImg) return false
+    
+    // Check if image has been scaled (zoomed) - works for desktop zooming
+    const style = window.getComputedStyle(previewImg)
+    const transform = style.transform || style.webkitTransform
+    if (transform && transform !== 'none') {
+      // Extract scale value from transform matrix
+      // transform is usually in format: matrix(scaleX, 0, 0, scaleY, 0, 0)
+      const matrixValues = transform.match(/matrix\(([^)]+)\)/)
+      if (matrixValues) {
+        const values = matrixValues[1].split(',').map(val => parseFloat(val.trim()))
+        const scaleX = Math.abs(values[0] || 1)
+        const scaleY = Math.abs(values[3] || 1)
+        
+        // If scale is significantly different from 1, image is zoomed
+        if (Math.abs(scaleX - 1) > 0.01 || Math.abs(scaleY - 1) > 0.01) {
+          return true
+        }
+      }
+    }
+    
+    // For mobile pinch zoom, check if the image dimensions exceed the viewport dimensions
+    // This is a fallback method when CSS transforms aren't updated by pinch zooming
+    // const rect = previewImg.getBoundingClientRect()
+    // const viewportWidth = window.innerWidth
+    // const viewportHeight = window.innerHeight
+    
+    // If image is larger than viewport in either dimension, it's likely zoomed
+    if (window.visualViewport){
+      return window.visualViewport.scale > 1.05 //allow a guardband of residual zoom
+    }
+    return false
+  }
 
 
   // Touch event handlers for mobile swipe
   const handleTouchStart = (e: TouchEvent) => {
     if (!previewing.value || e.touches.length !== 1) return
+
+    // Check if image is zoomed before handling drag
+    isZoomed.value = checkIfZoomed()
+    
+    // If zoomed, don't prevent default behavior to allow panning
+    if (isZoomed.value) {
+      return
+    }
     
     console.log('Touch start detected on preview image')
     const touch = e.touches[0]
@@ -155,7 +243,7 @@ export function usePreview (spec?: { loadNext?: () => void }) {
   }
 
   const handleTouchMove = (e: TouchEvent) => {
-    if (!isDragging.value || !previewing.value || e.touches.length !== 1) return
+    if (!isDragging.value || !previewing.value || e.touches.length !== 1 || isZoomed.value) return
     
     const touch = e.touches[0]
     dragCurrentX.value = touch.clientX
@@ -181,7 +269,7 @@ export function usePreview (spec?: { loadNext?: () => void }) {
   }
 
   const handleTouchEnd = (_e: TouchEvent) => {
-    if (!isDragging.value || !previewing.value) return
+    if (!isDragging.value || !previewing.value || isZoomed.value) return
     
     const deltaX = dragCurrentX.value - dragStartX.value
     const deltaY = dragCurrentY.value - dragStartY.value
