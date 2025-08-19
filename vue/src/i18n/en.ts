@@ -133,6 +133,7 @@ You can specify which snapshot to restore to when starting IIB in the global set
   gridCellWidth: 'Grid Cell Width (px)',
   showChangeIndicators: 'Show Change Indicators',
   seedAsChange: 'Seed as Change',
+  hideImageNavigationButtons: 'Hide Image Navigation Buttons',
   defaultShowChangeIndicators: 'Default Show Change Indicators',
   defaultSeedAsChange: 'Default Compare Seed as Change',
   defaultGridCellWidth: 'Default Grid Cell Width (px)',

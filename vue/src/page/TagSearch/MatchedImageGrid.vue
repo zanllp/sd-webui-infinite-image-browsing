@@ -163,7 +163,7 @@ const onTiktokViewClick = () => {
           <AButton @click="openRebuildImageIndexModal()" type="primary">{{ $t('rebuildImageIndex') }}</AButton>
         </div>
       </div>
-      <div v-if="previewing" class="preview-switch">
+      <div v-if="previewing && !g.hideImageNavigationButtons" class="preview-switch">
         <LeftCircleOutlined
           @click="previewImgMove('prev')"
           :class="{ disable: !canPreview('prev') }"

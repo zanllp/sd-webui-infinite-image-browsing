@@ -192,7 +192,8 @@ export const presistKeys = [
   'batchDownloadCompress',
   'batchDownloadPackOnly',
   'magicSwitchTiktokView',
-  'showRandomImageInStartup'
+  'showRandomImageInStartup',
+  'hideImageNavigationButtons'
 ]
 
 function cellWidthMap(x: number): number {
@@ -345,6 +346,7 @@ export const useGlobalStore = defineStore(
     const previewBgOpacity = ref(0.6)
     const magicSwitchTiktokView = ref(false)
     const showRandomImageInStartup = ref(true)
+    const hideImageNavigationButtons = ref(false)
     return {
       computedTheme,
       darkModeControl,
@@ -385,7 +387,8 @@ export const useGlobalStore = defineStore(
       batchDownloadCompress: ref(false),
       batchDownloadPackOnly: ref(false),
       magicSwitchTiktokView,
-      showRandomImageInStartup
+      showRandomImageInStartup,
+      hideImageNavigationButtons
     }
   },
   {

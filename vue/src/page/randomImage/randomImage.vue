@@ -148,7 +148,7 @@ const onContextMenuClickU: typeof onContextMenuClick = async (e, file, idx) => {
           @file-item-click="onFileItemClick" @tiktok-view="(_file, idx) => openTiktokViewWithFiles(files, idx)" />
       </template>
     </RecycleScroller>
-    <div v-if="previewing" class="preview-switch">
+    <div v-if="previewing && !g.hideImageNavigationButtons" class="preview-switch">
       <LeftCircleOutlined @click="previewImgMove('prev')" :class="{ disable: !canPreview('prev') }" />
       <RightCircleOutlined @click="previewImgMove('next')" :class="{ disable: !canPreview('next') }" />
     </div>
