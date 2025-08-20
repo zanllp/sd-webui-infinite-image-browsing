@@ -275,7 +275,7 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
             :is-selected-mutil-files="multiSelectedIdxs.length > 1" @preview-visible-change="onPreviewVisibleChange" />
         </template>
       </RecycleScroller>
-      <div v-if="previewing" class="preview-switch">
+      <div v-if="previewing && !g.hideImageNavigationButtons" class="preview-switch">
         <LeftCircleOutlined @click="previewImgMove('prev')" :class="{ disable: !canPreview('prev') }" />
         <RightCircleOutlined @click="previewImgMove('next')" :class="{ disable: !canPreview('next') }" />
       </div>

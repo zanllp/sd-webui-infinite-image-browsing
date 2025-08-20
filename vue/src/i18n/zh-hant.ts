@@ -86,6 +86,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   alias: '別名',
   showChangeIndicators: '顯示變更指示器',
   seedAsChange: '將Seed也進行比較',
+  hideImageNavigationButtons: '隱藏圖片導航按鈕',
   defaultShowChangeIndicators: '預設顯示變更指示器',
   defaultSeedAsChange: '預設將Seed也進行比較',
   exit: '退出',

@@ -266,6 +266,7 @@ export const zhHans = {
   gridCellWidth: '网格单元宽度 (px)',
   showChangeIndicators: '显示变更指示器',
   seedAsChange: '将Seed也进行比较',
+  hideImageNavigationButtons: '隐藏图像导航按钮',
   defaultShowChangeIndicators: '默认显示变更指示器',
   defaultSeedAsChange: '默认将Seed也进行比较',
   defaultGridCellWidth: '默认网格单元宽度 (px)',
