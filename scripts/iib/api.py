@@ -710,13 +710,21 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
 
     @app.get(api_base + "/image_geninfo", dependencies=[Depends(verify_secret)])
     async def image_geninfo(path: str):
-        return parse_image_info(path).raw_info
+        # 使用 get_exif_data 函数，它已经支持视频文件
+        from scripts.iib.db.update_image_data import get_exif_data
+        try:
+            result = get_exif_data(path)
+            return result.raw_info or ""
+        except Exception as e:
+            logger.error(f"Failed to get geninfo for {path}: {e}")
+            return ""
 
     class GeninfoBatchReq(BaseModel):
         paths: List[str]
 
     @app.post(api_base + "/image_geninfo_batch", dependencies=[Depends(verify_secret)])
     async def image_geninfo_batch(req: GeninfoBatchReq):
+        from scripts.iib.db.update_image_data import get_exif_data
         res = {}
         conn = DataBase.get_conn()
         for path in req.paths:
@@ -725,9 +733,11 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 if img:
                     res[path] = img.exif
                 else:
-                    res[path] = parse_image_info(path).raw_info
+                    result = get_exif_data(path)
+                    res[path] = result.raw_info or ""
             except Exception as e:
-                logger.error(e, stack_info=True)
+                logger.error(f"Failed to get geninfo for {path}: {e}", stack_info=True)
+                res[path] = ""
         return res
 
 
@@ -919,6 +929,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         cursor: str
         folder_paths: List[str] = None
         size: Optional[int] = 200
+        random_sort: Optional[bool] = False
 
     @app.post(db_api_base + "/match_images_by_tags", dependencies=[Depends(verify_secret)])
     async def match_image_by_tags(req: MatchImagesByTagsReq):
@@ -933,7 +944,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             tag_dict={"and": req.and_tags, "or": req.or_tags, "not": req.not_tags},
             cursor=req.cursor,
             folder_paths=folder_paths,
-            limit=req.size
+            limit=req.size,
+            random_sort=req.random_sort
         )
         return {
             "files": filter_allowed_files([x.to_file_info() for x in imgs]),

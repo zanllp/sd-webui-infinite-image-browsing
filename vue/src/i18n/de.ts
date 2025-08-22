@@ -141,5 +141,7 @@ export const de: Partial<IIBI18nMap> = {
   randomImageSettingNotification: 'Tipp: Sie können in den globalen Einstellungen steuern, ob die Zufallsbild-Option auf der Startseite angezeigt wird',
   mediaType: 'Medientyp',
   all: 'Alle',
-  video: 'Video'
+  video: 'Video',
+  randomSort: 'Zufällig sortieren',
+  sortByDate: 'Nach Datum sortieren'
 }

@@ -9,7 +9,9 @@ from scripts.iib.tool import (
     is_dev,
     get_modified_date,
     is_image_file,
-    case_insensitive_get
+    case_insensitive_get,
+    get_img_geninfo_txt_path,
+    parse_generation_parameters
 )
 from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 from scripts.iib.logger import logger
@@ -19,6 +21,26 @@ from scripts.iib.plugin import plugin_inst_map
 # 定义一个函数来获取图片文件的EXIF数据
 def get_exif_data(file_path):
     if get_video_type(file_path):
+        # 对于视频文件，尝试读取对应的txt标签文件
+        txt_path = get_img_geninfo_txt_path(file_path)
+        if txt_path:
+            try:
+                with open(txt_path, 'r', encoding='utf-8') as f:
+                    content = f.read().strip()
+                    if content:
+                        # 复用现有解析逻辑，添加视频标识
+                        params = parse_generation_parameters(content + "\nSource Identifier: Video Tags")
+                        return ImageGenerationInfo(
+                            content,
+                            ImageGenerationParams(
+                                meta=params["meta"],
+                                pos_prompt=params["pos_prompt"],
+                                extra=params,
+                            ),
+                        )
+            except Exception as e:
+                if is_dev:
+                    logger.error("Failed to read video txt file %s: %s", txt_path, e)
         return ImageGenerationInfo()
     try:
         return parse_image_info(file_path)

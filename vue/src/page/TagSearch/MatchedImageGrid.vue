@@ -5,7 +5,7 @@ import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
 import { toRawFileUrl } from '@/util/file'
 import { getImagesByTags, type MatchImageByTagsReq } from '@/api/db'
-import { nextTick, watch } from 'vue'
+import { nextTick, watch, ref } from 'vue'
 import { copy2clipboardI18n } from '@/util'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
 import { LeftCircleOutlined, RightCircleOutlined } from '@/icon'
@@ -23,7 +23,13 @@ const props = defineProps<{
 }>()
 
 
-const iter = createImageSearchIter(cursor => getImagesByTags(props.selectedTagIds, cursor))
+// 添加随机排序状态
+const randomSort = ref(true)
+
+// 创建搜索迭代器，根据随机排序状态决定参数
+const iter = createImageSearchIter(cursor => {
+  return getImagesByTags({...props.selectedTagIds, random_sort: randomSort.value}, cursor)
+})
 const {
   queue,
   images,
@@ -65,6 +71,17 @@ watch(
     onScroll() // 重新获取
   },
   { immediate: true }
+)
+
+// 监听随机排序状态变化
+watch(
+  randomSort,
+  async () => {
+    await iter.reset()
+    await nextTick()
+    scroller.value?.scrollToItem(0)
+    onScroll() // 重新获取
+  }
 )
 
 
@@ -114,6 +131,9 @@ const onTiktokViewClick = () => {
         </ASkeleton>
       </AModal>
       <div class="action-bar">
+        <a-button @click="randomSort = !randomSort" :type="randomSort ? 'primary' : 'default'">
+          {{ randomSort ? '🎲 ' + $t('randomSort') : '📅 ' + $t('sortByDate') }}
+        </a-button>
         <a-button @click="onTiktokViewClick" type="primary" :disabled="!images?.length">{{ $t('tiktokView') }}</a-button>
         <a-button @click="saveLoadedFileAsJson">{{ $t('saveLoadedImageAsJson') }}</a-button>
         <a-button @click="saveAllFileAsJson">{{ $t('saveAllAsJson') }}</a-button>

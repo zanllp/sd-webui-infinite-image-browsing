@@ -43,6 +43,7 @@ export interface MatchImageByTagsReq {
   and_tags: TagId[]
   or_tags: TagId[]
   not_tags: TagId[]
+  random_sort?: boolean
 }
 
 export const getImagesByTags = async (req: MatchImageByTagsReq, cursor: string) => {
