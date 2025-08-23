@@ -335,5 +335,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   tagOperationFailed: '標籤操作失敗',
   mediaType: '媒體類型',
   all: '全部',
-  video: '視頻'
+  video: '視頻',
+  randomSort: '隨機排序',
+  sortByDate: '按日期排序'
 }

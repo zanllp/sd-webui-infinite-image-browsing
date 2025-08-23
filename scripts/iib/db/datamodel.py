@@ -533,6 +533,7 @@ class ImageTag:
         limit: int = 500,
         cursor="",
         folder_paths: List[str] = None,
+        random_sort: bool = False,
     ) -> tuple[List[Image], Cursor]:
         query = """
             SELECT image.id, image.path, image.size,image.date
@@ -583,7 +584,7 @@ class ImageTag:
                 print(folder_path)
             where_clauses.append("(" + " OR ".join(folder_clauses) + ")")
 
-        if cursor:
+        if cursor and not random_sort:
             where_clauses.append("(image.date < ?)")
             params.append(cursor)
         if where_clauses:
@@ -593,7 +594,17 @@ class ImageTag:
             query += " HAVING COUNT(DISTINCT tag_id) = ?"
             params.append(len(tag_dict["and"]))
 
-        query += " ORDER BY date DESC LIMIT ?"
+        if random_sort:
+            query += " ORDER BY RANDOM() LIMIT ?"
+            # For random sort, use offset-based pagination
+            if cursor:
+                try:
+                    offset = int(cursor)
+                    query = query.replace("LIMIT ?", f"LIMIT ? OFFSET {offset}")
+                except (ValueError, TypeError):
+                    pass  # Invalid cursor, start from beginning
+        else:
+            query += " ORDER BY date DESC LIMIT ?"
         params.append(limit)
         api_cur = Cursor()
         with closing(conn.cursor()) as cur:
@@ -610,7 +621,13 @@ class ImageTag:
             Image.safe_batch_remove(conn, deleted_ids)
             api_cur.has_next = len(rows) >= limit
             if images:
-                api_cur.next = str(images[-1].date)
+                if random_sort:
+                    # For random sort, use offset-based cursor
+                    current_offset = int(cursor) if cursor else 0
+                    api_cur.next = str(current_offset + len(images))
+                else:
+                    # For date sort, use date-based cursor
+                    api_cur.next = str(images[-1].date)
             return images, api_cur
 
     @classmethod

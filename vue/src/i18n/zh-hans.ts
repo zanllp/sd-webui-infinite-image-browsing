@@ -330,5 +330,7 @@ export const zhHans = {
   tagOperationFailed: '标签操作失败',
   mediaType: '媒体类型',
   all: '全部',
-  video: '视频'
+  video: '视频',
+  randomSort: '随机排序',
+  sortByDate: '按日期排序'
 }
