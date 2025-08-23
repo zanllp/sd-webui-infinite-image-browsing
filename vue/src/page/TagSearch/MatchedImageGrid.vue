@@ -24,7 +24,7 @@ const props = defineProps<{
 
 
 // 添加随机排序状态
-const randomSort = ref(true)
+const randomSort = ref(false)
 
 // 创建搜索迭代器，根据随机排序状态决定参数
 const iter = createImageSearchIter(cursor => {
@@ -131,10 +131,8 @@ const onTiktokViewClick = () => {
         </ASkeleton>
       </AModal>
       <div class="action-bar">
-        <a-button @click="randomSort = !randomSort" :type="randomSort ? 'primary' : 'default'">
-          {{ randomSort ? '🎲 ' + $t('randomSort') : '📅 ' + $t('sortByDate') }}
-        </a-button>
-        <a-button @click="onTiktokViewClick" type="primary" :disabled="!images?.length">{{ $t('tiktokView') }}</a-button>
+        <a-switch v-model:checked="randomSort" :checked-children="$t('randomSort')" :un-checked-children="$t('sortByDate')" />
+        <a-button @click="onTiktokViewClick" :disabled="!images?.length">{{ $t('tiktokView') }}</a-button>
         <a-button @click="saveLoadedFileAsJson">{{ $t('saveLoadedImageAsJson') }}</a-button>
         <a-button @click="saveAllFileAsJson">{{ $t('saveAllAsJson') }}</a-button>
 
