@@ -104,6 +104,13 @@ const disableMaximize = useLocalStorage(prefix+'disable_maximize', false)
     <a-form>
       <h2 style="margin-top: 0;">{{ t('ImageBrowsingSettings') }}</h2>
       <ImageSetting />
+
+      <h2>TikTok {{ t('view') }}</h2>
+      <a-form-item :label="$t('showTiktokNavigator')">
+        <a-switch v-model:checked="globalStore.showTiktokNavigator" />
+        <span style="margin-left: 8px;color: #666;">{{ t('showTiktokNavigatorDesc') }}</span>
+      </a-form-item>
+
       <h2>{{ t('imgSearch') }}</h2>
       <a-form-item :label="$t('rebuildImageIndex')">
         <AButton @click="openRebuildImageIndexModal">{{ $t('start') }}</AButton>
