@@ -18,6 +18,8 @@ export const en: IIBI18nMap = {
   pinnedSearchHistoryDesc: 'You can quickly restore to the previous search state by clicking the pinned search history.',
   addNewCustomTag: 'Add New Custom Tag',
   clearCacheIfNotTakeEffect: 'If the changes do not take effect, try clearing the page cache',
+  showTiktokNavigator: 'Show Navigation Buttons',
+  showTiktokNavigatorDesc: 'Show the navigation buttons (up/down arrows) in TikTok view',
   success: 'Success',
   setCurrFrameAsVideoPoster: 'Set Current Frame as Video Cover',
   sync: 'Sync',

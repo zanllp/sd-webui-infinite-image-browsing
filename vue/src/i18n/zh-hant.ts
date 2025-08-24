@@ -18,6 +18,8 @@ export const zhHant: Partial<IIBI18nMap> = {
   conflictWithOtherShortcuts: '與其他快速鍵衝突',
   pinnedSearchHistoryDesc: '你可以通過點擊置頂的搜索歷史來快速還原到之前的搜索狀態。',
   addNewCustomTag: '添加新的自定義標籤',
+  showTiktokNavigator: '顯示導航按鈕',
+  showTiktokNavigatorDesc: '在 TikTok 視圖中顯示導航按鈕（上/下箭頭）',
   clearCacheIfNotTakeEffect:  '如果更改沒有生效，請嘗試清理頁面緩存',
   success: '成功',
   setCurrFrameAsVideoPoster: '設置當前幀為視頻封面',

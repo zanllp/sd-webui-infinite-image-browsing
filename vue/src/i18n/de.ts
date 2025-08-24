@@ -18,6 +18,8 @@ export const de: Partial<IIBI18nMap> = {
   exactMatch: 'Exakte Übereinstimmung',
   anyMatch: 'Beliebige Übereinstimmung',
   exclude: 'Ausschliessen',
+  showTiktokNavigator: 'Navigationsschaltflächen anzeigen',
+  showTiktokNavigatorDesc: 'Zeigen Sie die Navigationstasten (Pfeile nach oben/unten) in der TikTok-Ansicht an',
   'auto.refreshed': 'Automatische Aktualisierung erfolgreich durchgeführt!',
   copied: 'In die Zwischenablage kopiert!',
   'index.expired': 'Index abgelaufen, automatische Aktualisierung wird durchgeführt',
