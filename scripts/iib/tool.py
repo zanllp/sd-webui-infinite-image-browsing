@@ -212,7 +212,7 @@ def is_video_simple(filepath):
         return isinstance(get_video_type(filepath), str)
 
 def get_video_type(file_path):
-    video_extensions = ['.mp4', '.m4v', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.ts']
+    video_extensions = ['.mp4', '.m4v', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.ts', '.webm']
     file_extension = file_path[file_path.rfind('.'):].lower()
 
     if file_extension in video_extensions:
