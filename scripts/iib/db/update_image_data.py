@@ -17,6 +17,7 @@ from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 from scripts.iib.logger import logger
 from scripts.iib.parsers.index import parse_image_info
 from scripts.iib.plugin import plugin_inst_map
+from scripts.iib.auto_tag import AutoTagMatcher
 
 # 定义一个函数来获取图片文件的EXIF数据
 def get_exif_data(file_path):
@@ -68,6 +69,59 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
         if not Folder.check_need_update(conn, folder_path):
             return
         print(f"Processing folder: {folder_path}")
+from scripts.iib.auto_tag import AutoTagMatcher
+
+# 定义一个函数来获取图片文件的EXIF数据
+def get_exif_data(file_path):
+    if get_video_type(file_path):
+        # 对于视频文件，尝试读取对应的txt标签文件
+        txt_path = get_img_geninfo_txt_path(file_path)
+        if txt_path:
+            try:
+                with open(txt_path, 'r', encoding='utf-8') as f:
+                    content = f.read().strip()
+                    if content:
+                        # 复用现有解析逻辑，添加视频标识
+                        params = parse_generation_parameters(content + "\nSource Identifier: Video Tags")
+                        return ImageGenerationInfo(
+                            content,
+                            ImageGenerationParams(
+                                meta=params["meta"],
+                                pos_prompt=params["pos_prompt"],
+                                extra=params,
+                            ),
+                        )
+            except Exception as e:
+                if is_dev:
+                    logger.error("Failed to read video txt file %s: %s", txt_path, e)
+        return ImageGenerationInfo()
+    try:
+        return parse_image_info(file_path)
+    except Exception as e:
+        if is_dev:
+            logger.error("get_exif_data %s", e)
+    return ImageGenerationInfo()
+
+
+def update_image_data(search_dirs: List[str], is_rebuild = False):
+    conn = DataBase.get_conn()
+    tag_incr_count_rec: Dict[int, int] = {}
+    auto_tag_matcher = AutoTagMatcher(conn)
+
+    if is_rebuild:
+        Folder.remove_all(conn)
+
+    def safe_save_img_tag(img_tag: ImageTag):
+        tag_incr_count_rec[img_tag.tag_id] = (
+            tag_incr_count_rec.get(img_tag.tag_id, 0) + 1
+        )
+        img_tag.save_or_ignore(conn)  # 原先用来处理一些意外，但是写的正确完全没问题,去掉了try catch
+
+    # 递归处理每个文件夹
+    def process_folder(folder_path: str):
+        if not Folder.check_need_update(conn, folder_path):
+            return
+        print(f"Processing folder: {folder_path}")
         for filename in os.listdir(folder_path):
             file_path = os.path.normpath(os.path.join(folder_path, filename))
             try:
@@ -75,7 +129,7 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
                 if os.path.isdir(file_path):
                     process_folder(file_path)
                 elif is_valid_media_path(file_path):
-                    build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag)
+                    build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag, auto_tag_matcher)
                 # neg暂时跳过感觉个没人会搜索这个
             except Exception as e:
                 logger.error("Tag generation failed. Skipping this file. file:%s error: %s", file_path, e)
@@ -95,6 +149,7 @@ def update_image_data(search_dirs: List[str], is_rebuild = False):
 def add_image_data_single(file_path):
     conn = DataBase.get_conn()
     tag_incr_count_rec: Dict[int, int] = {}
+    auto_tag_matcher = AutoTagMatcher(conn)
 
     def safe_save_img_tag(img_tag: ImageTag):
         tag_incr_count_rec[img_tag.tag_id] = (
@@ -106,7 +161,7 @@ def add_image_data_single(file_path):
     try:
         if not is_valid_media_path(file_path):
             return
-        build_single_img_idx(conn, file_path, False, safe_save_img_tag)
+        build_single_img_idx(conn, file_path, False, safe_save_img_tag, auto_tag_matcher)
         # neg暂时跳过感觉个没人会搜索这个
     except Exception as e:
         logger.error("Tag generation failed. Skipping this file. file:%s error: %s", file_path, e)
@@ -142,7 +197,7 @@ def get_extra_meta_keys_from_plugins(source_identifier: str):
         logger.error("get_extra_meta_keys_from_plugins %s", e)
     return []
 
-def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
+def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag, auto_tag_matcher=None):
     img = DbImg.get(conn, file_path)
     parsed_params = None
     if is_rebuild:
@@ -223,3 +278,6 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
     for k in pos:
         tag = Tag.get_or_create(conn, k, "pos")
         safe_save_img_tag(ImageTag(img.id, tag.id))
+    
+    if auto_tag_matcher:
+        auto_tag_matcher.apply(img.id, parsed_params)

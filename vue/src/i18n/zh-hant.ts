@@ -20,7 +20,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   addNewCustomTag: '添加新的自定義標籤',
   showTiktokNavigator: '顯示導航按鈕',
   showTiktokNavigatorDesc: '在 TikTok 視圖中顯示導航按鈕（上/下箭頭）',
-  clearCacheIfNotTakeEffect:  '如果更改沒有生效，請嘗試清理頁面緩存',
+  clearCacheIfNotTakeEffect: '如果更改沒有生效，請嘗試清理頁面緩存',
   success: '成功',
   setCurrFrameAsVideoPoster: '設置當前幀為視頻封面',
   sync: '同步',
@@ -62,7 +62,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   moveSuccess: '移動成功',
   copySuccess: '複製成功',
   copyFilePath: '複製文件路徑',
-  
+
   previewMaskBackgroundOpacity: '預覽遮罩背景透明度',
   experimentalLRLayout: '並列布局',
   width: '寬度',
@@ -162,7 +162,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   restoreLastRecord: '還原上次記錄',
   launch: '啟動',
   walkMode: '使用 Walk 模式瀏覽圖片',
-  
+
   launchFromNormalAndFixed: '使用 Normal / Fixed 模式瀏覽圖片',
   recent: '最近',
   emptyStartPage: '空啟動頁',
@@ -315,7 +315,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   magicSwitchEnabled: '🎬 開啟 - 點擊媒體文件直接進入 TikTok 觀看',
   magicSwitchDisabled: '📁 關閉 - 點擊媒體文件正常打開',
   magicSwitchDetailDesc: '點擊圖片和視頻文件時直接進入 TikTok 式瀏覽體驗',
-  
+
   // 自動輪播相關
   autoPlay: '自動輪播',
   autoPlayOff: '關閉',
@@ -324,7 +324,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   autoPlay20s: '20秒',
   autoPlayTooltip: '自動輪播: {mode} (A鍵切換)',
   autoPlayStatus: '自動輪播：{mode}',
-  
+
   // TikTok 查看器控制
   exitFullscreen: '退出全螢幕',
   fullscreen: '全螢幕',
@@ -339,5 +339,28 @@ export const zhHant: Partial<IIBI18nMap> = {
   all: '全部',
   video: '視頻',
   randomSort: '隨機排序',
-  sortByDate: '按日期排序'
+  sortByDate: '按日期排序',
+  'autoTag.name': '自動標籤 (Auto Tagging)',
+  'autoTag.addRule': '添加規則',
+  'autoTag.saveConfig': '保存配置',
+  'autoTag.tagName': '標籤名稱',
+  'autoTag.inputTagName': '輸入標籤名稱',
+  'autoTag.field': '欄位',
+  'autoTag.operator': '運算符',
+  'autoTag.value': '值',
+  'autoTag.addFilter': '添加條件',
+  'autoTag.noRules': '暫無規則，點擊上方按鈕添加',
+  'autoTag.saveSuccess': '保存成功',
+  'autoTag.saveFail': '保存失敗',
+  'autoTag.fields.posPrompt': '正向提示詞 (Pos Prompt)',
+  'autoTag.fields.negPrompt': '負向提示詞 (Neg Prompt)',
+  'autoTag.fields.model': '模型 (Model)',
+  'autoTag.fields.sampler': '採樣器 (Sampler)',
+  'autoTag.fields.size': '尺寸 (Size)',
+  'autoTag.fields.cfgScale': 'CFG Scale',
+  'autoTag.fields.steps': 'Steps',
+  'autoTag.fields.seed': 'Seed',
+  'autoTag.operators.contains': '包含 (Contains)',
+  'autoTag.operators.equals': '等於 (Equals)',
+  'autoTag.operators.regex': '正則 (Regex)'
 }
