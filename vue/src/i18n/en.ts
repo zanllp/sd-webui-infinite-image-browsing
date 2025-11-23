@@ -14,7 +14,7 @@ export const en: IIBI18nMap = {
   compressFile: 'Compress File',
   packOnlyNotDownload: 'Pack Only, Not Download',
   notAllowSingleCtrlOrShiftAsShortcut: '不允許使用單獨的 Ctrl 或者 Shift 作為快速鍵',
-  conflictWithOtherShortcuts:  'Conflict with other shortcuts',
+  conflictWithOtherShortcuts: 'Conflict with other shortcuts',
   pinnedSearchHistoryDesc: 'You can quickly restore to the previous search state by clicking the pinned search history.',
   addNewCustomTag: 'Add New Custom Tag',
   clearCacheIfNotTakeEffect: 'If the changes do not take effect, try clearing the page cache',
@@ -36,7 +36,7 @@ export const en: IIBI18nMap = {
   pollInterval: 'Poll Interval',
   pollRefresh: 'Polling refresh',
   pollRefreshTip: 'By default, IIB will automatically refresh when you return to IIB from other tabs or when the visibility of IIB changes. This feature is designed to keep IIB refreshed even when you stay in IIB all the time, please use it with caution',
-  
+
   stopPollRefresh: 'Stop Polling refresh',
   restoreLastWorkspaceStateSuccess: 'Restore Last Workspace State Success',
   restoreWorkspaceSnapshotSuccess: 'Restore Workspace Snapshot Success',
@@ -62,7 +62,7 @@ You can specify which snapshot to restore to when starting IIB in the global set
   moveSuccess: 'Move success',
   copySuccess: 'Copy success',
   copyFilePath: 'Copy file path',
-  
+
   previewMaskBackgroundOpacity: 'Preview Mask Background Opacity',
   experimentalLRLayout: 'Side-by-Side Layout',
   width: 'Width',
@@ -73,7 +73,7 @@ You can specify which snapshot to restore to when starting IIB in the global set
   unpin: 'Unpin',
   restore: 'Restore',
   restoreFromHistory: 'Restore from History',
-  history: 'History', 
+  history: 'History',
   historyRecordsSubstr: 'Input Value',
   historyRecordsisRegex: 'Is Regex',
   walkModeDoc: 'Browse all files in a specified folder without paging, using infinite scrolling to display them. DFS will be used to traverse all files. Note: Sorting is only performed within the same layer in this mode.',
@@ -331,7 +331,7 @@ You can specify which snapshot to restore to when starting IIB in the global set
   magicSwitchEnabled: '🎬 ON - Click media files to enter TikTok View',
   magicSwitchDisabled: '📁 OFF - Click media files to open normally',
   magicSwitchDetailDesc: 'Click images and videos to directly enter TikTok-style browsing experience',
-  
+
   // Auto play related
   autoPlay: 'Auto Play',
   autoPlayOff: 'Off',
@@ -340,7 +340,7 @@ You can specify which snapshot to restore to when starting IIB in the global set
   autoPlay20s: '20s',
   autoPlayTooltip: 'Auto Play: {mode} (A to toggle)',
   autoPlayStatus: 'Auto Play: {mode}',
-  
+
   // TikTok viewer controls
   exitFullscreen: 'Exit Fullscreen',
   fullscreen: 'Fullscreen',
@@ -351,9 +351,34 @@ You can specify which snapshot to restore to when starting IIB in the global set
   tags: 'Tags',
   tag: 'Tag',
   tagOperationFailed: 'Tag operation failed',
+
   mediaType: 'Media Type',
   all: 'All',
   video: 'Video',
   randomSort: 'Random Sort',
-  sortByDate: 'Sort by Date'
+  sortByDate: 'Sort by Date',
+
+  'autoTag.name': 'Auto Tagging',
+  'autoTag.addRule': 'Add Rule',
+  'autoTag.saveConfig': 'Save Config',
+  'autoTag.tagName': 'Tag Name',
+  'autoTag.inputTagName': 'Enter tag name',
+  'autoTag.field': 'Field',
+  'autoTag.operator': 'Operator',
+  'autoTag.value': 'Value',
+  'autoTag.addFilter': 'Add Filter',
+  'autoTag.noRules': 'No rules, click button above to add',
+  'autoTag.saveSuccess': 'Saved successfully',
+  'autoTag.saveFail': 'Save failed',
+  'autoTag.fields.posPrompt': 'Pos Prompt',
+  'autoTag.fields.negPrompt': 'Neg Prompt',
+  'autoTag.fields.model': 'Model',
+  'autoTag.fields.sampler': 'Sampler',
+  'autoTag.fields.size': 'Size',
+  'autoTag.fields.cfgScale': 'CFG Scale',
+  'autoTag.fields.steps': 'Steps',
+  'autoTag.fields.seed': 'Seed',
+  'autoTag.operators.contains': 'Contains',
+  'autoTag.operators.equals': 'Equals',
+  'autoTag.operators.regex': 'Regex'
 }
