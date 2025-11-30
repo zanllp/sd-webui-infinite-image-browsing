@@ -11,7 +11,7 @@ export const zhHans = {
   disableMaximize: '禁用最大化',
   compressFile: '对文件压缩',
   packOnlyNotDownload: '仅打包不下载',
-  notAllowSingleCtrlOrShiftAsShortcut:  '不允许使用单独的 Ctrl 或者 Shift 作为快捷键',
+  notAllowSingleCtrlOrShiftAsShortcut: '不允许使用单独的 Ctrl 或者 Shift 作为快捷键',
   conflictWithOtherShortcuts: '与其他快捷键冲突',
   pinnedSearchHistoryDesc: '你可以通过点击置顶的搜索历史来快速还原到之前的搜索状态',
   addNewCustomTag: '添加新的自定义标签',
@@ -37,7 +37,7 @@ export const zhHans = {
   pollRefreshTip: '默认情况下你从其他TAB返回IIB时或者IIB的可见性发生改变时IIB都会自动刷新。这个功能是为了让你一直呆在IIB内时他也能自动刷新，请慎重使用',
   restoreLastWorkspaceStateSuccess: '成功恢复上次工作区状态',
   restoreWorkspaceSnapshotSuccess: '成功恢复工作区快照',
-  openOnAppStart: '启动时打开', 
+  openOnAppStart: '启动时打开',
   confirmThisAction: '确认这个操作？',
   saveWorkspaceSnapshot: '保存工作区快照',
   WorkspaceSnapshot: '工作区快照',
@@ -66,7 +66,7 @@ export const zhHans = {
   alwaysOn: '常驻',
   time: '时间',
   pin: '置顶',
-  unpin: '取消置顶',  
+  unpin: '取消置顶',
   restore: '还原',
   restoreFromHistory: '从历史记录中恢复',
   history: '历史记录',
@@ -310,7 +310,7 @@ export const zhHans = {
   magicSwitchEnabled: '🎬 开启 - 点击媒体文件直接进入 TikTok 观看',
   magicSwitchDisabled: '📁 关闭 - 点击媒体文件正常打开',
   magicSwitchDetailDesc: '点击图片和视频文件时直接进入 TikTok 式浏览体验',
-  
+
   // 自动轮播相关
   autoPlay: '自动轮播',
   autoPlayOff: '关闭',
@@ -319,7 +319,7 @@ export const zhHans = {
   autoPlay20s: '20秒',
   autoPlayTooltip: '自动轮播: {mode} (A键切换)',
   autoPlayStatus: '自动轮播：{mode}',
-  
+
   // TikTok 查看器控制
   exitFullscreen: '退出全屏',
   fullscreen: '全屏',
@@ -330,9 +330,34 @@ export const zhHans = {
   tags: '标签',
   tag: '标签',
   tagOperationFailed: '标签操作失败',
+
   mediaType: '媒体类型',
   all: '全部',
   video: '视频',
   randomSort: '随机排序',
-  sortByDate: '按日期排序'
+  sortByDate: '按日期排序',
+  'autoTag.name': '自动标签 (Auto Tagging)',
+  'autoTag.description': '这些规则会在图像被索引时自动应用,为符合条件的图像添加标签（触发时机：在搜索页更新索引或重新构建索引时）。注意：同一规则内的多个条件是AND(且)关系,需全部满足才会应用标签',
+  'autoTag.addRule': '添加规则',
+  'autoTag.saveConfig': '保存配置',
+  'autoTag.tagName': '标签名称',
+  'autoTag.inputTagName': '选择自定义标签',
+  'autoTag.field': '字段',
+  'autoTag.operator': '操作符',
+  'autoTag.value': '值',
+  'autoTag.addFilter': '添加条件',
+  'autoTag.noRules': '暂无规则，点击上方按钮添加',
+  'autoTag.saveSuccess': '保存成功',
+  'autoTag.saveFail': '保存失败',
+  'autoTag.fields.posPrompt': '正向提示词 (Pos Prompt)',
+  'autoTag.fields.negPrompt': '负向提示词 (Neg Prompt)',
+  'autoTag.fields.model': '模型 (Model)',
+  'autoTag.fields.sampler': '采样器 (Sampler)',
+  'autoTag.fields.size': '尺寸 (Size)',
+  'autoTag.fields.cfgScale': 'CFG Scale',
+  'autoTag.fields.steps': 'Steps',
+  'autoTag.fields.seed': 'Seed',
+  'autoTag.operators.contains': '包含 (Contains)',
+  'autoTag.operators.equals': '等于 (Equals)',
+  'autoTag.operators.regex': '正则 (Regex)'
 }

@@ -908,7 +908,7 @@ class DirCoverCache:
         else:
             return []
         
-
+# Global settings storage, also use as key-value store
 class GlobalSetting:
     @classmethod
     def create_table(cls, conn):

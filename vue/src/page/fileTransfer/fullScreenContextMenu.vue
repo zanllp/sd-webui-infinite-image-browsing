@@ -139,10 +139,34 @@ function getParNode (p: any) {
   return p.parentNode as HTMLDivElement
 }
 
+function isTagStylePrompt(text: string): boolean {
+  if (!text) return false
+  // 判断是否为tag形式：包含多个逗号分隔的短词，且有下划线连接词
+  const commaCount = (text.match(/,/g) || []).length
+  const hasUnderscores = /_/.test(text)
+  const avgWordLength = text.replace(/[,\s]+/g, ' ').split(' ').filter(v => v).reduce((sum, word) => sum + word.length, 0) / Math.max(1, text.split(/[,\s]+/).filter(v => v).length)
+  
+  // 如果有较多逗号、包含下划线、且平均词长较短，判定为tag形式
+  return commaCount > 3 && hasUnderscores && avgWordLength < 20
+}
+
 function spanWrap (text: string) {
   if (!text) {
     return ''
   }
+  
+  // 判断是否为tag形式
+  if (!isTagStylePrompt(text)) {
+    // 自然语言形式：直接显示，保留段落结构
+    return text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line)
+      .map(line => `<p class="natural-text">${line}</p>`)
+      .join('')
+  }
+  
+  // Tag形式：使用原有的标签样式
   const frags = [] as string[]
   const specBreakTag = 'BREAK'
   const values = text.replace(/&gt;\s/g, '> ,').replace(/\sBREAK\s/g, ',' + specBreakTag + ',').split(/[\n,]+/).map(v => v.trim()).filter(v => v)
@@ -517,6 +541,13 @@ const onTiktokViewClick = () => {
       line-height: 1.78em;
 
       :deep() {
+        .natural-text {
+          margin: 0.5em 0;
+          line-height: 1.6em;
+          text-align: justify;
+          color: var(--zp-primary);
+        }
+
         .short-tag {
           word-break: break-all;
           white-space: nowrap;

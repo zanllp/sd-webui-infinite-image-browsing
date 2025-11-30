@@ -17,6 +17,7 @@ from scripts.iib.parsers.model import ImageGenerationInfo, ImageGenerationParams
 from scripts.iib.logger import logger
 from scripts.iib.parsers.index import parse_image_info
 from scripts.iib.plugin import plugin_inst_map
+from scripts.iib.auto_tag import AutoTagMatcher
 
 # 定义一个函数来获取图片文件的EXIF数据
 def get_exif_data(file_path):
@@ -223,3 +224,5 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
     for k in pos:
         tag = Tag.get_or_create(conn, k, "pos")
         safe_save_img_tag(ImageTag(img.id, tag.id))
+    
+    AutoTagMatcher.get_instance(conn).apply(img.id, parsed_params)

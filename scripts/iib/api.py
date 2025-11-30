@@ -313,6 +313,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def app_fe_setting(req: AppFeSettingReq):
         conn = DataBase.get_conn()
         GlobalSetting.save_setting(conn, req.name, req.value)
+        # 如果更新的是自动标签规则，重新加载
+        if req.name == "auto_tag_rules":
+            from scripts.iib.auto_tag import AutoTagMatcher
+            AutoTagMatcher.reload_rules(conn)
 
     class AppFeSettingDelReq(BaseModel):
         name: str
