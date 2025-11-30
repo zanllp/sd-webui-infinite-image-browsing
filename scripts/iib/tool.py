@@ -460,11 +460,20 @@ def get_comfyui_exif_data(img: Image):
     meta["Model"] = data[KSampler_entry["model"][0]]["inputs"].get("ckpt_name")
     meta["Source Identifier"] = "ComfyUI"
     def get_text_from_clip(idx: str) :
-        inputs = data[idx]["inputs"]
-        text = inputs["text"] if "text" in inputs else inputs["t5xxl"]
-        if isinstance(text, list): # type:CLIPTextEncode (NSP) mode:Wildcards
-            text = data[text[0]]["inputs"]["text"]
-        return text.strip()
+        try:
+            inputs = data[idx]["inputs"]
+            if "text" in inputs:
+                text = inputs["text"]
+            elif "t5xxl" in inputs:
+                text = inputs["t5xxl"]
+            else:
+                return ""
+            if isinstance(text, list): # type:CLIPTextEncode (NSP) mode:Wildcards
+                text = data[text[0]]["inputs"]["text"]
+            return text.strip()
+        except Exception as e:
+            print(e)
+            return ""   
     
     in_node = data[str(KSampler_entry["positive"][0])]
     if in_node["class_type"] != "FluxGuidance":

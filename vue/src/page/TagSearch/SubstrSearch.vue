@@ -6,7 +6,7 @@ import '@zanllp/vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { RecycleScroller } from '@zanllp/vue-virtual-scroller'
 import { toRawFileUrl } from '@/util/file'
 import { getDbBasicInfo, getExpiredDirs, getImagesBySubstr, updateImageData, type DataBaseBasicInfo, SearchBySubstrReq } from '@/api/db'
-import { copy2clipboardI18n, makeAsyncFunctionSingle, useGlobalEventListen } from '@/util'
+import { copy2clipboardI18n,  makeAsyncFunctionSingle, useGlobalEventListen } from '@/util'
 import fullScreenContextMenu from '@/page/fileTransfer/fullScreenContextMenu.vue'
 import { LeftCircleOutlined, RightCircleOutlined, regex, AimOutlined } from '@/icon'
 import { message } from 'ant-design-vue'
@@ -18,7 +18,8 @@ import { useGlobalStore } from '@/store/useGlobalStore'
 import HistoryRecord from '@/components/HistoryRecord.vue'
 import { fuzzySearchHistory, FuzzySearchHistoryRecord } from '@/store/searchHistory'
 import { openTiktokViewWithFiles } from '@/util/tiktokHelper'
-
+import { useTagStore } from '@/store/useTagStore'
+const tagStore = useTagStore()
 const props = defineProps<{ tabIdx: number; paneIdx: number, searchScope?: string }>()
 const isRegex = ref(false)
 const substr = ref('')
@@ -99,6 +100,7 @@ const onUpdateBtnClick = makeAsyncFunctionSingle(
     queue.pushAction(async () => {
       await updateImageData()
       info.value = await getDbBasicInfo()
+      tagStore.tagMap.clear()
       return info.value
     }).res
 )

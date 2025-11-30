@@ -39,7 +39,7 @@ const addInterceptor = (axiosInst: AxiosInstance) => {
                   'onUpdate:value': (v: string) => (key.value = v)
                 })
               },
-              onOk() {
+              onOk () {
                 resolve(key.value)
               }
             })
@@ -51,13 +51,13 @@ const addInterceptor = (axiosInst: AxiosInstance) => {
           await delay(100)
           location.reload()
         }
-      
+
         switch (err.response?.data?.detail?.type) {
           case 'secret_key_required':
             Modal.error({
               width: '60vw',
               title: t('secretKeyMustBeConfigured'),
-              content: () => h('p', { style: 'white-space: pre-line;' } , t('secretKeyRequiredWarnMsg'))
+              content: () => h('p', { style: 'white-space: pre-line;' }, t('secretKeyRequiredWarnMsg'))
             })
             throw new Error(t('secretKeyRequiredWarnMsg'))
         }
@@ -67,9 +67,9 @@ const addInterceptor = (axiosInst: AxiosInstance) => {
             errmsg = JSON.parse(await err.response?.data.text()).detail
           }
         } catch (e) {
-          console.error(err.response ,e)
+          console.error(err.response, e)
         }
-        errmsg ??=  t('errorOccurred')
+        errmsg ??= t('errorOccurred')
         message.error(errmsg)
         throw new Error(errmsg)
       }
@@ -101,7 +101,7 @@ export interface GlobalConf {
   enable_access_control: boolean
   launch_mode: 'server' | 'sd'
   export_fe_fn: boolean
-  app_fe_setting: Record<'global'|'fullscreen_layout'| `workspace_snapshot_${string}`, any> 
+  app_fe_setting: Record<'global' | 'fullscreen_layout' | 'auto_tag_rules' | `workspace_snapshot_${string}`, any>
   is_readonly: boolean
 }
 
@@ -167,15 +167,15 @@ export const batchGetDirTop4MediaInfo = async (paths: string[]) => {
 }
 
 export const setAppFeSetting = async (name: keyof GlobalConf['app_fe_setting'], setting: Record<string, any>) => {
-  if (!isSync()) return 
+  if (!isSync()) return
   await axiosInst.value.post('/app_fe_setting', { name, value: JSON.stringify(setting) })
 }
 
 export const removeAppFeSetting = async (name: keyof GlobalConf['app_fe_setting']) => {
-  if (!isSync()) return 
+  if (!isSync()) return
   await axiosInst.value.delete('/app_fe_setting', { data: { name } })
 }
 
-export const setTargetFrameAsCover = async (body: {path: string, base64_img: string, updated_time: string}) => {
+export const setTargetFrameAsCover = async (body: { path: string, base64_img: string, updated_time: string }) => {
   await axiosInst.value.post('/set_target_frame_as_video_cover', body)
 }

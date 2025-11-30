@@ -11,6 +11,7 @@ import { fs, invoke } from '@tauri-apps/api'
 import { getShortcutStrFromEvent } from '@/util/shortcut'
 import { isTauri } from '@/util/env'
 import ImageSetting from './ImageSetting.vue'
+import AutoTagSettings from './AutoTagSettings.vue'
 import { openRebuildImageIndexModal } from '@/components/functionalCallableComp'
 import { Dict } from '@/util'
 import { message } from 'ant-design-vue'
@@ -102,8 +103,19 @@ const disableMaximize = useLocalStorage(prefix+'disable_maximize', false)
     <a-select v-if="false" />
 
     <a-form>
-      <h2 style="margin-top: 0;">{{ t('ImageBrowsingSettings') }}</h2>
+      <a-form-item :label="$t('lang')">
+        <div class="lang-select-wrap">
+          <SearchSelect :options="langs" v-model:value="globalStore.lang" @change="langChanged = true" />
+        </div>
+        <a-button type="primary" @click="reload" v-if="langChanged" ghost>{{
+          t('langChangeReload')
+          }}</a-button>
+      </a-form-item>
+      <h2 style="margin-top: 64px;">{{ t('ImageBrowsingSettings') }}</h2>
       <ImageSetting />
+      
+      <h2 style="margin-top: 64px;">{{ t('autoTag.name') }}</h2>
+      <AutoTagSettings />
 
       <h2>TikTok {{ t('view') }}</h2>
       <a-form-item :label="$t('showTiktokNavigator')">
@@ -126,15 +138,8 @@ const disableMaximize = useLocalStorage(prefix+'disable_maximize', false)
       <a-form-item :label="t('autoRefreshWalkModePosLimit')">
         <NumInput :min="0" :max="1024" :step="16" v-model="globalStore.autoRefreshWalkModePosLimit" />
       </a-form-item>
-      <h2>{{ t('other') }}</h2>
-      <a-form-item :label="$t('lang')">
-        <div class="lang-select-wrap">
-          <SearchSelect :options="langs" v-model:value="globalStore.lang" @change="langChanged = true" />
-        </div>
-        <a-button type="primary" @click="reload" v-if="langChanged" ghost>{{
-          t('langChangeReload')
-          }}</a-button>
-      </a-form-item>
+
+      <h2 style="margin-top: 0;">{{ t('other') }}</h2>
       <a-form-item :label="$t('onlyFoldersAndImages')">
         <a-switch v-model:checked="globalStore.onlyFoldersAndImages" />
       </a-form-item>
