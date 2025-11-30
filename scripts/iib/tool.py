@@ -406,7 +406,7 @@ def get_img_geninfo_txt_path(path: str):
 
 def is_img_created_by_comfyui(img: Image):
     if img.format == "PNG":
-        prompt = img.info.get('prompt')
+        prompt = img.info.get('prompt') or img.info.get('parameters')
         return prompt and (img.info.get('workflow') or ("class_type" in prompt)) # ermanitu
     elif img.format == "WEBP":
         exif = img.info.get("exif")
