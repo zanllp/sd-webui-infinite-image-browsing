@@ -1100,6 +1100,7 @@ watch(() => autoPlayMode.value, () => {
 .media-content {
   width: 100%;
   height: calc(100% - 32px);
+  margin-bottom: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1261,7 +1262,7 @@ watch(() => autoPlayMode.value, () => {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 0 20px 60px 20px;
+  padding: 0 20px 20px 20px;
 }
 
 .filename-display {
