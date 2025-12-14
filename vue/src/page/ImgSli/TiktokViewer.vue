@@ -3,8 +3,8 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useTiktokStore, type TiktokMediaItem } from '@/store/useTiktokStore'
 import { useTagStore } from '@/store/useTagStore'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { useLocalStorage } from '@vueuse/core'
-import { isVideoFile } from '@/util'
+import { useLocalStorage, onLongPress } from '@vueuse/core'
+import { isVideoFile, isAudioFile } from '@/util'
 import { openAddNewTagModal } from '@/components/functionalCallableComp'
 import { toggleCustomTagToImg } from '@/api/db'
 import { message } from 'ant-design-vue'
@@ -86,6 +86,7 @@ const getAnimationDelay = (isTriggerByTouch: boolean) => {
 const containerRef = ref<HTMLElement>()
 const viewportRef = ref<HTMLElement>()
 const videoRefs = ref<(HTMLVideoElement | null)[]>([null, null, null]) // 视频元素引用
+const audioRefs = ref<(HTMLAudioElement | null)[]>([null, null, null]) // 音频元素引用
 
 // 3位buffer状态管理
 const bufferItems = ref<(TiktokMediaItem | null)[]>([null, null, null]) // [prev, current, next]
@@ -98,6 +99,14 @@ const dragOffset = ref(0) // 拖拽偏移量
 
 // TAG 相关状态
 const showTags = ref(false)
+
+// 控件可见性状态（长按切换）
+const controlsVisible = ref(true)
+
+// 长按切换控件可见性
+const toggleControlsVisibility = () => {
+  controlsVisible.value = !controlsVisible.value
+}
 
 // 计算属性
 const currentItem = computed(() => bufferItems.value[1]) // 中间位置是当前显示的项目
@@ -173,9 +182,25 @@ const handleVideoEnded = (index: number) => {
   }
 }
 
+// 处理音频播放结束事件
+const handleAudioEnded = (index: number) => {
+  // 只处理当前显示的音频（index === 1）
+  if (index === 1 && autoPlayMode.value !== 'off' && !isAnimating.value) {
+    setTimeout(() => {
+      if (tiktokStore.hasNext) {
+        goToNext()
+      } else {
+        // 到达最后一个时跳回第一个
+        goToFirst()
+      }
+    }, 500) // 延迟500ms后切换，避免过于突兀
+  }
+}
+
 // 控制视频播放
 const controlVideoPlayback = async () => {
   await delay(30)
+  // 控制视频
   for (let index = 0; index < videoRefs.value.length; index++) {
     const video = videoRefs.value[index]
     if (!video) continue
@@ -198,6 +223,32 @@ const controlVideoPlayback = async () => {
       }
     } catch (err) {
       console.warn(`视频播放控制失败 (index: ${index}):`, err)
+    }
+  }
+  
+  // 控制音频
+  for (let index = 0; index < audioRefs.value.length; index++) {
+    const audio = audioRefs.value[index]
+    if (!audio) continue
+
+    try {
+      if (index === 1) {
+        // 当前显示的音频：自动播放
+        audio.currentTime = 0 // 重置到开头
+        audio.muted = isMuted.value // 根据用户偏好设置静音状态
+
+        // 添加音频结束事件监听
+        audio.onended = () => handleAudioEnded(index)
+
+        await audio.play()
+      } else {
+        // 非当前显示的音频：暂停并重置
+        audio.pause()
+        audio.currentTime = 0
+        audio.onended = null // 清除事件监听
+      }
+    } catch (err) {
+      console.warn(`音频播放控制失败 (index: ${index}):`, err)
     }
   }
 }
@@ -589,6 +640,12 @@ const toggleMute = () => {
   if (currentVideo) {
     currentVideo.muted = isMuted.value
   }
+  
+  // 立即应用到当前播放的音频
+  const currentAudio = audioRefs.value[1]
+  if (currentAudio) {
+    currentAudio.muted = isMuted.value
+  }
 }
 
 // 监听全屏状态变化
@@ -596,15 +653,30 @@ const handleFullscreenChange = () => {
   tiktokStore.isFullscreen = !!document.fullscreenElement
 }
 const videoPreloadList = ref([] as HTMLVideoElement[])
+const audioPreloadList = ref([] as HTMLAudioElement[])
+
 const recVideo = (video?: HTMLVideoElement) => {
   if (!video) return
-  video.src = ''
   video.pause()
+  video.src = ''
   video.muted = true
+  video.load() // 强制释放资源
   if (video.parentNode) {
     video.parentNode.removeChild(video)
   }
 }
+
+const recAudio = (audio?: HTMLAudioElement) => {
+  if (!audio) return
+  audio.pause()
+  audio.src = ''
+  audio.muted = true
+  audio.load() // 强制释放资源
+  if (audio.parentNode) {
+    audio.parentNode.removeChild(audio)
+  }
+}
+
 watch(videoPreloadList, (newList) => {
   // 清理已加载的视频元素
   while (newList.length > 5) {
@@ -613,11 +685,22 @@ watch(videoPreloadList, (newList) => {
     recVideo(video)
   }
 }, { deep: true })
+
+watch(audioPreloadList, (newList) => {
+  // 清理已加载的音频元素
+  while (newList.length > 5) {
+    const audio = newList.shift()
+    if (!audio) continue
+    recAudio(audio)
+  }
+}, { deep: true })
 watch(() => tiktokStore.visible === false || tiktokStore.mediaList.length === 0, (isClose) => {
   if (isClose) return
   // 组件隐藏时清理预加载列表
   videoPreloadList.value.forEach(recVideo)
   videoPreloadList.value = []
+  audioPreloadList.value.forEach(recAudio)
+  audioPreloadList.value = []
 
   autoPlayMode.value = 'off' // 重置自动轮播模式
 }, { immediate: true })
@@ -631,6 +714,11 @@ const preloadMedia = () => {
       video.preload = 'metadata'
       video.src = item.url
       videoPreloadList.value.push(video)
+    } else if (isAudioFile(item.url)) {
+      const audio = document.createElement('audio')
+      audio.preload = 'metadata'
+      audio.src = item.url
+      audioPreloadList.value.push(audio)
     } else {
       const img = new Image()
       img.src = item.url
@@ -650,6 +738,13 @@ const loadCurrentItemTags = async () => {
   }
 }
 
+// 长按切换控件可见性
+onLongPress(
+  viewportRef,
+  toggleControlsVisibility,
+  { delay: 500 }
+)
+
 // 生命周期
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
@@ -668,6 +763,17 @@ onUnmounted(() => {
   videoRefs.value.forEach(video => {
     recVideo(video!)
   })
+  
+  // 清理：停止所有音频播放
+  audioRefs.value.forEach(audio => {
+    recAudio(audio!)
+  })
+  
+  // 清理预加载列表
+  videoPreloadList.value.forEach(recVideo)
+  videoPreloadList.value = []
+  audioPreloadList.value.forEach(recAudio)
+  audioPreloadList.value = []
 })
 
 // 监听当前项变化
@@ -687,12 +793,28 @@ watch(() => tiktokStore.mediaList, () => {
 // 监听组件可见性变化
 watch(() => tiktokStore.visible, (visible) => {
   if (!visible) {
-    // 组件隐藏时停止所有视频
+    // 组件隐藏时停止并清理所有视频
     videoRefs.value.forEach(video => {
       if (video) {
         video.pause()
+        video.src = ''
+        video.load()
       }
     })
+    videoRefs.value = [null, null, null]
+    
+    // 组件隐藏时停止并清理所有音频
+    audioRefs.value.forEach(audio => {
+      if (audio) {
+        audio.pause()
+        audio.src = ''
+        audio.load()
+      }
+    })
+    audioRefs.value = [null, null, null]
+    
+    // 清空缓冲区
+    bufferItems.value = [null, null, null]
 
     // 清除自动轮播计时器
     clearAutoPlayTimer()
@@ -702,18 +824,26 @@ watch(() => tiktokStore.visible, (visible) => {
       exitFullscreen()
     }
   } else {
-    // 组件显示时重新控制视频播放
+    // 组件显示时重置控件可见性
+    controlsVisible.value = true
+    
+    // 组件显示时重新更新缓冲区并控制播放
     nextTick(() => {
-      controlVideoPlayback()
+      updateBuffer()
     })
   }
 })
 
-// 监听静音状态变化，同步所有视频
+// 监听静音状态变化，同步所有视频和音频
 watch(() => isMuted.value, (muted) => {
   videoRefs.value.forEach(video => {
     if (video) {
       video.muted = muted
+    }
+  })
+  audioRefs.value.forEach(audio => {
+    if (audio) {
+      audio.muted = muted
     }
   })
 })
@@ -752,6 +882,21 @@ watch(() => autoPlayMode.value, () => {
               :controls="index === 1" :loop="index === 1 && autoPlayMode === 'off'" playsinline preload="metadata"
               :key="item.url" :ref="(el) => { if (el) videoRefs[index] = el as HTMLVideoElement }" />
 
+            <!-- 音频 -->
+            <div v-else-if="isAudioFile(item.url) && tiktokStore.visible" class="tiktok-media tiktok-audio-container">
+              <div class="audio-icon">🎵</div>
+              <div class="audio-filename">{{ item.name || item.url.split('/').pop() }}</div>
+              <audio 
+                class="tiktok-audio"
+                :src="item.url"
+                :controls="index === 1"
+                :loop="index === 1 && autoPlayMode === 'off'"
+                preload="metadata"
+                :key="item.url"
+                :ref="(el) => { if (el) audioRefs[index] = el as HTMLAudioElement }"
+              />
+            </div>
+
             <!-- 图片 -->
             <img v-else class="tiktok-media" :src="item.url" />
           </div>
@@ -759,7 +904,7 @@ watch(() => autoPlayMode.value, () => {
       </div>
 
       <!-- 控制按钮区域 -->
-      <div class="tiktok-controls">
+      <div v-show="controlsVisible" class="tiktok-controls">
         <!-- 关闭按钮 -->
         <button class="control-btn close-btn" @click="tiktokStore.closeView" :title="$t('close')">
           <CloseOutlined />
@@ -799,7 +944,7 @@ watch(() => autoPlayMode.value, () => {
       </div>
 
       <!-- 导航指示器 -->
-      <div v-if="globalStore.showTiktokNavigator" class="tiktok-navigation">
+      <div v-show="controlsVisible" v-if="globalStore.showTiktokNavigator" class="tiktok-navigation">
         <!-- 上一个指示器 -->
         <div v-if="tiktokStore.hasPrev" class="nav-indicator nav-prev" @touchstart.prevent="goToPrev(false)"
           @click="goToPrev(false)">
@@ -813,16 +958,25 @@ watch(() => autoPlayMode.value, () => {
         </div>
       </div>
 
-      <!-- 进度指示器 -->
-      <div class="tiktok-progress">
-        <div class="progress-bar">
-          <div class="progress-fill" :style="{
-            width: `${((tiktokStore.currentIndex + 1) / tiktokStore.mediaList.length) * 100}%`
-          }" />
+      <!-- 底部渐变遮罩和文件名 -->
+      <div v-show="controlsVisible" class="tiktok-bottom-overlay">
+        <div class="filename-display" v-if="currentItem?.name">
+          {{ currentItem.name }}
         </div>
-        <span class="progress-text">
-          {{ tiktokStore.currentIndex + 1 }} / {{ tiktokStore.mediaList.length }}
-        </span>
+      </div>
+
+      <!-- 进度指示器 -->
+      <div v-show="controlsVisible" class="tiktok-progress">
+        <div class="progress-bar-row">
+          <div class="progress-bar">
+            <div class="progress-fill" :style="{
+              width: `${((tiktokStore.currentIndex + 1) / tiktokStore.mediaList.length) * 100}%`
+            }" />
+          </div>
+          <span class="progress-text">
+            {{ tiktokStore.currentIndex + 1 }} / {{ tiktokStore.mediaList.length }}
+          </span>
+        </div>
       </div>
 
       <!-- TAG 面板 -->
@@ -946,6 +1100,7 @@ watch(() => autoPlayMode.value, () => {
 .media-content {
   width: 100%;
   height: calc(100% - 32px);
+  margin-bottom: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1094,16 +1249,49 @@ watch(() => autoPlayMode.value, () => {
   }
 }
 
+/* 底部渐变遮罩 - 抖音风格 */
+.tiktok-bottom-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 20px 20px 20px;
+}
+
+.filename-display {
+  color: white;
+  font-size: 16px;
+  text-align: left;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
 .tiktok-progress {
   position: absolute;
   bottom: 5px;
   left: 20px;
   right: 20px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
   z-index: 10;
   pointer-events: none;
+}
+
+.progress-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .progress-bar {
@@ -1125,6 +1313,123 @@ watch(() => autoPlayMode.value, () => {
   font-size: 14px;
   min-width: 60px;
   text-align: right;
+}
+
+/* 音频容器样式 */
+.tiktok-audio-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(135deg, #0a0a1a 0%, #0d1525 50%, #0a1628 100%);
+  position: relative;
+  overflow: hidden;
+  
+  /* 星空背景层 */
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+  
+  /* 星星层1 - 小星星 */
+  &::before {
+    background-image: 
+      radial-gradient(1px 1px at 20px 30px, white, transparent),
+      radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1px 1px at 50px 160px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 90px 40px, white, transparent),
+      radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1px 1px at 160px 120px, white, transparent),
+      radial-gradient(1.5px 1.5px at 200px 50px, rgba(255,255,255,0.9), transparent),
+      radial-gradient(1px 1px at 220px 150px, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1.5px 1.5px at 280px 90px, white, transparent),
+      radial-gradient(1px 1px at 320px 20px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1px 1px at 350px 180px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1.5px 1.5px at 400px 60px, white, transparent),
+      radial-gradient(1px 1px at 450px 130px, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1px 1px at 500px 40px, rgba(255,255,255,0.9), transparent),
+      radial-gradient(1.5px 1.5px at 80px 200px, white, transparent),
+      radial-gradient(1px 1px at 180px 220px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 300px 250px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1.5px 1.5px at 420px 200px, white, transparent);
+    background-repeat: repeat;
+    background-size: 550px 300px;
+    animation: starfield-move 60s linear infinite;
+  }
+  
+  /* 星星层2 - 亮星星，不同速度 */
+  &::after {
+    background-image: 
+      radial-gradient(2px 2px at 100px 50px, rgba(255,255,255,0.9), transparent),
+      radial-gradient(2px 2px at 250px 120px, white, transparent),
+      radial-gradient(2.5px 2.5px at 380px 80px, rgba(200,220,255,0.9), transparent),
+      radial-gradient(2px 2px at 150px 180px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(2.5px 2.5px at 450px 150px, rgba(220,200,255,0.9), transparent),
+      radial-gradient(2px 2px at 50px 250px, white, transparent),
+      radial-gradient(2px 2px at 320px 220px, rgba(255,255,255,0.85), transparent);
+    background-repeat: repeat;
+    background-size: 600px 350px;
+    animation: starfield-move 90s linear infinite reverse;
+    opacity: 0.8;
+  }
+  
+  .audio-icon {
+    font-size: 120px;
+    margin-bottom: 24px;
+    animation: pulse 2s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 0 40px rgba(100, 150, 255, 0.5);
+  }
+  
+  .audio-filename {
+    color: white;
+    font-size: 18px;
+    margin-bottom: 32px;
+    max-width: 80%;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  }
+  
+  .tiktok-audio {
+    width: 80%;
+    max-width: 1400px;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@keyframes starfield-move {
+  from {
+    transform: translateY(0) translateX(0);
+  }
+  to {
+    transform: translateY(-300px) translateX(-550px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
 }
 
 .tiktok-tags-panel {

@@ -317,6 +317,9 @@ You can specify which snapshot to restore to when starting IIB in the global set
   searchResults: 'Search Results',
   imgSearch: 'Image Search',
   onlyFoldersAndImages: 'Only show folders/images/videos',
+  fileTypeFilter: 'File Type Filter',
+  allFiles: 'All Files',
+  audio: 'Audio',
   send2savedDir: 'Send to saved folder',
   regexSearchEnabledHint:
     '(You can also enable regex search by clicking the regex icon on the right)',

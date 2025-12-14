@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 
 export interface TiktokMediaItem {
   url: string
-  type: 'image' | 'video'
+  type: 'image' | 'video' | 'audio'
   id: string
   [key: string]: any // 允许额外的属性
 }

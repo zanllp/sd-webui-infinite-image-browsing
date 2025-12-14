@@ -1,19 +1,34 @@
 import type { FileNodeInfo } from '@/api/files'
 import type { TiktokMediaItem } from '@/store/useTiktokStore'
 import { useTiktokStore } from '@/store/useTiktokStore'
-import { isVideoFile, isImageFile } from '@/util'
-import { toRawFileUrl, toStreamVideoUrl } from '@/util/file'
+import { isVideoFile, isImageFile, isAudioFile } from '@/util'
+import { toRawFileUrl, toStreamVideoUrl, toStreamAudioUrl } from '@/util/file'
 
 /**
  * 将 FileNodeInfo 转换为 TiktokMediaItem
  */
 export const fileToTiktokItem = (file: FileNodeInfo): TiktokMediaItem => {
   const isVideo = isVideoFile(file.name)
+  const isAudio = isAudioFile(file.name)
+  
+  let url: string
+  let type: 'image' | 'video' | 'audio'
+  
+  if (isVideo) {
+    url = toStreamVideoUrl(file)
+    type = 'video'
+  } else if (isAudio) {
+    url = toStreamAudioUrl(file)
+    type = 'audio'
+  } else {
+    url = toRawFileUrl(file)
+    type = 'image'
+  }
   
   return {
     id: file.fullpath,
-    url: isVideo ? toStreamVideoUrl(file) : toRawFileUrl(file),
-    type: isVideo ? 'video' : 'image',
+    url,
+    type,
     // 保留原始文件信息以供后续使用
     originalFile: file,
     name: file.name,
@@ -26,7 +41,7 @@ export const fileToTiktokItem = (file: FileNodeInfo): TiktokMediaItem => {
  */
 export const filesToTiktokItems = (files: FileNodeInfo[]): TiktokMediaItem[] => {
   return files
-    .filter(file => file.type === 'file' && (isImageFile(file.name) || isVideoFile(file.name)))
+    .filter(file => file.type === 'file' && (isImageFile(file.name) || isVideoFile(file.name) || isAudioFile(file.name)))
     .map(fileToTiktokItem)
 }
 
@@ -34,11 +49,19 @@ export const filesToTiktokItems = (files: FileNodeInfo[]): TiktokMediaItem[] => 
  * 从 URL 列表直接创建 TiktokMediaItem 数组
  */
 export const urlsToTiktokItems = (urls: string[]): TiktokMediaItem[] => {
-  return urls.map((url) => ({
-    id: url,
-    url: url,
-    type: isVideoFile(url) ? 'video' : 'image'
-  }))
+  return urls.map((url) => {
+    let type: 'image' | 'video' | 'audio' = 'image'
+    if (isVideoFile(url)) {
+      type = 'video'
+    } else if (isAudioFile(url)) {
+      type = 'audio'
+    }
+    return {
+      id: url,
+      url: url,
+      type
+    }
+  })
 }
 
 /**

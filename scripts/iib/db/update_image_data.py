@@ -9,6 +9,7 @@ from scripts.iib.tool import (
     is_dev,
     get_modified_date,
     is_image_file,
+    is_audio_file,
     case_insensitive_get,
     get_img_geninfo_txt_path,
     parse_generation_parameters
@@ -189,7 +190,16 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
         type="size",
     )
     safe_save_img_tag(ImageTag(img.id, size_tag.id))
-    media_type_tag = Tag.get_or_create(conn, "Image" if is_image_file(file_path) else "Video", 'Media Type')
+    # 确定媒体类型：Image / Video / Audio / Unknown
+    if is_image_file(file_path):
+        media_type_name = "Image"
+    elif is_audio_file(file_path):
+        media_type_name = "Audio"
+    elif get_video_type(file_path):
+        media_type_name = "Video"
+    else:
+        media_type_name = "Unknown"
+    media_type_tag = Tag.get_or_create(conn, media_type_name, 'Media Type')
     safe_save_img_tag(ImageTag(img.id, media_type_tag.id))
     keys = [
         "Model",

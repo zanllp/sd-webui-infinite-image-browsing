@@ -3,7 +3,7 @@ import { FileOutlined, FolderOpenOutlined, EllipsisOutlined, HeartOutlined, Hear
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { fallbackImage, ok } from 'vue3-ts-util'
 import type { FileNodeInfo } from '@/api/files'
-import { isImageFile, isVideoFile } from '@/util'
+import { isImageFile, isVideoFile, isAudioFile } from '@/util'
 import { toImageThumbnailUrl, toVideoCoverUrl, toRawFileUrl } from '@/util/file'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { computed, ref } from 'vue'
@@ -12,7 +12,7 @@ import ChangeIndicator from './ChangeIndicator.vue'
 import { useTagStore } from '@/store/useTagStore'
 import { CloseCircleOutlined, StarFilled, StarOutlined } from '@/icon'
 import { Tag } from '@/api/db'
-import { openVideoModal } from './functionalCallableComp'
+import { openVideoModal, openAudioModal } from './functionalCallableComp'
 import type { GenDiffInfo } from '@/api/files'
 import { play } from '@/icon'
 import { Top4MediaInfo } from '@/api'
@@ -100,6 +100,9 @@ const minShowDetailWidth = 160
 const handleFileClick = (event: MouseEvent) => {
   // 检查magic switch是否开启且是图片文件（视频有自己的处理逻辑）
   if (global.magicSwitchTiktokView && props.file.type === 'file' && isImageFile(props.file.name)) {
+    // 阻止事件传播，防止 a-image 组件也触发预览
+    event.stopPropagation()
+    event.preventDefault()
     // 直接触发TikTok视图
     emit('tiktokView', props.file, props.idx)
     setTimeout(() => {
@@ -119,6 +122,21 @@ const handleVideoClick = () => {
   } else {
     // 正常打开视频模态框
     openVideoModal(
+      props.file, 
+      (id) => emit('contextMenuClick', { key: `toggle-tag-${id}` } as any, props.file, props.idx),
+      () => emit('tiktokView', props.file, props.idx)
+    )
+  }
+}
+
+// 处理音频点击事件
+const handleAudioClick = () => {
+  if (global.magicSwitchTiktokView) {
+    // 直接触发TikTok视图
+    emit('tiktokView', props.file, props.idx)
+  } else {
+    // 正常打开音频模态框
+    openAudioModal(
       props.file, 
       (id) => emit('contextMenuClick', { key: `toggle-tag-${id}` } as any, props.file, props.idx),
       () => emit('tiktokView', props.file, props.idx)
@@ -196,6 +214,15 @@ const handleVideoClick = () => {
             </a-tag>
           </div>
         </div>
+        <div :class="`idx-${idx} item-content audio`" v-else-if="isAudioFile(file.name)"
+          @click="handleAudioClick">
+          <div class="audio-icon">🎵</div>
+          <div class="tags-container" v-if="customTags && cellWidth > minShowDetailWidth">
+            <a-tag v-for="tag in customTags" :key="tag.id" :color="tagStore.getColor(tag)">
+              {{ tag.name }}
+            </a-tag>
+          </div>
+        </div>
         <div v-else class="preview-icon-wrap">
           <file-outlined class="icon center" v-if="file.type === 'file'" />
           <div v-else-if="coverFiles?.length && cellWidth > 160" class="dir-cover-container">
@@ -247,6 +274,22 @@ const handleVideoClick = () => {
     background-size: cover;
     background-position: center;
     cursor: pointer;
+  }
+
+  &.audio {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border-radius: 8px;
+    overflow: hidden;
+    width: v-bind('$props.cellWidth + "px"');
+    height: v-bind('$props.cellWidth + "px"');
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    
+    .audio-icon {
+      font-size: 48px;
+    }
   }
 
   .play-icon {
