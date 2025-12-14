@@ -4,7 +4,7 @@ import * as Path from '@/util/path'
 import { FileNodeInfo, mkdirs } from '@/api/files'
 import { setTargetFrameAsCover } from '@/api'
 import { t } from '@/i18n'
-import { downloadFiles, globalEvents, toRawFileUrl, toStreamVideoUrl } from '@/util'
+import { downloadFiles, globalEvents, toRawFileUrl, toStreamVideoUrl, toStreamAudioUrl } from '@/util'
 import { DownloadOutlined } from '@/icon'
 import { isStandalone } from '@/util/env'
 import { addCustomTag, getDbBasicInfo, rebuildImageIndex, renameFile } from '@/api/db'
@@ -128,6 +128,91 @@ export const openVideoModal = (
               default: t('setCurrFrameAsVideoPoster')
             }}
           </Button>
+        </div>
+      </div>
+    ),
+    maskClosable: true,
+    wrapClassName: 'hidden-antd-btns-modal'
+  })
+  function onTiktokViewWrapper() {
+    onTiktokView?.()
+    closeImageFullscreenPreview()
+    modal.destroy()
+  }
+}
+
+export const openAudioModal = (
+  file: FileNodeInfo, 
+  onTagClick?: (id: string| number) => void,
+  onTiktokView?: () => void
+) => {
+  const tagStore = useTagStore()
+  const global = useGlobalStore()
+  const isSelected = (id: string | number) => {
+    return !!tagStore.tagMap.get(file.fullpath)?.some(v => v.id === id)
+  }
+  const tagBaseStyle: StyleValue = {
+    margin: '2px',
+    padding: '2px 16px',
+    'border-radius': '4px',
+    display: 'inline-block',
+    cursor: 'pointer',
+    'font-weight': 'bold',
+    transition: '.5s all ease',
+    'user-select': 'none',
+  }
+  
+  const modal = Modal.confirm({
+    width: '60vw',
+    title: file.name,
+    icon: null,
+    content: () => (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column'
+        }}
+      >
+        <div style={{
+          fontSize: '80px',
+          marginBottom: '16px'
+        }}>🎵</div>
+        <audio style={{ width: '100%', maxWidth: '500px' }} src={toStreamAudioUrl(file)} controls autoplay></audio>
+        <div style={{ marginTop: '16px' }}>
+          <div onClick={openAddNewTagModal}  style={{
+            background: 'var(--zp-primary-background)', 
+            color: 'var(--zp-luminous)',
+            border: '2px solid var(--zp-luminous)',
+            ...tagBaseStyle
+          }}>
+            { t('addNewCustomTag') }
+          </div>
+          {global.conf!.all_custom_tags.map((tag) => 
+            <div key={tag.id} onClick={() => onTagClick?.(tag.id)}  style={{
+              background: isSelected(tag.id) ? tagStore.getColor(tag) : 'var(--zp-primary-background)', 
+              color: !isSelected(tag.id) ? tagStore.getColor(tag) : 'white', 
+              border: `2px solid ${tagStore.getColor(tag)}`,
+              ...tagBaseStyle
+            }}>
+              { tag.name }
+            </div>)}
+        </div>
+        <div class="actions" style={{ marginTop: '16px' }}>
+          <Button onClick={() => downloadFiles([toRawFileUrl(file, true)])}>
+            {{
+              icon: <DownloadOutlined/>,
+              default: t('download')
+            }}
+          </Button>
+          {onTiktokView && (
+            <Button onClick={onTiktokViewWrapper} type="primary">
+              {{
+                default: t('tiktokView')
+              }}
+            </Button>
+          )}
         </div>
       </div>
     ),

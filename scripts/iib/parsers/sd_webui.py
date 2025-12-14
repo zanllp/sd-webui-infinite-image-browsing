@@ -23,7 +23,9 @@ class SdWebUIParser:
                     meta={"final_width": width, "final_height": height}
                 )
             )
-        info += ", Source Identifier: Stable Diffusion web UI"
+        
+        if "Source Identifier" not in info:
+            info += ", Source Identifier: Stable Diffusion web UI"
         params = parse_generation_parameters(info)
         return ImageGenerationInfo(
             info,

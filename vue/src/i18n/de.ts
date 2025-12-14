@@ -145,5 +145,8 @@ export const de: Partial<IIBI18nMap> = {
   all: 'Alle',
   video: 'Video',
   randomSort: 'Zufällig sortieren',
-  sortByDate: 'Nach Datum sortieren'
+  sortByDate: 'Nach Datum sortieren',
+  fileTypeFilter: 'Dateityp-Filter',
+  allFiles: 'Alle Dateien',
+  audio: 'Audio'
 }

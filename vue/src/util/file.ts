@@ -55,7 +55,19 @@ export function isVideoFile (filename: string): boolean {
   return extension !== undefined && exts.includes(`.${extension}`)
 }
 
-export const isMediaFile = (file: string) => isImageFile(file) || isVideoFile(file)
+export function isAudioFile (filename: string): boolean {
+  if (typeof filename !== 'string') {
+    return false
+  }
+  const exts = ['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.wma']
+  const extension = filename.split('.').pop()?.toLowerCase()
+  return extension !== undefined && exts.includes(`.${extension}`)
+}
+
+export const toStreamAudioUrl = (file: FileNodeInfo) =>
+  `${apiBase.value}/stream_video?path=${encode(file.fullpath)}`
+
+export const isMediaFile = (file: string) => isImageFile(file) || isVideoFile(file) || isAudioFile(file)
 
 export function downloadFiles (urls: string[]) {
   const link = document.createElement('a')

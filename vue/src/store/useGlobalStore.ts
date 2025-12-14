@@ -181,6 +181,7 @@ export const presistKeys = [
   'gridThumbnailResolution',
   'longPressOpenContextMenu',
   'onlyFoldersAndImages',
+  'fileTypeFilter',
   'shortcut',
   'ignoredConfirmActions',
   'previewBgOpacity',
@@ -369,7 +370,8 @@ export const useGlobalStore = defineStore(
       gridThumbnailResolution,
       longPressOpenContextMenu,
       openTagSearchMatchedImageGridInRight,
-      onlyFoldersAndImages: ref(true),
+      onlyFoldersAndImages: ref(true), // 保留用于向后兼容
+      fileTypeFilter: ref<('image' | 'video' | 'audio' | 'all')[]>(['image', 'video', 'audio']), // 新的多选过滤
       keepMultiSelect: ref(false),
       fullscreenPreviewInitialUrl: ref(''),
       shortcut,

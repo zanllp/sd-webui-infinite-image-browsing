@@ -140,8 +140,13 @@ const disableMaximize = useLocalStorage(prefix+'disable_maximize', false)
       </a-form-item>
 
       <h2 style="margin-top: 0;">{{ t('other') }}</h2>
-      <a-form-item :label="$t('onlyFoldersAndImages')">
-        <a-switch v-model:checked="globalStore.onlyFoldersAndImages" />
+      <a-form-item :label="$t('fileTypeFilter')">
+        <a-checkbox-group v-model:value="globalStore.fileTypeFilter">
+          <a-checkbox value="all">{{ $t('allFiles') }}</a-checkbox>
+          <a-checkbox value="image">{{ $t('image') }}</a-checkbox>
+          <a-checkbox value="video">{{ $t('video') }}</a-checkbox>
+          <a-checkbox value="audio">{{ $t('audio') }}</a-checkbox>
+        </a-checkbox-group>
       </a-form-item>
       <!--在生成信息面板显示逗号-->
       <a-form-item :label="$t('showCommaInGenInfoPanel')">

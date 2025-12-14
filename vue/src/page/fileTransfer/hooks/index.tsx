@@ -11,7 +11,7 @@ import { type FileNodeInfo } from '@/api/files'
 import { sortFiles } from '../fileSort'
 import { last, range } from 'lodash-es'
 import * as Path from '@/util/path'
-import { isMediaFile } from '@/util/file'
+import { isImageFile, isVideoFile, isAudioFile } from '@/util/file'
 import { useTagStore } from '@/store/useTagStore'
 import { useBatchDownloadStore } from '@/store/useBatchDownloadStore'
 import { Walker } from '../walker'
@@ -88,10 +88,25 @@ export const { useHookShareState } = createTypedShareStateHook(
       }
       const files = currPage.value?.files ?? []
       const method = sortMethod.value
-      const filter = (files: FileNodeInfo[]) =>
-        global.onlyFoldersAndImages
-          ? files.filter((file) => file.type === 'dir' || isMediaFile(file.name))
-          : files
+      const filter = (files: FileNodeInfo[]) => {
+        const filterTypes = global.fileTypeFilter
+        // 如果选择了 'all'，显示所有文件
+        if (filterTypes.includes('all')) {
+          return files
+        }
+        // 如果没有选择任何类型，显示所有文件
+        if (filterTypes.length === 0) {
+          return files
+        }
+        // 根据选择的类型过滤
+        return files.filter((file) => {
+          if (file.type === 'dir') return true // 始终显示文件夹
+          if (filterTypes.includes('image') && isImageFile(file.name)) return true
+          if (filterTypes.includes('video') && isVideoFile(file.name)) return true
+          if (filterTypes.includes('audio') && isAudioFile(file.name)) return true
+          return false
+        })
+      }
       return sortFiles(filter(files), method).filter(v => !deletedFiles.has(v.fullpath))
     })
     const multiSelectedIdxs = ref([] as number[])
