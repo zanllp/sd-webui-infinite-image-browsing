@@ -328,9 +328,18 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     
     @app.get(f"{api_base}/version", dependencies=[Depends(verify_secret)])
     async def get_version():
+        av_version = None
+        try:
+            import av as _av
+            av_version = getattr(_av, "__version__", None)
+        except Exception:
+            # av (PyAV) not installed or failed to import
+            av_version = None
+
         return {
             "hash": get_current_commit_hash(),
             "tag": get_current_tag(),
+            "av_version": av_version,
         }
 
     class DeleteFilesReq(BaseModel):
@@ -649,16 +658,34 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         if not is_media_file(path):
             raise HTTPException(status_code=400, detail=f"{path} is not a video file")
         # 如果缓存文件不存在，则生成缩略图并保存
-        
-        import imageio.v3 as iio
-        frame = iio.imread(
-            path,
-            index=16,
-            plugin="pyav",
-        )
-        
-        os.makedirs(cache_dir, exist_ok=True)
-        iio.imwrite(cache_path,frame, extension=".webp")
+        try:
+            import imageio.v3 as iio
+            logger.info(
+                "Generating video cover thumbnail: path=%s, mt=%s, cache_path=%s",
+                path,
+                mt,
+                cache_path,
+            )
+            frame = iio.imread(
+                path,
+                index=16,
+                plugin="pyav",
+            )
+
+            os.makedirs(cache_dir, exist_ok=True)
+            iio.imwrite(cache_path, frame, extension=".webp")
+            logger.info("Saved video cover thumbnail: %s", cache_path)
+        except Exception as e:
+            # record full stack trace and contextual info in English
+            logger.exception(
+                "Failed to generate video cover for path=%s mt=%s cache_dir=%s: %s",
+                path,
+                mt,
+                cache_dir,
+                e,
+            )
+            # return a clear HTTP error (detail contains exception message)
+            raise HTTPException(status_code=500, detail=f"Failed to generate video cover: {e}")
 
         # 返回缓存文件
         return FileResponse(
