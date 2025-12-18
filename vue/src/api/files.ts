@@ -28,9 +28,9 @@ export const getTargetFolderFiles = async (folder_path: string) => {
 }
 
 
-export const deleteFiles = async (file_paths: string[]) => {
-  const resp = await axiosInst.value.post('/delete_files', { file_paths })
-  return resp.data as { files: FileNodeInfo[] }
+export const deleteFiles = async (file_paths: string[], use_trash: boolean = true) => {
+  const resp = await axiosInst.value.post('/delete_files', { file_paths, use_trash })
+  return resp.data as { send2trash_available: boolean; used_trash: boolean }
 }
 
 export const moveFiles = async (

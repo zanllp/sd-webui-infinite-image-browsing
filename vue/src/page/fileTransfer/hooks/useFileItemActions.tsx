@@ -318,8 +318,8 @@ export function useFileItemActions (
         const selectedFiles = getSelectedImg()
         const removeFile = async () => {
           const paths = selectedFiles.map((v) => v.fullpath)
-          await deleteFiles(paths)
-          message.success(t('deleteSuccess'))
+          const result = await deleteFiles(paths)
+          message.success(result.used_trash ? t('moveToTrashSuccess') : t('deleteSuccess'))
           if (previewing.value) {
             const isFullscreenFirst = toRawFileUrl(file) === global.fullscreenPreviewInitialUrl
             const isEnd = previewIdx.value === sortedFiles.value.length - 1

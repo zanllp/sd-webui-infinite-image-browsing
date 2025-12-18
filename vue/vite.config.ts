@@ -40,7 +40,7 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3000,
+    port: 3002,
     proxy: {
       '/infinite_image_browsing/': {
         target: 'http://127.0.0.1:7866/'

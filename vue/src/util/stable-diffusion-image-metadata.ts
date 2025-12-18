@@ -75,6 +75,19 @@ export function parse(parameters: string): ImageMeta {
   const metadata: ImageMeta = {};
   if (!parameters) return metadata;
 
+  // 提取 extraJsonMetaInfo 字段
+  const extraJsonMetaInfoMatch = parameters.match(/\nextraJsonMetaInfo:\s*(\{[\s\S]*\})\s*$/);
+  if (extraJsonMetaInfoMatch) {
+    try {
+      metadata.extraJsonMetaInfo = JSON.parse(extraJsonMetaInfoMatch[1]);
+      // 从原始参数中移除 extraJsonMetaInfo 部分
+      parameters = parameters.replace(/\nextraJsonMetaInfo:\s*\{[\s\S]*\}\s*$/, '');
+    } catch (e) {
+      // 解析失败，保留原始字符串
+      metadata.extraJsonMetaInfo = extraJsonMetaInfoMatch[1];
+    }
+  }
+
   const metaLines = parameters.split('\n').filter((line) => {
     return line.trim() !== '' && !stripKeys.some((key) => line.startsWith(key));
   });
@@ -117,10 +130,14 @@ export function parse(parameters: string): ImageMeta {
   });
 
   // Extract prompts
-  const [prompt, ...negativePrompt] = metaLines
+  let [prompt, ...negativePrompt] = metaLines
     .join('\n')
     .split('Negative prompt:')
     .map((x) => x.trim());
+  
+  // 确保 prompt 中不包含 extraJsonMetaInfo
+  prompt = prompt.replace(/\nextraJsonMetaInfo:\s*\{[\s\S]*\}\s*$/, '').trim();
+  
   metadata.prompt = prompt;
   metadata.negativePrompt = negativePrompt.join(' ').trim();
 

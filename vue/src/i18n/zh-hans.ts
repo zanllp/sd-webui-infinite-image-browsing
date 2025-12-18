@@ -128,6 +128,7 @@ export const zhHans = {
   sendImageFailed: '发送图像失败，请携带console的错误消息找开发者',
   confirmDelete: '确认删除？',
   deleteSuccess: '删除成功',
+  moveToTrashSuccess: '已移动到回收站',
   doubleClickToCopy: '双击复制',
   root: '根',
   drive: '盘',

@@ -81,6 +81,7 @@ export const de: Partial<IIBI18nMap> = {
     'Fehler beim Senden des Bildes. Bitte kontaktieren Sie den Entwickler mit der Fehlermeldung aus der Konsole.',
   confirmDelete: 'Sind Sie sicher, dass Sie dies löschen möchten?',
   deleteSuccess: 'Erfolgreich gelöscht',
+  moveToTrashSuccess: 'In den Papierkorb verschoben',
   doubleClickToCopy: 'Doppelklick zum Kopieren',
   root: 'Root',
   drive: ' Laufwerk',

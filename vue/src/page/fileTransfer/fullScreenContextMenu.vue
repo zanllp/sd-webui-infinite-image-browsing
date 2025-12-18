@@ -58,9 +58,15 @@ const geninfoStructNoPrompts = computed(() => {
   let p = parse(cleanImageGenInfo.value)
   delete p.prompt
   delete p.negativePrompt
+  delete p.extraJsonMetaInfo
   return p
 })
 
+// extraJsonMetaInfo 是需要额外显示的meta字段，使用原始 imageGenInfo 解析以避免 HTML 转义问题
+const extraJsonMetaInfo = computed(() => {
+  const p = parse(imageGenInfo.value) // 使用原始的 imageGenInfo，而不是 cleanImageGenInfo
+  return p.extraJsonMetaInfo as Record<string, any> | undefined
+})
 
 const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
@@ -490,6 +496,17 @@ const onTiktokViewClick = () => {
                 </tr>
               </table>
             </template>
+            <template v-if="extraJsonMetaInfo && Object.keys(extraJsonMetaInfo).length"> <br />
+              <h3>Extra Meta Info</h3>
+              <table class="extra-meta-table">
+                <tr v-for="(val, key) in extraJsonMetaInfo" :key="key" class="gen-info-frag">
+                  <td style="font-weight: 600;text-transform: capitalize;">{{ key }}</td>
+                  <td style="cursor: pointer;" @dblclick="copy(val)">
+                    <code class="extra-meta-value">{{ typeof val === 'string' ? val : JSON.stringify(val, null, 2) }}</code>
+                  </td>
+                </tr>
+              </table>
+            </template>
           </a-tab-pane>
           <a-tab-pane key="sourceText" :tab="$t('sourceText')">
             <code>{{ imageGenInfo }}</code>
@@ -608,6 +625,21 @@ const onTiktokViewClick = () => {
 
       tr td:first-child {
         white-space: nowrap;
+        vertical-align: top;
+      }
+    }
+
+    table.extra-meta-table {
+      .extra-meta-value {
+        display: block;
+        max-height: 200px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.85em;
+        background: var(--zp-secondary-variant-background);
+        padding: 8px;
+        border-radius: 4px;
       }
     }
 

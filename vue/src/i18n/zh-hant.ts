@@ -134,6 +134,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   sendImageFailed: '發送圖像失敗,請攜帶console的錯誤訊息找開發者',
   confirmDelete: '確認刪除?',
   deleteSuccess: '刪除成功',
+  moveToTrashSuccess: '已移動到回收站',
   doubleClickToCopy: '雙擊複製',
   promptcompare: 'Compare Prompts',
   root: '根',

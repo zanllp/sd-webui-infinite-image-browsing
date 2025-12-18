@@ -269,6 +269,7 @@ You can specify which snapshot to restore to when starting IIB in the global set
     'Failed to send image. Please contact the developer with the error message from the console.',
   confirmDelete: 'Are you sure you want to delete?',
   deleteSuccess: 'Deleted successfully',
+  moveToTrashSuccess: 'Moved to trash',
   doubleClickToCopy: 'Double-click to copy',
   root: 'Root',
   drive: ' drive',

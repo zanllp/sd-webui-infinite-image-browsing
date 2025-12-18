@@ -6,6 +6,11 @@ from pathlib import Path
 import shutil
 import sqlite3
 
+try:
+    from send2trash import send2trash
+    send2trash_available = True
+except ImportError:
+    send2trash_available = False
 
 from scripts.iib.dir_cover_cache import get_top_4_media_info
 from scripts.iib.tool import (
@@ -369,6 +374,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
 
     class DeleteFilesReq(BaseModel):
         file_paths: List[str]
+        use_trash: bool = True  # 默认使用垃圾桶
 
     @app.post(
         api_base + "/delete_files",
@@ -376,6 +382,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     )
     async def delete_files(req: DeleteFilesReq):
         conn = DataBase.get_conn()
+        
+        # 检查是否可以使用垃圾桶
+        can_use_trash = send2trash_available and req.use_trash
+        
         for path in req.file_paths:
             check_path_trust(path)
             try:
@@ -387,13 +397,23 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                             else "文件夹不为空时不允许删除。"
                         )
                         raise HTTPException(400, detail=error_msg)
-                    shutil.rmtree(path)
+                    if can_use_trash:
+                        send2trash(path)
+                    else:
+                        shutil.rmtree(path)
                 else:
                     close_video_file_reader(path)
-                    os.remove(path)
                     txt_path = get_img_geninfo_txt_path(path)
-                    if txt_path:
-                        os.remove(txt_path)
+                    
+                    if can_use_trash:
+                        send2trash(path)
+                        if txt_path:
+                            send2trash(txt_path)
+                    else:
+                        os.remove(path)
+                        if txt_path:
+                            os.remove(txt_path)
+                    
                     img = DbImg.get(conn, os.path.normpath(path))
                     if img:
                         logger.info("delete file: %s", path)
@@ -408,6 +428,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     else f"删除文件 {path} 时出错：{e}"
                 )
                 raise HTTPException(400, detail=error_msg)
+        
+        return {"send2trash_available": send2trash_available, "used_trash": can_use_trash}
 
     class CreateFoldersReq(BaseModel):
         dest_folder: str
