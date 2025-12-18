@@ -328,19 +328,44 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     
     @app.get(f"{api_base}/version", dependencies=[Depends(verify_secret)])
     async def get_version():
-        av_version = None
-        try:
-            import av as _av
-            av_version = getattr(_av, "__version__", None)
-        except Exception:
-            # av (PyAV) not installed or failed to import
-            av_version = None
+        import sys
+        import platform
 
-        return {
+        def _get_dist_version(dist_name: str = None, module_name: str = None):
+            # Try importlib.metadata first (distribution metadata), then fallback to module __version__
+            try:
+                if dist_name:
+                    try:
+                        from importlib.metadata import version
+
+                        return version(dist_name)
+                    except Exception:
+                        pass
+                if module_name:
+                    mod = __import__(module_name)
+                    return getattr(mod, "__version__", None)
+                if dist_name:
+                    # try importing by normalized name
+                    mod = __import__(dist_name.replace("-", "_"))
+                    return getattr(mod, "__version__", None)
+            except Exception as e:
+                logger.debug("Version probe failed for %s/%s: %s", dist_name, module_name, e)
+            return None
+
+        versions = {
+            "python_version": sys.version.splitlines()[0],
+            "platform": platform.platform(),
             "hash": get_current_commit_hash(),
             "tag": get_current_tag(),
-            "av_version": av_version,
+            "av": _get_dist_version("av", "av"),
+            "imageio": _get_dist_version("imageio", "imageio"),
+            "pillow": _get_dist_version("Pillow", "PIL"),
+            "imageio_ffmpeg": _get_dist_version("imageio-ffmpeg", "imageio_ffmpeg"),
+            "pillow_avif_plugin": _get_dist_version("pillow-avif-plugin", "pillow_avif"),
         }
+
+        logger.info("Version info requested: %s", {k: v for k, v in versions.items() if v})
+        return versions
 
     class DeleteFilesReq(BaseModel):
         file_paths: List[str]

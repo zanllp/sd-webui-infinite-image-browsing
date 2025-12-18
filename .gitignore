@@ -6,7 +6,7 @@ launch.sh
 conf.json
 iib.db-journal
 .env
-standalone.cmd
+standalone*
 .vscode
 build/**/*
 dist/**/*
