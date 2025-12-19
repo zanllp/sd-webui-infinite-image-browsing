@@ -44,6 +44,7 @@ jobs:
           script-name: app.py
           output-file: iib_api_server
           output-dir: out
+          include-module: imageio.plugins.pyav
           include-data-dir: |
             vue/dist=vue/dist
       
@@ -143,7 +144,7 @@ jobs:
         with:
             spec: 'app.py'
             upload_exe_with_name: 'My executable'
-            options: --onefile
+            options: --onefile --additional-hooks-dir=pyinstaller_hooks
 
       - run: mv dist/app.exe vue/src-tauri/iib_api_server-x86_64-pc-windows-msvc.exe
 

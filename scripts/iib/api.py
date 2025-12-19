@@ -328,10 +328,44 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     
     @app.get(f"{api_base}/version", dependencies=[Depends(verify_secret)])
     async def get_version():
-        return {
+        import sys
+        import platform
+
+        def _get_dist_version(dist_name: str = None, module_name: str = None):
+            # Try importlib.metadata first (distribution metadata), then fallback to module __version__
+            try:
+                if dist_name:
+                    try:
+                        from importlib.metadata import version
+
+                        return version(dist_name)
+                    except Exception:
+                        pass
+                if module_name:
+                    mod = __import__(module_name)
+                    return getattr(mod, "__version__", None)
+                if dist_name:
+                    # try importing by normalized name
+                    mod = __import__(dist_name.replace("-", "_"))
+                    return getattr(mod, "__version__", None)
+            except Exception as e:
+                logger.debug("Version probe failed for %s/%s: %s", dist_name, module_name, e)
+            return None
+
+        versions = {
+            "python_version": sys.version.splitlines()[0],
+            "platform": platform.platform(),
             "hash": get_current_commit_hash(),
             "tag": get_current_tag(),
+            "av": _get_dist_version("av", "av"),
+            "imageio": _get_dist_version("imageio", "imageio"),
+            "pillow": _get_dist_version("Pillow", "PIL"),
+            "imageio_ffmpeg": _get_dist_version("imageio-ffmpeg", "imageio_ffmpeg"),
+            "pillow_avif_plugin": _get_dist_version("pillow-avif-plugin", "pillow_avif"),
         }
+
+        logger.info("Version info requested: %s", {k: v for k, v in versions.items() if v})
+        return versions
 
     class DeleteFilesReq(BaseModel):
         file_paths: List[str]
@@ -649,16 +683,34 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         if not is_media_file(path):
             raise HTTPException(status_code=400, detail=f"{path} is not a video file")
         # 如果缓存文件不存在，则生成缩略图并保存
-        
-        import imageio.v3 as iio
-        frame = iio.imread(
-            path,
-            index=16,
-            plugin="pyav",
-        )
-        
-        os.makedirs(cache_dir, exist_ok=True)
-        iio.imwrite(cache_path,frame, extension=".webp")
+        try:
+            import imageio.v3 as iio
+            logger.info(
+                "Generating video cover thumbnail: path=%s, mt=%s, cache_path=%s",
+                path,
+                mt,
+                cache_path,
+            )
+            frame = iio.imread(
+                path,
+                index=16,
+                plugin="pyav",
+            )
+
+            os.makedirs(cache_dir, exist_ok=True)
+            iio.imwrite(cache_path, frame, extension=".webp")
+            logger.info("Saved video cover thumbnail: %s", cache_path)
+        except Exception as e:
+            # record full stack trace and contextual info in English
+            logger.exception(
+                "Failed to generate video cover for path=%s mt=%s cache_dir=%s: %s",
+                path,
+                mt,
+                cache_dir,
+                e,
+            )
+            # return a clear HTTP error (detail contains exception message)
+            raise HTTPException(status_code=500, detail=f"Failed to generate video cover: {e}")
 
         # 返回缓存文件
         return FileResponse(
