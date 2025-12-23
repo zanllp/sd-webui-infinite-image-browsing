@@ -78,6 +78,8 @@ try:
 except Exception as e:
     logger.error(e)
 
+ Ensure .jxl has a mime type registered so FastAPI/FileResponse can include it
+mimetypes.add_type("image/jxl", ".jxl")
 
 index_html_path = get_data_file_path("vue/dist/index.html") if is_exe_ver else os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 
