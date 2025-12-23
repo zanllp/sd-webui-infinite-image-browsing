@@ -73,6 +73,11 @@ try:
 except Exception as e:
     logger.error(e)
 
+try:
+    import pillow_jxl
+except Exception as e:
+    logger.error(e)
+
 
 index_html_path = get_data_file_path("vue/dist/index.html") if is_exe_ver else os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 
