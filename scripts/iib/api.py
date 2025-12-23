@@ -48,6 +48,7 @@ from PIL import Image
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 import hashlib
+import mimetypes
 from scripts.iib.db.datamodel import (
     DataBase,
     ExtraPathType,
