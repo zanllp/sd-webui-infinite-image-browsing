@@ -3,6 +3,7 @@ from modules import script_callbacks, generation_parameters_copypaste as send
 from scripts.iib.tool import locale
 from scripts.iib.tool import read_sd_webui_gen_info_from_image
 from PIL import Image
+import pillow_jxl
 from scripts.iib.logger import logger
 
 from fastapi import FastAPI
