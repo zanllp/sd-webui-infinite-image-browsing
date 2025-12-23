@@ -600,11 +600,13 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             )
 
                 
-        # 如果小于64KB，直接返回原图
-        if os.path.getsize(path) < 64 * 1024:
+        # 如果小于64KB，通常直接返回原图以节省处理时间。
+        # 对于 `.jxl` 文件，浏览器通常不支持原生显示，因此仍然生成缩略图。
+        ext = path.split(".")[-1].lower()
+        if os.path.getsize(path) < 64 * 1024 and ext != "jxl":
             return FileResponse(
                 path,
-                media_type="image/" + path.split(".")[-1],
+                media_type="image/" + ext,
                 headers={"Cache-Control": "max-age=31536000", "ETag": hash},
             )
         
