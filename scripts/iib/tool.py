@@ -12,6 +12,7 @@ import piexif.helper
 import json
 import zipfile
 from PIL import Image
+import pillow_jxl
 import shutil
 # import magic
 
