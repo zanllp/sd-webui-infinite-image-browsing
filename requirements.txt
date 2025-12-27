@@ -4,8 +4,9 @@ piexif
 python-dotenv
 Pillow
 pillow-avif-plugin
-pillow-jxl
+pillow-jxl-plugin
 imageio
+imageio-ffmpeg
 av>=14,<15
 lxml
 filetype
