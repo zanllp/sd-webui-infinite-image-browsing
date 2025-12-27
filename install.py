@@ -8,7 +8,7 @@ def dist2package(dist: str):
     return ({
         "python-dotenv": "dotenv",
         "Pillow": "PIL",
-        "pillow-avif-plugin": "pillow_avif"
+        "pillow-avif-plugin": "pillow_avif",
         "pillow-jxl-plugin": "pillow_jxl"
     }).get(dist, dist)
 
