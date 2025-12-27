@@ -363,5 +363,6 @@ export const zhHans = {
   'autoTag.fields.seed': 'Seed',
   'autoTag.operators.contains': '包含 (Contains)',
   'autoTag.operators.equals': '等于 (Equals)',
-  'autoTag.operators.regex': '正则 (Regex)'
+  'autoTag.operators.regex': '正则 (Regex)',
+  aiAnalyzeTags: 'AI分析标签'
 }

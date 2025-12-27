@@ -179,3 +179,38 @@ export const removeAppFeSetting = async (name: keyof GlobalConf['app_fe_setting'
 export const setTargetFrameAsCover = async (body: { path: string, base64_img: string, updated_time: string }) => {
   await axiosInst.value.post('/set_target_frame_as_video_cover', body)
 }
+
+// AI 相关 API
+export interface AIChatMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+}
+
+export interface AIChatRequest {
+  messages: AIChatMessage[]
+  temperature?: number
+  max_tokens?: number
+  stream?: boolean
+}
+
+export interface AIChatResponse {
+  id: string
+  object: string
+  created: number
+  model: string
+  choices: Array<{
+    index: number
+    message: AIChatMessage
+    finish_reason: string
+  }>
+  usage: {
+    prompt_tokens: number
+    completion_tokens: number
+    total_tokens: number
+  }
+}
+
+export const aiChat = async (req: AIChatRequest) => {
+  const resp = await axiosInst.value.post('/ai-chat', req)
+  return resp.data as AIChatResponse
+}

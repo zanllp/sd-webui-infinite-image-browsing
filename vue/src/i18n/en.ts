@@ -385,5 +385,6 @@ You can specify which snapshot to restore to when starting IIB in the global set
   'autoTag.fields.seed': 'Seed',
   'autoTag.operators.contains': 'Contains',
   'autoTag.operators.equals': 'Equals',
-  'autoTag.operators.regex': 'Regex'
+  'autoTag.operators.regex': 'Regex',
+  aiAnalyzeTags: 'AI Analyze Tags'
 }
