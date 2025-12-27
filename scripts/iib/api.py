@@ -74,13 +74,29 @@ try:
 except Exception as e:
     logger.error(e)
 
-try:
-    import pillow_jxl
-except Exception as e:
-    logger.error(e)
+# Try several possible names for the Pillow JXL plugin so different pip package names are supported
+_jxl_imported = False
+for _name in ("pillow_jxl", "pillow_jxl_plugin", "pillow_jxl-plugin", "pillow_jxl_plugin_main"):
+    try:
+        __import__(_name)
+        logger.info("Imported JXL plugin module: %s", _name)
+        _jxl_imported = True
+        break
+    except Exception as _e:
+        logger.debug("JXL import attempt failed for %s: %s", _name, _e)
+if not _jxl_imported:
+    logger.info("No pillow-jxl plugin module imported; fallback conversion (djxl/magick) will be used if available.")
 
-# Import our JXL utility (fallback conversion helpers)
-from scripts.iib.jxl_utils import convert_jxl_to_webp, pillow_can_open_jxl
+# Import our JXL utility (fallback conversion helpers). If this module doesn't exist, server will fail on import.
+try:
+    from scripts.iib.jxl_utils import convert_jxl_to_webp, pillow_can_open_jxl
+except Exception as e:
+    # If helper isn't present, we still allow server start but conversion fallback won't be available.
+    logger.debug("jxl_utils not available: %s", e)
+    def convert_jxl_to_webp(src, dst, size=None, quality=85):
+        return False
+    def pillow_can_open_jxl():
+        return False
 
 # Ensure .jxl has a mime type registered so FastAPI/FileResponse can include it
 mimetypes.add_type("image/jxl", ".jxl")
