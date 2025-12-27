@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import sqlite3
-import subprocess
+
 
 from scripts.iib.dir_cover_cache import get_top_4_media_info
 from scripts.iib.tool import (
@@ -14,6 +14,9 @@ from scripts.iib.tool import (
     human_readable_size,
     is_valid_media_path,
     is_media_file,
+    is_image_file,
+    is_video_file,
+    is_audio_file,
     get_cache_dir,
     get_formatted_date,
     is_win,
@@ -74,32 +77,6 @@ try:
 except Exception as e:
     logger.error(e)
 
-# Try several possible names for the Pillow JXL plugin so different pip package names are supported
-_jxl_imported = False
-for _name in ("pillow_jxl", "pillow_jxl_plugin", "pillow_jxl-plugin", "pillow_jxl_plugin_main"):
-    try:
-        __import__(_name)
-        logger.info("Imported JXL plugin module: %s", _name)
-        _jxl_imported = True
-        break
-    except Exception as _e:
-        logger.debug("JXL import attempt failed for %s: %s", _name, _e)
-if not _jxl_imported:
-    logger.info("No pillow-jxl plugin module imported; fallback conversion (djxl/magick) will be used if available.")
-
-# Import our JXL utility (fallback conversion helpers). If this module doesn't exist, server will fail on import.
-try:
-    from scripts.iib.jxl_utils import convert_jxl_to_webp, pillow_can_open_jxl
-except Exception as e:
-    # If helper isn't present, we still allow server start but conversion fallback won't be available.
-    logger.debug("jxl_utils not available: %s", e)
-    def convert_jxl_to_webp(src, dst, size=None, quality=85):
-        return False
-    def pillow_can_open_jxl():
-        return False
-
-# Ensure .jxl has a mime type registered so FastAPI/FileResponse can include it
-mimetypes.add_type("image/jxl", ".jxl")
 
 index_html_path = get_data_file_path("vue/dist/index.html") if is_exe_ver else os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 
@@ -144,6 +121,7 @@ async def verify_secret(request: Request):
 
 DEFAULT_BASE = "/infinite_image_browsing"
 def infinite_image_browsing_api(app: FastAPI, **kwargs):
+    mimetypes.add_type('image/jxl', '.jxl')
     backup_db_file(DataBase.get_db_file_path())
     api_base = kwargs.get("base") if isinstance(kwargs.get("base"), str) else DEFAULT_BASE
     fe_public_path = kwargs.get("fe_public_path") if isinstance(kwargs.get("fe_public_path"), str) else api_base
@@ -389,7 +367,6 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             "pillow": _get_dist_version("Pillow", "PIL"),
             "imageio_ffmpeg": _get_dist_version("imageio-ffmpeg", "imageio_ffmpeg"),
             "pillow_avif_plugin": _get_dist_version("pillow-avif-plugin", "pillow_avif"),
-            "pillow_jxl": _get_dist_version("pillow-jxl", "pillow_jxl"),
         }
 
         logger.info("Version info requested: %s", {k: v for k, v in versions.items() if v})
@@ -560,9 +537,17 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     if item.is_file():
                         bytes = stat.st_size
                         size = human_readable_size(bytes)
+                        # Determine file type based on extension
+                        file_type = "file"
+                        if is_image_file(name):
+                            file_type = "image"
+                        elif is_video_file(name):
+                            file_type = "video"
+                        elif is_audio_file(name):
+                            file_type = "audio"
                         files.append(
                             {
-                                "type": "file",
+                                "type": file_type,
                                 "date": date,
                                 "size": size,
                                 "name": name,
@@ -619,35 +604,21 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             )
 
                 
-        # 如果小于64KB，通常直接返回原图以节省处理时间。
-        # 对于 `.jxl` 文件，浏览器通常不支持原生显示，因此仍然生成缩略图。
-        ext = path.split(".")[-1].lower()
-        if os.path.getsize(path) < 64 * 1024 and ext != "jxl":
+        # 如果小于64KB，直接返回原图
+        if os.path.getsize(path) < 64 * 1024:
             return FileResponse(
                 path,
-                media_type="image/" + ext,
+                media_type="image/" + path.split(".")[-1],
                 headers={"Cache-Control": "max-age=31536000", "ETag": hash},
             )
         
+
         # 如果缓存文件不存在，则生成缩略图并保存
-        try:
-            with Image.open(path) as img:
-                w, h = size.split("x")
-                img.thumbnail((int(w), int(h)))
-                os.makedirs(cache_dir, exist_ok=True)
-                img.save(cache_path, "webp")
-        except Exception as e:
-            # Pillow failed to open/convert (likely for .jxl if pillow-jxl or native lib is missing).
-            # Try fallback conversion using djxl/magick via convert_jxl_to_webp.
-            try:
-                w, h = size.split("x")
-                ok = convert_jxl_to_webp(path, cache_path, size=(int(w), int(h)))
-                if not ok:
-                    logger.error("Fallback conversion failed for thumbnail: %s", path)
-                    raise HTTPException(status_code=500, detail="Failed to generate thumbnail using fallback converter")
-            except Exception as e2:
-                logger.exception("Failed to generate thumbnail for %s: %s", path, e2)
-                raise HTTPException(status_code=500, detail=f"Failed to generate thumbnail: {e2}")
+        with Image.open(path) as img:
+            w, h = size.split("x")
+            img.thumbnail((int(w), int(h)))
+            os.makedirs(cache_dir, exist_ok=True)
+            img.save(cache_path, "webp")
 
         # 返回缓存文件
         return FileResponse(
@@ -656,89 +627,38 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             headers={"Cache-Control": "max-age=31536000", "ETag": hash},
         )
 
-    @app.get(api_base + "/image-thumbnail", dependencies=[Depends(verify_secret)])
-async def thumbnail(path: str, t: str, size: str = "256x256"):
-    check_path_trust(path)
-    if not cache_base_dir:
-        logger.warning("No cache_base_dir configured; can't generate thumbnails")
-        return
-    hash_dir = hashlib.md5((path + t).encode("utf-8")).hexdigest()
-    hash = hash_dir + size
-    cache_dir = os.path.join(cache_base_dir, "iib_cache", hash_dir)
-    cache_path = os.path.join(cache_dir, f"{size}.webp")
+    @app.get(api_base + "/file", dependencies=[Depends(verify_secret)])
+    async def get_file(path: str, t: str, disposition: Optional[str] = None):
+        filename = path
+        import mimetypes
 
-    logger.info("thumbnail request: path=%s size=%s cache_path=%s", path, size, cache_path)
+        check_path_trust(path)
+        if not os.path.exists(filename):
+            raise HTTPException(status_code=404)
+        if not os.path.isfile(filename):
+            raise HTTPException(status_code=400, detail=f"{filename} is not a file")
+        # 根据文件后缀名获取媒体类型
+        media_type, _ = mimetypes.guess_type(filename)
+        headers = {}
+        if disposition:
+            encoded_filename = urllib.parse.quote(disposition.encode('utf-8'))
+            headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{encoded_filename}"
 
-    # Return cached if exists
-    if os.path.exists(cache_path):
-        logger.debug("thumbnail cache hit: %s", cache_path)
+        if is_path_under_parents(filename) and is_valid_media_path(
+            filename
+        ):  # 认为永远不变,不要协商缓存了试试
+            headers[
+                "Cache-Control"
+            ] = "public, max-age=31536000"  # 针对同样名字文件但实际上不同内容的文件要求必须传入创建时间来避免浏览器缓存
+            headers["Expires"] = (datetime.now() + timedelta(days=365)).strftime(
+                "%a, %d %b %Y %H:%M:%S GMT"
+            )
+
         return FileResponse(
-            cache_path,
-            media_type="image/webp",
-            headers={"Cache-Control": "max-age=31536000", "ETag": hash},
+            filename,
+            media_type=media_type,
+            headers=headers,
         )
-
-    # Small file optimization (skip generating thumb for tiny files except .jxl)
-    ext = path.split(".")[-1].lower()
-    try:
-        file_size = os.path.getsize(path)
-    except Exception as e:
-        logger.exception("Failed to stat file %s: %s", path, e)
-        raise HTTPException(status_code=404, detail="File not found")
-
-    if file_size < 64 * 1024 and ext != "jxl":
-        logger.debug("Serving raw small file: %s (size=%d)", path, file_size)
-        return FileResponse(
-            path,
-            media_type="image/" + ext,
-            headers={"Cache-Control": "max-age=31536000", "ETag": hash},
-        )
-
-    os.makedirs(cache_dir, exist_ok=True)
-
-    # Try Pillow first (works if pillow-jxl and libjxl are installed)
-    try:
-        logger.debug("Attempting to open with Pillow: %s", path)
-        with Image.open(path) as img:
-            w, h = size.split("x")
-            img.thumbnail((int(w), int(h)))
-            img.save(cache_path, "WEBP")
-        logger.info("Thumbnail generated by Pillow: %s", cache_path)
-        return FileResponse(cache_path, media_type="image/webp", headers={"Cache-Control": "max-age=31536000", "ETag": hash})
-    except Exception as e_p:
-        logger.warning("Pillow failed to open/convert %s: %s", path, e_p)
-
-    # Fallback: if JXL, try djxl -> PNG -> Pillow -> WEBP
-    if ext == "jxl":
-        tmp_png = os.path.join(cache_dir, f"tmp_{hashlib.md5(path.encode()).hexdigest()}.png")
-        try:
-            logger.info("Falling back to djxl for %s -> %s", path, tmp_png)
-            subprocess.check_call(["djxl", path, tmp_png], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            logger.debug("djxl decoded to PNG: %s", tmp_png)
-            with Image.open(tmp_png) as img:
-                w, h = size.split("x")
-                img.thumbnail((int(w), int(h)))
-                img.save(cache_path, "WEBP")
-            logger.info("Thumbnail generated via djxl fallback: %s", cache_path)
-            try:
-                os.remove(tmp_png)
-            except Exception:
-                pass
-            return FileResponse(cache_path, media_type="image/webp", headers={"Cache-Control": "max-age=31536000", "ETag": hash})
-        except subprocess.CalledProcessError as ce:
-            logger.exception("djxl subprocess failed for %s: %s", path, ce)
-            # fallthrough to error response
-        except Exception as e_f:
-            logger.exception("Fallback conversion failed for %s: %s", path, e_f)
-            try:
-                if os.path.exists(tmp_png):
-                    os.remove(tmp_png)
-            except Exception:
-                pass
-
-    # If we reach here, thumbnail generation failed
-    logger.error("Failed to generate thumbnail for %s", path)
-    raise HTTPException(status_code=500, detail="Failed to generate thumbnail")
     
     @app.get(api_base + "/stream_video", dependencies=[Depends(verify_secret)])
     async def stream_video(path: str, request: Request):      
@@ -1385,3 +1305,4 @@ async def thumbnail(path: str, t: str, size: str = "256x256"):
     async def rebuild_index():
         update_extra_paths(conn = DataBase.get_conn())
         rebuild_image_index(search_dirs = get_img_search_dirs() + mem["extra_paths"])
+
