@@ -9,6 +9,7 @@ def dist2package(dist: str):
         "python-dotenv": "dotenv",
         "Pillow": "PIL",
         "pillow-avif-plugin": "pillow_avif"
+        "pillow-jxl-plugin": "pillow_jxl"
     }).get(dist, dist)
 
 # copy from controlnet, thanks
