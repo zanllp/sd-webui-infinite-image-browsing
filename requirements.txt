@@ -4,6 +4,7 @@ piexif
 python-dotenv
 Pillow
 pillow-avif-plugin
+pillow-jxl
 imageio
 av>=14,<15
 lxml
