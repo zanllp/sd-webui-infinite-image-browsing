@@ -7,6 +7,6 @@ pillow-avif-plugin
 pillow-jxl-plugin
 imageio
 imageio-ffmpeg
-av>=14,<15
+av
 lxml
 filetype
