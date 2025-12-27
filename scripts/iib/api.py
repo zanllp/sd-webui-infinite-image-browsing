@@ -79,7 +79,10 @@ try:
 except Exception as e:
     logger.error(e)
 
- Ensure .jxl has a mime type registered so FastAPI/FileResponse can include it
+# Import our JXL utility (fallback conversion helpers)
+from scripts.iib.jxl_utils import convert_jxl_to_webp, pillow_can_open_jxl
+
+# Ensure .jxl has a mime type registered so FastAPI/FileResponse can include it
 mimetypes.add_type("image/jxl", ".jxl")
 
 index_html_path = get_data_file_path("vue/dist/index.html") if is_exe_ver else os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
@@ -610,13 +613,25 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 headers={"Cache-Control": "max-age=31536000", "ETag": hash},
             )
         
-
         # 如果缓存文件不存在，则生成缩略图并保存
-        with Image.open(path) as img:
-            w, h = size.split("x")
-            img.thumbnail((int(w), int(h)))
-            os.makedirs(cache_dir, exist_ok=True)
-            img.save(cache_path, "webp")
+        try:
+            with Image.open(path) as img:
+                w, h = size.split("x")
+                img.thumbnail((int(w), int(h)))
+                os.makedirs(cache_dir, exist_ok=True)
+                img.save(cache_path, "webp")
+        except Exception as e:
+            # Pillow failed to open/convert (likely for .jxl if pillow-jxl or native lib is missing).
+            # Try fallback conversion using djxl/magick via convert_jxl_to_webp.
+            try:
+                w, h = size.split("x")
+                ok = convert_jxl_to_webp(path, cache_path, size=(int(w), int(h)))
+                if not ok:
+                    logger.error("Fallback conversion failed for thumbnail: %s", path)
+                    raise HTTPException(status_code=500, detail="Failed to generate thumbnail using fallback converter")
+            except Exception as e2:
+                logger.exception("Failed to generate thumbnail for %s: %s", path, e2)
+                raise HTTPException(status_code=500, detail=f"Failed to generate thumbnail: {e2}")
 
         # 返回缓存文件
         return FileResponse(
@@ -651,6 +666,28 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             headers["Expires"] = (datetime.now() + timedelta(days=365)).strftime(
                 "%a, %d %b %Y %H:%M:%S GMT"
             )
+
+        # If the file is a .jxl and the request is for inline display (no disposition),
+        # convert to webp and serve the converted image so browsers can display it.
+        ext = filename.split(".")[-1].lower()
+        if ext == "jxl" and disposition is None and cache_base_dir:
+            try:
+                hash_dir = hashlib.md5((filename + t).encode("utf-8")).hexdigest()
+            except Exception:
+                hash_dir = hashlib.md5((filename).encode("utf-8")).hexdigest()
+            cache_dir = os.path.join(cache_base_dir, "iib_cache", hash_dir)
+            os.makedirs(cache_dir, exist_ok=True)
+            full_view_path = os.path.join(cache_dir, "full.webp")
+            if not os.path.exists(full_view_path):
+                try:
+                    ok = convert_jxl_to_webp(filename, full_view_path, size=None)
+                    if not ok:
+                        logger.error("Failed to convert jxl to webp for inline view: %s", filename)
+                except Exception as e:
+                    logger.exception("Error converting jxl to webp for inline view: %s", filename)
+            if os.path.exists(full_view_path):
+                headers["Cache-Control"] = "public, max-age=31536000"
+                return FileResponse(full_view_path, media_type="image/webp", headers=headers)
 
         return FileResponse(
             filename,
@@ -1303,4 +1340,3 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def rebuild_index():
         update_extra_paths(conn = DataBase.get_conn())
         rebuild_image_index(search_dirs = get_img_search_dirs() + mem["extra_paths"])
-
