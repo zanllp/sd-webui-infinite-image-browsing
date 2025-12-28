@@ -8,3 +8,4 @@ imageio
 av>=14,<15
 lxml
 filetype
+requests

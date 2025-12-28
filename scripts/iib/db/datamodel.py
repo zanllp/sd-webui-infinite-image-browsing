@@ -18,6 +18,7 @@ from contextlib import closing
 import os
 import threading
 import re
+import hashlib
 
 
 class FileInfoDict(TypedDict):
@@ -80,6 +81,8 @@ class DataBase:
             ExtraPath.create_table(conn)
             DirCoverCache.create_table(conn)
             GlobalSetting.create_table(conn)
+            ImageEmbedding.create_table(conn)
+            TopicTitleCache.create_table(conn)
         finally:
             conn.commit()
         clz.num += 1
@@ -299,6 +302,151 @@ class Image:
             cls.safe_batch_remove(conn, deleted_ids)
         
         return images
+
+
+class ImageEmbedding:
+    """
+    Store embeddings for image prompt text.
+
+    Notes:
+    - vec is stored as float32 bytes (little-endian), compatible with Python's array('f').
+    - text_hash is used to skip recomputation when prompt text doesn't change.
+    """
+
+    @classmethod
+    def create_table(cls, conn: Connection):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """CREATE TABLE IF NOT EXISTS image_embedding (
+                    image_id INTEGER PRIMARY KEY,
+                    model TEXT NOT NULL,
+                    dim INTEGER NOT NULL,
+                    text_hash TEXT NOT NULL,
+                    vec BLOB NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    FOREIGN KEY (image_id) REFERENCES image(id)
+                )"""
+            )
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS image_embedding_idx_model_hash ON image_embedding(model, text_hash)"
+            )
+
+    @staticmethod
+    def compute_text_hash(text: str) -> str:
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+    @classmethod
+    def get_by_image_ids(cls, conn: Connection, image_ids: List[int]):
+        if not image_ids:
+            return {}
+        placeholders = ",".join("?" * len(image_ids))
+        query = f"SELECT image_id, model, dim, text_hash, vec, updated_at FROM image_embedding WHERE image_id IN ({placeholders})"
+        with closing(conn.cursor()) as cur:
+            cur.execute(query, image_ids)
+            rows = cur.fetchall()
+        res = {}
+        for row in rows:
+            res[row[0]] = {
+                "image_id": row[0],
+                "model": row[1],
+                "dim": row[2],
+                "text_hash": row[3],
+                "vec": row[4],
+                "updated_at": row[5],
+            }
+        return res
+
+    @classmethod
+    def upsert(
+        cls,
+        conn: Connection,
+        image_id: int,
+        model: str,
+        dim: int,
+        text_hash: str,
+        vec_blob: bytes,
+        updated_at: Optional[str] = None,
+    ):
+        updated_at = updated_at or datetime.now().isoformat()
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """INSERT INTO image_embedding (image_id, model, dim, text_hash, vec, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(image_id) DO UPDATE SET
+                    model = excluded.model,
+                    dim = excluded.dim,
+                    text_hash = excluded.text_hash,
+                    vec = excluded.vec,
+                    updated_at = excluded.updated_at
+                """,
+                (image_id, model, dim, text_hash, vec_blob, updated_at),
+            )
+
+
+class TopicTitleCache:
+    """
+    Cache cluster titles/keywords to avoid repeated LLM calls.
+    """
+
+    @classmethod
+    def create_table(cls, conn: Connection):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """CREATE TABLE IF NOT EXISTS topic_title_cache (
+                    cluster_hash TEXT PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    keywords TEXT NOT NULL,
+                    model TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )"""
+            )
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS topic_title_cache_idx_model ON topic_title_cache(model)"
+            )
+
+    @classmethod
+    def get(cls, conn: Connection, cluster_hash: str):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                "SELECT title, keywords, model, updated_at FROM topic_title_cache WHERE cluster_hash = ?",
+                (cluster_hash,),
+            )
+            row = cur.fetchone()
+        if not row:
+            return None
+        title, keywords, model, updated_at = row
+        try:
+            kw = json.loads(keywords) if isinstance(keywords, str) else []
+        except Exception:
+            kw = []
+        if not isinstance(kw, list):
+            kw = []
+        return {"title": title, "keywords": kw, "model": model, "updated_at": updated_at}
+
+    @classmethod
+    def upsert(
+        cls,
+        conn: Connection,
+        cluster_hash: str,
+        title: str,
+        keywords: List[str],
+        model: str,
+        updated_at: Optional[str] = None,
+    ):
+        updated_at = updated_at or datetime.now().isoformat()
+        kw = json.dumps([str(x) for x in (keywords or [])], ensure_ascii=False)
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """INSERT INTO topic_title_cache (cluster_hash, title, keywords, model, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(cluster_hash) DO UPDATE SET
+                    title = excluded.title,
+                    keywords = excluded.keywords,
+                    model = excluded.model,
+                    updated_at = excluded.updated_at
+                """,
+                (cluster_hash, title, kw, model, updated_at),
+            )
 
 
 class Tag:

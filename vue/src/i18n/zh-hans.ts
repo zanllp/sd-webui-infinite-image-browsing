@@ -18,6 +18,32 @@ export const zhHans = {
   clearCacheIfNotTakeEffect: '如果更改没有生效，请尝试清理页面缓存',
   showTiktokNavigator: '显示导航按钮',
   showTiktokNavigatorDesc: '在 TikTok 视图中显示导航按钮（上/下箭头）',
+
+  // ===== Topic Search (Experimental) =====
+  topicSearchExperimental: '自然语言分类&搜索（实验性）',
+  topicSearchTitleExperimental: '自然语言分类 & 搜索（实验性）',
+  topicSearchScope: '范围',
+  topicSearchNeedScope: '请先选择向量化范围（文件夹）',
+  topicSearchQueryPlaceholder: '输入一句话，召回相似图片（RAG 召回）',
+  topicSearchOpenResults: '打开结果',
+  topicSearchThreshold: '阈值',
+  topicSearchMinClusterSize: '最小组',
+  topicSearchEmptyNoScope: '请先选择范围，然后刷新/归类',
+  topicSearchEmptyNoTopics: '暂无主题结果（可尝试降低“最小组”或调整“阈值”）',
+  topicSearchChooseScope: '选择范围',
+  topicSearchRefreshAndCluster: '刷新/归类',
+  topicSearchScopeModalTitle: '选择向量化范围（文件夹）',
+  topicSearchScopeTip: '默认不启用任何范围；必须选择后才能归类/搜索。范围来源于 QuickMovePaths。',
+  topicSearchSavingToBackend: '正在保存到后端...',
+  topicSearchScopePlaceholder: '选择文件夹（可多选）',
+  topicSearchRecallMsg: '召回 {0} / {1}（TopK={2}）',
+
+  topicSearchGuideTitle: '快速上手（实验性）',
+  topicSearchGuideStep1: '选择要分析的文件夹范围（可多选）',
+  topicSearchGuideStep2: '点击刷新，生成主题卡片（会增量向量化）',
+  topicSearchGuideStep3: '输入一句话搜索，会召回相似图片并打开结果页',
+  topicSearchGuideEmptyReasonNoScope: '当前为空：未选择范围（已默认关闭），请先点“范围”选择文件夹',
+  topicSearchGuideEmptyReasonNoTopics: '当前为空：该范围内还未生成主题（可点刷新，或调低最小组/阈值）',
   success: '成功',
   setCurrFrameAsVideoPoster: '设置当前帧为视频封面',
   sync: '同步',
@@ -128,6 +154,7 @@ export const zhHans = {
   sendImageFailed: '发送图像失败，请携带console的错误消息找开发者',
   confirmDelete: '确认删除？',
   deleteSuccess: '删除成功',
+  moveToTrashSuccess: '已移动到回收站',
   doubleClickToCopy: '双击复制',
   root: '根',
   drive: '盘',
@@ -362,5 +389,6 @@ export const zhHans = {
   'autoTag.fields.seed': 'Seed',
   'autoTag.operators.contains': '包含 (Contains)',
   'autoTag.operators.equals': '等于 (Equals)',
-  'autoTag.operators.regex': '正则 (Regex)'
+  'autoTag.operators.regex': '正则 (Regex)',
+  aiAnalyzeTags: 'AI分析标签'
 }
