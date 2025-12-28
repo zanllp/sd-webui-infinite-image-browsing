@@ -23,7 +23,7 @@ interface TabPaneBase {
 }
 
 interface OtherTabPane extends TabPaneBase {
-  type: 'global-setting' | 'tag-search' |  'batch-download' | 'workspace-snapshot' | 'random-image'
+  type: 'global-setting' | 'tag-search' |  'batch-download' | 'workspace-snapshot' | 'random-image' | 'topic-search'
 }
 
 export interface EmptyStartTabPane extends TabPaneBase  {
@@ -90,6 +90,13 @@ interface TagSearchMatchedImageGridTabPane extends TabPaneBase {
   selectedTagIds: MatchImageByTagsReq
   id: string
 }
+
+interface TopicSearchMatchedImageGridTabPane extends TabPaneBase {
+  type: 'topic-search-matched-image-grid'
+  id: string
+  title: string
+  paths: string[]
+}
 export interface ImgSliTabPane extends TabPaneBase {
   type: 'img-sli'
   left: FileNodeInfo
@@ -113,7 +120,16 @@ export interface FuzzySearchTabPane extends TabPaneBase {
   searchScope?: string
 }
 
-export type TabPane = EmptyStartTabPane | FileTransferTabPane | OtherTabPane | TagSearchMatchedImageGridTabPane | ImgSliTabPane | TagSearchTabPane | FuzzySearchTabPane| GridViewTabPane
+export type TabPane =
+  | EmptyStartTabPane
+  | FileTransferTabPane
+  | OtherTabPane
+  | TagSearchMatchedImageGridTabPane
+  | TopicSearchMatchedImageGridTabPane
+  | ImgSliTabPane
+  | TagSearchTabPane
+  | FuzzySearchTabPane
+  | GridViewTabPane
 
 /**
  * This interface represents a tab, which contains an array of panes, an ID, and a key
