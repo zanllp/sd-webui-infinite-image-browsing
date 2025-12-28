@@ -33,8 +33,6 @@ import { prefix } from '@/util/const'
 // @ts-ignore
 import * as Pinyin from 'jian-pinyin'
 import { Tag } from '@/api/db'
-import { aiChat } from '@/api'
-import { message } from 'ant-design-vue'
 
 const global = useGlobalStore()
 
@@ -60,15 +58,9 @@ const geninfoStructNoPrompts = computed(() => {
   let p = parse(cleanImageGenInfo.value)
   delete p.prompt
   delete p.negativePrompt
-  delete p.extraJsonMetaInfo
   return p
 })
 
-// extraJsonMetaInfo 是需要额外显示的meta字段，使用原始 imageGenInfo 解析以避免 HTML 转义问题
-const extraJsonMetaInfo = computed(() => {
-  const p = parse(imageGenInfo.value) // 使用原始的 imageGenInfo，而不是 cleanImageGenInfo
-  return p.extraJsonMetaInfo as Record<string, any> | undefined
-})
 
 const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
@@ -313,80 +305,6 @@ const onTiktokViewClick = () => {
   emit('contextMenuClick', { key: 'tiktokView' } as any, props.file, props.idx)
 }
 
-// AI分析tag功能
-const analyzeTagsWithAI = async () => {
-  if (!geninfoStruct.value.prompt) {
-    message.warning('没有找到提示词')
-    return
-  }
-
-  if (!global.conf?.all_custom_tags?.length) {
-    message.warning('没有自定义标签')
-    return
-  }
-
-  try {
-    const prompt = geninfoStruct.value.prompt
-    const availableTags = global.conf.all_custom_tags.map(tag => tag.name).join(', ')
-
-    const systemMessage = `你是一个专业的AI助手，负责分析Stable Diffusion提示词并将其分类到相应的标签中。
-
-你的任务是：
-1. 分析给定的提示词
-2. 从提供的标签列表中找出所有相关的标签
-3. 只返回匹配的标签名称，用逗号分隔
-4. 如果没有匹配的标签，返回空字符串
-5. 标签匹配应该基于语义相似性和主题相关性
-
-可用的标签：${availableTags}
-
-请只返回标签名称，不要包含其他内容。`
-
-    const response = await aiChat({
-      messages: [
-        { role: 'system', content: systemMessage },
-        { role: 'user', content: `请分析这个提示词并返回匹配的标签：${prompt}` }
-      ],
-      temperature: 0.3,
-      max_tokens: 200
-    })
-
-    const matchedTagsText = response.choices[0].message.content.trim()
-    if (!matchedTagsText) {
-      message.info('AI没有找到匹配的标签')
-      return
-    }
-
-    // 解析返回的标签
-    const matchedTagNames = matchedTagsText.split(',').map((name: string) => name.trim()).filter((name: string) => name)
-    
-    // 找到对应的tag对象
-    const tagsToAdd = global.conf.all_custom_tags.filter((tag: Tag) => 
-      matchedTagNames.some((matchedName: string) => 
-        tag.name.toLowerCase() === matchedName.toLowerCase() ||
-        tag.name.toLowerCase().includes(matchedName.toLowerCase()) ||
-        matchedName.toLowerCase().includes(tag.name.toLowerCase())
-      )
-    )
-
-    if (tagsToAdd.length === 0) {
-      message.info('没有找到有效的匹配标签')
-      return
-    }
-
-    // 为每个匹配的tag发送添加请求
-    for (const tag of tagsToAdd) {
-      emit('contextMenuClick', { key: `toggle-tag-${tag.id}` } as any, props.file, props.idx)
-    }
-
-    message.success(`已添加 ${tagsToAdd.length} 个标签：${tagsToAdd.map(t => t.name).join(', ')}`)
-
-  } catch (error) {
-    console.error('AI分析标签失败:', error)
-    message.error('AI分析标签失败，请检查配置')
-  }
-}
-
 </script>
 
 <template>
@@ -466,13 +384,6 @@ const analyzeTagsWithAI = async () => {
           <a-button @click="copyPositivePrompt" v-if="imageGenInfo">{{
             $t('copyPositivePrompt')
           }}</a-button>
-          <a-button 
-            @click="analyzeTagsWithAI"
-            type="primary"
-            v-if="imageGenInfo && global.conf?.all_custom_tags?.length"
-          >
-            {{ $t('aiAnalyzeTags') }}
-          </a-button>
           <a-button 
             @click="onTiktokViewClick" 
             @touchstart.prevent="onTiktokViewClick"
@@ -575,17 +486,6 @@ const analyzeTagsWithAI = async () => {
                   </td>
                   <td v-else style="cursor: pointer;" @dblclick="copy(unescapeHtml(txt))">
                     {{ unescapeHtml(txt) }}
-                  </td>
-                </tr>
-              </table>
-            </template>
-            <template v-if="extraJsonMetaInfo && Object.keys(extraJsonMetaInfo).length"> <br />
-              <h3>Extra Meta Info</h3>
-              <table class="extra-meta-table">
-                <tr v-for="(val, key) in extraJsonMetaInfo" :key="key" class="gen-info-frag">
-                  <td style="font-weight: 600;text-transform: capitalize;">{{ key }}</td>
-                  <td style="cursor: pointer;" @dblclick="copy(val)">
-                    <code class="extra-meta-value">{{ typeof val === 'string' ? val : JSON.stringify(val, null, 2) }}</code>
                   </td>
                 </tr>
               </table>
@@ -708,21 +608,6 @@ const analyzeTagsWithAI = async () => {
 
       tr td:first-child {
         white-space: nowrap;
-        vertical-align: top;
-      }
-    }
-
-    table.extra-meta-table {
-      .extra-meta-value {
-        display: block;
-        max-height: 200px;
-        overflow: auto;
-        white-space: pre-wrap;
-        word-break: break-word;
-        font-size: 0.85em;
-        background: var(--zp-secondary-variant-background);
-        padding: 8px;
-        border-radius: 4px;
       }
     }
 

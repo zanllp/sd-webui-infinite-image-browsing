@@ -40,7 +40,6 @@ const compCnMap: Partial<Record<TabPane['type'], string>> = {
   local: t('local'),
   'tag-search': t('imgSearch'),
   'fuzzy-search': t('fuzzy-search'),
-  'topic-search': t('topicSearchExperimental'),
   'batch-download': t('batchDownload') + ' / ' + t('archive'),
   'workspace-snapshot': t('WorkspaceSnapshot'),
   'random-image': t('randomImage'),
@@ -52,7 +51,6 @@ const createPane = (type: TabPane['type'], path?: string, mode?: FileTransModeIn
   switch (type) {
     case 'grid-view':
     case 'tag-search-matched-image-grid':
-    case 'topic-search-matched-image-grid':
     case 'img-sli':
       return
     case 'global-setting':
@@ -60,7 +58,6 @@ const createPane = (type: TabPane['type'], path?: string, mode?: FileTransModeIn
     case 'batch-download':
     case 'workspace-snapshot':
     case 'fuzzy-search':
-    case 'topic-search':
     case 'random-image':
     case 'empty':
       pane = { type, name: compCnMap[type]!, key: Date.now() + uniqueId() }

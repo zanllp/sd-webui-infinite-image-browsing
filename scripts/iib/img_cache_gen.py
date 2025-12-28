@@ -6,14 +6,11 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 from PIL import Image
 
-def generate_image_cache(dirs: List[str], size:str, verbose=True):
-  dirs = [r"C:\Users\zanllp\Desktop\repo\Z-Image-Turbo\client"]
+def generate_image_cache(dirs, size:str, verbose=False):
   start_time = time.time()
   cache_base_dir = get_cache_dir()
-  verbose=True
+
   def process_image(item):
-    if '\\node_modules\\' in item.path:
-      return
     if item.is_dir():
       verbose and print(f"Processing directory: {item.path}")
       for sub_item in os.scandir(item.path):

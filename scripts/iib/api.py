@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import sqlite3
 
+
 from scripts.iib.dir_cover_cache import get_top_4_media_info
 from scripts.iib.tool import (
     get_created_date_by_stat,
@@ -47,7 +48,6 @@ from PIL import Image
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 import hashlib
-from contextlib import closing
 from scripts.iib.db.datamodel import (
     DataBase,
     ExtraPathType,
@@ -58,10 +58,9 @@ from scripts.iib.db.datamodel import (
     ExtraPath,
     FileInfoDict,
     Cursor, 
-    GlobalSetting,
+    GlobalSetting
 )
 from scripts.iib.db.update_image_data import update_image_data, rebuild_image_index, add_image_data_single
-from scripts.iib.topic_cluster import mount_topic_cluster_routes
 from scripts.iib.logger import logger
 from scripts.iib.seq import seq
 import urllib.parse
@@ -74,13 +73,6 @@ try:
 except Exception as e:
     logger.error(e)
 
-import requests
-import dotenv
-
-
-
-# 加载环境变量
-dotenv.load_dotenv()
 
 index_html_path = get_data_file_path("vue/dist/index.html") if is_exe_ver else os.path.join(cwd, "vue/dist/index.html")  # 在app.py也被使用
 
@@ -90,17 +82,6 @@ mem = {"secret_key_hash": None, "extra_paths": [], "all_scanned_paths": []}
 secret_key = os.getenv("IIB_SECRET_KEY")
 if secret_key:
     print("Secret key loaded successfully. ")
-
-# AI 配置
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
-AI_MODEL = os.getenv("AI_MODEL", "gpt-4o-mini")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
-
-print(f"AI Model: {AI_MODEL or 'Not configured'}")
-print(f"OpenAI Base URL: {OPENAI_BASE_URL}")
-print(f"OpenAI API Key: {'Configured' if OPENAI_API_KEY else 'Not configured'}")
-print(f"Embedding Model: {EMBEDDING_MODEL or 'Not configured'}")
 
 WRITEABLE_PERMISSIONS = ["read-write", "write-only"]
 
@@ -395,7 +376,6 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     )
     async def delete_files(req: DeleteFilesReq):
         conn = DataBase.get_conn()
-
         for path in req.file_paths:
             check_path_trust(path)
             try:
@@ -410,12 +390,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     shutil.rmtree(path)
                 else:
                     close_video_file_reader(path)
-                    txt_path = get_img_geninfo_txt_path(path)
-
                     os.remove(path)
+                    txt_path = get_img_geninfo_txt_path(path)
                     if txt_path:
                         os.remove(txt_path)
-                    
                     img = DbImg.get(conn, os.path.normpath(path))
                     if img:
                         logger.info("delete file: %s", path)
@@ -430,8 +408,6 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     else f"删除文件 {path} 时出错：{e}"
                 )
                 raise HTTPException(400, detail=error_msg)
-
-        return {"ok": True}
 
     class CreateFoldersReq(BaseModel):
         dest_folder: str
@@ -630,7 +606,6 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             img.thumbnail((int(w), int(h)))
             os.makedirs(cache_dir, exist_ok=True)
             img.save(cache_path, "webp")
-            # print(f"Image cache generated: {path}")
 
         # 返回缓存文件
         return FileResponse(
@@ -1241,17 +1216,6 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         ImageTag.remove(conn, image_id=req.img_id, tag_id=req.tag_id)
 
 
-    # ===== 主题聚类 / Embedding（拆分到独立模块，减少 api.py 体积）=====
-    mount_topic_cluster_routes(
-        app=app,
-        db_api_base=db_api_base,
-        verify_secret=verify_secret,
-        write_permission_required=write_permission_required,
-        openai_base_url=OPENAI_BASE_URL,
-        openai_api_key=OPENAI_API_KEY,
-        embedding_model=EMBEDDING_MODEL,
-        ai_model=AI_MODEL,
-    )
 
 
     class ExtraPathModel(BaseModel):
@@ -1328,49 +1292,4 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def rebuild_index():
         update_extra_paths(conn = DataBase.get_conn())
         rebuild_image_index(search_dirs = get_img_search_dirs() + mem["extra_paths"])
-
-
-    # AI 相关路由
-    class AIChatRequest(BaseModel):
-        messages: List[dict]
-        temperature: Optional[float] = 0.7
-        max_tokens: Optional[int] = None
-        stream: Optional[bool] = False
-
-    @app.post(f"{api_base}/ai-chat", dependencies=[Depends(verify_secret), Depends(write_permission_required)])
-    async def ai_chat(req: AIChatRequest):
-        """通用AI聊天接口，转发到OpenAI兼容API"""
-        if not OPENAI_API_KEY:
-            raise HTTPException(status_code=500, detail="OpenAI API Key not configured")
-
-        try:
-            payload = {
-                "model": AI_MODEL,
-                "messages": req.messages,
-                "temperature": req.temperature,
-                "stream": req.stream
-            }
-            if req.max_tokens:
-                payload["max_tokens"] = req.max_tokens
-
-            headers = {
-                "Authorization": f"Bearer {OPENAI_API_KEY}",
-                "Content-Type": "application/json"
-            }
-
-            response = requests.post(
-                f"{OPENAI_BASE_URL}/chat/completions",
-                json=payload,
-                headers=headers,
-                timeout=60
-            )
-
-            if response.status_code != 200:
-                raise HTTPException(status_code=response.status_code, detail=response.text)
-
-            return response.json()
-
-        except requests.RequestException as e:
-            logger.error(f"AI API request failed: {e}")
-            raise HTTPException(status_code=500, detail=f"AI API request failed: {str(e)}")
 

@@ -20,32 +20,6 @@ export const en: IIBI18nMap = {
   clearCacheIfNotTakeEffect: 'If the changes do not take effect, try clearing the page cache',
   showTiktokNavigator: 'Show Navigation Buttons',
   showTiktokNavigatorDesc: 'Show the navigation buttons (up/down arrows) in TikTok view',
-
-  // ===== Topic Search (Experimental) =====
-  topicSearchExperimental: 'Natural Language Categorization & Search (Experimental)',
-  topicSearchTitleExperimental: 'Natural Language Categorization & Search (Experimental)',
-  topicSearchScope: 'Scope',
-  topicSearchNeedScope: 'Please select a scope folder first',
-  topicSearchQueryPlaceholder: 'Type a sentence to retrieve similar images (RAG-like retrieval)',
-  topicSearchOpenResults: 'Open results',
-  topicSearchThreshold: 'Threshold',
-  topicSearchMinClusterSize: 'Min cluster',
-  topicSearchEmptyNoScope: 'Please select a scope, then refresh/categorize',
-  topicSearchEmptyNoTopics: 'No topics yet (try lowering “Min cluster” or adjusting “Threshold”)',
-  topicSearchChooseScope: 'Select scope',
-  topicSearchRefreshAndCluster: 'Refresh/Categorize',
-  topicSearchScopeModalTitle: 'Select vectorization scope (folders)',
-  topicSearchScopeTip: 'No scope is enabled by default. You must select folders to categorize/search. Scope comes from QuickMovePaths.',
-  topicSearchSavingToBackend: 'Saving to backend...',
-  topicSearchScopePlaceholder: 'Select folders (multi-select)',
-  topicSearchRecallMsg: 'Retrieved {0} / {1} (TopK={2})',
-
-  topicSearchGuideTitle: 'Quick Start (Experimental)',
-  topicSearchGuideStep1: 'Select the scope folders to analyze (multi-select)',
-  topicSearchGuideStep2: 'Click Refresh to generate topic cards (incremental vectorization)',
-  topicSearchGuideStep3: 'Type a sentence to search; it will retrieve similar images and open the result page',
-  topicSearchGuideEmptyReasonNoScope: 'Empty because: no scope selected (disabled by default). Click “Scope” to choose folders.',
-  topicSearchGuideEmptyReasonNoTopics: 'Empty because: no topics generated yet for this scope (try Refresh or lower Min cluster/Threshold).',
   success: 'Success',
   setCurrFrameAsVideoPoster: 'Set Current Frame as Video Cover',
   sync: 'Sync',
@@ -295,7 +269,6 @@ You can specify which snapshot to restore to when starting IIB in the global set
     'Failed to send image. Please contact the developer with the error message from the console.',
   confirmDelete: 'Are you sure you want to delete?',
   deleteSuccess: 'Deleted successfully',
-  moveToTrashSuccess: 'Moved to trash',
   doubleClickToCopy: 'Double-click to copy',
   root: 'Root',
   drive: ' drive',
@@ -411,6 +384,5 @@ You can specify which snapshot to restore to when starting IIB in the global set
   'autoTag.fields.seed': 'Seed',
   'autoTag.operators.contains': 'Contains',
   'autoTag.operators.equals': 'Equals',
-  'autoTag.operators.regex': 'Regex',
-  aiAnalyzeTags: 'AI Analyze Tags'
+  'autoTag.operators.regex': 'Regex'
 }
