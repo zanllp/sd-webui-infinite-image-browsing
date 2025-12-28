@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { getGlobalSettingRaw, setAppFeSettingForce } from '@/api'
-import { clusterIibOutput, searchIibOutputByPrompt, type ClusterIibOutputResp, type PromptSearchResp } from '@/api/db'
+import {
+  getClusterIibOutputJobStatus,
+  searchIibOutputByPrompt,
+  startClusterIibOutputJob,
+  type ClusterIibOutputJobStatusResp,
+  type ClusterIibOutputResp,
+  type PromptSearchResp
+} from '@/api/db'
 import { t } from '@/i18n'
 import { useGlobalStore } from '@/store/useGlobalStore'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { uniqueId } from 'lodash-es'
 import { message } from 'ant-design-vue'
 
@@ -14,6 +21,56 @@ const loading = ref(false)
 const threshold = ref(0.86)
 const minClusterSize = ref(2)
 const result = ref<ClusterIibOutputResp | null>(null)
+
+const job = ref<ClusterIibOutputJobStatusResp | null>(null)
+const jobId = ref<string>('')
+let _jobTimer: any = null
+
+const jobRunning = computed(() => {
+  const st = job.value?.status
+  return st === 'queued' || st === 'running'
+})
+const jobStageText = computed(() => {
+  const st = String(job.value?.stage || '')
+  if (!st || st === 'queued' || st === 'init') return t('topicSearchJobQueued')
+  if (st === 'embedding') return t('topicSearchJobStageEmbedding')
+  if (st === 'clustering') return t('topicSearchJobStageClustering')
+  if (st === 'titling') return t('topicSearchJobStageTitling')
+  if (st === 'done') return t('topicSearchJobStageDone')
+  if (st === 'error') return t('topicSearchJobStageError')
+  return `${t('topicSearchJobStage')}: ${st}`
+})
+const jobPercent = computed(() => {
+  const p = job.value?.progress
+  if (!p) return 0
+  const total = Number(p.to_embed ?? 0)
+  const done = Number(p.embedded_done ?? 0)
+  if (total <= 0) return 0
+  const v = Math.floor((done / total) * 100)
+  return Math.max(0, Math.min(100, v))
+})
+const jobDesc = computed(() => {
+  const p = job.value?.progress
+  if (!p) return ''
+  if (job.value?.stage === 'embedding') {
+    const done = Number(p.embedded_done ?? 0)
+    const total = Number(p.to_embed ?? 0)
+    const scanned = Number(p.scanned ?? 0)
+    const folder = String(p.folder ?? '')
+    return t('topicSearchJobEmbeddingDesc', [done, total, scanned, folder])
+  }
+  if (job.value?.stage === 'clustering') {
+    const done = Number(p.items_done ?? 0)
+    const total = Number(p.items_total ?? 0)
+    return t('topicSearchJobClusteringDesc', [done, total])
+  }
+  if (job.value?.stage === 'titling') {
+    const done = Number(p.clusters_done ?? 0)
+    const total = Number(p.clusters_total ?? 0)
+    return t('topicSearchJobTitlingDesc', [done, total])
+  }
+  return ''
+})
 
 const query = ref('')
 const qLoading = ref(false)
@@ -109,6 +166,29 @@ const scheduleSaveScope = () => {
   }, 500)
 }
 
+const stopJobPoll = () => {
+  if (_jobTimer) {
+    clearInterval(_jobTimer)
+    _jobTimer = null
+  }
+}
+
+const pollJob = async () => {
+  const id = jobId.value
+  if (!id) return
+  const st = await getClusterIibOutputJobStatus(id)
+  job.value = st
+  if (st.status === 'done') {
+    stopJobPoll()
+    loading.value = false
+    if (st.result) result.value = st.result
+  } else if (st.status === 'error') {
+    stopJobPoll()
+    loading.value = false
+    message.error(st.error || t('topicSearchJobFailed'))
+  }
+}
+
 const refresh = async () => {
   if (g.conf?.is_readonly) return
   if (!scopeCount.value) {
@@ -116,16 +196,26 @@ const refresh = async () => {
     scopeOpen.value = true
     return
   }
+  stopJobPoll()
   loading.value = true
+  job.value = null
+  jobId.value = ''
   try {
-    result.value = await clusterIibOutput({
+    const started = await startClusterIibOutputJob({
       threshold: threshold.value,
       min_cluster_size: minClusterSize.value,
       lang: g.lang,
       folder_paths: scopeFolders.value
     })
-  } finally {
+    jobId.value = started.job_id
+    // poll immediately + interval
+    await pollJob()
+    _jobTimer = setInterval(() => {
+      void pollJob()
+    }, 800)
+  } catch (e) {
     loading.value = false
+    throw e
   }
 }
 
@@ -193,6 +283,10 @@ onMounted(() => {
   })()
 })
 
+onBeforeUnmount(() => {
+  stopJobPoll()
+})
+
 watch(
   () => scopeFolders.value,
   () => {
@@ -245,6 +339,11 @@ watch(
       style="margin: 12px 0;"
       show-icon
     />
+
+    <div v-if="jobRunning" style="margin: 10px 0 0 0;">
+      <a-alert type="info" show-icon :message="jobStageText" :description="jobDesc" />
+      <a-progress :percent="jobPercent" size="small" style="margin-top: 8px;" />
+    </div>
 
     <a-spin :spinning="loading">
       <div v-if="qResult" style="margin-top: 10px;">

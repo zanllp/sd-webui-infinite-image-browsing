@@ -222,6 +222,45 @@ export const clusterIibOutput = async (req: ClusterIibOutputReq) => {
   return resp.data as ClusterIibOutputResp
 }
 
+// ===== Async clustering job (progress polling) =====
+export interface ClusterIibOutputJobStartResp {
+  job_id: string
+}
+
+export interface ClusterIibOutputJobStatusResp {
+  job_id: string
+  status: 'queued' | 'running' | 'done' | 'error'
+  stage?: string
+  folders?: string[]
+  progress?: {
+    // embedding totals
+    scanned?: number
+    to_embed?: number
+    embedded_done?: number
+    updated?: number
+    skipped?: number
+    folder?: string
+    // clustering
+    items_total?: number
+    items_done?: number
+    // titling
+    clusters_total?: number
+    clusters_done?: number
+  }
+  error?: string
+  result?: ClusterIibOutputResp
+}
+
+export const startClusterIibOutputJob = async (req: ClusterIibOutputReq) => {
+  const resp = await axiosInst.value.post('/db/cluster_iib_output_job_start', req)
+  return resp.data as ClusterIibOutputJobStartResp
+}
+
+export const getClusterIibOutputJobStatus = async (job_id: string) => {
+  const resp = await axiosInst.value.get('/db/cluster_iib_output_job_status', { params: { job_id } })
+  return resp.data as ClusterIibOutputJobStatusResp
+}
+
 // ===== Natural language prompt query (RAG-like retrieval) =====
 export interface PromptSearchReq {
   query: string
