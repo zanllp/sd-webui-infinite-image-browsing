@@ -82,7 +82,9 @@ class DataBase:
             DirCoverCache.create_table(conn)
             GlobalSetting.create_table(conn)
             ImageEmbedding.create_table(conn)
+            ImageEmbeddingFail.create_table(conn)
             TopicTitleCache.create_table(conn)
+            TopicClusterCache.create_table(conn)
         finally:
             conn.commit()
         clz.num += 1
@@ -383,6 +385,77 @@ class ImageEmbedding:
             )
 
 
+class ImageEmbeddingFail:
+    """
+    Cache embedding failures per image+model+text_hash to avoid repeatedly hitting the API
+    for known-failing inputs. This helps keep clustering/search usable by skipping bad items.
+    """
+
+    @classmethod
+    def create_table(cls, conn: Connection):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """CREATE TABLE IF NOT EXISTS image_embedding_fail (
+                    image_id INTEGER NOT NULL,
+                    model TEXT NOT NULL,
+                    text_hash TEXT NOT NULL,
+                    error TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY(image_id, model, text_hash)
+                )"""
+            )
+            cur.execute("CREATE INDEX IF NOT EXISTS image_embedding_fail_idx_model ON image_embedding_fail(model)")
+
+    @classmethod
+    def get_by_image_ids(cls, conn: Connection, image_ids: List[int], model: str) -> Dict[int, Dict]:
+        if not image_ids:
+            return {}
+        ids = [int(x) for x in image_ids]
+        placeholders = ",".join(["?"] * len(ids))
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                f"SELECT image_id, text_hash, error, updated_at FROM image_embedding_fail WHERE model = ? AND image_id IN ({placeholders})",
+                (str(model), *ids),
+            )
+            rows = cur.fetchall()
+        out: Dict[int, Dict] = {}
+        for image_id, text_hash, error, updated_at in rows or []:
+            out[int(image_id)] = {
+                "text_hash": str(text_hash or ""),
+                "error": str(error or ""),
+                "updated_at": str(updated_at or ""),
+            }
+        return out
+
+    @classmethod
+    def upsert(
+        cls,
+        conn: Connection,
+        *,
+        image_id: int,
+        model: str,
+        text_hash: str,
+        error: str,
+        updated_at: Optional[str] = None,
+    ):
+        updated_at = updated_at or datetime.now().isoformat()
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """INSERT INTO image_embedding_fail (image_id, model, text_hash, error, updated_at)
+                   VALUES (?, ?, ?, ?, ?)
+                   ON CONFLICT(image_id, model, text_hash) DO UPDATE SET
+                      error = excluded.error,
+                      updated_at = excluded.updated_at
+                """,
+                (int(image_id), str(model), str(text_hash), str(error or "")[:600], str(updated_at)),
+            )
+
+    @classmethod
+    def delete(cls, conn: Connection, *, image_id: int, model: str):
+        with closing(conn.cursor()) as cur:
+            cur.execute("DELETE FROM image_embedding_fail WHERE image_id = ? AND model = ?", (int(image_id), str(model)))
+
+
 class TopicTitleCache:
     """
     Cache cluster titles/keywords to avoid repeated LLM calls.
@@ -448,6 +521,112 @@ class TopicTitleCache:
                 (cluster_hash, title, kw, model, updated_at),
             )
 
+
+class TopicClusterCache:
+    """
+    Persist the final clustering result (clusters/noise) to avoid re-clustering when:
+    - embeddings haven't changed (by max(updated_at) & count), and
+    - clustering parameters are unchanged.
+
+    This is intentionally lightweight:
+    - result is stored as JSON text
+    - caller defines cache_key (sha1 over params + folders + normalize version + lang, etc.)
+    """
+
+    @classmethod
+    def create_table(cls, conn: Connection):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """CREATE TABLE IF NOT EXISTS topic_cluster_cache (
+                            cache_key TEXT PRIMARY KEY,
+                            folders TEXT NOT NULL,
+                            model TEXT NOT NULL,
+                            params TEXT NOT NULL,
+                            embeddings_count INTEGER NOT NULL,
+                            embeddings_max_updated_at TEXT NOT NULL,
+                            result TEXT NOT NULL,
+                            updated_at TEXT NOT NULL
+                        )"""
+            )
+            cur.execute("CREATE INDEX IF NOT EXISTS topic_cluster_cache_idx_model ON topic_cluster_cache(model)")
+
+    @classmethod
+    def get(cls, conn: Connection, cache_key: str):
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                "SELECT folders, model, params, embeddings_count, embeddings_max_updated_at, result, updated_at FROM topic_cluster_cache WHERE cache_key = ?",
+                (cache_key,),
+            )
+            row = cur.fetchone()
+        if not row:
+            return None
+        folders, model, params, embeddings_count, embeddings_max_updated_at, result, updated_at = row
+        try:
+            folders_obj = json.loads(folders) if isinstance(folders, str) else []
+        except Exception:
+            folders_obj = []
+        try:
+            params_obj = json.loads(params) if isinstance(params, str) else {}
+        except Exception:
+            params_obj = {}
+        try:
+            result_obj = json.loads(result) if isinstance(result, str) else None
+        except Exception:
+            result_obj = None
+        return {
+            "cache_key": cache_key,
+            "folders": folders_obj if isinstance(folders_obj, list) else [],
+            "model": str(model),
+            "params": params_obj if isinstance(params_obj, dict) else {},
+            "embeddings_count": int(embeddings_count or 0),
+            "embeddings_max_updated_at": str(embeddings_max_updated_at or ""),
+            "result": result_obj,
+            "updated_at": str(updated_at or ""),
+        }
+
+    @classmethod
+    def upsert(
+        cls,
+        conn: Connection,
+        *,
+        cache_key: str,
+        folders: List[str],
+        model: str,
+        params: Dict,
+        embeddings_count: int,
+        embeddings_max_updated_at: str,
+        result: Dict,
+        updated_at: Optional[str] = None,
+    ):
+        updated_at = updated_at or datetime.now().isoformat()
+        folders_s = json.dumps([str(x) for x in (folders or [])], ensure_ascii=False)
+        params_s = json.dumps(params or {}, ensure_ascii=False, sort_keys=True)
+        result_s = json.dumps(result or {}, ensure_ascii=False)
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """INSERT INTO topic_cluster_cache
+                   (cache_key, folders, model, params, embeddings_count, embeddings_max_updated_at, result, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(cache_key) DO UPDATE SET
+                     folders = excluded.folders,
+                     model = excluded.model,
+                     params = excluded.params,
+                     embeddings_count = excluded.embeddings_count,
+                     embeddings_max_updated_at = excluded.embeddings_max_updated_at,
+                     result = excluded.result,
+                     updated_at = excluded.updated_at
+                """,
+                (
+                    cache_key,
+                    folders_s,
+                    str(model),
+                    params_s,
+                    int(embeddings_count or 0),
+                    str(embeddings_max_updated_at or ""),
+                    result_s,
+                    updated_at,
+                ),
+            )
 
 class Tag:
     def __init__(self, name: str, score: int, type: str, count=0, color = ""):
