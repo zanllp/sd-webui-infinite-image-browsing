@@ -1,11 +1,15 @@
 import hashlib
+import asyncio
 import json
 import math
 import os
 import re
+import time
+import uuid
+import threading
 from array import array
 from contextlib import closing
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import requests
 from fastapi import Depends, FastAPI, HTTPException
@@ -13,6 +17,95 @@ from pydantic import BaseModel
 
 from scripts.iib.db.datamodel import DataBase, ImageEmbedding, TopicTitleCache
 from scripts.iib.tool import cwd
+
+
+_TOPIC_CLUSTER_JOBS: Dict[str, Dict] = {}
+_TOPIC_CLUSTER_JOBS_LOCK = threading.Lock()
+_TOPIC_CLUSTER_JOBS_MAX = 16
+
+
+_EMBEDDING_MAX_TOKENS_SOFT = 7800
+
+
+def _estimate_tokens_soft(s: str) -> int:
+    """
+    Lightweight, dependency-free token estimator.
+    - ASCII-ish chars: ~4 chars per token (roughly OpenAI/BPE average for English)
+    - Non-ASCII chars (CJK etc): ~1 char per token (conservative)
+    This is intentionally conservative to avoid provider-side "max tokens exceeded" errors.
+    """
+    if not s:
+        return 0
+    ascii_chars = 0
+    non_ascii = 0
+    for ch in s:
+        if ord(ch) < 128:
+            ascii_chars += 1
+        else:
+            non_ascii += 1
+    return (ascii_chars + 3) // 4 + non_ascii
+
+
+def _truncate_for_embedding_tokens(s: str, max_tokens: int = _EMBEDDING_MAX_TOKENS_SOFT) -> str:
+    """
+    Truncate text to a conservative token budget.
+    We do not rely on provider tokenizers to keep the system lightweight.
+    """
+    s = (s or "").strip()
+    if not s:
+        return ""
+    if _estimate_tokens_soft(s) <= max_tokens:
+        return s
+
+    # Walk from start, stop when budget is reached.
+    out = []
+    tokens = 0
+    ascii_bucket = 0  # count ascii chars; every 4 ascii chars ~= +1 token
+    for ch in s:
+        if ord(ch) < 128:
+            ascii_bucket += 1
+            if ascii_bucket >= 4:
+                tokens += 1
+                ascii_bucket = 0
+        else:
+            tokens += 1
+        if tokens > max_tokens:
+            break
+        out.append(ch)
+    return ("".join(out)).strip()
+
+
+def _job_now() -> float:
+    return time.time()
+
+
+def _job_trim() -> None:
+    # Keep only the most recent jobs in memory.
+    with _TOPIC_CLUSTER_JOBS_LOCK:
+        if len(_TOPIC_CLUSTER_JOBS) <= _TOPIC_CLUSTER_JOBS_MAX:
+            return
+        # sort by updated_at desc
+        items = sorted(_TOPIC_CLUSTER_JOBS.items(), key=lambda kv: (kv[1].get("updated_at") or 0), reverse=True)
+        keep = dict(items[: _TOPIC_CLUSTER_JOBS_MAX])
+        _TOPIC_CLUSTER_JOBS.clear()
+        _TOPIC_CLUSTER_JOBS.update(keep)
+
+
+def _job_get(job_id: str) -> Optional[Dict]:
+    with _TOPIC_CLUSTER_JOBS_LOCK:
+        j = _TOPIC_CLUSTER_JOBS.get(job_id)
+        return dict(j) if isinstance(j, dict) else None
+
+
+def _job_upsert(job_id: str, patch: Dict) -> None:
+    with _TOPIC_CLUSTER_JOBS_LOCK:
+        cur = _TOPIC_CLUSTER_JOBS.get(job_id)
+        if not isinstance(cur, dict):
+            cur = {"job_id": job_id}
+        cur.update(patch or {})
+        cur["updated_at"] = _job_now()
+        _TOPIC_CLUSTER_JOBS[job_id] = cur
+    _job_trim()
 
 
 def _normalize_base_url(base_url: str) -> str:
@@ -203,7 +296,7 @@ def _cos_sum(a_sum: array, a_norm_sq: float, b_sum: array, b_norm_sq: float) -> 
     return dotv / (math.sqrt(a_norm_sq) * math.sqrt(b_norm_sq))
 
 
-def _call_embeddings(
+def _call_embeddings_sync(
     *,
     inputs: List[str],
     model: str,
@@ -231,7 +324,28 @@ def _call_embeddings(
     return embeddings
 
 
-def _call_chat_title(
+async def _call_embeddings(
+    *,
+    inputs: List[str],
+    model: str,
+    base_url: str,
+    api_key: str,
+) -> List[List[float]]:
+    """
+    IMPORTANT:
+    - We must NOT block FastAPI's event loop thread with a long-running synchronous HTTP request.
+    - Use a thread offload for requests.post to keep the server responsive while waiting the embedding API.
+    """
+    return await asyncio.to_thread(
+        _call_embeddings_sync,
+        inputs=inputs,
+        model=model,
+        base_url=base_url,
+        api_key=api_key,
+    )
+
+
+def _call_chat_title_sync(
     *,
     base_url: str,
     api_key: str,
@@ -380,6 +494,32 @@ def _call_chat_title(
     return _post_and_parse(payload)
 
 
+async def _call_chat_title(
+    *,
+    base_url: str,
+    api_key: str,
+    model: str,
+    prompt_samples: List[str],
+    output_lang: str,
+) -> Dict:
+    """
+    Same rationale as embeddings:
+    - requests.post() is synchronous and would block the event loop thread for tens of seconds.
+    - Offload to a worker thread to keep other API requests responsive.
+    """
+    ret = await asyncio.to_thread(
+        _call_chat_title_sync,
+        base_url=base_url,
+        api_key=api_key,
+        model=model,
+        prompt_samples=prompt_samples,
+        output_lang=output_lang,
+    )
+    if not isinstance(ret, dict):
+        raise HTTPException(status_code=502, detail="Chat API returned empty title payload")
+    return ret
+
+
 def mount_topic_cluster_routes(
     app: FastAPI,
     db_api_base: str,
@@ -395,29 +535,27 @@ def mount_topic_cluster_routes(
     Mount embedding + topic clustering endpoints (MVP: manual, iib_output only).
     """
 
-    class BuildIibOutputEmbeddingReq(BaseModel):
-        folder: Optional[str] = None  # default: {cwd}/iib_output
-        model: Optional[str] = None
-        force: Optional[bool] = False
-        batch_size: Optional[int] = 64
-        max_chars: Optional[int] = 4000
-
-    @app.post(
-        f"{db_api_base}/build_iib_output_embeddings",
-        dependencies=[Depends(verify_secret), Depends(write_permission_required)],
-    )
-    async def build_iib_output_embeddings(req: BuildIibOutputEmbeddingReq):
+    async def _build_embeddings_one_folder(
+        *,
+        folder: str,
+        model: str,
+        force: bool,
+        batch_size: int,
+        max_chars: int,
+        progress_cb: Optional[Callable[[Dict], None]] = None,
+    ) -> Dict:
+        """
+        Build embeddings for a single folder with optional progress callback.
+        Progress payload (best-effort):
+        - stage: "embedding"
+        - folder, scanned, to_embed, embedded_done, updated, skipped
+        """
         if not openai_api_key:
             raise HTTPException(status_code=500, detail="OpenAI API Key not configured")
         if not openai_base_url:
             raise HTTPException(status_code=500, detail="OpenAI Base URL not configured")
-        folder = req.folder or os.path.join(cwd, "iib_output")
-        folder = os.path.normpath(folder)
-        model = req.model or embedding_model
-        batch_size = max(1, min(int(req.batch_size or 64), 256))
-        max_chars = max(256, min(int(req.max_chars or 4000), 8000))
-        force = bool(req.force)
 
+        folder = os.path.normpath(folder)
         if not os.path.exists(folder) or not os.path.isdir(folder):
             raise HTTPException(status_code=400, detail=f"Folder not found: {folder}")
 
@@ -438,11 +576,26 @@ def mount_topic_cluster_routes(
                     text = text_raw
             else:
                 text = text_raw
+            # Some embedding models/providers have strict context limits (often 8192 tokens).
+            # Apply a conservative truncation before sending to embedding API.
+            text = _truncate_for_embedding_tokens(text, _EMBEDDING_MAX_TOKENS_SOFT)
             if not text:
                 continue
             images.append({"id": int(image_id), "path": path, "text": text})
 
         if not images:
+            if progress_cb:
+                progress_cb(
+                    {
+                        "stage": "embedding",
+                        "folder": folder,
+                        "scanned": 0,
+                        "to_embed": 0,
+                        "embedded_done": 0,
+                        "updated": 0,
+                        "skipped": 0,
+                    }
+                )
             return {"folder": folder, "count": 0, "updated": 0, "skipped": 0, "model": model}
 
         id_list = [x["id"] for x in images]
@@ -465,11 +618,25 @@ def mount_topic_cluster_routes(
                 continue
             to_embed.append({**item, "text_hash": text_hash})
 
+        if progress_cb:
+            progress_cb(
+                {
+                    "stage": "embedding",
+                    "folder": folder,
+                    "scanned": len(images),
+                    "to_embed": len(to_embed),
+                    "embedded_done": 0,
+                    "updated": 0,
+                    "skipped": skipped,
+                }
+            )
+
         updated = 0
+        embedded_done = 0
         for i in range(0, len(to_embed), batch_size):
             batch = to_embed[i : i + batch_size]
             inputs = [x["text"] for x in batch]
-            vectors = _call_embeddings(
+            vectors = await _call_embeddings(
                 inputs=inputs,
                 model=model,
                 base_url=openai_base_url,
@@ -487,9 +654,54 @@ def mount_topic_cluster_routes(
                     vec_blob=_vec_to_blob_f32(vec),
                 )
                 updated += 1
+                embedded_done += 1
             conn.commit()
+            if progress_cb:
+                progress_cb(
+                    {
+                        "stage": "embedding",
+                        "folder": folder,
+                        "scanned": len(images),
+                        "to_embed": len(to_embed),
+                        "embedded_done": embedded_done,
+                        "updated": updated,
+                        "skipped": skipped,
+                    }
+                )
+            # yield between batches
+            await asyncio.sleep(0)
 
         return {"folder": folder, "count": len(images), "updated": updated, "skipped": skipped, "model": model}
+
+    class BuildIibOutputEmbeddingReq(BaseModel):
+        folder: Optional[str] = None  # default: {cwd}/iib_output
+        model: Optional[str] = None
+        force: Optional[bool] = False
+        batch_size: Optional[int] = 64
+        max_chars: Optional[int] = 4000
+
+    @app.post(
+        f"{db_api_base}/build_iib_output_embeddings",
+        dependencies=[Depends(verify_secret), Depends(write_permission_required)],
+    )
+    async def build_iib_output_embeddings(req: BuildIibOutputEmbeddingReq):
+        if not openai_api_key:
+            raise HTTPException(status_code=500, detail="OpenAI API Key not configured")
+        if not openai_base_url:
+            raise HTTPException(status_code=500, detail="OpenAI Base URL not configured")
+        folder = req.folder or os.path.join(cwd, "iib_output")
+        model = req.model or embedding_model
+        batch_size = max(1, min(int(req.batch_size or 64), 256))
+        max_chars = max(256, min(int(req.max_chars or 4000), 8000))
+        force = bool(req.force)
+        return await _build_embeddings_one_folder(
+            folder=folder,
+            model=model,
+            force=force,
+            batch_size=batch_size,
+            max_chars=max_chars,
+            progress_cb=None,
+        )
 
     class ClusterIibOutputReq(BaseModel):
         folder: Optional[str] = None
@@ -509,6 +721,260 @@ def mount_topic_cluster_routes(
         force_title: Optional[bool] = False
         # Output language for titles/keywords (from frontend globalStore.lang)
         lang: Optional[str] = None
+
+    def _extract_and_validate_folders(req: ClusterIibOutputReq) -> List[str]:
+        folders: List[str] = []
+        if req.folder_paths:
+            for p in req.folder_paths:
+                if isinstance(p, str) and p.strip():
+                    folders.append(os.path.normpath(p.strip()))
+        if req.folder and isinstance(req.folder, str) and req.folder.strip():
+            folders.append(os.path.normpath(req.folder.strip()))
+        # 用户不会用默认 iib_output：未指定范围则直接报错
+        if not folders:
+            raise HTTPException(status_code=400, detail="folder_paths is required (select folders to cluster)")
+        folders = list(dict.fromkeys(folders))
+        for f in folders:
+            if not os.path.exists(f) or not os.path.isdir(f):
+                raise HTTPException(status_code=400, detail=f"Folder not found: {f}")
+        return folders
+
+    async def _cluster_after_embeddings(
+        req: ClusterIibOutputReq,
+        folders: List[str],
+        progress_cb: Optional[Callable[[Dict], None]] = None,
+    ) -> Dict:
+        folder = folders[0]
+        model = req.model or embedding_model
+        threshold = float(req.threshold or 0.86)
+        threshold = max(0.0, min(threshold, 0.999))
+        min_cluster_size = max(1, int(req.min_cluster_size or 2))
+        title_model = req.title_model or os.getenv("TOPIC_TITLE_MODEL") or ai_model
+        output_lang = _normalize_output_lang(req.lang)
+        assign_noise_threshold = req.assign_noise_threshold
+        if assign_noise_threshold is None:
+            # conservative: only reassign if very likely belongs to a large topic
+            assign_noise_threshold = max(0.72, min(threshold - 0.035, 0.93))
+        else:
+            assign_noise_threshold = max(0.0, min(float(assign_noise_threshold), 0.999))
+        use_title_cache = bool(True if req.use_title_cache is None else req.use_title_cache)
+        force_title = bool(req.force_title)
+
+        if progress_cb:
+            progress_cb({"stage": "clustering", "folder": folder, "folders": folders})
+
+        conn = DataBase.get_conn()
+        like_prefixes = [os.path.join(f, "%") for f in folders]
+        with closing(conn.cursor()) as cur:
+            where = " OR ".join(["image.path LIKE ?"] * len(like_prefixes))
+            cur.execute(
+                f"""SELECT image.id, image.path, image.exif, image_embedding.vec
+                    FROM image
+                    INNER JOIN image_embedding ON image_embedding.image_id = image.id
+                    WHERE ({where}) AND image_embedding.model = ?""",
+                (*like_prefixes, model),
+            )
+            rows = cur.fetchall()
+
+        items = []
+        for n, (image_id, path, exif, vec_blob) in enumerate(rows):
+            if not isinstance(path, str) or not os.path.exists(path):
+                continue
+            if not vec_blob:
+                continue
+            vec = _blob_to_vec_f32(vec_blob)
+            n2 = _l2_norm_sq(vec)
+            if n2 <= 0:
+                continue
+            inv = 1.0 / math.sqrt(n2)
+            for i in range(len(vec)):
+                vec[i] *= inv
+            text_raw = _extract_prompt_text(exif, max_chars=int(req.max_chars or 4000))
+            if _PROMPT_NORMALIZE_ENABLED:
+                text = _clean_prompt_for_semantic(text_raw)
+                if not text:
+                    text = text_raw
+            else:
+                text = text_raw
+            items.append({"id": int(image_id), "path": path, "text": text, "vec": vec})
+            if (n + 1) % 800 == 0:
+                await asyncio.sleep(0)
+
+        if not items:
+            return {"folder": folder, "folders": folders, "model": model, "threshold": threshold, "clusters": [], "noise": []}
+
+        # Incremental clustering by centroid-direction (sum vector)
+        clusters = []  # {sum, norm_sq, members:[idx], sample_text}
+        for idx, it in enumerate(items):
+            v = it["vec"]
+            best_ci = -1
+            best_sim = -1.0
+            best_dot = 0.0
+            for ci, c in enumerate(clusters):
+                dotv = _dot(v, c["sum"])
+                denom = math.sqrt(c["norm_sq"]) if c["norm_sq"] > 0 else 1.0
+                sim = dotv / denom
+                if sim > best_sim:
+                    best_sim = sim
+                    best_ci = ci
+                    best_dot = dotv
+            if best_ci != -1 and best_sim >= threshold:
+                c = clusters[best_ci]
+                for i in range(len(v)):
+                    c["sum"][i] += v[i]
+                c["norm_sq"] = c["norm_sq"] + 2.0 * best_dot + 1.0
+                c["members"].append(idx)
+            else:
+                clusters.append({"sum": array("f", v), "norm_sq": 1.0, "members": [idx], "sample_text": it.get("text") or ""})
+            if (idx + 1) % 800 == 0:
+                if progress_cb:
+                    progress_cb({"stage": "clustering", "items_total": len(items), "items_done": idx + 1})
+                await asyncio.sleep(0)
+
+        # Merge highly similar clusters (fix: same theme split into multiple clusters)
+        merge_threshold = min(0.995, max(threshold + 0.04, 0.90))
+        merged = True
+        while merged and len(clusters) > 1:
+            merged = False
+            best_i = best_j = -1
+            best_sim = merge_threshold
+            for i in range(len(clusters)):
+                ci = clusters[i]
+                for j in range(i + 1, len(clusters)):
+                    cj = clusters[j]
+                    sim = _cos_sum(ci["sum"], ci["norm_sq"], cj["sum"], cj["norm_sq"])
+                    if sim >= best_sim:
+                        best_sim = sim
+                        best_i, best_j = i, j
+            if best_i != -1:
+                a = clusters[best_i]
+                b = clusters[best_j]
+                for k in range(len(a["sum"])):
+                    a["sum"][k] += b["sum"][k]
+                a["norm_sq"] = _l2_norm_sq(a["sum"])
+                a["members"].extend(b["members"])
+                if not a.get("sample_text"):
+                    a["sample_text"] = b.get("sample_text", "")
+                clusters.pop(best_j)
+                merged = True
+            await asyncio.sleep(0)
+
+        # Reassign members from small clusters into best large cluster to reduce noise
+        if min_cluster_size > 1 and assign_noise_threshold > 0 and clusters:
+            large = [c for c in clusters if len(c["members"]) >= min_cluster_size]
+            if large:
+                new_large = []
+                # copy large clusters first
+                for c in clusters:
+                    if len(c["members"]) >= min_cluster_size:
+                        new_large.append(c)
+                # reassign items from small clusters
+                for c in clusters:
+                    if len(c["members"]) >= min_cluster_size:
+                        continue
+                    for mi in c["members"]:
+                        v = items[mi]["vec"]
+                        best_ci = -1
+                        best_sim = -1.0
+                        best_dot = 0.0
+                        for ci, bigc in enumerate(new_large):
+                            dotv = _dot(v, bigc["sum"])
+                            denom = math.sqrt(bigc["norm_sq"]) if bigc["norm_sq"] > 0 else 1.0
+                            sim = dotv / denom
+                            if sim > best_sim:
+                                best_sim = sim
+                                best_ci = ci
+                                best_dot = dotv
+                        if best_ci != -1 and best_sim >= assign_noise_threshold:
+                            bigc = new_large[best_ci]
+                            for k in range(len(v)):
+                                bigc["sum"][k] += v[k]
+                            bigc["norm_sq"] = bigc["norm_sq"] + 2.0 * best_dot + 1.0
+                            bigc["members"].append(mi)
+                        # else: keep in small cluster -> will become noise below
+                    await asyncio.sleep(0)
+                clusters = new_large
+
+        # Split small clusters to noise, generate titles
+        out_clusters = []
+        noise = []
+        if progress_cb:
+            progress_cb({"stage": "titling", "clusters_total": len(clusters)})
+
+        for cidx, c in enumerate(clusters):
+            if len(c["members"]) < min_cluster_size:
+                for mi in c["members"]:
+                    noise.append(items[mi]["path"])
+                continue
+
+            member_items = [items[mi] for mi in c["members"]]
+            paths = [x["path"] for x in member_items]
+            texts = [x.get("text") or "" for x in member_items]
+            member_ids = [x["id"] for x in member_items]
+
+            # Representative prompt for LLM title generation
+            rep = (c.get("sample_text") or (texts[0] if texts else "")).strip()
+
+            cached = None
+            cluster_hash = _cluster_sig(
+                member_ids=member_ids,
+                model=model,
+                threshold=threshold,
+                min_cluster_size=min_cluster_size,
+                title_model=title_model,
+                lang=output_lang,
+            )
+            if use_title_cache and (not force_title):
+                cached = TopicTitleCache.get(conn, cluster_hash)
+            if cached and isinstance(cached, dict) and cached.get("title"):
+                title = str(cached.get("title"))
+                keywords = cached.get("keywords") or []
+            else:
+                llm = await _call_chat_title(
+                    base_url=openai_base_url,
+                    api_key=openai_api_key,
+                    model=title_model,
+                    prompt_samples=[rep] + texts[:5],
+                    output_lang=output_lang,
+                )
+                title = (llm or {}).get("title")
+                keywords = (llm or {}).get("keywords", [])
+                if not title:
+                    raise HTTPException(status_code=502, detail="Chat API returned empty title")
+                if use_title_cache and title:
+                    try:
+                        TopicTitleCache.upsert(conn, cluster_hash, str(title), list(keywords or []), str(title_model))
+                        conn.commit()
+                    except Exception:
+                        pass
+
+            out_clusters.append(
+                {
+                    "id": f"topic_{cidx}",
+                    "title": title,
+                    "keywords": keywords,
+                    "size": len(paths),
+                    "paths": paths,
+                    "sample_prompt": _clean_for_title(rep)[:200],
+                }
+            )
+            if (cidx + 1) % 6 == 0:
+                if progress_cb:
+                    progress_cb({"stage": "titling", "clusters_total": len(clusters), "clusters_done": cidx + 1})
+                await asyncio.sleep(0)
+
+        out_clusters.sort(key=lambda x: x["size"], reverse=True)
+        return {
+            "folder": folder,
+            "folders": folders,
+            "count": len(items),
+            "threshold": threshold,
+            "min_cluster_size": min_cluster_size,
+            "model": model,
+            "assign_noise_threshold": assign_noise_threshold,
+            "clusters": out_clusters,
+            "noise": noise,
+        }
 
     class PromptSearchReq(BaseModel):
         query: str
@@ -572,7 +1038,8 @@ def mount_topic_cluster_routes(
             q_text2 = _clean_prompt_for_semantic(q_text)
             if q_text2:
                 q_text = q_text2
-        vecs = _call_embeddings(inputs=[q_text], model=model, base_url=openai_base_url, api_key=openai_api_key)
+        q_text = _truncate_for_embedding_tokens(q_text, _EMBEDDING_MAX_TOKENS_SOFT)
+        vecs = await _call_embeddings(inputs=[q_text], model=model, base_url=openai_base_url, api_key=openai_api_key)
         if not vecs or not isinstance(vecs[0], list) or not vecs[0]:
             raise HTTPException(status_code=502, detail="Embedding API returned empty vector")
         qv = array("f", [float(x) for x in vecs[0]])
@@ -886,15 +1353,15 @@ def mount_topic_cluster_routes(
                 title = str(cached.get("title"))
                 keywords = cached.get("keywords") or []
             else:
-                llm = _call_chat_title(
+                llm = await _call_chat_title(
                     base_url=openai_base_url,
                     api_key=openai_api_key,
                     model=title_model,
                     prompt_samples=[rep] + texts[:5],
                     output_lang=output_lang,
                 )
-                title = (llm or {}).get("title") if isinstance(llm, dict) else None
-                keywords = (llm or {}).get("keywords", []) if isinstance(llm, dict) else []
+                title = (llm or {}).get("title")
+                keywords = (llm or {}).get("keywords", [])
                 if not title:
                     raise HTTPException(status_code=502, detail="Chat API returned empty title")
                 if use_title_cache and title:
