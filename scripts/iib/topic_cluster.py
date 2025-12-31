@@ -18,6 +18,17 @@ from pydantic import BaseModel
 from scripts.iib.db.datamodel import DataBase, ImageEmbedding, ImageEmbeddingFail, TopicClusterCache, TopicTitleCache
 from scripts.iib.tool import cwd
 
+# Optional perf deps (heavy but worth it for 10k+ images)
+try:
+    import numpy as _np  # type: ignore
+except Exception:  # pragma: no cover
+    _np = None
+
+try:
+    import hnswlib as _hnswlib  # type: ignore
+except Exception:  # pragma: no cover
+    _hnswlib = None
+
 
 _TOPIC_CLUSTER_JOBS: Dict[str, Dict] = {}
 _TOPIC_CLUSTER_JOBS_LOCK = threading.Lock()
@@ -321,6 +332,44 @@ def _l2_norm_sq(vec: array) -> float:
 def _dot(a: array, b: array) -> float:
     return sum((x * y for x, y in zip(a, b)))
 
+
+def _can_use_ann() -> bool:
+    return _np is not None and _hnswlib is not None
+
+
+def _centroid_vec_np(sum_vec: array, norm_sq: float):
+    """
+    Convert centroid sum-vector to a normalized numpy float32 vector.
+    Cosine between unit v and centroid is dot(v, sum)/sqrt(norm_sq).
+    So centroid direction is sum / ||sum||.
+    """
+    if _np is None:
+        return None
+    if norm_sq <= 0:
+        return None
+    inv = 1.0 / math.sqrt(norm_sq)
+    # array('f') -> numpy without extra python loops
+    v = _np.frombuffer(sum_vec.tobytes(), dtype=_np.float32).copy()
+    v *= _np.float32(inv)
+    return v
+
+
+def _build_hnsw_index(centroids_np, *, ef: int = 64, M: int = 32):
+    """
+    Build a cosine HNSW index over centroid vectors.
+    Returns index or None.
+    """
+    if not _can_use_ann() or centroids_np is None:
+        return None
+    if len(centroids_np) == 0:
+        return None
+    dim = int(centroids_np.shape[1])
+    idx = _hnswlib.Index(space="cosine", dim=dim)
+    idx.init_index(max_elements=int(centroids_np.shape[0]) + 8, ef_construction=ef, M=M)
+    labels = _np.arange(centroids_np.shape[0], dtype=_np.int32)
+    idx.add_items(centroids_np, labels)
+    idx.set_ef(max(ef, 32))
+    return idx
 
 def _cos_sum(a_sum: array, a_norm_sq: float, b_sum: array, b_norm_sq: float) -> float:
     if a_norm_sq <= 0 or b_norm_sq <= 0:
@@ -1083,12 +1132,40 @@ def mount_topic_cluster_routes(
 
         # Incremental clustering by centroid-direction (sum vector)
         clusters = []  # {sum, norm_sq, members:[idx], sample_text}
+        ann_idx = None
+        ann_centroids = None
+        ann_rebuild_every = 256  # rebuild index periodically to reflect centroid updates
+        ann_topk = 8
         for idx, it in enumerate(items):
             v = it["vec"]
             best_ci = -1
             best_sim = -1.0
             best_dot = 0.0
-            for ci, c in enumerate(clusters):
+            # Build / rebuild ANN index when helpful (many clusters)
+            if _can_use_ann() and len(clusters) >= 64:
+                if ann_idx is None or (idx % ann_rebuild_every == 0):
+                    # rebuild from current centroids
+                    cents = []
+                    for c in clusters:
+                        cv = _centroid_vec_np(c["sum"], c["norm_sq"])
+                        if cv is None:
+                            # fallback to zeros; will never be nearest
+                            cv = _np.zeros((len(v),), dtype=_np.float32)  # type: ignore
+                        cents.append(cv)
+                    ann_centroids = _np.stack(cents, axis=0).astype(_np.float32)  # type: ignore
+                    ann_idx = _build_hnsw_index(ann_centroids)
+                # Query candidates
+                if ann_idx is not None:
+                    q = _np.frombuffer(v.tobytes(), dtype=_np.float32).reshape(1, -1).copy()  # type: ignore
+                    labels, _dists = ann_idx.knn_query(q, k=min(ann_topk, len(clusters)))
+                    cand = [int(x) for x in (labels[0].tolist() if labels is not None else [])]
+                else:
+                    cand = list(range(len(clusters)))
+            else:
+                cand = list(range(len(clusters)))
+
+            for ci in cand:
+                c = clusters[ci]
                 dotv = _dot(v, c["sum"])
                 denom = math.sqrt(c["norm_sq"]) if c["norm_sq"] > 0 else 1.0
                 sim = dotv / denom
@@ -1104,6 +1181,7 @@ def mount_topic_cluster_routes(
                 c["members"].append(idx)
             else:
                 clusters.append({"sum": array("f", v), "norm_sq": 1.0, "members": [idx], "sample_text": it.get("text") or ""})
+                ann_idx = None  # force rebuild after new cluster
             if (idx + 1) % 800 == 0:
                 if progress_cb:
                     progress_cb({"stage": "clustering", "items_total": len(items), "items_done": idx + 1})
@@ -1146,6 +1224,17 @@ def mount_topic_cluster_routes(
                 for c in clusters:
                     if len(c["members"]) >= min_cluster_size:
                         new_large.append(c)
+                # Build ANN over large centroids once (optional)
+                ann_large = None
+                if _can_use_ann() and len(new_large) >= 64:
+                    cents = []
+                    for c in new_large:
+                        cv = _centroid_vec_np(c["sum"], c["norm_sq"])
+                        if cv is None:
+                            cv = _np.zeros((len(items[0]["vec"]),), dtype=_np.float32)  # type: ignore
+                        cents.append(cv)
+                    cent_mat = _np.stack(cents, axis=0).astype(_np.float32)  # type: ignore
+                    ann_large = _build_hnsw_index(cent_mat, ef=64, M=32)
                 # reassign items from small clusters
                 for c in clusters:
                     if len(c["members"]) >= min_cluster_size:
@@ -1155,7 +1244,14 @@ def mount_topic_cluster_routes(
                         best_ci = -1
                         best_sim = -1.0
                         best_dot = 0.0
-                        for ci, bigc in enumerate(new_large):
+                        if ann_large is not None:
+                            q = _np.frombuffer(v.tobytes(), dtype=_np.float32).reshape(1, -1).copy()  # type: ignore
+                            labels, _dists = ann_large.knn_query(q, k=min(8, len(new_large)))
+                            cand = [int(x) for x in (labels[0].tolist() if labels is not None else [])]
+                        else:
+                            cand = range(len(new_large))
+                        for ci in cand:
+                            bigc = new_large[ci]
                             dotv = _dot(v, bigc["sum"])
                             denom = math.sqrt(bigc["norm_sq"]) if bigc["norm_sq"] > 0 else 1.0
                             sim = dotv / denom
