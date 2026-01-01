@@ -596,22 +596,16 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         cache_dir = os.path.join(cache_base_dir, "iib_cache", hash_dir)
         cache_path = os.path.join(cache_dir, f"{size}.webp")
 
-               # 如果缓存文件存在（支持任意扩展名），则直接返回该文件并根据实际扩展名设置 Content-Type
-        if os.path.isdir(cache_dir):
-            for fname in os.listdir(cache_dir):
-                if fname.startswith(f"{size}."):
-                    found = os.path.join(cache_dir, fname)
-                    guessed_type, _ = mimetypes.guess_type(found)
-                    media_type = guessed_type or ("image/jxl" if fname.lower().endswith('.jxl') else "application/octet-stream")
-                    return FileResponse(
-                        found,
-                        media_type=media_type,
-                        headers={"Cache-Control": "max-age=31536000", "ETag": hash},
-                    )
+        # 如果缓存文件存在，则直接返回该文件
+        if os.path.exists(cache_path):
+            return FileResponse(
+                cache_path,
+                media_type="image/webp",
+                headers={"Cache-Control": "max-age=31536000", "ETag": hash},
+            )
 
                 
-# 如果小于64KB，通常直接返回原图，但对于 .jxl 我们仍需转换为 webp 以便浏览器显示
-        ext = path.split('.')[-1].lower()
+        # 如果小于64KB，直接返回原图
         if os.path.getsize(path) < 64 * 1024:
             return FileResponse(
                 path,
@@ -619,33 +613,18 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 headers={"Cache-Control": "max-age=31536000", "ETag": hash},
             )
         
-        w, h = size.split("x")
-        # store cache with native extension for JXL, webp for others
-        cache_ext = 'jxl' if ext == 'jxl' else 'webp'
-        cache_path = os.path.join(cache_dir, f"{size}.{cache_ext}")
 
-        if ext == 'jxl':
-            # For JXL we won't attempt server-side conversion here — copy original so browser can fetch it
+        # 如果缓存文件不存在，则生成缩略图并保存
+        with Image.open(path) as img:
+            w, h = size.split("x")
+            img.thumbnail((int(w), int(h)))
             os.makedirs(cache_dir, exist_ok=True)
-            try:
-                import shutil
+            img.save(cache_path, "webp")
 
-                shutil.copy2(path, cache_path)
-            except Exception:
-                # fallback to Pillow if available
-                with Image.open(path) as img:
-                    img.thumbnail((int(w), int(h)))
-                    os.makedirs(cache_dir, exist_ok=True)
-                    img.save(cache_path, "webp")
-        else:
-                with Image.open(path) as img:
-                    img.thumbnail((int(w), int(h)))
-                    os.makedirs(cache_dir, exist_ok=True)
-                    img.save(cache_path, "webp")
         # 返回缓存文件
         return FileResponse(
             cache_path,
-            media_type=media_type,
+            media_type="image/webp",
             headers={"Cache-Control": "max-age=31536000", "ETag": hash},
         )
 
@@ -1327,4 +1306,3 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def rebuild_index():
         update_extra_paths(conn = DataBase.get_conn())
         rebuild_image_index(search_dirs = get_img_search_dirs() + mem["extra_paths"])
-
