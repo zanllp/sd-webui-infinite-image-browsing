@@ -1,4 +1,4 @@
-import { Input, Modal, message } from 'ant-design-vue'
+import { Modal, message } from 'ant-design-vue'
 import axios, { AxiosInstance, isAxiosError } from 'axios'
 import type { GlobalSettingPart } from './type'
 import { t } from '@/i18n'
@@ -23,33 +23,69 @@ const sha256 = (data: string) => {
   return sjcl.codec.hex.fromBits(hash)
 }
 
+// Prevent multiple stacked auth prompts when several requests return 401 at the same time
+let pendingServerKeyPrompt: Promise<string> | null = null
+let isReloadingAfterAuth = false
+
+const promptServerKeyOnce = async (): Promise<string> => {
+  if (pendingServerKeyPrompt) return pendingServerKeyPrompt
+
+  pendingServerKeyPrompt = new Promise<string>((resolve) => {
+    const key = ref('')
+
+    const finish = (v: string) => {
+      pendingServerKeyPrompt = null
+      resolve(v)
+    }
+
+    Modal.confirm({
+      title: t('serverKeyRequired'),
+      content: () =>
+        h('input', {
+          class: 'ant-input',
+          type: 'password',
+          value: key.value,
+          onInput: (e: any) => (key.value = e.target.value),
+          autocomplete: 'current-password',
+          name: 'password',
+          autocapitalize: 'off',
+          spellcheck: false,
+          style: 'width: 100%;'
+        }),
+      onOk () {
+        finish(key.value)
+      },
+      onCancel () {
+        finish('')
+      }
+    })
+  })
+
+  return pendingServerKeyPrompt
+}
+
 const addInterceptor = (axiosInst: AxiosInstance) => {
   axiosInst.interceptors.response.use(
     (resp) => resp,
     async (err) => {
       if (isAxiosError(err)) {
         if (err.response?.status === 401) {
-          const key = await new Promise<string>((resolve) => {
-            const key = ref('')
-            Modal.confirm({
-              title: t('serverKeyRequired'),
-              content: () => {
-                return h(Input, {
-                  value: key.value,
-                  'onUpdate:value': (v: string) => (key.value = v)
-                })
-              },
-              onOk () {
-                resolve(key.value)
-              }
-            })
-          })
+          const key = await promptServerKeyOnce()
           if (!key) {
-            return
+            // user cancelled; leave the request rejected as-is
+            throw err
           }
+
           cookie.set('IIB_S', sha256(key + '_ciallo'))
-          await delay(100)
-          location.reload()
+
+          if (!isReloadingAfterAuth) {
+            isReloadingAfterAuth = true
+            await delay(100)
+            location.reload()
+          }
+
+          // prevent any further error handling UI from showing while we reload
+          return new Promise(() => {})
         }
 
         switch (err.response?.data?.detail?.type) {
