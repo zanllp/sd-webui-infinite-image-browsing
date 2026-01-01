@@ -71,6 +71,7 @@ import urllib.parse
 from scripts.iib.fastapi_video import range_requests_response, close_video_file_reader
 from scripts.iib.parsers.index import parse_image_info
 import scripts.iib.plugin
+from scripts.iib.jxl_utils import convert_jxl_to_webp
 
 try:
     import pillow_avif
@@ -605,21 +606,30 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             )
 
                 
-        # 如果小于64KB，直接返回原图
-        if os.path.getsize(path) < 64 * 1024:
+# 如果小于64KB，通常直接返回原图，但对于 .jxl 我们仍需转换为 webp 以便浏览器显示
+        ext = path.split('.')[-1].lower()
+        if os.path.getsize(path) < 64 * 1024 and ext != 'jxl':
             return FileResponse(
                 path,
                 media_type="image/" + path.split(".")[-1],
                 headers={"Cache-Control": "max-age=31536000", "ETag": hash},
             )
         
-
-        # 如果缓存文件不存在，则生成缩略图并保存
-        with Image.open(path) as img:
-            w, h = size.split("x")
-            img.thumbnail((int(w), int(h)))
-            os.makedirs(cache_dir, exist_ok=True)
-            img.save(cache_path, "webp")
+        w, h = size.split("x")
+        # Special handling for JXL: try using helper that falls back to djxl/ImageMagick if needed
+        if ext == 'jxl':
+            success = convert_jxl_to_webp(path, cache_path, size=(int(w), int(h)))
+            if not success:
+                # last resort, try Pillow generic path (may raise)
+                with Image.open(path) as img:
+                    img.thumbnail((int(w), int(h)))
+                    os.makedirs(cache_dir, exist_ok=True)
+                    img.save(cache_path, "webp")
+        else:
+            with Image.open(path) as img:
+                img.thumbnail((int(w), int(h)))
+                os.makedirs(cache_dir, exist_ok=True)
+                img.save(cache_path, "webp")
 
         # 返回缓存文件
         return FileResponse(
