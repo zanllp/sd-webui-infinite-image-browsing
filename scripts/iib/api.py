@@ -596,13 +596,18 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         cache_dir = os.path.join(cache_base_dir, "iib_cache", hash_dir)
         cache_path = os.path.join(cache_dir, f"{size}.webp")
 
-        # 如果缓存文件存在，则直接返回该文件
-        if os.path.exists(cache_path):
-            return FileResponse(
-                cache_path,
-                media_type="image/webp",
-                headers={"Cache-Control": "max-age=31536000", "ETag": hash},
-            )
+               # 如果缓存文件存在（支持任意扩展名），则直接返回该文件并根据实际扩展名设置 Content-Type
+        if os.path.isdir(cache_dir):
+            for fname in os.listdir(cache_dir):
+                if fname.startswith(f"{size}."):
+                    found = os.path.join(cache_dir, fname)
+                    guessed_type, _ = mimetypes.guess_type(found)
+                    media_type = guessed_type or ("image/jxl" if fname.lower().endswith('.jxl') else "application/octet-stream")
+                    return FileResponse(
+                        found,
+                        media_type=media_type,
+                        headers={"Cache-Control": "max-age=31536000", "ETag": hash},
+                    )
 
                 
 # 如果小于64KB，通常直接返回原图，但对于 .jxl 我们仍需转换为 webp 以便浏览器显示
