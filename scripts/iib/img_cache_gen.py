@@ -5,7 +5,6 @@ from scripts.iib.tool import get_formatted_date, get_cache_dir, is_image_file
 from concurrent.futures import ThreadPoolExecutor
 import time
 from PIL import Image
-import shutil
 
 def generate_image_cache(dirs, size:str, verbose=False):
   start_time = time.time()
@@ -33,26 +32,14 @@ def generate_image_cache(dirs, size:str, verbose=False):
           return
 
       if os.path.getsize(path) < 64 * 1024:
-           verbose and print(f"Image size less than 64KB: {path}", "skip")
+          verbose and print(f"Image size less than 64KB: {path}", "skip")
           return
-
-      w, h = size.split("x")
-      # cache extension: keep JXL as-is, otherwise use webp
-      if path.lower().endswith('.jxl'):
-          os.makedirs(cache_dir, exist_ok=True)
-          try:
-              shutil.copy2(path, cache_path.replace('.webp', '.jxl'))
-          except Exception:
-              # fallback: try opening via Pillow
-              with Image.open(path) as img:
-                  img.thumbnail((int(w), int(h)))
-                  os.makedirs(cache_dir, exist_ok=True)
-                  img.save(cache_path, "webp")
-      else:
+        
       with Image.open(path) as img:
-              img.thumbnail((int(w), int(h)))
-              os.makedirs(cache_dir, exist_ok=True)
-              img.save(cache_path, "webp")
+          w, h = size.split("x")
+          img.thumbnail((int(w), int(h)))
+          os.makedirs(cache_dir, exist_ok=True)
+          img.save(cache_path, "webp")
 
       verbose and print(f"Image cache generated: {path}")
     except Exception as e:
