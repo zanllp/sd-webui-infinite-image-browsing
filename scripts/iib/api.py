@@ -637,7 +637,6 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     img.thumbnail((int(w), int(h)))
                     os.makedirs(cache_dir, exist_ok=True)
                     img.save(cache_path, "webp")
-            media_type = 'image/webp',
         # 返回缓存文件
         return FileResponse(
             cache_path,
