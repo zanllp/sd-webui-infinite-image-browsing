@@ -631,9 +631,9 @@ def mount_topic_cluster_routes(
     """
     Mount embedding + topic clustering endpoints (MVP: manual, iib_output only).
     """
-    # Fail fast at API layer if required perf deps are missing.
-    # (We don't crash the whole server at import time.)
-    _ensure_perf_deps()
+    # IMPORTANT:
+    # Do NOT call _ensure_perf_deps() here.
+    # We only fail at specific API endpoints so users without deps can still use other features.
 
     async def _run_cluster_job(job_id: str, req) -> None:
         try:
@@ -1002,6 +1002,8 @@ def mount_topic_cluster_routes(
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
     async def build_iib_output_embeddings(req: BuildIibOutputEmbeddingReq):
+        # TopicSearch feature requires perf deps; fail at API layer, not at server start.
+        _ensure_perf_deps()
         if not openai_api_key:
             raise HTTPException(status_code=500, detail="OpenAI API Key not configured")
         if not openai_base_url:
@@ -1044,6 +1046,8 @@ def mount_topic_cluster_routes(
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
     async def cluster_iib_output_job_start(req: ClusterIibOutputReq):
+        # TopicSearch feature requires perf deps; fail at API layer, not at server start.
+        _ensure_perf_deps()
         """
         Start a background job for embedding + clustering + LLM titling.
         Returns job_id immediately; frontend should poll job_status to show progress.
@@ -1381,6 +1385,8 @@ def mount_topic_cluster_routes(
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
     async def search_iib_output_by_prompt(req: PromptSearchReq):
+        # TopicSearch feature requires perf deps; fail at API layer, not at server start.
+        _ensure_perf_deps()
         if not openai_api_key:
             raise HTTPException(status_code=500, detail="OpenAI API Key not configured")
         if not openai_base_url:

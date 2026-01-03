@@ -14,6 +14,8 @@ import { useGlobalStore } from '@/store/useGlobalStore'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { uniqueId } from 'lodash-es'
 import { message } from 'ant-design-vue'
+import { isTauri } from '@/util/env'
+import { useLocalStorage } from '@vueuse/core'
 
 const props = defineProps<{ tabIdx: number; paneIdx: number }>()
 const g = useGlobalStore()
@@ -22,6 +24,13 @@ const loading = ref(false)
 const threshold = ref(0.86)
 const minClusterSize = ref(2)
 const result = ref<ClusterIibOutputResp | null>(null)
+
+const _REQS_LS_KEY = 'iib_topic_search_hide_requirements_v1'
+// true = show requirements; false = hidden
+const showRequirements = useLocalStorage<boolean>(_REQS_LS_KEY, true)
+const hideRequirements = () => {
+  showRequirements.value = false
+}
 
 const job = ref<ClusterIibOutputJobStatusResp | null>(null)
 const jobId = ref<string>('')
@@ -342,6 +351,41 @@ watch(
       style="margin: 12px 0;"
       show-icon
     />
+
+    <a-alert
+      v-if="showRequirements"
+      type="info"
+      show-icon
+      closable
+      style="margin: 10px 0 0 0;"
+      :message="$t('topicSearchRequirementsTitle')"
+      @close="hideRequirements"
+    >
+      <template #description>
+        <div style="display: grid; gap: 6px;">
+          <div>
+            <span style="margin-right: 6px;">🔑</span>
+            <span>{{ $t('topicSearchRequirementsOpenai') }}</span>
+          </div>
+          <template v-if="isTauri">
+            <div>
+              <span style="margin-right: 6px;">🧩</span>
+              <span>{{ $t('topicSearchRequirementsDepsDesktop') }}</span>
+            </div>
+          </template>
+          <template v-else>
+            <div>
+              <span style="margin-right: 6px;">🐍</span>
+              <span>{{ $t('topicSearchRequirementsDepsPython') }}</span>
+            </div>
+            <div style="opacity: 0.85;">
+              <span style="margin-right: 6px;">💻</span>
+              <span>{{ $t('topicSearchRequirementsInstallCmd') }}</span>
+            </div>
+          </template>
+        </div>
+      </template>
+    </a-alert>
 
     <div v-if="jobRunning" style="margin: 10px 0 0 0;">
       <a-alert type="info" show-icon :message="jobStageText" :description="jobDesc" />

@@ -415,7 +415,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     os.remove(path)
                     if txt_path:
                         os.remove(txt_path)
-                    
+
                     img = DbImg.get(conn, os.path.normpath(path))
                     if img:
                         logger.info("delete file: %s", path)
