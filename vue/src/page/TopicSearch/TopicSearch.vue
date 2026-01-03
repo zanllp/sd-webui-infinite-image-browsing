@@ -21,7 +21,8 @@ const props = defineProps<{ tabIdx: number; paneIdx: number }>()
 const g = useGlobalStore()
 
 const loading = ref(false)
-const threshold = ref(0.86)
+// Default stricter to avoid over-merged broad topics for natural-language prompts.
+const threshold = ref(0.9)
 const minClusterSize = ref(2)
 const result = ref<ClusterIibOutputResp | null>(null)
 

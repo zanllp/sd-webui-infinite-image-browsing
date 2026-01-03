@@ -1019,7 +1019,8 @@ def mount_topic_cluster_routes(
         folder_paths: Optional[List[str]] = None
         model: Optional[str] = None
         force_embed: Optional[bool] = False
-        threshold: Optional[float] = 0.86
+        # Default a bit stricter to avoid over-merged broad topics for natural-language prompts.
+        threshold: Optional[float] = 0.90
         batch_size: Optional[int] = 64
         max_chars: Optional[int] = 4000
         min_cluster_size: Optional[int] = 2
@@ -1083,15 +1084,17 @@ def mount_topic_cluster_routes(
     ) -> Dict:
         folder = folders[0]
         model = req.model or embedding_model
-        threshold = float(req.threshold or 0.86)
+        threshold = float(req.threshold or 0.90)
         threshold = max(0.0, min(threshold, 0.999))
         min_cluster_size = max(1, int(req.min_cluster_size or 2))
         title_model = req.title_model or os.getenv("TOPIC_TITLE_MODEL") or ai_model
         output_lang = _normalize_output_lang(req.lang)
         assign_noise_threshold = req.assign_noise_threshold
         if assign_noise_threshold is None:
-            # conservative: only reassign if very likely belongs to a large topic
-            assign_noise_threshold = max(0.72, min(threshold - 0.035, 0.93))
+            # More conservative: noise reassignment is helpful to reduce noise,
+            # but if too permissive it can "glue" loosely-related themes into one big topic.
+            # Keep it >= threshold (or slightly higher) so we only reassign when very confident.
+            assign_noise_threshold = max(0.88, min(threshold + 0.02, 0.97))
         else:
             assign_noise_threshold = max(0.0, min(float(assign_noise_threshold), 0.999))
         use_title_cache = bool(True if req.use_title_cache is None else req.use_title_cache)
@@ -1198,7 +1201,8 @@ def mount_topic_cluster_routes(
                 await asyncio.sleep(0)
 
         # Merge highly similar clusters (fix: same theme split into multiple clusters)
-        merge_threshold = min(0.995, max(threshold + 0.04, 0.90))
+        # IMPORTANT: keep this VERY strict; otherwise unrelated clusters can be merged.
+        merge_threshold = min(0.999, max(threshold + 0.08, 0.965))
         merged = True
         while merged and len(clusters) > 1:
             merged = False
