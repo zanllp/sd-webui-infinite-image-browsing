@@ -21,8 +21,12 @@ const compMap: Record<TabPane['type'], ReturnType<typeof defineAsyncComponent>> 
   'tag-search-matched-image-grid': defineAsyncComponent(
     () => import('@/page/TagSearch/MatchedImageGrid.vue')
   ),
+  'topic-search-matched-image-grid': defineAsyncComponent(
+    () => import('@/page/TopicSearch/MatchedImageGrid.vue')
+  ),
   'tag-search': defineAsyncComponent(() => import('@/page/TagSearch/TagSearch.vue')),
   'fuzzy-search': defineAsyncComponent(() => import('@/page/TagSearch/SubstrSearch.vue')),
+  'topic-search': defineAsyncComponent(() => import('@/page/TopicSearch/TopicSearch.vue')),
   'img-sli': defineAsyncComponent(() => import('@/page/ImgSli/ImgSliPagePane.vue')),
   'batch-download': defineAsyncComponent(() => import('@/page/batchDownload/batchDownload.vue')),
   'grid-view': defineAsyncComponent(() => import('@/page/gridView/gridView.vue')),

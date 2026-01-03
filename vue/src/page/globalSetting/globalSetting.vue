@@ -19,7 +19,6 @@ import { throttle, debounce } from 'lodash-es'
 import { useLocalStorage } from '@vueuse/core'
 import { prefix } from '@/util/const'
 
-
 const globalStore = useGlobalStore()
 const wsStore = useWorkspeaceSnapshot()
 
@@ -71,7 +70,7 @@ const defaultInitinalPageOptions = computed(() => {
 const shortCutsCountRec = computed(() => {
   const rec = globalStore.shortcut
   const res = {} as Dict<number>
-  Object.entries(rec).forEach(([_k, v]) => {
+  Object.values(rec).forEach((v) => {
     res[v + ''] ??= 0
     res[v + '']++
   })
@@ -96,6 +95,8 @@ const isShortcutConflict = (keyStr: string) => {
   return keyStr && keyStr in shortCutsCountRec.value && shortCutsCountRec.value[keyStr] > 1
 }
 const disableMaximize = useLocalStorage(prefix+'disable_maximize', false)
+
+// 自然语言分类&搜索 已提升到首页启动入口（TopicSearch），全局设置不再保留旧入口
 </script>
 <template>
   <div class="panel">
@@ -172,6 +173,8 @@ const disableMaximize = useLocalStorage(prefix+'disable_maximize', false)
         <a-switch v-model:checked="disableMaximize" />
         <sub style="padding-left: 8px;color: #666;">{{ $t('takeEffectAfterReloadPage') }}</sub>
       </a-form-item>
+
+      
       <h2>{{ t('shortcutKey') }}</h2>
       <a-form-item :label="item.label" v-for="item in shortcutsList" :key="item.key">
         <div class="col" :class="{ conflict: isShortcutConflict(globalStore.shortcut[item.key] + '') }"

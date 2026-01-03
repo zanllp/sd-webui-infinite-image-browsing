@@ -162,3 +162,150 @@ export const renameFile = async  (data: RenameFileParams) => {
   const resp = await axiosInst.value.post('/db/rename', data)
   return resp.data  as Promise<{ new_path:string }>
 }
+
+// ===== Natural language topic clustering =====
+export interface BuildIibOutputEmbeddingsReq {
+  folder?: string
+  model?: string
+  force?: boolean
+  batch_size?: number
+  max_chars?: number
+}
+
+export interface BuildIibOutputEmbeddingsResp {
+  folder: string
+  count: number
+  updated: number
+  skipped: number
+  model: string
+}
+
+export const buildIibOutputEmbeddings = async (req: BuildIibOutputEmbeddingsReq) => {
+  const resp = await axiosInst.value.post('/db/build_iib_output_embeddings', req)
+  return resp.data as BuildIibOutputEmbeddingsResp
+}
+
+export interface ClusterIibOutputReq {
+  folder?: string
+  folder_paths?: string[]
+  model?: string
+  force_embed?: boolean
+  threshold?: number
+  batch_size?: number
+  max_chars?: number
+  min_cluster_size?: number
+  lang?: string
+  // advanced (backend-supported; optional)
+  force_title?: boolean
+  use_title_cache?: boolean
+  assign_noise_threshold?: number
+}
+
+export interface ClusterIibOutputResp {
+  folder: string
+  model: string
+  threshold: number
+  min_cluster_size: number
+  count: number
+  clusters: Array<{
+    id: string
+    title: string
+    size: number
+    paths: string[]
+    sample_prompt: string
+  }>
+  noise: string[]
+}
+
+// ===== Async clustering job (progress polling) =====
+export interface ClusterIibOutputJobStartResp {
+  job_id: string
+}
+
+export interface ClusterIibOutputJobStatusResp {
+  job_id: string
+  status: 'queued' | 'running' | 'done' | 'error'
+  stage?: string
+  folders?: string[]
+  progress?: {
+    // embedding totals
+    scanned?: number
+    to_embed?: number
+    embedded_done?: number
+    updated?: number
+    skipped?: number
+    folder?: string
+    // clustering
+    items_total?: number
+    items_done?: number
+    // titling
+    clusters_total?: number
+    clusters_done?: number
+  }
+  error?: string
+  result?: ClusterIibOutputResp
+}
+
+export const startClusterIibOutputJob = async (req: ClusterIibOutputReq) => {
+  const resp = await axiosInst.value.post('/db/cluster_iib_output_job_start', req)
+  return resp.data as ClusterIibOutputJobStartResp
+}
+
+export const getClusterIibOutputJobStatus = async (job_id: string) => {
+  const resp = await axiosInst.value.get('/db/cluster_iib_output_job_status', { params: { job_id } })
+  return resp.data as ClusterIibOutputJobStatusResp
+}
+
+export interface ClusterIibOutputCachedResp {
+  cache_key: string
+  cache_hit: boolean
+  cached_at?: string
+  stale: boolean
+  stale_reason?: {
+    folders_changed?: boolean
+    reason?: string
+    path?: string
+    stored?: string
+    current?: string
+    embeddings_changed?: boolean
+    embeddings_count?: number
+    embeddings_max_updated_at?: string
+  }
+  result?: ClusterIibOutputResp | null
+}
+
+export const getClusterIibOutputCached = async (req: ClusterIibOutputReq) => {
+  const resp = await axiosInst.value.post('/db/cluster_iib_output_cached', req)
+  return resp.data as ClusterIibOutputCachedResp
+}
+
+// ===== Natural language prompt query (RAG-like retrieval) =====
+export interface PromptSearchReq {
+  query: string
+  folder?: string
+  folder_paths?: string[]
+  model?: string
+  top_k?: number
+  min_score?: number
+  ensure_embed?: boolean
+  max_chars?: number
+}
+
+export interface PromptSearchResp {
+  query: string
+  folder: string
+  model: string
+  count: number
+  top_k: number
+  results: Array<{
+    id: number
+    path: string
+    score: number
+    sample_prompt: string
+  }>
+}
+
+export const searchIibOutputByPrompt = async (req: PromptSearchReq) => {
+  const resp = await axiosInst.value.post('/db/search_iib_output_by_prompt', req, { timeout: Infinity })
+  return resp.data as PromptSearchResp
+}

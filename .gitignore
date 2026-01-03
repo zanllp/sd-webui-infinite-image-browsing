@@ -20,3 +20,6 @@ plugins/*
 !plugins/.gitkeep
 test_data/*
 .DS_Store
+iib_output
+iib.db-shm
+iib.db-wal

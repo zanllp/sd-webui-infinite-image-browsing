@@ -69,7 +69,7 @@ const addInterceptor = (axiosInst: AxiosInstance) => {
     (resp) => resp,
     async (err) => {
       if (isAxiosError(err)) {
-        if (err.response?.status === 401) {
+        if (err.response?.status === 401 && err.response?.data?.detail?.type === 'secret_verification_failed') {
           const key = await promptServerKeyOnce()
           if (!key) {
             // user cancelled; leave the request rejected as-is
@@ -154,6 +154,15 @@ export const getGlobalSetting = async () => {
   return data
 }
 
+/**
+ * 获取后端原始 global_setting（包含 app_fe_setting），不受 isSync() 影响。
+ * 仅在确实需要使用后端 KV（GlobalSetting 表）做持久化时使用。
+ */
+export const getGlobalSettingRaw = async () => {
+  const resp = await axiosInst.value.get('/global_setting')
+  return resp.data as GlobalConf
+}
+
 export const getVersion = async () => {
   const resp = await axiosInst.value.get('/version')
   return resp.data as { hash?: string, tag?: string }
@@ -207,6 +216,14 @@ export const setAppFeSetting = async (name: keyof GlobalConf['app_fe_setting'], 
   await axiosInst.value.post('/app_fe_setting', { name, value: JSON.stringify(setting) })
 }
 
+/**
+ * 强制写入后端 app_fe_setting KV，不依赖 isSync()。
+ * 用于需要“后端持久化”的少量功能开关/配置（例如 TopicSearch 的向量化范围）。
+ */
+export const setAppFeSettingForce = async (name: string, setting: Record<string, any>) => {
+  await axiosInst.value.post('/app_fe_setting', { name, value: JSON.stringify(setting) })
+}
+
 export const removeAppFeSetting = async (name: keyof GlobalConf['app_fe_setting']) => {
   if (!isSync()) return
   await axiosInst.value.delete('/app_fe_setting', { data: { name } })
@@ -214,4 +231,39 @@ export const removeAppFeSetting = async (name: keyof GlobalConf['app_fe_setting'
 
 export const setTargetFrameAsCover = async (body: { path: string, base64_img: string, updated_time: string }) => {
   await axiosInst.value.post('/set_target_frame_as_video_cover', body)
+}
+
+// AI 相关 API
+export interface AIChatMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+}
+
+export interface AIChatRequest {
+  messages: AIChatMessage[]
+  temperature?: number
+  max_tokens?: number
+  stream?: boolean
+}
+
+export interface AIChatResponse {
+  id: string
+  object: string
+  created: number
+  model: string
+  choices: Array<{
+    index: number
+    message: AIChatMessage
+    finish_reason: string
+  }>
+  usage: {
+    prompt_tokens: number
+    completion_tokens: number
+    total_tokens: number
+  }
+}
+
+export const aiChat = async (req: AIChatRequest) => {
+  const resp = await axiosInst.value.post('/ai-chat', req)
+  return resp.data as AIChatResponse
 }

@@ -33,6 +33,8 @@ import { prefix } from '@/util/const'
 // @ts-ignore
 import * as Pinyin from 'jian-pinyin'
 import { Tag } from '@/api/db'
+import { aiChat } from '@/api'
+import { message } from 'ant-design-vue'
 
 const global = useGlobalStore()
 
@@ -58,9 +60,15 @@ const geninfoStructNoPrompts = computed(() => {
   let p = parse(cleanImageGenInfo.value)
   delete p.prompt
   delete p.negativePrompt
+  delete p.extraJsonMetaInfo
   return p
 })
 
+// extraJsonMetaInfo 是需要额外显示的meta字段，使用原始 imageGenInfo 解析以避免 HTML 转义问题
+const extraJsonMetaInfo = computed(() => {
+  const p = parse(imageGenInfo.value) // 使用原始的 imageGenInfo，而不是 cleanImageGenInfo
+  return p.extraJsonMetaInfo as Record<string, any> | undefined
+})
 
 const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
@@ -305,6 +313,92 @@ const onTiktokViewClick = () => {
   emit('contextMenuClick', { key: 'tiktokView' } as any, props.file, props.idx)
 }
 
+// AI分析tag功能
+const analyzingTags = ref(false)
+const analyzeTagsWithAI = async () => {
+  if (!geninfoStruct.value.prompt) {
+    message.warning(t('aiAnalyzeTagsNoPrompt'))
+    return
+  }
+
+  if (!global.conf?.all_custom_tags?.length) {
+    message.warning(t('aiAnalyzeTagsNoCustomTags'))
+    return
+  }
+
+  analyzingTags.value = true
+  try {
+    const prompt = geninfoStruct.value.prompt
+    const availableTags = global.conf.all_custom_tags.map(tag => tag.name).join(', ')
+
+    const systemMessage = `You are a professional AI assistant responsible for analyzing Stable Diffusion prompts and categorizing them into appropriate tags.
+
+Your task is:
+1. Analyze the given prompt
+2. Find all relevant tags from the provided tag list
+3. Return only the matching tag names, separated by commas
+4. If no tags match, return an empty string
+5. Tag matching should be based on semantic similarity and thematic relevance
+
+Available tags: ${availableTags}
+
+Please return only tag names, do not include any other content.`
+
+    const response = await aiChat({
+      messages: [
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: `Please analyze this prompt and return matching tags: ${prompt}` }
+      ],
+      temperature: 0.3,
+      max_tokens: 200
+    })
+
+    const matchedTagsText = response.choices[0].message.content.trim()
+    if (!matchedTagsText) {
+      message.info(t('aiAnalyzeTagsNoMatchedTags'))
+      return
+    }
+
+    // 解析返回的标签
+    const matchedTagNames = matchedTagsText.split(',').map((name: string) => name.trim()).filter((name: string) => name)
+    
+    // 找到对应的tag对象
+    const matchedTags = global.conf.all_custom_tags.filter((tag: Tag) => 
+      matchedTagNames.some((matchedName: string) => 
+        tag.name.toLowerCase() === matchedName.toLowerCase() ||
+        tag.name.toLowerCase().includes(matchedName.toLowerCase()) ||
+        matchedName.toLowerCase().includes(tag.name.toLowerCase())
+      )
+    )
+
+    // 过滤掉已经添加到图像上的标签
+    const existingTagIds = new Set(selectedTag.value.map((t: Tag) => t.id))
+    const tagsToAdd = matchedTags.filter((tag: Tag) => !existingTagIds.has(tag.id))
+
+    if (tagsToAdd.length === 0) {
+      if (matchedTags.length > 0) {
+        message.info(t('aiAnalyzeTagsAllTagsAlreadyAdded'))
+      } else {
+        message.info(t('aiAnalyzeTagsNoValidTags'))
+      }
+      return
+    }
+
+    // 为每个匹配的tag发送添加请求（只添加新标签）
+    for (const tag of tagsToAdd) {
+      emit('contextMenuClick', { key: `toggle-tag-${tag.id}` } as any, props.file, props.idx)
+    }
+
+    message.success(t('aiAnalyzeTagsSuccess', [tagsToAdd.length.toString(), tagsToAdd.map(t => t.name).join(', ')]))
+
+  } catch (error) {
+    console.error('AI分析标签失败:', error)
+    message.error(t('aiAnalyzeTagsFailed'))
+  } finally {
+    analyzingTags.value = false
+  }
+}
+
 </script>
 
 <template>
@@ -384,6 +478,14 @@ const onTiktokViewClick = () => {
           <a-button @click="copyPositivePrompt" v-if="imageGenInfo">{{
             $t('copyPositivePrompt')
           }}</a-button>
+          <a-button 
+            @click="analyzeTagsWithAI"
+            type="primary"
+            :loading="analyzingTags"
+            v-if="imageGenInfo && global.conf?.all_custom_tags?.length"
+          >
+            {{ $t('aiAnalyzeTags') }}
+          </a-button>
           <a-button 
             @click="onTiktokViewClick" 
             @touchstart.prevent="onTiktokViewClick"
@@ -486,6 +588,17 @@ const onTiktokViewClick = () => {
                   </td>
                   <td v-else style="cursor: pointer;" @dblclick="copy(unescapeHtml(txt))">
                     {{ unescapeHtml(txt) }}
+                  </td>
+                </tr>
+              </table>
+            </template>
+            <template v-if="extraJsonMetaInfo && Object.keys(extraJsonMetaInfo).length"> <br />
+              <h3>Extra Meta Info</h3>
+              <table class="extra-meta-table">
+                <tr v-for="(val, key) in extraJsonMetaInfo" :key="key" class="gen-info-frag">
+                  <td style="font-weight: 600;text-transform: capitalize;">{{ key }}</td>
+                  <td style="cursor: pointer;" @dblclick="copy(val)">
+                    <code class="extra-meta-value">{{ typeof val === 'string' ? val : JSON.stringify(val, null, 2) }}</code>
                   </td>
                 </tr>
               </table>
@@ -608,6 +721,21 @@ const onTiktokViewClick = () => {
 
       tr td:first-child {
         white-space: nowrap;
+        vertical-align: top;
+      }
+    }
+
+    table.extra-meta-table {
+      .extra-meta-value {
+        display: block;
+        max-height: 200px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.85em;
+        background: var(--zp-secondary-variant-background);
+        padding: 8px;
+        border-radius: 4px;
       }
     }
 
