@@ -490,26 +490,6 @@ def _call_chat_title_sync(
         "top_p": 1.0,
         # Give enough room for JSON across providers.
         "max_tokens": 2048,
-        # Prefer tool/function call to force structured output across providers (e.g. Gemini).
-        "tools": [
-            {
-                "type": "function",
-                "function": {
-                    "name": "set_topic",
-                    "description": "Return a concise topic title and 3-6 keywords.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "title": {"type": "string"},
-                            "keywords": {"type": "array", "items": {"type": "string"}},
-                        },
-                        "required": ["title", "keywords"],
-                        "additionalProperties": False,
-                    },
-                },
-            }
-        ],
-        "tool_choice": {"type": "function", "function": {"name": "set_topic"}},
     }
     # Some OpenAI-compatible providers may use different token limit fields / casing.
     # Set them all (still a single request; no retry/fallback).
@@ -518,77 +498,78 @@ def _call_chat_title_sync(
     payload["maxOutputTokens"] = payload["max_tokens"]
     payload["maxCompletionTokens"] = payload["max_tokens"]
 
-    def _post_and_parse(payload_obj: Dict) -> Dict:
+    def _post(payload_obj: Dict):
         try:
-            resp = requests.post(url, json=payload_obj, headers=headers, timeout=60)
+            return requests.post(url, json=payload_obj, headers=headers, timeout=60)
         except requests.RequestException as e:
             raise HTTPException(status_code=502, detail=f"Chat API request failed: {e}")
+
+    # Parse JSON from message.content only (regex extraction). If parsing fails, retry up to 5 times.
+    attempt_debug: List[Dict] = []
+    last_err = ""
+    for attempt in range(1, 6):
+        resp = _post(payload)
         if resp.status_code != 200:
-            # keep response body for debugging (truncated)
             body = (resp.text or "")[:600]
             status = 400 if resp.status_code == 401 else resp.status_code
             raise HTTPException(status_code=status, detail=body)
+
         try:
             data = resp.json()
         except Exception as e:
             txt = (resp.text or "")[:600]
             raise HTTPException(status_code=502, detail=f"Chat API response is not JSON: {e}; body={txt}")
+
         choice0 = (data.get("choices") or [{}])[0] if isinstance(data.get("choices"), list) else {}
         msg = (choice0 or {}).get("message") or {}
-
-        # OpenAI-compatible providers may return JSON in different places:
-        # - message.tool_calls[].function.arguments (JSON string)  <-- preferred when tools are used
-        # - message.function_call.arguments (legacy)
-        # - message.content (common)
-        # - choice.text (legacy completions)
-        raw = ""
-        if not raw and isinstance(msg, dict):
-            tcs = msg.get("tool_calls") or []
-            if isinstance(tcs, list) and tcs:
-                fn = ((tcs[0] or {}).get("function") or {}) if isinstance(tcs[0], dict) else {}
-                args = (fn.get("arguments") or "") if isinstance(fn, dict) else ""
-                if isinstance(args, str) and args.strip():
-                    raw = args.strip()
-        if not raw and isinstance(msg, dict):
-            fc = msg.get("function_call") or {}
-            args = (fc.get("arguments") or "") if isinstance(fc, dict) else ""
-            if isinstance(args, str) and args.strip():
-                raw = args.strip()
-        if not raw:
-            content = (msg.get("content") or "") if isinstance(msg, dict) else ""
-            if isinstance(content, str) and content.strip():
-                raw = content.strip()
-        if not raw:
-            txt = (choice0.get("text") or "") if isinstance(choice0, dict) else ""
-            if isinstance(txt, str) and txt.strip():
-                raw = txt.strip()
+        finish_reason = (choice0.get("finish_reason") if isinstance(choice0, dict) else None) or ""
+        content = (msg.get("content") if isinstance(msg, dict) else "") or ""
+        raw = content.strip() if isinstance(content, str) else ""
+        if not raw and isinstance(choice0, dict):
+            txt = (choice0.get("text") or "")  # legacy
+            raw = txt.strip() if isinstance(txt, str) else ""
 
         m = re.search(r"\{[\s\S]*\}", raw)
         if not m:
             snippet = (raw or "")[:400].replace("\n", "\\n")
             choice_dump = json.dumps(choice0, ensure_ascii=False)[:600] if isinstance(choice0, dict) else str(choice0)[:600]
-            raise HTTPException(
-                status_code=502,
-                detail=f"Chat API response has no JSON object; content_snippet={snippet}; choice0={choice_dump}",
-            )
+            last_err = f"no_json_object; finish_reason={finish_reason}; content_snippet={snippet}; choice0={choice_dump}"
+            attempt_debug.append({"attempt": attempt, "reason": "no_json_object", "finish_reason": finish_reason, "snippet": snippet})
+            continue
+
+        json_str = m.group(0)
         try:
-            obj = json.loads(m.group(0))
+            obj = json.loads(json_str)
         except Exception as e:
-            snippet = (m.group(0) or "")[:400].replace("\n", "\\n")
-            raise HTTPException(status_code=502, detail=f"Chat API JSON parse failed: {e}; json_snippet={snippet}")
+            snippet = (json_str or "")[:400].replace("\n", "\\n")
+            last_err = f"json_parse_failed: {type(e).__name__}: {e}; finish_reason={finish_reason}; json_snippet={snippet}"
+            attempt_debug.append({"attempt": attempt, "reason": "json_parse_failed", "finish_reason": finish_reason, "snippet": snippet})
+            continue
+
         if not isinstance(obj, dict):
-            raise HTTPException(status_code=502, detail="Chat API response JSON is not an object")
+            snippet = (json_str or "")[:200].replace("\n", "\\n")
+            last_err = f"json_not_object; finish_reason={finish_reason}; json_snippet={snippet}"
+            attempt_debug.append({"attempt": attempt, "reason": "json_not_object", "finish_reason": finish_reason, "snippet": snippet})
+            continue
+
         title = str(obj.get("title") or "").strip()
         keywords = obj.get("keywords") or []
         if not title:
-            raise HTTPException(status_code=502, detail="Chat API response missing title")
+            snippet = (json_str or "")[:200].replace("\n", "\\n")
+            last_err = f"missing_title; finish_reason={finish_reason}; json_snippet={snippet}"
+            attempt_debug.append({"attempt": attempt, "reason": "missing_title", "finish_reason": finish_reason, "snippet": snippet})
+            continue
         if not isinstance(keywords, list):
             keywords = []
         keywords = [str(x).strip() for x in keywords if str(x).strip()][:6]
         return {"title": title[:24], "keywords": keywords}
 
-    # No fallback / no retry: fail fast if provider/model doesn't support response_format or returns invalid output.
-    return _post_and_parse(payload)
+    # Exhausted retries
+    dbg = json.dumps(attempt_debug, ensure_ascii=False)[:1200]
+    raise HTTPException(
+        status_code=502,
+        detail=f"Chat API JSON extraction failed after 5 attempts; last_error={last_err}; attempts={dbg}",
+    )
 
 
 async def _call_chat_title(
