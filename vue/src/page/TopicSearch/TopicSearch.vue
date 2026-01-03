@@ -8,6 +8,7 @@ import {
   type ClusterIibOutputResp,
   type PromptSearchResp
 } from '@/api/db'
+import { updateImageData } from '@/api/db'
 import { t } from '@/i18n'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -201,6 +202,8 @@ const refresh = async () => {
   job.value = null
   jobId.value = ''
   try {
+    // Ensure DB file index is up to date before clustering (so newly added/moved images are included).
+    await updateImageData()
     const started = await startClusterIibOutputJob({
       threshold: threshold.value,
       min_cluster_size: minClusterSize.value,
