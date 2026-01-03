@@ -10,7 +10,7 @@ import threading
 from array import array
 from contextlib import closing
 from typing import Callable, Dict, List, Optional, Tuple
-
+from sqlite3 import Connection, connect
 import requests
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
@@ -707,7 +707,7 @@ def mount_topic_cluster_routes(
 
             cache_params = {
                 "model": model,
-                "threshold": float(req.threshold or 0.86),
+                "threshold": float(req.threshold or 0.90),
                 "min_cluster_size": int(req.min_cluster_size or 2),
                 "assign_noise_threshold": req.assign_noise_threshold,
                 "title_model": req.title_model,
@@ -1033,6 +1033,129 @@ def mount_topic_cluster_routes(
         force_title: Optional[bool] = False
         # Output language for titles/keywords (from frontend globalStore.lang)
         lang: Optional[str] = None
+
+    def _scope_cache_stale_by_folders(conn: Connection, folders: List[str]) -> Dict:
+        """
+        Determine whether selected folders (and their subfolders) appear to have changed
+        since last /db/update_image_data run.
+
+        We use the existing `folders` table (Folder) which stores last observed modified_date.
+        If any tracked folder's current modified_date differs, we treat cache as stale.
+        If a selected root folder is missing from the table, treat as stale (not indexed yet).
+        """
+        try:
+            from scripts.iib.db.datamodel import Folder
+            from scripts.iib.tool import get_modified_date
+        except Exception:
+            # If imports fail for any reason, be conservative.
+            return {"folders_changed": True, "reason": "folder_state_check_import_failed"}
+
+        changed_path = ""
+        # root folder missing in table => stale
+        with closing(conn.cursor()) as cur:
+            for f in folders:
+                cur.execute("SELECT id, path, modified_date FROM folders WHERE path = ?", (str(f),))
+                row = cur.fetchone()
+                if not row:
+                    return {"folders_changed": True, "reason": "folder_not_indexed", "path": str(f)}
+        # check all known subfolders under each selected folder
+        for f in folders:
+            like_prefix = os.path.join(str(f), "%")
+            with closing(conn.cursor()) as cur:
+                cur.execute(
+                    "SELECT path, modified_date FROM folders WHERE path = ? OR path LIKE ?",
+                    (str(f), like_prefix),
+                )
+                rows = cur.fetchall() or []
+            for p, stored in rows:
+                p = str(p or "")
+                if not p:
+                    continue
+                if not os.path.exists(p) or not os.path.isdir(p):
+                    # path removed: treat as changed
+                    changed_path = p
+                    return {"folders_changed": True, "reason": "folder_missing", "path": changed_path}
+                cur_md = str(get_modified_date(p))
+                if cur_md != str(stored or ""):
+                    changed_path = p
+                    return {
+                        "folders_changed": True,
+                        "reason": "folder_modified_date_changed",
+                        "path": changed_path,
+                        "stored": str(stored or ""),
+                        "current": cur_md,
+                    }
+        return {"folders_changed": False}
+
+    def _embeddings_state(conn: Connection, folders: List[str], model: str) -> Dict:
+        like_prefixes = [os.path.join(f, "%") for f in folders]
+        with closing(conn.cursor()) as cur:
+            where = " OR ".join(["image.path LIKE ?"] * len(like_prefixes))
+            cur.execute(
+                f"""SELECT COUNT(*), MAX(image_embedding.updated_at)
+                    FROM image
+                    INNER JOIN image_embedding ON image_embedding.image_id = image.id
+                    WHERE ({where}) AND image_embedding.model = ?""",
+                (*like_prefixes, str(model)),
+            )
+            row = cur.fetchone() or (0, "")
+        return {"embeddings_count": int(row[0] or 0), "embeddings_max_updated_at": str(row[1] or "")}
+
+    @app.post(
+        f"{db_api_base}/cluster_iib_output_cached",
+        # Read-only: do NOT require write permission; only reads sqlite cache and folder mtimes.
+        dependencies=[Depends(verify_secret)],
+    )
+    async def cluster_iib_output_cached(req: ClusterIibOutputReq):
+        """
+        Return cached clustering result if exists, WITHOUT triggering embedding/clustering.
+        Also returns a lightweight "stale" signal based on:
+        - folders table modified_date changes (requires user to run refresh/index update)
+        - embedding state changes (count / max(updated_at)) compared to cache metadata
+        """
+        folders = _extract_and_validate_folders(req)
+        model = req.model or embedding_model
+        conn = DataBase.get_conn()
+
+        cache_params = {
+            "model": str(model),
+            "threshold": float(req.threshold or 0.90),
+            "min_cluster_size": int(req.min_cluster_size or 2),
+            "assign_noise_threshold": req.assign_noise_threshold,
+            "title_model": req.title_model,
+            "lang": str(req.lang or ""),
+            "nv": _PROMPT_NORMALIZE_VERSION,
+            "nm": _PROMPT_NORMALIZE_MODE,
+        }
+        h = hashlib.sha1()
+        h.update(json.dumps({"folders": folders, "params": cache_params}, ensure_ascii=False, sort_keys=True).encode("utf-8"))
+        cache_key = h.hexdigest()
+
+        cached = TopicClusterCache.get(conn, cache_key)
+        folder_state = _scope_cache_stale_by_folders(conn, folders)
+        emb_state = _embeddings_state(conn, folders, model)
+
+        embeddings_changed = False
+        if cached:
+            embeddings_changed = (
+                int(cached.get("embeddings_count") or 0) != int(emb_state["embeddings_count"])
+                or str(cached.get("embeddings_max_updated_at") or "") != str(emb_state["embeddings_max_updated_at"])
+            )
+
+        stale = bool(folder_state.get("folders_changed")) or bool(embeddings_changed) or (not cached)
+        return {
+            "cache_key": cache_key,
+            "cache_hit": bool(cached and isinstance(cached.get("result"), dict)),
+            "cached_at": (cached or {}).get("updated_at") if cached else "",
+            "result": (cached or {}).get("result") if cached else None,
+            "stale": stale,
+            "stale_reason": {
+                **folder_state,
+                "embeddings_changed": bool(embeddings_changed),
+                "embeddings_count": int(emb_state["embeddings_count"]),
+                "embeddings_max_updated_at": str(emb_state["embeddings_max_updated_at"]),
+            },
+        }
 
     @app.post(
         f"{db_api_base}/cluster_iib_output_job_start",

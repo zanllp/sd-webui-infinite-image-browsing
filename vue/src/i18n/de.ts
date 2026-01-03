@@ -39,6 +39,9 @@ export const de: Partial<IIBI18nMap> = {
   topicSearchSavingToBackend: 'Wird im Backend gespeichert...',
   topicSearchScopePlaceholder: 'Ordner auswählen (Mehrfachauswahl)',
   topicSearchRecallMsg: '{0} / {1} abgerufen (TopK={2})',
+  topicSearchCacheStale: 'Zwischengespeichertes Ergebnis wird angezeigt (Update verfügbar)',
+  topicSearchCacheStaleDesc: 'Ordner im ausgewählten Bereich könnten geändert worden sein. Der Cache könnte veraltet sein. Klicken Sie auf „Update“, um Themen neu zu erzeugen (Index wird zuerst aktualisiert).',
+  topicSearchCacheUpdate: 'Cache aktualisieren',
 
   topicSearchGuideTitle: 'Schnellstart (Experimentell)',
   topicSearchGuideStep1: 'Wählen Sie die Ordner (Bereich) zur Analyse aus (Mehrfachauswahl)',

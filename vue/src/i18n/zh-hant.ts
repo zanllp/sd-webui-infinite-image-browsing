@@ -39,6 +39,9 @@ export const zhHant: Partial<IIBI18nMap> = {
   topicSearchSavingToBackend: '正在保存到後端...',
   topicSearchScopePlaceholder: '選擇資料夾（可多選）',
   topicSearchRecallMsg: '召回 {0} / {1}（TopK={2}）',
+  topicSearchCacheStale: '已顯示快取結果（可更新）',
+  topicSearchCacheStaleDesc: '偵測到範圍內資料夾可能有變更，快取可能已過期。可點擊更新重新生成主題（會先更新索引）。',
+  topicSearchCacheUpdate: '更新快取',
 
   topicSearchGuideTitle: '快速上手（實驗性）',
   topicSearchGuideStep1: '選擇要分析的資料夾範圍（可多選）',

@@ -2,9 +2,11 @@
 import { getGlobalSettingRaw, setAppFeSettingForce } from '@/api'
 import {
   getClusterIibOutputJobStatus,
+  getClusterIibOutputCached,
   searchIibOutputByPrompt,
   startClusterIibOutputJob,
   type ClusterIibOutputJobStatusResp,
+  type ClusterIibOutputCachedResp,
   type ClusterIibOutputResp,
   type PromptSearchResp
 } from '@/api/db'
@@ -25,6 +27,7 @@ const loading = ref(false)
 const threshold = ref(0.9)
 const minClusterSize = ref(2)
 const result = ref<ClusterIibOutputResp | null>(null)
+const cacheInfo = ref<ClusterIibOutputCachedResp | null>(null)
 
 const _REQS_LS_KEY = 'iib_topic_search_hide_requirements_v1'
 // true = show requirements; false = hidden
@@ -127,7 +130,7 @@ const folderOptions = computed(() => {
 const scopeCount = computed(() => (selectedFolders.value ?? []).filter(Boolean).length)
 const scopeFolders = computed(() => (selectedFolders.value ?? []).filter(Boolean))
 
-const clusters = computed(() => (result.value?.clusters ?? []).slice(0, 12))
+const clusters = computed(() => result.value?.clusters ?? [])
 
 const loadScopeFromBackend = async () => {
   if (_scopeInitDone.value) return
@@ -193,10 +196,30 @@ const pollJob = async () => {
     stopJobPoll()
     loading.value = false
     if (st.result) result.value = st.result
+    cacheInfo.value = null
   } else if (st.status === 'error') {
     stopJobPoll()
     loading.value = false
     message.error(st.error || t('topicSearchJobFailed'))
+  }
+}
+
+const loadCached = async () => {
+  if (!scopeCount.value) return
+  // best-effort: do not block entering the page
+  try {
+    const cached = await getClusterIibOutputCached({
+      threshold: threshold.value,
+      min_cluster_size: minClusterSize.value,
+      lang: g.lang,
+      folder_paths: scopeFolders.value
+    })
+    cacheInfo.value = cached
+    if (cached.cache_hit && cached.result) {
+      result.value = cached.result
+    }
+  } catch (e) {
+    // ignore
   }
 }
 
@@ -291,7 +314,7 @@ onMounted(() => {
   void (async () => {
     await loadScopeFromBackend()
     if (scopeCount.value) {
-      await refresh()
+      await loadCached()
     }
   })()
 })
@@ -384,6 +407,23 @@ watch(
               <span>{{ $t('topicSearchRequirementsInstallCmd') }}</span>
             </div>
           </template>
+        </div>
+      </template>
+    </a-alert>
+
+    <a-alert
+      v-if="cacheInfo?.cache_hit && cacheInfo?.stale"
+      type="warning"
+      show-icon
+      style="margin: 10px 0 0 0;"
+      :message="$t('topicSearchCacheStale')"
+    >
+      <template #description>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span style="opacity: 0.85;">{{ $t('topicSearchCacheStaleDesc') }}</span>
+          <a-button size="small" :loading="loading || jobRunning" :disabled="g.conf?.is_readonly" @click="refresh">
+            {{ $t('topicSearchCacheUpdate') }}
+          </a-button>
         </div>
       </template>
     </a-alert>

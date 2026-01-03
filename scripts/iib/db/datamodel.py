@@ -192,6 +192,13 @@ class Image:
     @classmethod
     def remove(cls, conn: Connection, image_id: int) -> None:
         with closing(conn.cursor()) as cur:
+            # Manual cascade delete to avoid leaving orphan rows in related tables.
+            # NOTE: SQLite foreign key constraints are often disabled by default unless
+            # PRAGMA foreign_keys=ON is set. We still delete related rows explicitly
+            # so deletion works regardless of FK settings and keeps DB clean.
+            cur.execute("DELETE FROM image_embedding WHERE image_id = ?", (int(image_id),))
+            cur.execute("DELETE FROM image_embedding_fail WHERE image_id = ?", (int(image_id),))
+            cur.execute("DELETE FROM image_tag WHERE image_id = ?", (int(image_id),))
             cur.execute("DELETE FROM image WHERE id = ?", (image_id,))
             conn.commit()
 
@@ -202,6 +209,16 @@ class Image:
         with closing(conn.cursor()) as cur:
             try:
                 placeholders = ",".join("?" * len(image_ids))
+                # Manual cascade delete for related tables.
+                # Keep this in sync with tables referencing image.id.
+                cur.execute(
+                    f"DELETE FROM image_embedding WHERE image_id IN ({placeholders})",
+                    image_ids,
+                )
+                cur.execute(
+                    f"DELETE FROM image_embedding_fail WHERE image_id IN ({placeholders})",
+                    image_ids,
+                )
                 cur.execute(
                     f"DELETE FROM image_tag WHERE image_id IN ({placeholders})",
                     image_ids,

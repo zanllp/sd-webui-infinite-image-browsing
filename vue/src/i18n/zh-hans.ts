@@ -37,6 +37,9 @@ export const zhHans = {
   topicSearchSavingToBackend: '正在保存到后端...',
   topicSearchScopePlaceholder: '选择文件夹（可多选）',
   topicSearchRecallMsg: '召回 {0} / {1}（TopK={2}）',
+  topicSearchCacheStale: '已显示缓存结果（可更新）',
+  topicSearchCacheStaleDesc: '检测到范围内文件夹可能有变更，缓存可能已过期。可点击更新重新生成主题（会先更新索引）。',
+  topicSearchCacheUpdate: '更新缓存',
 
   topicSearchGuideTitle: '快速上手（实验性）',
   topicSearchGuideStep1: '选择要分析的文件夹范围（可多选）',

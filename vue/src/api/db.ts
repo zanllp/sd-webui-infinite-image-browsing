@@ -256,6 +256,29 @@ export const getClusterIibOutputJobStatus = async (job_id: string) => {
   return resp.data as ClusterIibOutputJobStatusResp
 }
 
+export interface ClusterIibOutputCachedResp {
+  cache_key: string
+  cache_hit: boolean
+  cached_at?: string
+  stale: boolean
+  stale_reason?: {
+    folders_changed?: boolean
+    reason?: string
+    path?: string
+    stored?: string
+    current?: string
+    embeddings_changed?: boolean
+    embeddings_count?: number
+    embeddings_max_updated_at?: string
+  }
+  result?: ClusterIibOutputResp | null
+}
+
+export const getClusterIibOutputCached = async (req: ClusterIibOutputReq) => {
+  const resp = await axiosInst.value.post('/db/cluster_iib_output_cached', req)
+  return resp.data as ClusterIibOutputCachedResp
+}
+
 // ===== Natural language prompt query (RAG-like retrieval) =====
 export interface PromptSearchReq {
   query: string

@@ -39,6 +39,9 @@ export const en: IIBI18nMap = {
   topicSearchSavingToBackend: 'Saving to backend...',
   topicSearchScopePlaceholder: 'Select folders (multi-select)',
   topicSearchRecallMsg: 'Retrieved {0} / {1} (TopK={2})',
+  topicSearchCacheStale: 'Showing cached result (update available)',
+  topicSearchCacheStaleDesc: 'Folders in the selected scope may have changed. The cache may be stale. Click Update to regenerate topics (will update index first).',
+  topicSearchCacheUpdate: 'Update cache',
 
   topicSearchGuideTitle: 'Quick Start (Experimental)',
   topicSearchGuideStep1: 'Select the scope folders to analyze (multi-select)',
