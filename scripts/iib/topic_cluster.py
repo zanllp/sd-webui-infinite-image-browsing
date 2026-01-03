@@ -498,27 +498,38 @@ def _call_chat_title_sync(
     payload["maxOutputTokens"] = payload["max_tokens"]
     payload["maxCompletionTokens"] = payload["max_tokens"]
 
-    def _post(payload_obj: Dict):
-        try:
-            return requests.post(url, json=payload_obj, headers=headers, timeout=60)
-        except requests.RequestException as e:
-            raise HTTPException(status_code=502, detail=f"Chat API request failed: {e}")
-
-    # Parse JSON from message.content only (regex extraction). If parsing fails, retry up to 5 times.
+    # Parse JSON from message.content only (regex extraction).
+    # Retry up to 5 times for: network errors, API errors (non 4xx client errors), parsing failures.
     attempt_debug: List[Dict] = []
     last_err = ""
     for attempt in range(1, 6):
-        resp = _post(payload)
+        try:
+            resp = requests.post(url, json=payload, headers=headers, timeout=60)
+        except requests.RequestException as e:
+            last_err = f"network_error: {type(e).__name__}: {e}"
+            attempt_debug.append({"attempt": attempt, "reason": "network_error", "error": str(e)[:400]})
+            continue
+
+        # Retry on server-side errors (5xx) and rate limits (429), but not client errors (4xx except 429).
         if resp.status_code != 200:
             body = (resp.text or "")[:600]
+            # 401 -> 400 as per your requirement
             status = 400 if resp.status_code == 401 else resp.status_code
+            # Retry on 429 (rate limit) or 5xx (server error)
+            if resp.status_code == 429 or resp.status_code >= 500:
+                last_err = f"api_error_retriable: status={status}; body={body}"
+                attempt_debug.append({"attempt": attempt, "reason": "api_error_retriable", "status": status, "body": body[:200]})
+                continue
+            # 4xx (except 429): fail immediately (client error, not retriable)
             raise HTTPException(status_code=status, detail=body)
 
         try:
             data = resp.json()
         except Exception as e:
             txt = (resp.text or "")[:600]
-            raise HTTPException(status_code=502, detail=f"Chat API response is not JSON: {e}; body={txt}")
+            last_err = f"response_not_json: {type(e).__name__}: {e}; body={txt}"
+            attempt_debug.append({"attempt": attempt, "reason": "response_not_json", "error": str(e)[:200], "body": txt[:200]})
+            continue
 
         choice0 = (data.get("choices") or [{}])[0] if isinstance(data.get("choices"), list) else {}
         msg = (choice0 or {}).get("message") or {}
