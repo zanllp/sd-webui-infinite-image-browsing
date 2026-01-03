@@ -217,11 +217,6 @@ export interface ClusterIibOutputResp {
   noise: string[]
 }
 
-export const clusterIibOutput = async (req: ClusterIibOutputReq) => {
-  const resp = await axiosInst.value.post('/db/cluster_iib_output', req, { timeout: Infinity })
-  return resp.data as ClusterIibOutputResp
-}
-
 // ===== Async clustering job (progress polling) =====
 export interface ClusterIibOutputJobStartResp {
   job_id: string

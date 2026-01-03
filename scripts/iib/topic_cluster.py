@@ -1518,81 +1518,8 @@ def mount_topic_cluster_routes(
         # fallback
         return "English"
 
-    @app.post(
-        f"{db_api_base}/cluster_iib_output",
-        dependencies=[Depends(verify_secret), Depends(write_permission_required)],
-    )
-    async def cluster_iib_output(req: ClusterIibOutputReq):
-        # Keep this endpoint for compatibility, but avoid duplicating the heavy logic.
-        # If embeddings haven't changed and we have a cached clustering result, return it directly.
-        folders = _extract_and_validate_folders(req)
-
-        model = req.model or embedding_model
-        batch_size = max(1, min(int(req.batch_size or 64), 256))
-        max_chars = max(256, min(int(req.max_chars or 4000), 8000))
-        force = bool(req.force_embed)
-        for f in folders:
-            await _build_embeddings_one_folder(
-                folder=f,
-                model=model,
-                force=force,
-                batch_size=batch_size,
-                max_chars=max_chars,
-                progress_cb=None,
-            )
-
-        conn = DataBase.get_conn()
-        like_prefixes = [os.path.join(f, "%") for f in folders]
-        with closing(conn.cursor()) as cur:
-            where = " OR ".join(["image.path LIKE ?"] * len(like_prefixes))
-            cur.execute(
-                f"""SELECT COUNT(*), MAX(image_embedding.updated_at)
-                    FROM image
-                    INNER JOIN image_embedding ON image_embedding.image_id = image.id
-                    WHERE ({where}) AND image_embedding.model = ?""",
-                (*like_prefixes, model),
-            )
-            row = cur.fetchone() or (0, "")
-        embeddings_count = int(row[0] or 0)
-        embeddings_max_updated_at = str(row[1] or "")
-
-        cache_params = {
-            "model": model,
-            "threshold": float(req.threshold or 0.86),
-            "min_cluster_size": int(req.min_cluster_size or 2),
-            "assign_noise_threshold": req.assign_noise_threshold,
-            "title_model": req.title_model,
-            "lang": str(req.lang or ""),
-            "nv": _PROMPT_NORMALIZE_VERSION,
-            "nm": _PROMPT_NORMALIZE_MODE,
-        }
-        h = hashlib.sha1()
-        h.update(json.dumps({"folders": folders, "params": cache_params}, ensure_ascii=False, sort_keys=True).encode("utf-8"))
-        cache_key = h.hexdigest()
-        cached = TopicClusterCache.get(conn, cache_key)
-        if (
-            cached
-            and int(cached.get("embeddings_count") or 0) == embeddings_count
-            and str(cached.get("embeddings_max_updated_at") or "") == embeddings_max_updated_at
-            and isinstance(cached.get("result"), dict)
-        ):
-            return cached["result"]
-
-        res = await _cluster_after_embeddings(req, folders, progress_cb=None)
-        try:
-            TopicClusterCache.upsert(
-                conn,
-                cache_key=cache_key,
-                folders=folders,
-                model=model,
-                params=cache_params,
-                embeddings_count=embeddings_count,
-                embeddings_max_updated_at=embeddings_max_updated_at,
-                result=res,
-            )
-            conn.commit()
-        except Exception:
-            pass
-        return res
+    # NOTE:
+    # We intentionally do NOT keep the legacy synchronous `/cluster_iib_output` endpoint.
+    # The UI should use `/cluster_iib_output_job_start` + `/cluster_iib_output_job_status` only.
 
 

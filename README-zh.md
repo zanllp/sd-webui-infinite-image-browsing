@@ -177,7 +177,7 @@ https://user-images.githubusercontent.com/25872019/230768207-daab786b-d4ab-489f-
 
 - **构建/刷新向量**：`POST /infinite_image_browsing/db/build_iib_output_embeddings`
   - 入参：`folder`, `model`, `force`, `batch_size`, `max_chars`
-- **归类（聚类）**：`POST /infinite_image_browsing/db/cluster_iib_output`
+- **归类（聚类）**：`POST /infinite_image_browsing/db/cluster_iib_output_job_start`，然后轮询 `GET /infinite_image_browsing/db/cluster_iib_output_job_status?job_id=...`
   - 入参：`folder_paths`（必填，数组）、`threshold`, `min_cluster_size`, `force_embed`, `title_model`, `force_title`, `use_title_cache`, `assign_noise_threshold`, `lang`
 - **语义检索（RAG 召回）**：`POST /infinite_image_browsing/db/search_iib_output_by_prompt`
   - 入参：`query`, `folder_paths`（必填，数组）、`top_k`, `min_score`, `ensure_embed`, `model`, `max_chars`
@@ -211,7 +211,7 @@ https://user-images.githubusercontent.com/25872019/230768207-daab786b-d4ab-489f-
 - **“重新向量化”的缓存键**：`text_hash = sha256(f"{normalize_version}:{prompt_text}")`
   - `prompt_text`：用于 embedding 的最终文本（抽取 + 可选清洗）
   - `normalize_version`：由代码对清洗规则/模式计算出的**指纹**（不允许用户用环境变量手动覆盖）
-- **强制刷新**：在 `build_iib_output_embeddings` 传 `force=true`，或在 `cluster_iib_output` 传 `force_embed=true`
+- **强制刷新**：在 `build_iib_output_embeddings` 传 `force=true`，或在 `cluster_iib_output_job_start` 传 `force_embed=true`
 
 #### 2）标题缓存（`topic_title_cache`）
 

@@ -195,7 +195,7 @@ It’s experimental: results depend on the embedding/chat models and the quality
 
 - **Build/refresh embeddings**: `POST /infinite_image_browsing/db/build_iib_output_embeddings`
   - Request: `folder`, `model`, `force`, `batch_size`, `max_chars`
-- **Cluster (categorize)**: `POST /infinite_image_browsing/db/cluster_iib_output`
+- **Cluster (categorize)**: `POST /infinite_image_browsing/db/cluster_iib_output_job_start` then poll `GET /infinite_image_browsing/db/cluster_iib_output_job_status?job_id=...`
   - Request: `folder_paths` (required, array), `threshold`, `min_cluster_size`, `force_embed`, `title_model`, `force_title`, `use_title_cache`, `assign_noise_threshold`, `lang`
 - **Prompt retrieval (RAG-like)**: `POST /infinite_image_browsing/db/search_iib_output_by_prompt`
   - Request: `query`, `folder_paths` (required, array), `top_k`, `min_score`, `ensure_embed`, `model`, `max_chars`
@@ -229,7 +229,7 @@ It’s experimental: results depend on the embedding/chat models and the quality
 - **Re-vectorization cache key**: `text_hash = sha256(f"{normalize_version}:{prompt_text}")`
   - `prompt_text` is the extracted + (optionally) normalized text used for embeddings
   - `normalize_version` is a **code-derived fingerprint** of normalization rules/mode (not user-configurable)
-- **Force rebuild**: pass `force=true` to `build_iib_output_embeddings` or `force_embed=true` to `cluster_iib_output`
+- **Force rebuild**: pass `force=true` to `build_iib_output_embeddings` or `force_embed=true` to `cluster_iib_output_job_start`
 
 #### 2) Title cache (`topic_title_cache`)
 
