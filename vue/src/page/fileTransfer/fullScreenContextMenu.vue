@@ -314,38 +314,40 @@ const onTiktokViewClick = () => {
 }
 
 // AI分析tag功能
+const analyzingTags = ref(false)
 const analyzeTagsWithAI = async () => {
   if (!geninfoStruct.value.prompt) {
-    message.warning('没有找到提示词')
+    message.warning(t('aiAnalyzeTagsNoPrompt'))
     return
   }
 
   if (!global.conf?.all_custom_tags?.length) {
-    message.warning('没有自定义标签')
+    message.warning(t('aiAnalyzeTagsNoCustomTags'))
     return
   }
 
+  analyzingTags.value = true
   try {
     const prompt = geninfoStruct.value.prompt
     const availableTags = global.conf.all_custom_tags.map(tag => tag.name).join(', ')
 
-    const systemMessage = `你是一个专业的AI助手，负责分析Stable Diffusion提示词并将其分类到相应的标签中。
+    const systemMessage = `You are a professional AI assistant responsible for analyzing Stable Diffusion prompts and categorizing them into appropriate tags.
 
-你的任务是：
-1. 分析给定的提示词
-2. 从提供的标签列表中找出所有相关的标签
-3. 只返回匹配的标签名称，用逗号分隔
-4. 如果没有匹配的标签，返回空字符串
-5. 标签匹配应该基于语义相似性和主题相关性
+Your task is:
+1. Analyze the given prompt
+2. Find all relevant tags from the provided tag list
+3. Return only the matching tag names, separated by commas
+4. If no tags match, return an empty string
+5. Tag matching should be based on semantic similarity and thematic relevance
 
-可用的标签：${availableTags}
+Available tags: ${availableTags}
 
-请只返回标签名称，不要包含其他内容。`
+Please return only tag names, do not include any other content.`
 
     const response = await aiChat({
       messages: [
         { role: 'system', content: systemMessage },
-        { role: 'user', content: `请分析这个提示词并返回匹配的标签：${prompt}` }
+        { role: 'user', content: `Please analyze this prompt and return matching tags: ${prompt}` }
       ],
       temperature: 0.3,
       max_tokens: 200
@@ -353,7 +355,7 @@ const analyzeTagsWithAI = async () => {
 
     const matchedTagsText = response.choices[0].message.content.trim()
     if (!matchedTagsText) {
-      message.info('AI没有找到匹配的标签')
+      message.info(t('aiAnalyzeTagsNoMatchedTags'))
       return
     }
 
@@ -361,7 +363,7 @@ const analyzeTagsWithAI = async () => {
     const matchedTagNames = matchedTagsText.split(',').map((name: string) => name.trim()).filter((name: string) => name)
     
     // 找到对应的tag对象
-    const tagsToAdd = global.conf.all_custom_tags.filter((tag: Tag) => 
+    const matchedTags = global.conf.all_custom_tags.filter((tag: Tag) => 
       matchedTagNames.some((matchedName: string) => 
         tag.name.toLowerCase() === matchedName.toLowerCase() ||
         tag.name.toLowerCase().includes(matchedName.toLowerCase()) ||
@@ -369,21 +371,31 @@ const analyzeTagsWithAI = async () => {
       )
     )
 
+    // 过滤掉已经添加到图像上的标签
+    const existingTagIds = new Set(selectedTag.value.map((t: Tag) => t.id))
+    const tagsToAdd = matchedTags.filter((tag: Tag) => !existingTagIds.has(tag.id))
+
     if (tagsToAdd.length === 0) {
-      message.info('没有找到有效的匹配标签')
+      if (matchedTags.length > 0) {
+        message.info(t('aiAnalyzeTagsAllTagsAlreadyAdded'))
+      } else {
+        message.info(t('aiAnalyzeTagsNoValidTags'))
+      }
       return
     }
 
-    // 为每个匹配的tag发送添加请求
+    // 为每个匹配的tag发送添加请求（只添加新标签）
     for (const tag of tagsToAdd) {
       emit('contextMenuClick', { key: `toggle-tag-${tag.id}` } as any, props.file, props.idx)
     }
 
-    message.success(`已添加 ${tagsToAdd.length} 个标签：${tagsToAdd.map(t => t.name).join(', ')}`)
+    message.success(t('aiAnalyzeTagsSuccess', [tagsToAdd.length.toString(), tagsToAdd.map(t => t.name).join(', ')]))
 
   } catch (error) {
     console.error('AI分析标签失败:', error)
-    message.error('AI分析标签失败，请检查配置')
+    message.error(t('aiAnalyzeTagsFailed'))
+  } finally {
+    analyzingTags.value = false
   }
 }
 
@@ -469,6 +481,7 @@ const analyzeTagsWithAI = async () => {
           <a-button 
             @click="analyzeTagsWithAI"
             type="primary"
+            :loading="analyzingTags"
             v-if="imageGenInfo && global.conf?.all_custom_tags?.length"
           >
             {{ $t('aiAnalyzeTags') }}

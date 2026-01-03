@@ -475,6 +475,15 @@ watch(
             <span class="guide-text">{{ $t('topicSearchGuideStep3') }}</span>
           </div>
 
+          <div class="guide-row">
+            <span class="guide-icon">✨</span>
+            <span class="guide-text">{{ $t('topicSearchGuideAdvantage1') }}</span>
+          </div>
+          <div class="guide-row">
+            <span class="guide-icon">🚀</span>
+            <span class="guide-text">{{ $t('topicSearchGuideAdvantage2') }}</span>
+          </div>
+
           <div class="guide-hint">
             <span class="guide-icon">💡</span>
             <span class="guide-text" v-if="!scopeCount">{{ $t('topicSearchGuideEmptyReasonNoScope') }}</span>

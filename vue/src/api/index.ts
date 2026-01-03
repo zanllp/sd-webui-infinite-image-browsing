@@ -69,7 +69,7 @@ const addInterceptor = (axiosInst: AxiosInstance) => {
     (resp) => resp,
     async (err) => {
       if (isAxiosError(err)) {
-        if (err.response?.status === 401) {
+        if (err.response?.status === 401 && err.response?.data?.detail?.type === 'secret_verification_failed') {
           const key = await promptServerKeyOnce()
           if (!key) {
             // user cancelled; leave the request rejected as-is

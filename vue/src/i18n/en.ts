@@ -47,6 +47,8 @@ export const en: IIBI18nMap = {
   topicSearchGuideStep1: 'Select the scope folders to analyze (multi-select)',
   topicSearchGuideStep2: 'Click Refresh to generate topic cards (incremental vectorization)',
   topicSearchGuideStep3: 'Type a sentence to search; it will retrieve similar images and open the result page',
+  topicSearchGuideAdvantage1: '✨ Auto-grouping by semantic similarity: AI automatically discovers similar themes without manual categorization',
+  topicSearchGuideAdvantage2: '🚀 Natural language semantic search: Quickly find related images with a sentence, similar to RAG retrieval',
   topicSearchGuideEmptyReasonNoScope: 'Empty because: no scope selected (disabled by default). Click “Scope” to choose folders.',
   topicSearchGuideEmptyReasonNoTopics: 'Empty because: no topics generated yet for this scope (try Refresh or lower Min cluster/Threshold).',
   topicSearchRequirementsTitle: 'Requirements',
@@ -431,5 +433,12 @@ You can specify which snapshot to restore to when starting IIB in the global set
   'autoTag.operators.contains': 'Contains',
   'autoTag.operators.equals': 'Equals',
   'autoTag.operators.regex': 'Regex',
-  aiAnalyzeTags: 'AI Analyze Tags'
+  aiAnalyzeTags: 'AI Analyze Tags',
+  aiAnalyzeTagsNoPrompt: 'No prompt found',
+  aiAnalyzeTagsNoCustomTags: 'No custom tags available',
+  aiAnalyzeTagsNoMatchedTags: 'AI found no matching tags',
+  aiAnalyzeTagsNoValidTags: 'No valid matching tags found',
+  aiAnalyzeTagsAllTagsAlreadyAdded: 'All matched tags have already been added to the image',
+  aiAnalyzeTagsSuccess: 'Added {0} tags: {1}',
+  aiAnalyzeTagsFailed: 'AI tag analysis failed, please check configuration'
 }

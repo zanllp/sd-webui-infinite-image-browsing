@@ -45,8 +45,10 @@ export const de: Partial<IIBI18nMap> = {
 
   topicSearchGuideTitle: 'Schnellstart (Experimentell)',
   topicSearchGuideStep1: 'Wählen Sie die Ordner (Bereich) zur Analyse aus (Mehrfachauswahl)',
-  topicSearchGuideStep2: 'Klicken Sie auf „Aktualisieren“, um Themenkarten zu erzeugen (inkrementelle Vektorisierung)',
+  topicSearchGuideStep2: 'Klicken Sie auf „Aktualisieren", um Themenkarten zu erzeugen (inkrementelle Vektorisierung)',
   topicSearchGuideStep3: 'Geben Sie einen Satz ein, um zu suchen; ähnliche Bilder werden abgerufen und die Ergebnisse geöffnet',
+  topicSearchGuideAdvantage1: '✨ Automatische Gruppierung nach semantischer Ähnlichkeit: KI entdeckt automatisch ähnliche Themen ohne manuelle Kategorisierung',
+  topicSearchGuideAdvantage2: '🚀 Natürliche Sprachsemantiksuche: Schnelles Finden verwandter Bilder mit einem Satz, ähnlich der RAG-Suche',
   topicSearchGuideEmptyReasonNoScope: 'Leer, weil: kein Bereich ausgewählt (standardmäßig deaktiviert). Klicken Sie auf „Bereich“, um Ordner zu wählen.',
   topicSearchGuideEmptyReasonNoTopics: 'Leer, weil: für diesen Bereich noch keine Themen erzeugt wurden (Aktualisieren oder Min. Cluster/Schwelle senken).',
   topicSearchRequirementsTitle: 'Voraussetzungen',
@@ -194,5 +196,13 @@ export const de: Partial<IIBI18nMap> = {
   sortByDate: 'Nach Datum sortieren',
   fileTypeFilter: 'Dateityp-Filter',
   allFiles: 'Alle Dateien',
-  audio: 'Audio'
+  audio: 'Audio',
+  aiAnalyzeTags: 'KI-Tags analysieren',
+  aiAnalyzeTagsNoPrompt: 'Kein Prompt gefunden',
+  aiAnalyzeTagsNoCustomTags: 'Keine benutzerdefinierten Tags verfügbar',
+  aiAnalyzeTagsNoMatchedTags: 'KI hat keine passenden Tags gefunden',
+  aiAnalyzeTagsNoValidTags: 'Keine gültigen passenden Tags gefunden',
+  aiAnalyzeTagsAllTagsAlreadyAdded: 'Alle passenden Tags wurden bereits zum Bild hinzugefügt',
+  aiAnalyzeTagsSuccess: '{0} Tags hinzugefügt: {1}',
+  aiAnalyzeTagsFailed: 'KI-Tag-Analyse fehlgeschlagen, bitte Konfiguration überprüfen'
 }

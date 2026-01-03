@@ -45,6 +45,8 @@ export const zhHans = {
   topicSearchGuideStep1: '选择要分析的文件夹范围（可多选）',
   topicSearchGuideStep2: '点击刷新，生成主题卡片（会增量向量化）',
   topicSearchGuideStep3: '输入一句话搜索，会召回相似图片并打开结果页',
+  topicSearchGuideAdvantage1: '✨ 基于语义相似度自动分组：AI自动发现相似主题，无需手动分类',
+  topicSearchGuideAdvantage2: '🚀 自然语言语义检索：用一句话快速找到相关图片，类似RAG检索',
   topicSearchGuideEmptyReasonNoScope: '当前为空：未选择范围（已默认关闭），请先点“范围”选择文件夹',
   topicSearchGuideEmptyReasonNoTopics: '当前为空：该范围内还未生成主题（可点刷新，或调低最小组/阈值）',
   topicSearchRequirementsTitle: '使用前置条件',
@@ -409,5 +411,12 @@ export const zhHans = {
   'autoTag.operators.contains': '包含 (Contains)',
   'autoTag.operators.equals': '等于 (Equals)',
   'autoTag.operators.regex': '正则 (Regex)',
-  aiAnalyzeTags: 'AI分析标签'
+  aiAnalyzeTags: 'AI分析标签',
+  aiAnalyzeTagsNoPrompt: '没有找到提示词',
+  aiAnalyzeTagsNoCustomTags: '没有自定义标签',
+  aiAnalyzeTagsNoMatchedTags: 'AI没有找到匹配的标签',
+  aiAnalyzeTagsNoValidTags: '没有找到有效的匹配标签',
+  aiAnalyzeTagsAllTagsAlreadyAdded: '所有匹配的标签已经添加到图像上了',
+  aiAnalyzeTagsSuccess: '已添加 {0} 个标签：{1}',
+  aiAnalyzeTagsFailed: 'AI分析标签失败，请检查配置'
 }

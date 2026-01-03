@@ -47,6 +47,8 @@ export const zhHant: Partial<IIBI18nMap> = {
   topicSearchGuideStep1: '選擇要分析的資料夾範圍（可多選）',
   topicSearchGuideStep2: '點擊刷新，生成主題卡片（會增量向量化）',
   topicSearchGuideStep3: '輸入一句話搜尋，召回相似圖片並打開結果頁',
+  topicSearchGuideAdvantage1: '✨ 基於語義相似度自動分組：AI自動發現相似主題，無需手動分類',
+  topicSearchGuideAdvantage2: '🚀 自然語言語義檢索：用一句話快速找到相關圖片，類似RAG檢索',
   topicSearchGuideEmptyReasonNoScope: '目前為空：尚未選擇範圍（預設關閉），請先點「範圍」選擇資料夾',
   topicSearchGuideEmptyReasonNoTopics: '目前為空：此範圍尚未生成主題（可點刷新，或調低最小組/閾值）',
   topicSearchRequirementsTitle: '使用前置條件',
@@ -412,5 +414,13 @@ export const zhHant: Partial<IIBI18nMap> = {
   'autoTag.fields.seed': 'Seed',
   'autoTag.operators.contains': '包含 (Contains)',
   'autoTag.operators.equals': '等於 (Equals)',
-  'autoTag.operators.regex': '正則 (Regex)'
+  'autoTag.operators.regex': '正則 (Regex)',
+  aiAnalyzeTags: 'AI分析標籤',
+  aiAnalyzeTagsNoPrompt: '沒有找到提示詞',
+  aiAnalyzeTagsNoCustomTags: '沒有自定義標籤',
+  aiAnalyzeTagsNoMatchedTags: 'AI沒有找到匹配的標籤',
+  aiAnalyzeTagsNoValidTags: '沒有找到有效的匹配標籤',
+  aiAnalyzeTagsAllTagsAlreadyAdded: '所有匹配的標籤已經添加到圖像上了',
+  aiAnalyzeTagsSuccess: '已添加 {0} 個標籤：{1}',
+  aiAnalyzeTagsFailed: 'AI分析標籤失敗，請檢查配置'
 }
