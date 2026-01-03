@@ -381,6 +381,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             "pillow": _get_dist_version("Pillow", "PIL"),
             "imageio_ffmpeg": _get_dist_version("imageio-ffmpeg", "imageio_ffmpeg"),
             "pillow_avif_plugin": _get_dist_version("pillow-avif-plugin", "pillow_avif"),
+            "requests": _get_dist_version("requests", "requests"),
+            "numpy": _get_dist_version("numpy", "numpy"),
+            "hnswlib": _get_dist_version("hnswlib", "hnswlib"),
         }
 
         logger.info("Version info requested: %s", {k: v for k, v in versions.items() if v})
