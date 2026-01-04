@@ -6,8 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 from PIL import Image
 
-def generate_image_cache(dirs: List[str], size:str, verbose=True):
-  dirs = [r"C:\Users\zanllp\Desktop\repo\Z-Image-Turbo\client"]
+def generate_image_cache(dirs: List[str], size:str, verbose=True): 
   start_time = time.time()
   cache_base_dir = get_cache_dir()
   verbose=True
