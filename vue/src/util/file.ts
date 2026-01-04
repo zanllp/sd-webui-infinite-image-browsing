@@ -70,23 +70,37 @@ export const toStreamAudioUrl = (file: FileNodeInfo) =>
 export const isMediaFile = (file: string) => isImageFile(file) || isVideoFile(file) || isAudioFile(file)
 
 export function downloadFiles (urls: string[]) {
-  const link = document.createElement('a')
-  link.style.display = 'none'
-  document.body.appendChild(link)
-
-  urls.forEach((url) => {
-    const urlObject = new URL(url, 'https://github.com/zanllp/sd-webui-infinite-image-browsing')
-    let filename = ''
-    const disposition = urlObject.searchParams.get('disposition')
-    if (disposition) {
-      filename = disposition
+  urls.forEach((url, index) => {
+    try {
+      // Use window.location.origin as base URL for relative URLs, or parse absolute URLs directly
+      const baseUrl = url.startsWith('http://') || url.startsWith('https://') 
+        ? undefined 
+        : window.location.origin
+      const urlObject = new URL(url, baseUrl)
+      let filename = ''
+      const disposition = urlObject.searchParams.get('disposition')
+      if (disposition) {
+        filename = decodeURIComponent(disposition)
+      }
+      
+      const link = document.createElement('a')
+      link.style.display = 'none'
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      
+      // Add small delay between downloads to avoid browser blocking
+      setTimeout(() => {
+        link.click()
+        // Clean up after a short delay
+        setTimeout(() => {
+          document.body.removeChild(link)
+        }, 100)
+      }, index * 100)
+    } catch (error) {
+      console.error(`Failed to download file from URL: ${url}`, error)
     }
-    link.href = url
-    link.download = filename
-    link.click()
   })
-
-  document.body.removeChild(link)
 }
 
 export const downloadFileInfoJSON = (files: FileNodeInfo[], name?: string) => {
