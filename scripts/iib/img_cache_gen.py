@@ -9,7 +9,6 @@ from PIL import Image
 def generate_image_cache(dirs: List[str], size:str, verbose=True): 
   start_time = time.time()
   cache_base_dir = get_cache_dir()
-  verbose=True
   def process_image(item):
     if '\\node_modules\\' in item.path:
       return
