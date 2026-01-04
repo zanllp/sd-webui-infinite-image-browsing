@@ -9,5 +9,5 @@ av>=14,<15
 lxml
 filetype
 requests>=2.0.0,<3.0.0
-numpy>=2.0.0,<3.0.0
+numpy>=1.10.0,<3.0.0
 hnswlib>=0.0.0,<1.0.0
