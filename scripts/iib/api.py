@@ -1264,6 +1264,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         verify_secret=verify_secret,
         embedding_model=EMBEDDING_MODEL,
         ai_model=AI_MODEL,
+        openai_base_url=OPENAI_BASE_URL,
+        openai_api_key=OPENAI_API_KEY,
     )
 
 

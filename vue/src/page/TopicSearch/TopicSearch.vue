@@ -29,6 +29,7 @@ const threshold = ref(0.9)
 const minClusterSize = ref(2)
 const result = ref<ClusterIibOutputResp | null>(null)
 const cacheInfo = ref<ClusterIibOutputCachedResp | null>(null)
+const embeddingBuilt = ref(false)  // Track if embeddings are already built
 
 const _REQS_LS_KEY = 'iib_topic_search_hide_requirements_v1'
 // true = show requirements; false = hidden
@@ -262,6 +263,7 @@ const refresh = async () => {
 const runQuery = async () => {
   const q = (query.value || '').trim()
   if (!q) return
+  if (qLoading.value) return
   if (!scopeCount.value) {
     message.warning(t('topicSearchNeedScope'))
     scopeOpen.value = true
@@ -272,9 +274,13 @@ const runQuery = async () => {
     qResult.value = await searchIibOutputByPrompt({
       query: q,
       top_k: 80,
-      ensure_embed: true,
+      ensure_embed: !embeddingBuilt.value,  // Only build on first search
       folder_paths: scopeFolders.value
     })
+    // Mark embeddings as built after first successful search
+    if (!embeddingBuilt.value) {
+      embeddingBuilt.value = true
+    }
     // 搜索完成后自动打开结果页
     openQueryResult()
   } finally {
@@ -313,6 +319,20 @@ const openCluster = (item: ClusterIibOutputResp['clusters'][0]) => {
   tab.key = (pane as any).key
 }
 
+const openClusterFromGraph = (cluster: { title: string; paths: string[]; size: number }) => {
+  const pane = {
+    type: 'topic-search-matched-image-grid' as const,
+    name: `${cluster.title}（${cluster.size}）`,
+    key: Date.now() + uniqueId(),
+    id: uniqueId(),
+    title: cluster.title,
+    paths: cluster.paths
+  }
+  const tab = g.tabList[props.tabIdx]
+  tab.panes.push(pane as any)
+  tab.key = (pane as any).key
+}
+
 const handleSearchTag = (tag: string) => {
   // Search by tag name
   query.value = tag
@@ -332,6 +352,11 @@ onMounted(() => {
 onBeforeUnmount(() => {
   stopJobPoll()
 })
+
+// Reset embedding built flag when scope changes
+watch(scopeFolders, () => {
+  embeddingBuilt.value = false
+}, { deep: true })
 
 watch(
   () => scopeFolders.value,
@@ -522,11 +547,9 @@ watch(
     <div v-else-if="activeTab === 'graph'" style="height: calc(100vh - 300px); min-height: 600px;">
       <TagRelationGraph
         :folders="scopeFolders"
-        :threshold="threshold"
-        :min-cluster-size="minClusterSize"
         :lang="g.lang"
-        :model="undefined"
         @search-tag="handleSearchTag"
+        @open-cluster="openClusterFromGraph"
       />
     </div>
 

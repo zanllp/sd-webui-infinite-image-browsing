@@ -1,64 +1,50 @@
 """
-Tag relationship graph generation for topic clusters.
-Builds a weighted graph showing connections between tags from cluster keywords.
+Hierarchical tag graph generation for topic clusters.
+Builds a multi-layer neural-network-style visualization with LLM-driven abstraction.
 """
 
 import hashlib
 import json
-import math
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional
 from pydantic import BaseModel
 from fastapi import Depends, FastAPI, HTTPException
 
-from scripts.iib.db.datamodel import DataBase, TopicClusterCache
+from scripts.iib.db.datamodel import DataBase, GlobalSetting
+from scripts.iib.tool import normalize_output_lang
+
+# Cache version for tag abstraction - increment to invalidate all caches
+TAG_ABSTRACTION_CACHE_VERSION = 2
 
 
 class TagGraphReq(BaseModel):
     folder_paths: List[str]
-    model: Optional[str] = None
-    threshold: Optional[float] = 0.90
-    min_cluster_size: Optional[int] = 2
-    lang: Optional[str] = None
-    # Graph parameters
     top_n_tags: Optional[int] = 50
     top_n_clusters: Optional[int] = 20
-    weight_mode: Optional[str] = "hybrid"  # frequency / tfidf / hybrid
-    alpha: Optional[float] = 0.3  # for hybrid mode
-    show_clusters: Optional[bool] = True
-    detect_communities: Optional[bool] = True
+    lang: Optional[str] = "en"  # Language for LLM output
 
 
-class TagNode(BaseModel):
+class LayerNode(BaseModel):
     id: str
     label: str
-    weight: float
-    image_count: int
-    cluster_count: int
-    category: str
-    community: Optional[int] = None
+    size: float  # Weight/importance of this node
+    metadata: Optional[dict] = None
 
 
-class ClusterNode(BaseModel):
-    id: str
-    label: str
-    weight: float
-    size: int
-    category: str = "cluster"
-    community: Optional[int] = None
+class GraphLayer(BaseModel):
+    level: int
+    name: str  # Layer name: "Clusters", "Tags", "Abstract-1", "Abstract-2"
+    nodes: List[LayerNode]
 
 
 class GraphLink(BaseModel):
     source: str
     target: str
     weight: float
-    image_count: Optional[int] = None
-    cluster_count: Optional[int] = None
 
 
 class TagGraphResp(BaseModel):
-    nodes: List[dict]  # TagNode or ClusterNode
+    layers: List[GraphLayer]
     links: List[GraphLink]
-    communities: Optional[List[dict]] = None
     stats: dict
 
 
@@ -68,115 +54,180 @@ def mount_tag_graph_routes(
     verify_secret,
     embedding_model: str,
     ai_model: str,
+    openai_base_url: str,
+    openai_api_key: str,
 ):
-    """Mount tag relationship graph endpoints"""
+    """Mount hierarchical tag graph endpoints"""
 
-    def _get_cluster_cache_key(req: TagGraphReq, model: str) -> str:
-        """Compute cache key for cluster result lookup"""
-        from scripts.iib.topic_cluster import _PROMPT_NORMALIZE_VERSION, _PROMPT_NORMALIZE_MODE
+    async def _call_llm_for_abstraction(
+        tags: List[str],
+        lang: str,
+        model: str,
+        base_url: str,
+        api_key: str
+    ) -> dict:
+        """
+        Call LLM to create hierarchical abstraction of tags.
+        Returns a dict with layers and groupings.
+        """
+        import asyncio
+        import requests
+        import re
 
-        cache_params = {
-            "model": model,
-            "threshold": float(req.threshold or 0.90),
-            "min_cluster_size": int(req.min_cluster_size or 2),
-            "assign_noise_threshold": None,
-            "title_model": None,
-            "lang": str(req.lang or ""),
-            "nv": _PROMPT_NORMALIZE_VERSION,
-            "nm": _PROMPT_NORMALIZE_MODE,
-        }
-        h = hashlib.sha1()
-        h.update(
-            json.dumps(
-                {"folders": sorted(req.folder_paths), "params": cache_params},
-                ensure_ascii=False,
-                sort_keys=True,
-            ).encode("utf-8")
-        )
-        return h.hexdigest()
+        def _normalize_base_url(url: str) -> str:
+            url = url.strip()
+            if not url.startswith(("http://", "https://")):
+                url = f"https://{url}"
+            return url.rstrip("/")
 
-    def _infer_tag_category(tag: str) -> str:
-        """Infer tag category from content"""
-        tag_lower = tag.lower()
+        def _call_sync():
+            if not api_key:
+                raise HTTPException(500, "OpenAI API Key not configured")
 
-        # Character
-        char_keywords = [
-            "girl", "boy", "woman", "man", "character", "person",
-            "女孩", "男孩", "女性", "男性", "人物", "角色", "战士", "精灵"
-        ]
-        if any(k in tag_lower for k in char_keywords):
-            return "character"
+            url = f"{_normalize_base_url(base_url)}/chat/completions"
+            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
-        # Style
-        style_keywords = [
-            "style", "punk", "sci-fi", "fantasy", "realistic", "anime",
-            "风格", "朋克", "科幻", "奇幻", "写实", "动漫", "赛博"
-        ]
-        if any(k in tag_lower for k in style_keywords):
-            return "style"
+            # Normalize language for consistent LLM output
+            normalized_lang = normalize_output_lang(lang)
+            sys_prompt = f"""You are a tag categorization assistant. Organize tags into hierarchical categories.
 
-        # Scene
-        scene_keywords = [
-            "forest", "city", "mountain", "ocean", "indoor", "outdoor", "landscape",
-            "森林", "城市", "山", "海", "室内", "室外", "风景", "场景"
-        ]
-        if any(k in tag_lower for k in scene_keywords):
-            return "scene"
+STRICT RULES:
+1. Create 5-15 Level 1 categories (broad groupings)
+2. Optionally create 2-5 Level 2 super-categories IF Level 1 has 8+ categories
+3. Every tag must belong to exactly ONE Level 1 category
+4. Use {normalized_lang} for all category labels
+5. Category IDs must be simple lowercase (e.g., "style", "char", "scene1")
 
-        # Object
-        object_keywords = [
-            "sword", "weapon", "machine", "building", "vehicle",
-            "机甲", "武器", "建筑", "车", "剑"
-        ]
-        if any(k in tag_lower for k in object_keywords):
-            return "object"
+OUTPUT ONLY VALID JSON - NO markdown, NO explanations, NO extra text:
+{{"layers":[{{"level":1,"groups":[{{"id":"cat1","label":"Label1","tags":["tag1"]}},{{"id":"cat2","label":"Label2","tags":["tag2"]}}]}},{{"level":2,"groups":[{{"id":"super1","label":"SuperLabel","categories":["cat1","cat2"]}}]}}]}}
 
-        return "other"
+If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }}"""
 
-    def _detect_communities(nodes: List[dict], links: List[GraphLink]) -> Optional[List[dict]]:
-        """Detect communities using Louvain algorithm"""
-        try:
-            import networkx as nx
-            from networkx.algorithms import community
-        except ImportError:
-            return None
+            user_prompt = f"Tags to categorize:\n{', '.join(tags)}"
 
-        # Build graph
-        G = nx.Graph()
-        for node in nodes:
-            G.add_node(node["id"], weight=node["weight"])
+            payload = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": sys_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "temperature": 0.0,
+                "max_tokens": 2048,
+            }
 
-        for link in links:
-            if G.has_node(link.source) and G.has_node(link.target):
-                G.add_edge(link.source, link.target, weight=link.weight)
+            # Retry up to 5 times
+            last_error = ""
+            for attempt in range(1, 6):
+                try:
+                    resp = requests.post(url, json=payload, headers=headers, timeout=60)
+                except requests.RequestException as e:
+                    last_error = f"network_error: {type(e).__name__}: {e}"
+                    continue
 
-        if len(G.nodes()) < 2:
-            return None
+                # Retry on 429 or 5xx, fail immediately on other 4xx
+                if resp.status_code != 200:
+                    body = (resp.text or "")[:400]
+                    if resp.status_code == 429 or resp.status_code >= 500:
+                        last_error = f"api_error_retriable: status={resp.status_code}"
+                        continue
+                    # 4xx client error - fail immediately
+                    raise Exception(f"API client error: {resp.status_code} {body}")
 
-        # Detect communities
-        try:
-            communities = community.louvain_communities(G, weight="weight", resolution=1.0)
-        except Exception:
-            return None
+                try:
+                    data = resp.json()
+                except Exception as e:
+                    last_error = f"response_not_json: {type(e).__name__}"
+                    continue
 
-        # Format result
-        result = []
-        node_to_community = {}
-        for idx, comm in enumerate(communities):
-            comm_list = list(comm)
-            result.append({
-                "id": idx,
-                "nodes": comm_list,
-                "size": len(comm_list),
-            })
-            for node_id in comm_list:
-                node_to_community[node_id] = idx
+                choice0 = (data.get("choices") or [{}])[0]
+                msg = (choice0 or {}).get("message") or {}
+                content = (msg.get("content") or "").strip()
 
-        # Assign community to nodes
-        for node in nodes:
-            node["community"] = node_to_community.get(node["id"], -1)
+                # Extract JSON from content - try multiple strategies
+                json_str = None
 
-        return result
+                # Strategy 1: Direct parse (if response is pure JSON)
+                try:
+                    result = json.loads(content)
+                    if isinstance(result, dict) and "layers" in result:
+                        return result
+                except:
+                    pass
+
+                # Strategy 2: Extract JSON from markdown code blocks
+                code_block = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", content)
+                if code_block:
+                    json_str = code_block.group(1)
+                else:
+                    # Strategy 3: Find largest JSON object
+                    m = re.search(r"\{[\s\S]*\}", content)
+                    if m:
+                        json_str = m.group(0)
+
+                if not json_str:
+                    last_error = f"no_json_found: {content[:200]}"
+                    continue
+
+                # Clean up common JSON issues
+                json_str = json_str.strip()
+                # Remove trailing commas before closing braces/brackets
+                json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
+
+                try:
+                    result = json.loads(json_str)
+                except json.JSONDecodeError as e:
+                    last_error = f"json_parse_error: {e}"
+                    continue
+
+                # Validate structure
+                if not isinstance(result, dict) or "layers" not in result:
+                    last_error = f"invalid_structure: {str(result)[:200]}"
+                    continue
+
+                # Success!
+                return result
+
+            # All retries exhausted
+            # Fallback: create simple heuristic grouping
+            # Group by first character/prefix for basic organization
+            groups_dict = {}
+            for tag in tags:
+                # Simple heuristic: group by first 2 chars or common keywords
+                prefix = tag[:2] if len(tag) >= 2 else tag
+                if prefix not in groups_dict:
+                    groups_dict[prefix] = []
+                groups_dict[prefix].append(tag)
+
+            # Merge small groups
+            merged_groups = []
+            for prefix, tag_list in sorted(groups_dict.items()):
+                if len(merged_groups) > 0 and len(tag_list) < 3:
+                    # Merge into last group if this group is too small
+                    merged_groups[-1]["tags"].extend(tag_list)
+                else:
+                    group_id = f"group{len(merged_groups) + 1}"
+                    label = f"Group {len(merged_groups) + 1}"
+                    merged_groups.append({
+                        "id": group_id,
+                        "label": label,
+                        "tags": tag_list
+                    })
+
+            # Limit to max 12 groups
+            if len(merged_groups) > 12:
+                # Merge smallest groups
+                merged_groups = sorted(merged_groups, key=lambda g: len(g["tags"]), reverse=True)[:12]
+
+            return {
+                "layers": [
+                    {
+                        "level": 1,
+                        "groups": merged_groups
+                    }
+                ]
+            }
+
+        return await asyncio.to_thread(_call_sync)
 
     @app.post(
         f"{db_api_base}/cluster_tag_graph",
@@ -184,36 +235,98 @@ def mount_tag_graph_routes(
     )
     async def cluster_tag_graph(req: TagGraphReq):
         """
-        Build tag relationship graph from clustering results.
-        Returns nodes (tags + clusters) and weighted edges.
+        Build hierarchical tag graph from clustering results.
+        Returns multi-layer structure similar to neural network visualization.
+
+        Layer structure (bottom to top):
+        - Layer 0: Cluster nodes
+        - Layer 1: Tag nodes (deduplicated cluster keywords)
+        - Layer 2+: Abstract groupings (LLM-generated, max 2 layers)
         """
         # Validate
         if not req.folder_paths:
             raise HTTPException(400, "folder_paths is required")
 
         folders = sorted(req.folder_paths)
-        model = req.model or embedding_model
 
-        # Get cached cluster result
+        # Get the latest cluster result for these folders
         conn = DataBase.get_conn()
-        cache_key = _get_cluster_cache_key(req, model)
-        cached = TopicClusterCache.get(conn, cache_key)
 
-        if not cached or not isinstance(cached.get("result"), dict):
+        from contextlib import closing
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                """SELECT cache_key, folders, result FROM topic_cluster_cache
+                   ORDER BY updated_at DESC"""
+            )
+            rows = cur.fetchall()
+
+        # Find a cache that matches the folders (order-independent)
+        folders_set = set(folders)
+        row = None
+
+        for cache_row in rows:
+            try:
+                cached_folders = json.loads(cache_row[1]) if isinstance(cache_row[1], str) else cache_row[1]
+                if isinstance(cached_folders, list) and set(cached_folders) == folders_set:
+                    row = (cache_row[0], cache_row[2])
+                    break
+            except Exception:
+                continue
+
+        if not row:
             raise HTTPException(
                 400,
-                "No clustering result found. Please run clustering first."
+                f"No clustering result found for these {len(folders)} folders. Please run clustering first."
             )
 
-        result = cached["result"]
+        cached_result = json.loads(row[1]) if isinstance(row[1], str) else row[1]
+
+        if not cached_result or not isinstance(cached_result, dict):
+            raise HTTPException(400, "Invalid clustering result format.")
+
+        result = cached_result
         clusters = result.get("clusters", [])
 
         if not clusters:
             raise HTTPException(400, "No clusters found in result")
 
-        # 1. Collect tag statistics
+        # === Layer 0: Cluster Nodes ===
+        top_n_clusters = req.top_n_clusters or 20
+        top_clusters = sorted(clusters, key=lambda c: c.get("size", 0), reverse=True)[:top_n_clusters]
+
+        cluster_nodes = []
+        cluster_to_tags_links = []
+
+        for cluster in top_clusters:
+            cluster_id = cluster.get("id", "")
+            cluster_title = cluster.get("title", "Untitled")
+            cluster_size = cluster.get("size", 0)
+            keywords = cluster.get("keywords", [])
+            paths = cluster.get("paths", [])
+
+            node_id = f"cluster_{cluster_id}"
+            cluster_nodes.append(LayerNode(
+                id=node_id,
+                label=cluster_title,
+                size=float(cluster_size),
+                metadata={
+                    "type": "cluster",
+                    "image_count": cluster_size,
+                    "paths": paths
+                }
+            ))
+
+            # Store links from clusters to their tags (will be created later)
+            for keyword in keywords:
+                if keyword:
+                    cluster_to_tags_links.append({
+                        "cluster_id": node_id,
+                        "tag": str(keyword).strip(),
+                        "weight": float(cluster_size)
+                    })
+
+        # === Layer 1: Tag Nodes (deduplicated) ===
         tag_stats: Dict[str, Dict] = {}
-        total_images = sum(c.get("size", 0) for c in clusters)
 
         for cluster in clusters:
             keywords = cluster.get("keywords", [])
@@ -227,141 +340,190 @@ def mount_tag_graph_routes(
 
                 if keyword not in tag_stats:
                     tag_stats[keyword] = {
-                        "clusters": [],
+                        "cluster_ids": [],
                         "total_images": 0,
                     }
 
-                tag_stats[keyword]["clusters"].append(cluster_id)
+                tag_stats[keyword]["cluster_ids"].append(cluster_id)
                 tag_stats[keyword]["total_images"] += cluster_size
 
-        # 2. Calculate tag weights
-        tag_nodes = []
-        alpha = float(req.alpha or 0.3)
-
-        for tag, stats in tag_stats.items():
-            cluster_count = len(stats["clusters"])
-            image_count = stats["total_images"]
-
-            # Frequency weight
-            freq_weight = float(image_count)
-
-            # TF-IDF weight
-            idf = math.log(len(clusters) / max(cluster_count, 1))
-            tfidf_weight = freq_weight * idf
-
-            # Hybrid weight
-            if req.weight_mode == "frequency":
-                weight = freq_weight
-            elif req.weight_mode == "tfidf":
-                weight = tfidf_weight
-            else:  # hybrid
-                weight = alpha * freq_weight + (1 - alpha) * tfidf_weight
-
-            tag_nodes.append({
-                "id": f"tag_{tag}",
-                "label": tag,
-                "weight": weight,
-                "image_count": image_count,
-                "cluster_count": cluster_count,
-                "category": _infer_tag_category(tag),
-            })
-
-        # 3. Filter top-N tags
+        # Filter and sort tags
         top_n_tags = req.top_n_tags or 50
-        tag_nodes = sorted(tag_nodes, key=lambda x: x["weight"], reverse=True)[:top_n_tags]
-        selected_tags = {node["label"] for node in tag_nodes}
+        sorted_tags = sorted(
+            tag_stats.items(),
+            key=lambda x: x[1]["total_images"],
+            reverse=True
+        )[:top_n_tags]
 
-        # 4. Calculate tag-tag co-occurrence
-        tag_pairs: Dict[Tuple[str, str], Dict] = {}
+        tag_nodes = []
+        selected_tags = set()
 
-        for cluster in clusters:
-            keywords = cluster.get("keywords", [])
-            keywords = [k for k in keywords if k in selected_tags]
-            cluster_size = cluster.get("size", 0)
-            cluster_id = cluster.get("id", "")
+        for tag, stats in sorted_tags:
+            tag_id = f"tag_{tag}"
+            selected_tags.add(tag)
+            tag_nodes.append(LayerNode(
+                id=tag_id,
+                label=tag,
+                size=float(stats["total_images"]),
+                metadata={
+                    "type": "tag",
+                    "cluster_count": len(stats["cluster_ids"]),
+                    "image_count": stats["total_images"]
+                }
+            ))
 
-            for i in range(len(keywords)):
-                for j in range(i + 1, len(keywords)):
-                    tag1, tag2 = sorted([keywords[i], keywords[j]])
-                    key = (tag1, tag2)
+        # Filter cluster->tag links to only include selected tags
+        layer0_to_1_links = []
+        for link in cluster_to_tags_links:
+            if link["tag"] in selected_tags:
+                layer0_to_1_links.append(GraphLink(
+                    source=link["cluster_id"],
+                    target=f"tag_{link['tag']}",
+                    weight=link["weight"]
+                ))
 
-                    if key not in tag_pairs:
-                        tag_pairs[key] = {
-                            "clusters": [],
-                            "images": 0,
-                        }
+        # === Layer 2+: LLM-driven abstraction ===
+        abstract_layers = []
+        layer1_to_2_links = []
 
-                    tag_pairs[key]["clusters"].append(cluster_id)
-                    tag_pairs[key]["images"] += cluster_size
+        if len(selected_tags) > 3:  # Only abstract if we have enough tags
+            # Use language from request
+            lang = req.lang or "en"
 
-        # 5. Build tag-tag links
-        tag_links = []
-        for (tag1, tag2), stats in tag_pairs.items():
-            tag_links.append(
-                GraphLink(
-                    source=f"tag_{tag1}",
-                    target=f"tag_{tag2}",
-                    weight=float(stats["images"]),
-                    image_count=stats["images"],
-                    cluster_count=len(stats["clusters"]),
+            # Generate cache key for this set of tags (with version)
+            import hashlib
+            tags_sorted = sorted(selected_tags)
+            cache_input = f"v{TAG_ABSTRACTION_CACHE_VERSION}|{ai_model}|{lang}|{','.join(tags_sorted)}"
+            cache_key_hash = hashlib.md5(cache_input.encode()).hexdigest()
+            cache_key = f"tag_abstraction_v{TAG_ABSTRACTION_CACHE_VERSION}_{cache_key_hash}"
+
+            # Try to get from cache
+            abstraction = None
+            try:
+                cached_data = GlobalSetting.get_setting(conn, cache_key)
+                if cached_data and isinstance(cached_data, dict):
+                    abstraction = cached_data
+            except:
+                pass
+
+            # Call LLM if not cached
+            if not abstraction:
+                abstraction = await _call_llm_for_abstraction(
+                    list(selected_tags),
+                    lang,
+                    ai_model,
+                    openai_base_url,
+                    openai_api_key
                 )
-            )
 
-        # 6. Add cluster nodes (if requested)
-        cluster_nodes = []
-        cluster_links = []
+                # Save to cache if successful
+                if abstraction and isinstance(abstraction, dict) and abstraction.get("layers"):
+                    try:
+                        GlobalSetting.save_setting(conn, cache_key, json.dumps(abstraction, ensure_ascii=False))
+                    except Exception:
+                        pass
 
-        if req.show_clusters:
-            # Filter top-N clusters by size
-            top_n_clusters = req.top_n_clusters or 20
-            top_clusters = sorted(clusters, key=lambda c: c.get("size", 0), reverse=True)[:top_n_clusters]
+            # Build abstract layers from LLM response
+            llm_layers = abstraction.get("layers", [])
 
-            for cluster in top_clusters:
-                cluster_id = cluster.get("id", "")
-                cluster_title = cluster.get("title", "Untitled")
-                cluster_size = cluster.get("size", 0)
-                keywords = cluster.get("keywords", [])
+            for layer_info in llm_layers:
+                level = layer_info.get("level", 1)
+                groups = layer_info.get("groups", [])
 
-                cluster_nodes.append({
-                    "id": f"cluster_{cluster_id}",
-                    "label": cluster_title,
-                    "weight": float(cluster_size),
-                    "size": cluster_size,
-                    "category": "cluster",
-                })
+                if not groups:
+                    continue
 
-                # Link cluster to its tags
-                for keyword in keywords:
-                    if keyword in selected_tags:
-                        cluster_links.append(
-                            GraphLink(
-                                source=f"cluster_{cluster_id}",
-                                target=f"tag_{keyword}",
-                                weight=float(cluster_size),
-                            )
+                abstract_nodes = []
+
+                # Process each group in this layer
+                for group in groups:
+                    group_id = f"abstract_l{level}_{group.get('id', 'unknown')}"
+                    group_label = group.get("label", "Unnamed")
+
+                    # Calculate size based on contained tags/categories
+                    if "tags" in group:
+                        # Level 1: references tags directly
+                        contained_tags = group.get("tags", [])
+                        total_size = sum(
+                            tag_stats.get(tag, {}).get("total_images", 0)
+                            for tag in contained_tags
+                            if tag in selected_tags
                         )
 
-        # 7. Combine all nodes and links
-        all_nodes = tag_nodes + cluster_nodes
-        all_links = [link.dict() for link in (tag_links + cluster_links)]
+                        abstract_nodes.append(LayerNode(
+                            id=group_id,
+                            label=group_label,
+                            size=float(total_size),
+                            metadata={"type": "abstract", "level": level}
+                        ))
 
-        # 8. Community detection
-        communities = None
-        if req.detect_communities:
-            communities = _detect_communities(all_nodes, tag_links + cluster_links)
+                        # Create links from tags to this abstract node
+                        for tag in contained_tags:
+                            if tag in selected_tags:
+                                tag_id = f"tag_{tag}"
+                                layer1_to_2_links.append(GraphLink(
+                                    source=tag_id,
+                                    target=group_id,
+                                    weight=float(tag_stats.get(tag, {}).get("total_images", 1))
+                                ))
 
-        # 9. Build response
+                    elif "categories" in group and level == 2:
+                        # Level 2: references Level 1 categories
+                        # Calculate size from contained categories
+                        contained_cats = group.get("categories", [])
+                        total_size = 0.0
+
+                        # Find size from level 1 nodes
+                        level1_nodes = abstract_layers[0].nodes if abstract_layers else []
+                        for cat_id in contained_cats:
+                            full_cat_id = f"abstract_l1_{cat_id}"
+                            for node in level1_nodes:
+                                if node.id == full_cat_id:
+                                    total_size += node.size
+                                    break
+
+                        abstract_nodes.append(LayerNode(
+                            id=group_id,
+                            label=group_label,
+                            size=float(total_size),
+                            metadata={"type": "abstract", "level": level}
+                        ))
+
+                        # Create links from Level 1 categories to this Level 2 node
+                        for cat_id in contained_cats:
+                            full_cat_id = f"abstract_l1_{cat_id}"
+                            # Verify the category exists
+                            if any(n.id == full_cat_id for n in level1_nodes):
+                                layer1_to_2_links.append(GraphLink(
+                                    source=full_cat_id,
+                                    target=group_id,
+                                    weight=total_size  # Use aggregated weight
+                                ))
+
+                if abstract_nodes:
+                    abstract_layers.append(GraphLayer(
+                        level=level + 1,  # +1 because Layer 0=clusters, Layer 1=tags
+                        name=f"Abstract-{level}",
+                        nodes=abstract_nodes
+                    ))
+
+        # === Build final response ===
+        layers = [
+            GraphLayer(level=0, name="Clusters", nodes=cluster_nodes),
+            GraphLayer(level=1, name="Tags", nodes=tag_nodes),
+        ] + abstract_layers
+
+        all_links = [link.dict() for link in (layer0_to_1_links + layer1_to_2_links)]
+
         return TagGraphResp(
-            nodes=all_nodes,
+            layers=layers,
             links=all_links,
-            communities=communities,
             stats={
-                "total_tags": len(tag_stats),
-                "selected_tags": len(tag_nodes),
                 "total_clusters": len(clusters),
                 "selected_clusters": len(cluster_nodes),
-                "total_images": total_images,
-                "tag_links": len(tag_links),
-                "cluster_links": len(cluster_links),
-            },
+                "total_tags": len(tag_stats),
+                "selected_tags": len(tag_nodes),
+                "abstraction_layers": len(abstract_layers),
+                "total_links": len(all_links),
+            }
         )

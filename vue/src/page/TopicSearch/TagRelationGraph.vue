@@ -1,424 +1,346 @@
 <template>
-  <div class="tag-graph-container">
-    <!-- Toolbar -->
-    <div class="toolbar">
-      <a-space>
-        <a-button type="primary" @click="loadGraph" :loading="loading">
-          {{ $t('refresh') }}
-        </a-button>
-        <a-divider type="vertical" />
-        <span class="label">Top Tags:</span>
-        <a-input-number v-model:value="topNTags" :min="10" :max="100" :step="10" style="width: 80px" />
-        <span class="label">Top Clusters:</span>
-        <a-input-number v-model:value="topNClusters" :min="5" :max="50" :step="5" style="width: 80px" />
-        <a-checkbox v-model:checked="showClusters">Show Clusters</a-checkbox>
-        <a-button @click="fitView" size="small">Fit View</a-button>
-      </a-space>
+  <div class="tag-hierarchy-graph">
+    <div v-if="loading" class="loading-container">
+      <a-spin size="large" />
+      <div class="loading-text">Generating hierarchical graph...</div>
     </div>
 
-    <!-- Graph Canvas -->
-    <div ref="chartContainer" class="chart-container"></div>
-
-    <!-- Info Panel -->
-    <div v-if="selectedNode" class="info-panel">
-      <div class="info-header">
-        <span class="info-title">{{ selectedNode.label }}</span>
-        <a-button size="small" type="text" @click="selectedNode = null">✕</a-button>
-      </div>
-      <div class="info-body">
-        <div class="info-item">
-          <span class="info-label">Category:</span>
-          <span class="info-value">{{ selectedNode.category }}</span>
-        </div>
-        <div class="info-item" v-if="selectedNode.image_count">
-          <span class="info-label">Images:</span>
-          <span class="info-value">{{ selectedNode.image_count }}</span>
-        </div>
-        <div class="info-item" v-if="selectedNode.cluster_count">
-          <span class="info-label">Clusters:</span>
-          <span class="info-value">{{ selectedNode.cluster_count }}</span>
-        </div>
-        <div class="info-item" v-if="selectedNode.size">
-          <span class="info-label">Size:</span>
-          <span class="info-value">{{ selectedNode.size }}</span>
-        </div>
-        <div class="info-item" v-if="selectedNode.community !== undefined">
-          <span class="info-label">Community:</span>
-          <span class="info-value">{{ selectedNode.community }}</span>
-        </div>
-      </div>
-      <div class="info-actions">
-        <a-button size="small" type="primary" @click="searchByTag(selectedNode.label)">
-          Search Images
-        </a-button>
-      </div>
+    <div v-else-if="error" class="error-container">
+      <a-alert type="error" :message="error" show-icon />
     </div>
 
-    <!-- Stats Panel -->
-    <div v-if="stats" class="stats-panel">
-      <div class="stat-item">
-        <div class="stat-value">{{ stats.selected_tags }}</div>
-        <div class="stat-label">Tags</div>
+    <div v-else-if="graphData" class="graph-container">
+      <!-- Control Panel -->
+      <div class="control-panel">
+        <a-space>
+          <a-tag>Layers: {{ graphData.layers.length }}</a-tag>
+          <a-tag>Total Links: {{ graphData.stats.total_links }}</a-tag>
+        </a-space>
       </div>
-      <div class="stat-item">
-        <div class="stat-value">{{ stats.selected_clusters }}</div>
-        <div class="stat-label">Clusters</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">{{ stats.total_images }}</div>
-        <div class="stat-label">Images</div>
-      </div>
+
+      <!-- ECharts Container -->
+      <div ref="chartRef" class="chart-container"></div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
-import { getClusterTagGraph, type TagGraphReq, type TagGraphResp, type TagGraphNode } from '@/api/db'
+import { ref, onMounted, watch, nextTick, onUnmounted } from 'vue'
+import { getClusterTagGraph, type TagGraphReq, type TagGraphResp } from '@/api/db'
 import { message } from 'ant-design-vue'
 import * as echarts from 'echarts'
-import type { ECharts } from 'echarts'
 
-const props = defineProps<{
+interface Props {
   folders: string[]
-  threshold: number
-  minClusterSize: number
   lang?: string
-  model?: string
-}>()
+}
 
+const props = defineProps<Props>()
 const emit = defineEmits<{
   searchTag: [tag: string]
+  openCluster: [cluster: { title: string; paths: string[]; size: number }]
 }>()
 
 const loading = ref(false)
-const chartContainer = ref<HTMLDivElement>()
-const chart = ref<ECharts>()
+const error = ref<string>('')
 const graphData = ref<TagGraphResp | null>(null)
-const selectedNode = ref<TagGraphNode | null>(null)
-const stats = ref<TagGraphResp['stats'] | null>(null)
+const chartRef = ref<HTMLDivElement>()
+let chartInstance: echarts.ECharts | null = null
+let _handleResize: (() => void) | null = null
 
-// Parameters
-const topNTags = ref(50)
-const topNClusters = ref(20)
-const showClusters = ref(true)
-
-// Category colors
-const categoryColors: Record<string, string> = {
-  character: '#5470c6',
-  style: '#91cc75',
-  scene: '#fac858',
-  object: '#ee6666',
-  cluster: '#73c0de',
-  other: '#9a60b4',
-}
-
-// Community colors (generated dynamically)
-const communityColors: string[] = [
-  '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
-  '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#5d7092'
+// Layer colors (different for each layer)
+const layerColors = [
+  '#4A90E2', // Layer 0: Clusters - Blue
+  '#7B68EE', // Layer 1: Tags - Purple
+  '#50C878', // Layer 2: Abstract-1 - Green
+  '#FF6B6B', // Layer 3: Abstract-2 - Red
 ]
 
-const getCategoryColor = (category: string, community?: number): string => {
-  if (community !== undefined && community >= 0) {
-    return communityColors[community % communityColors.length]
-  }
-  return categoryColors[category] || categoryColors.other
+const getLayerColor = (layer: number): string => {
+  return layerColors[layer % layerColors.length]
 }
 
-const loadGraph = async () => {
-  if (!props.folders.length) {
-    message.error('Please select folders first')
+const fetchGraphData = async () => {
+  if (!props.folders || props.folders.length === 0) {
+    error.value = 'No folders selected'
     return
   }
 
   loading.value = true
+  error.value = ''
+
   try {
     const req: TagGraphReq = {
       folder_paths: props.folders,
-      model: props.model,
-      threshold: props.threshold,
-      min_cluster_size: props.minClusterSize,
-      lang: props.lang,
-      top_n_tags: topNTags.value,
-      top_n_clusters: topNClusters.value,
-      show_clusters: showClusters.value,
-      detect_communities: true,
-      weight_mode: 'hybrid',
-      alpha: 0.3,
+      top_n_tags: 50,
+      top_n_clusters: 20,
+      lang: props.lang || 'en',
     }
 
-    const data = await getClusterTagGraph(req)
-    graphData.value = data
-    stats.value = data.stats
-
-    renderGraph(data)
-    message.success(`Graph loaded: ${data.stats.selected_tags} tags, ${data.stats.selected_clusters} clusters`)
-  } catch (e: any) {
-    message.error(e.message || 'Failed to load tag graph')
+    graphData.value = await getClusterTagGraph(req)
+  } catch (err: any) {
+    error.value = err.response?.data?.detail || err.message || 'Failed to load graph'
+    message.error(error.value)
   } finally {
     loading.value = false
   }
 }
 
-const renderGraph = (data: TagGraphResp) => {
-  if (!chartContainer.value) return
-
-  if (!chart.value) {
-    chart.value = echarts.init(chartContainer.value)
+const renderChart = () => {
+  if (!graphData.value || !chartRef.value) {
+    return
   }
 
-  // Prepare data for ECharts
-  const nodes = data.nodes.map(node => ({
-    id: node.id,
-    name: node.label,
-    symbolSize: Math.sqrt(node.weight) * 0.5 + 10,
-    value: node.weight,
-    category: node.category,
-    itemStyle: {
-      color: getCategoryColor(node.category, node.community)
-    },
-    label: {
-      show: node.category === 'cluster' || node.weight > 100,
-    },
-    // Store original data
-    _data: node,
-  }))
+  // Dispose old instance
+  if (chartInstance) {
+    chartInstance.dispose()
+  }
 
-  const links = data.links.map(link => ({
+  chartInstance = echarts.init(chartRef.value)
+
+  const layers = graphData.value.layers
+  // Reverse to show abstract on left
+  const reversedLayers = [...layers].reverse()
+
+  // Build nodes with scattered positions for better visualization
+  const nodes: any[] = []
+  const layerSpacing = 1200 / (reversedLayers.length + 1)  // Increased from 1000 to 1200
+  const horizontalRange = 150 // Horizontal scatter range
+
+  reversedLayers.forEach((layer, layerIdx) => {
+    const baseX = layerSpacing * (layerIdx + 1)
+    const numNodes = layer.nodes.length
+    const verticalSpacing = 800 / (numNodes + 1)
+
+    layer.nodes.forEach((node, nodeIdx) => {
+      const y = verticalSpacing * (nodeIdx + 1)
+
+      // Add horizontal offset for visual spacing
+      // Alternate left/right based on index, with some randomness based on node id
+      const hashOffset = node.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+      const horizontalOffset = ((hashOffset % horizontalRange) - horizontalRange / 2)
+      const x = baseX + horizontalOffset
+
+      // Calculate size with max 3x ratio
+      const minSize = 20
+      const maxSize = 60  // 3x ratio: 60 / 20 = 3
+      const normalizedSize = Math.sqrt(node.size) / 5
+      const clampedSize = Math.max(minSize, Math.min(maxSize, minSize + normalizedSize))
+
+      nodes.push({
+        id: node.id,
+        name: node.label,
+        x: x,
+        y: y,
+        fixed: true,
+        symbolSize: clampedSize,
+        value: node.size,
+        category: layer.level,
+        itemStyle: {
+          color: getLayerColor(layer.level)
+        },
+        label: {
+          show: true,
+          fontSize: 11,
+          color: '#fff',
+          formatter: (params: any) => {
+            const maxLen = 10
+            const name = params.name
+            return name.length > maxLen ? name.substring(0, maxLen) + '...' : name
+          }
+        },
+        metadata: node.metadata,
+        layerName: layer.name,
+      })
+    })
+  })
+
+  // Build links
+  const links = graphData.value.links.map(link => ({
     source: link.source,
     target: link.target,
     value: link.weight,
     lineStyle: {
-      width: Math.sqrt(link.weight) * 0.02 + 0.5,
-      opacity: 0.4,
-    },
+      width: Math.max(0.5, Math.min(2, link.weight / 100)),
+      opacity: 0.3,
+      curveness: 0.1
+    }
   }))
 
-  // Build categories
-  const categories = Object.keys(categoryColors).map(name => ({ name }))
+  // Build categories for legend
+  const categories = reversedLayers.map(layer => ({
+    name: layer.name
+  }))
 
   const option: echarts.EChartsOption = {
-    title: {
-      text: 'Tag Relationship Graph',
-      left: 'center',
-      top: 10,
-    },
     tooltip: {
       formatter: (params: any) => {
         if (params.dataType === 'node') {
-          const node = params.data._data as TagGraphNode
-          let html = `<strong>${node.label}</strong><br/>`
-          html += `Category: ${node.category}<br/>`
-          if (node.image_count) html += `Images: ${node.image_count}<br/>`
-          if (node.cluster_count) html += `Clusters: ${node.cluster_count}<br/>`
-          if (node.size) html += `Size: ${node.size}<br/>`
-          if (node.community !== undefined) html += `Community: ${node.community}<br/>`
+          const node = params.data
+          let html = `<strong>${params.name}</strong><br/>`
+          html += `Layer: ${node.layerName}<br/>`
+          if (node.metadata?.image_count) {
+            html += `Images: ${node.metadata.image_count}`
+          }
           return html
-        } else if (params.dataType === 'edge') {
-          return `Weight: ${params.value.toFixed(1)}`
         }
         return ''
       }
     },
-    legend: [
-      {
-        data: categories.map(c => c.name),
-        orient: 'vertical',
-        left: 10,
-        top: 50,
+    legend: [{
+      data: categories.map(c => c.name),
+      orient: 'vertical',
+      right: 10,
+      bottom: 10,
+      textStyle: {
+        color: '#fff'
       }
-    ],
-    series: [
-      {
-        type: 'graph',
-        layout: 'force',
-        data: nodes,
-        links: links,
-        categories: categories,
-        roam: true,
-        draggable: true,
-        force: {
-          repulsion: 200,
-          gravity: 0.1,
-          edgeLength: [50, 150],
-          friction: 0.6,
-        },
-        emphasis: {
-          focus: 'adjacency',
-          lineStyle: {
-            width: 3,
-          },
-        },
-        label: {
-          position: 'right',
-          formatter: '{b}',
-        },
-        labelLayout: {
-          hideOverlap: true,
-        },
-        scaleLimit: {
-          min: 0.5,
-          max: 5,
-        },
-      }
-    ]
+    }],
+    series: [{
+      type: 'graph',
+      layout: 'none',
+      data: nodes,
+      links: links,
+      categories: categories,
+      roam: true,  // Enable zoom and pan
+      scaleLimit: {
+        min: 0.2,
+        max: 5
+      },
+      draggable: false,
+      label: {
+        show: true,
+        position: 'inside'
+      },
+      lineStyle: {
+        color: 'source',
+        curveness: 0.1
+      },
+      emphasis: {
+        focus: 'adjacency',
+        lineStyle: {
+          width: 3
+        }
+      },
+      zoom: 1  // Initial zoom level
+    }]
   }
 
-  chart.value.setOption(option)
+  chartInstance.setOption(option)
 
-  // Handle click event
-  chart.value.off('click')
-  chart.value.on('click', (params: any) => {
+  // Handle click events
+  chartInstance.on('click', (params: any) => {
     if (params.dataType === 'node') {
-      selectedNode.value = params.data._data as TagGraphNode
+      const node = params.data
+      if (node.metadata?.type === 'tag') {
+        emit('searchTag', params.name)
+        message.info(`Searching for tag: ${params.name}`)
+      } else if (node.metadata?.type === 'cluster') {
+        // Open cluster directly with bound images
+        if (node.metadata.paths && node.metadata.paths.length > 0) {
+          emit('openCluster', {
+            title: params.name,
+            paths: node.metadata.paths,
+            size: node.metadata.image_count || node.metadata.paths.length
+          })
+        } else {
+          message.warning('No images found in this cluster')
+        }
+      } else {
+        message.info(`Abstract category: ${params.name}`)
+      }
     }
   })
 }
 
-const fitView = () => {
-  if (!chart.value) return
-  chart.value.resize()
-}
+// Watch for folder changes
+watch(
+  () => props.folders,
+  () => {
+    fetchGraphData()
+  },
+  { immediate: true }
+)
 
-const searchByTag = (tag: string) => {
-  emit('searchTag', tag)
-}
-
-const resizeHandler = () => {
-  chart.value?.resize()
-}
+// Watch for graphData and chartRef to trigger rendering
+watch(
+  [graphData, chartRef],
+  () => {
+    if (graphData.value && chartRef.value) {
+      nextTick(() => {
+        renderChart()
+      })
+    }
+  }
+)
 
 onMounted(() => {
-  nextTick(() => {
-    window.addEventListener('resize', resizeHandler)
-  })
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', resizeHandler)
-  chart.value?.dispose()
-})
-
-// Auto load when folders change
-watch(() => props.folders, () => {
-  if (props.folders.length) {
-    loadGraph()
+  // Rerender on window resize
+  _handleResize = () => {
+    if (chartInstance) {
+      chartInstance.resize()
+    }
   }
-}, { immediate: true })
+  window.addEventListener('resize', _handleResize)
+})
 
-// Reload when parameters change
-watch([topNTags, topNClusters, showClusters], () => {
-  if (graphData.value) {
-    loadGraph()
+onUnmounted(() => {
+  if (_handleResize) {
+    window.removeEventListener('resize', _handleResize)
+    _handleResize = null
+  }
+  if (chartInstance) {
+    chartInstance.dispose()
   }
 })
-
-defineExpose({ loadGraph })
 </script>
 
-<style scoped>
-.tag-graph-container {
+<style scoped lang="scss">
+.tag-hierarchy-graph {
   width: 100%;
-  height: 100%;
+  height: calc(100vh - 200px);
+  min-height: 600px;
+  position: relative;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.loading-container,
+.error-container {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #fff;
+}
+
+.loading-text {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #aaa;
+}
+
+.graph-container {
+  width: 100%;
+  height: 100%;
   position: relative;
 }
 
-.toolbar {
-  padding: 12px 16px;
-  background: #fafafa;
-  border-bottom: 1px solid #e8e8e8;
-  flex-shrink: 0;
-}
-
-.toolbar .label {
-  font-size: 13px;
-  color: #666;
+.control-panel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 12px;
+  border-radius: 6px;
+  backdrop-filter: blur(10px);
 }
 
 .chart-container {
-  flex: 1;
   width: 100%;
-  min-height: 500px;
-}
-
-.info-panel {
-  position: absolute;
-  top: 80px;
-  right: 20px;
-  width: 280px;
-  background: white;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-}
-
-.info-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.info-title {
-  font-weight: 600;
-  font-size: 15px;
-}
-
-.info-body {
-  padding: 12px 16px;
-}
-
-.info-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 13px;
-}
-
-.info-label {
-  color: #666;
-}
-
-.info-value {
-  font-weight: 500;
-}
-
-.info-actions {
-  padding: 12px 16px;
-  border-top: 1px solid #f0f0f0;
-}
-
-.stats-panel {
-  position: absolute;
-  top: 80px;
-  left: 20px;
-  display: flex;
-  gap: 16px;
-  background: white;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  padding: 12px 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.stat-item {
-  text-align: center;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1890ff;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #666;
-  margin-top: 4px;
+  height: 100%;
 }
 </style>

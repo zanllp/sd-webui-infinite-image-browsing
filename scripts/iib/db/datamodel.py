@@ -66,6 +66,9 @@ class DataBase:
         # 创建连接并打开数据库
         conn = connect(clz.get_db_file_path())
 
+        # # 禁用 WAL 模式，使用传统的 DELETE 日志模式
+        # conn.execute("PRAGMA journal_mode=DELETE")
+
         def regexp(expr, item):
             if not isinstance(item, str):
                 return False

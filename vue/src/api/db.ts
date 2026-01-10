@@ -310,56 +310,48 @@ export const searchIibOutputByPrompt = async (req: PromptSearchReq) => {
   return resp.data as PromptSearchResp
 }
 
-// ===== Tag Relationship Graph =====
+// ===== Hierarchical Tag Graph =====
 export interface TagGraphReq {
   folder_paths: string[]
-  model?: string
-  threshold?: number
-  min_cluster_size?: number
-  lang?: string
   top_n_tags?: number
   top_n_clusters?: number
-  weight_mode?: 'frequency' | 'tfidf' | 'hybrid'
-  alpha?: number
-  show_clusters?: boolean
-  detect_communities?: boolean
+  lang?: string
 }
 
-export interface TagGraphNode {
+export interface LayerNode {
   id: string
   label: string
-  weight: number
-  image_count?: number
-  cluster_count?: number
-  size?: number
-  category: string
-  community?: number
+  size: number
+  metadata?: {
+    type: string
+    image_count?: number
+    cluster_count?: number
+    level?: number
+  }
 }
 
-export interface TagGraphLink {
+export interface GraphLayer {
+  level: number
+  name: string
+  nodes: LayerNode[]
+}
+
+export interface GraphLink {
   source: string
   target: string
   weight: number
-  image_count?: number
-  cluster_count?: number
 }
 
 export interface TagGraphResp {
-  nodes: TagGraphNode[]
-  links: TagGraphLink[]
-  communities?: Array<{
-    id: number
-    nodes: string[]
-    size: number
-  }>
+  layers: GraphLayer[]
+  links: GraphLink[]
   stats: {
-    total_tags: number
-    selected_tags: number
     total_clusters: number
     selected_clusters: number
-    total_images: number
-    tag_links: number
-    cluster_links: number
+    total_tags: number
+    selected_tags: number
+    abstraction_layers: number
+    total_links: number
   }
 }
 
