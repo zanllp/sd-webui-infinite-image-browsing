@@ -309,3 +309,53 @@ export const searchIibOutputByPrompt = async (req: PromptSearchReq) => {
   const resp = await axiosInst.value.post('/db/search_iib_output_by_prompt', req, { timeout: Infinity })
   return resp.data as PromptSearchResp
 }
+
+// ===== Hierarchical Tag Graph =====
+export interface TagGraphReq {
+  folder_paths: string[]
+  top_n_tags?: number
+  top_n_clusters?: number
+  lang?: string
+}
+
+export interface LayerNode {
+  id: string
+  label: string
+  size: number
+  metadata?: {
+    type: string
+    image_count?: number
+    cluster_count?: number
+    level?: number
+  }
+}
+
+export interface GraphLayer {
+  level: number
+  name: string
+  nodes: LayerNode[]
+}
+
+export interface GraphLink {
+  source: string
+  target: string
+  weight: number
+}
+
+export interface TagGraphResp {
+  layers: GraphLayer[]
+  links: GraphLink[]
+  stats: {
+    total_clusters: number
+    selected_clusters: number
+    total_tags: number
+    selected_tags: number
+    abstraction_layers: number
+    total_links: number
+  }
+}
+
+export const getClusterTagGraph = async (req: TagGraphReq) => {
+  const resp = await axiosInst.value.post('/db/cluster_tag_graph', req, { timeout: 60000 })
+  return resp.data as TagGraphResp
+}
