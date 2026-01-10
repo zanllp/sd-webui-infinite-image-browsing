@@ -1,0 +1,1 @@
+import{bV as i,b1 as t,e5 as f,bM as n}from"./index-632e7cf6.js";function u(e,s,r){if(!i(r))return!1;var a=typeof s;return(a=="number"?t(r)&&f(s,r.length):a=="string"&&s in r)?n(r[s],e):!1}export{u as i};

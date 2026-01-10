@@ -71,12 +71,8 @@ export const isMediaFile = (file: string) => isImageFile(file) || isVideoFile(fi
 
 export function downloadFiles (urls: string[]) {
   urls.forEach((url, index) => {
-    try {
-      // Use window.location.origin as base URL for relative URLs, or parse absolute URLs directly
-      const baseUrl = url.startsWith('http://') || url.startsWith('https://') 
-        ? undefined 
-        : window.location.origin
-      const urlObject = new URL(url, baseUrl)
+    try { 
+      const urlObject = new URL(url, 'https://github.com/zanllp/sd-webui-infinite-image-browsing')
       let filename = ''
       const disposition = urlObject.searchParams.get('disposition')
       if (disposition) {
