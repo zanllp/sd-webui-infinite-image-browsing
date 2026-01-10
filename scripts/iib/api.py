@@ -62,6 +62,7 @@ from scripts.iib.db.datamodel import (
 )
 from scripts.iib.db.update_image_data import update_image_data, rebuild_image_index, add_image_data_single
 from scripts.iib.topic_cluster import mount_topic_cluster_routes
+from scripts.iib.tag_graph import mount_tag_graph_routes
 from scripts.iib.logger import logger
 from scripts.iib.seq import seq
 import urllib.parse
@@ -1252,6 +1253,15 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         write_permission_required=write_permission_required,
         openai_base_url=OPENAI_BASE_URL,
         openai_api_key=OPENAI_API_KEY,
+        embedding_model=EMBEDDING_MODEL,
+        ai_model=AI_MODEL,
+    )
+
+    # ===== Tag 关系图 =====
+    mount_tag_graph_routes(
+        app=app,
+        db_api_base=db_api_base,
+        verify_secret=verify_secret,
         embedding_model=EMBEDDING_MODEL,
         ai_model=AI_MODEL,
     )

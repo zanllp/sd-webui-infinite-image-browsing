@@ -18,6 +18,7 @@ import { uniqueId } from 'lodash-es'
 import { message } from 'ant-design-vue'
 import { isTauri } from '@/util/env'
 import { useLocalStorage } from '@vueuse/core'
+import TagRelationGraph from './TagRelationGraph.vue'
 
 const props = defineProps<{ tabIdx: number; paneIdx: number }>()
 const g = useGlobalStore()
@@ -89,6 +90,9 @@ const jobDesc = computed(() => {
 const query = ref('')
 const qLoading = ref(false)
 const qResult = ref<PromptSearchResp | null>(null)
+
+// Tab control
+const activeTab = ref<'clusters' | 'graph'>('clusters')
 
 const scopeOpen = ref(false)
 const selectedFolders = ref<string[]>([])
@@ -309,6 +313,12 @@ const openCluster = (item: ClusterIibOutputResp['clusters'][0]) => {
   tab.key = (pane as any).key
 }
 
+const handleSearchTag = (tag: string) => {
+  // Search by tag name
+  query.value = tag
+  runQuery()
+}
+
 onMounted(() => {
   // 默认不启用任何范围：不自动刷新；但如果后端已持久化范围，则自动拉取一次结果
   void (async () => {
@@ -433,25 +443,39 @@ watch(
       <a-progress :percent="jobPercent" size="small" style="margin-top: 8px;" />
     </div>
 
-    <a-spin :spinning="loading">
-      <div v-if="qResult" style="margin-top: 10px;">
-        <a-alert
-          type="info"
-          :message="$t('topicSearchRecallMsg', [qResult.results.length, qResult.count, qResult.top_k])"
-          show-icon
-        />
-      </div>
-      <div class="grid" v-if="clusters.length">
-        <div class="card" v-for="c in clusters" :key="c.id" @click="openCluster(c)">
-          <div class="card-top">
-            <div class="card-title line-clamp-1">{{ c.title }}</div>
-            <div class="card-count">{{ c.size }}</div>
-          </div>
-          <div class="card-desc line-clamp-2">{{ c.sample_prompt }}</div>
-        </div>
-      </div>
+    <!-- View Switcher -->
+    <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 13px; color: #666;">View:</span>
+      <a-switch
+        v-model:checked="activeTab"
+        :checked-value="'graph'"
+        :un-checked-value="'clusters'"
+        checked-children="Tag Graph"
+        un-checked-children="Clusters"
+      />
+    </div>
 
-      <div class="empty" v-else>
+    <!-- Cluster Cards View -->
+    <div v-if="activeTab === 'clusters'">
+      <a-spin :spinning="loading">
+        <div v-if="qResult" style="margin-top: 10px;">
+          <a-alert
+            type="info"
+            :message="$t('topicSearchRecallMsg', [qResult.results.length, qResult.count, qResult.top_k])"
+            show-icon
+          />
+        </div>
+        <div class="grid" v-if="clusters.length">
+          <div class="card" v-for="c in clusters" :key="c.id" @click="openCluster(c)">
+            <div class="card-top">
+              <div class="card-title line-clamp-1">{{ c.title }}</div>
+              <div class="card-count">{{ c.size }}</div>
+            </div>
+            <div class="card-desc line-clamp-2">{{ c.sample_prompt }}</div>
+          </div>
+        </div>
+
+        <div class="empty" v-else>
         <a-alert
           type="info"
           show-icon
@@ -491,7 +515,20 @@ watch(
           </div>
         </div>
       </div>
-    </a-spin>
+      </a-spin>
+    </div>
+
+    <!-- Tag Graph View -->
+    <div v-else-if="activeTab === 'graph'" style="height: calc(100vh - 300px); min-height: 600px;">
+      <TagRelationGraph
+        :folders="scopeFolders"
+        :threshold="threshold"
+        :min-cluster-size="minClusterSize"
+        :lang="g.lang"
+        :model="undefined"
+        @search-tag="handleSearchTag"
+      />
+    </div>
 
     <a-modal
       v-model:visible="scopeOpen"

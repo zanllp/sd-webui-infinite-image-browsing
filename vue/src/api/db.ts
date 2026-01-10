@@ -309,3 +309,61 @@ export const searchIibOutputByPrompt = async (req: PromptSearchReq) => {
   const resp = await axiosInst.value.post('/db/search_iib_output_by_prompt', req, { timeout: Infinity })
   return resp.data as PromptSearchResp
 }
+
+// ===== Tag Relationship Graph =====
+export interface TagGraphReq {
+  folder_paths: string[]
+  model?: string
+  threshold?: number
+  min_cluster_size?: number
+  lang?: string
+  top_n_tags?: number
+  top_n_clusters?: number
+  weight_mode?: 'frequency' | 'tfidf' | 'hybrid'
+  alpha?: number
+  show_clusters?: boolean
+  detect_communities?: boolean
+}
+
+export interface TagGraphNode {
+  id: string
+  label: string
+  weight: number
+  image_count?: number
+  cluster_count?: number
+  size?: number
+  category: string
+  community?: number
+}
+
+export interface TagGraphLink {
+  source: string
+  target: string
+  weight: number
+  image_count?: number
+  cluster_count?: number
+}
+
+export interface TagGraphResp {
+  nodes: TagGraphNode[]
+  links: TagGraphLink[]
+  communities?: Array<{
+    id: number
+    nodes: string[]
+    size: number
+  }>
+  stats: {
+    total_tags: number
+    selected_tags: number
+    total_clusters: number
+    selected_clusters: number
+    total_images: number
+    tag_links: number
+    cluster_links: number
+  }
+}
+
+export const getClusterTagGraph = async (req: TagGraphReq) => {
+  const resp = await axiosInst.value.post('/db/cluster_tag_graph', req, { timeout: 60000 })
+  return resp.data as TagGraphResp
+}
