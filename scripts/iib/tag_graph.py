@@ -18,8 +18,6 @@ TAG_ABSTRACTION_CACHE_VERSION = 2
 
 class TagGraphReq(BaseModel):
     folder_paths: List[str]
-    top_n_tags: Optional[int] = 50
-    top_n_clusters: Optional[int] = 20
     lang: Optional[str] = "en"  # Language for LLM output
 
 
@@ -291,8 +289,7 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
             raise HTTPException(400, "No clusters found in result")
 
         # === Layer 0: Cluster Nodes ===
-        top_n_clusters = req.top_n_clusters or 20
-        top_clusters = sorted(clusters, key=lambda c: c.get("size", 0), reverse=True)[:top_n_clusters]
+        top_clusters = sorted(clusters, key=lambda c: c.get("size", 0), reverse=True)
 
         cluster_nodes = []
         cluster_to_tags_links = []
@@ -348,12 +345,11 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                 tag_stats[keyword]["total_images"] += cluster_size
 
         # Filter and sort tags
-        top_n_tags = req.top_n_tags or 50
         sorted_tags = sorted(
             tag_stats.items(),
             key=lambda x: x[1]["total_images"],
             reverse=True
-        )[:top_n_tags]
+        )
 
         tag_nodes = []
         selected_tags = set()

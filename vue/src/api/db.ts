@@ -313,8 +313,6 @@ export const searchIibOutputByPrompt = async (req: PromptSearchReq) => {
 // ===== Hierarchical Tag Graph =====
 export interface TagGraphReq {
   folder_paths: string[]
-  top_n_tags?: number
-  top_n_clusters?: number
   lang?: string
 }
 
