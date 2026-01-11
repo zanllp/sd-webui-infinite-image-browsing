@@ -517,6 +517,38 @@ class TopicTitleCache:
         return {"title": title, "keywords": kw, "model": model, "updated_at": updated_at}
 
     @classmethod
+    def get_all_keywords_frequency(cls, conn: Connection, model: Optional[str] = None) -> Dict[str, int]:
+        """
+        Get keyword frequency from all cached clusters.
+        Optionally filter by model.
+        Returns a dictionary mapping keyword -> frequency.
+        """
+        with closing(conn.cursor()) as cur:
+            if model:
+                cur.execute(
+                    "SELECT keywords FROM topic_title_cache WHERE model = ?",
+                    (model,),
+                )
+            else:
+                cur.execute(
+                    "SELECT keywords FROM topic_title_cache",
+                )
+            rows = cur.fetchall()
+        
+        keyword_frequency: Dict[str, int] = {}
+        for row in rows:
+            keywords_str = row[0] if row else None
+            try:
+                keywords = json.loads(keywords_str) if isinstance(keywords_str, str) else []
+            except Exception:
+                keywords = []
+            if isinstance(keywords, list):
+                for kw in keywords:
+                    if isinstance(kw, str) and kw.strip():
+                        keyword_frequency[kw] = keyword_frequency.get(kw, 0) + 1
+        return keyword_frequency
+
+    @classmethod
     def upsert(
         cls,
         conn: Connection,

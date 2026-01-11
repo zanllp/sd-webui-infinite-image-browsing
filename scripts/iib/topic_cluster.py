@@ -448,6 +448,7 @@ def _call_chat_title_sync(
     model: str,
     prompt_samples: List[str],
     output_lang: str,
+    existing_keywords: Optional[List[str]] = None,
 ) -> Optional[Dict]:
     """
     Ask LLM to generate a short topic title and a few keywords. Returns dict or None.
@@ -477,9 +478,16 @@ def _call_chat_title_sync(
         "- Do NOT output explanations. Do NOT output markdown/code fences.\n"
         "- The output MUST start with '{' and end with '}' (no leading/trailing characters).\n"
         "\n"
-        "Output STRICT JSON only:\n"
-        + json_example
     )
+    if existing_keywords:
+        top_keywords = existing_keywords[:100]
+        sys += (
+            f"IMPORTANT: You MUST prioritize selecting keywords from this existing list. "
+            f"Use keywords from the list that best match the current theme. "
+            f"Only create new keywords when absolutely necessary.\n"
+            f"Existing keywords (top {len(top_keywords)}): {', '.join(top_keywords)}\n\n"
+        )
+    sys += "Output STRICT JSON only:\n" + json_example
     user = "Prompt snippets:\n" + "\n".join([f"- {s}" for s in samples])
 
     payload = {
@@ -590,6 +598,7 @@ async def _call_chat_title(
     model: str,
     prompt_samples: List[str],
     output_lang: str,
+    existing_keywords: Optional[List[str]] = None,
 ) -> Dict:
     """
     Same rationale as embeddings:
@@ -603,6 +612,7 @@ async def _call_chat_title(
         model=model,
         prompt_samples=prompt_samples,
         output_lang=output_lang,
+        existing_keywords=existing_keywords,
     )
     if not isinstance(ret, dict):
         raise HTTPException(status_code=502, detail="Chat API returned empty title payload")
@@ -1412,6 +1422,15 @@ def mount_topic_cluster_routes(
         if progress_cb:
             progress_cb({"stage": "titling", "clusters_total": len(clusters)})
 
+        existing_keywords: List[str] = []
+        keyword_frequency: Dict[str, int] = TopicTitleCache.get_all_keywords_frequency(conn, model)
+
+        def _get_top_keywords() -> List[str]:
+            if not keyword_frequency:
+                return []
+            sorted_keywords = sorted(keyword_frequency.items(), key=lambda x: x[1], reverse=True)
+            return [k for k, v in sorted_keywords[:100]]
+
         for cidx, c in enumerate(clusters):
             if len(c["members"]) < min_cluster_size:
                 for mi in c["members"]:
@@ -1441,12 +1460,14 @@ def mount_topic_cluster_routes(
                 title = str(cached.get("title"))
                 keywords = cached.get("keywords") or []
             else:
+                top_keywords = _get_top_keywords()
                 llm = await _call_chat_title(
                     base_url=openai_base_url,
                     api_key=openai_api_key,
                     model=title_model,
                     prompt_samples=[rep] + texts[:5],
                     output_lang=output_lang,
+                    existing_keywords=top_keywords,
                 )
                 title = (llm or {}).get("title")
                 keywords = (llm or {}).get("keywords", [])
@@ -1458,6 +1479,9 @@ def mount_topic_cluster_routes(
                         conn.commit()
                     except Exception:
                         pass
+
+            for kw in keywords or []:
+                keyword_frequency[kw] = keyword_frequency.get(kw, 0) + 1
 
             out_clusters.append(
                 {
