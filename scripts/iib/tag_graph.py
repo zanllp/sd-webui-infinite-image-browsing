@@ -5,15 +5,23 @@ Builds a multi-layer neural-network-style visualization with LLM-driven abstract
 
 import hashlib
 import json
+import os
+import time
 from typing import Dict, List, Optional
 from pydantic import BaseModel
 from fastapi import Depends, FastAPI, HTTPException
 
 from scripts.iib.db.datamodel import DataBase, GlobalSetting
 from scripts.iib.tool import normalize_output_lang
+from scripts.iib.logger import logger
 
 # Cache version for tag abstraction - increment to invalidate all caches
-TAG_ABSTRACTION_CACHE_VERSION = 2
+TAG_ABSTRACTION_CACHE_VERSION = 3
+TAG_GRAPH_CACHE_VERSION = 1
+_MAX_TAGS_FOR_LLM = int(os.getenv("IIB_TAG_GRAPH_MAX_TAGS_FOR_LLM", "200") or "200")
+_TOPK_TAGS_FOR_LLM = int(os.getenv("IIB_TAG_GRAPH_TOPK_TAGS_FOR_LLM", "200") or "200")
+_LLM_REQUEST_TIMEOUT_SEC = int(os.getenv("IIB_TAG_GRAPH_LLM_TIMEOUT_SEC", "30") or "30")
+_LLM_MAX_ATTEMPTS = int(os.getenv("IIB_TAG_GRAPH_LLM_MAX_ATTEMPTS", "2") or "2")
 
 
 class TagGraphReq(BaseModel):
@@ -113,13 +121,14 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                 "max_tokens": 2048,
             }
 
-            # Retry up to 5 times
+            # Retry a few times then fallback quickly (to avoid frontend timeout on large datasets).
             last_error = ""
-            for attempt in range(1, 6):
+            for attempt in range(1, _LLM_MAX_ATTEMPTS + 1):
                 try:
-                    resp = requests.post(url, json=payload, headers=headers, timeout=60)
+                    resp = requests.post(url, json=payload, headers=headers, timeout=_LLM_REQUEST_TIMEOUT_SEC)
                 except requests.RequestException as e:
                     last_error = f"network_error: {type(e).__name__}: {e}"
+                    logger.warning("[tag_graph] llm_request_error attempt=%s err=%s", attempt, last_error)
                     continue
 
                 # Retry on 429 or 5xx, fail immediately on other 4xx
@@ -127,14 +136,17 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                     body = (resp.text or "")[:400]
                     if resp.status_code == 429 or resp.status_code >= 500:
                         last_error = f"api_error_retriable: status={resp.status_code}"
+                        logger.warning("[tag_graph] llm_http_error attempt=%s status=%s body=%s", attempt, resp.status_code, body)
                         continue
                     # 4xx client error - fail immediately
+                    logger.error("[tag_graph] llm_http_client_error attempt=%s status=%s body=%s", attempt, resp.status_code, body)
                     raise Exception(f"API client error: {resp.status_code} {body}")
 
                 try:
                     data = resp.json()
                 except Exception as e:
                     last_error = f"response_not_json: {type(e).__name__}"
+                    logger.warning("[tag_graph] llm_response_not_json attempt=%s err=%s body=%s", attempt, last_error, (resp.text or "")[:400])
                     continue
 
                 choice0 = (data.get("choices") or [{}])[0]
@@ -164,6 +176,7 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
 
                 if not json_str:
                     last_error = f"no_json_found: {content[:200]}"
+                    logger.warning("[tag_graph] llm_no_json attempt=%s err=%s", attempt, last_error)
                     continue
 
                 # Clean up common JSON issues
@@ -175,55 +188,34 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                     result = json.loads(json_str)
                 except json.JSONDecodeError as e:
                     last_error = f"json_parse_error: {e}"
+                    logger.warning("[tag_graph] llm_json_parse_error attempt=%s err=%s json=%s", attempt, last_error, json_str[:400])
                     continue
 
                 # Validate structure
                 if not isinstance(result, dict) or "layers" not in result:
                     last_error = f"invalid_structure: {str(result)[:200]}"
+                    logger.warning("[tag_graph] llm_invalid_structure attempt=%s err=%s", attempt, last_error)
                     continue
 
                 # Success!
                 return result
 
-            # All retries exhausted
-            # Fallback: create simple heuristic grouping
-            # Group by first character/prefix for basic organization
-            groups_dict = {}
-            for tag in tags:
-                # Simple heuristic: group by first 2 chars or common keywords
-                prefix = tag[:2] if len(tag) >= 2 else tag
-                if prefix not in groups_dict:
-                    groups_dict[prefix] = []
-                groups_dict[prefix].append(tag)
-
-            # Merge small groups
-            merged_groups = []
-            for prefix, tag_list in sorted(groups_dict.items()):
-                if len(merged_groups) > 0 and len(tag_list) < 3:
-                    # Merge into last group if this group is too small
-                    merged_groups[-1]["tags"].extend(tag_list)
-                else:
-                    group_id = f"group{len(merged_groups) + 1}"
-                    label = f"Group {len(merged_groups) + 1}"
-                    merged_groups.append({
-                        "id": group_id,
-                        "label": label,
-                        "tags": tag_list
-                    })
-
-            # Limit to max 12 groups
-            if len(merged_groups) > 12:
-                # Merge smallest groups
-                merged_groups = sorted(merged_groups, key=lambda g: len(g["tags"]), reverse=True)[:12]
-
-            return {
-                "layers": [
-                    {
-                        "level": 1,
-                        "groups": merged_groups
-                    }
-                ]
-            }
+            # No fallback: expose error to frontend, but log enough info for debugging.
+            logger.error(
+                "[tag_graph] llm_failed attempts=%s timeout_sec=%s last_error=%s",
+                _LLM_MAX_ATTEMPTS,
+                _LLM_REQUEST_TIMEOUT_SEC,
+                last_error,
+            )
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "type": "tag_graph_llm_failed",
+                    "attempts": _LLM_MAX_ATTEMPTS,
+                    "timeout_sec": _LLM_REQUEST_TIMEOUT_SEC,
+                    "last_error": last_error,
+                },
+            )
 
         return await asyncio.to_thread(_call_sync)
 
@@ -241,6 +233,7 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
         - Layer 1: Tag nodes (deduplicated cluster keywords)
         - Layer 2+: Abstract groupings (LLM-generated, max 2 layers)
         """
+        t0 = time.time()
         # Validate
         if not req.folder_paths:
             raise HTTPException(400, "folder_paths is required")
@@ -252,21 +245,25 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
 
         from contextlib import closing
         with closing(conn.cursor()) as cur:
+            # Avoid full table scan on large DBs; we only need recent caches for matching.
             cur.execute(
                 """SELECT cache_key, folders, result FROM topic_cluster_cache
-                   ORDER BY updated_at DESC"""
+                   ORDER BY updated_at DESC
+                   LIMIT 200"""
             )
             rows = cur.fetchall()
 
         # Find a cache that matches the folders (order-independent)
         folders_set = set(folders)
         row = None
+        topic_cluster_cache_key: Optional[str] = None
 
         for cache_row in rows:
             try:
                 cached_folders = json.loads(cache_row[1]) if isinstance(cache_row[1], str) else cache_row[1]
                 if isinstance(cached_folders, list) and set(cached_folders) == folders_set:
-                    row = (cache_row[0], cache_row[2])
+                    topic_cluster_cache_key = str(cache_row[0] or "")
+                    row = (topic_cluster_cache_key, cache_row[2])
                     break
             except Exception:
                 continue
@@ -288,6 +285,45 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
         if not clusters:
             raise HTTPException(400, "No clusters found in result")
 
+        logger.info(
+            "[tag_graph] start folders=%s clusters=%s lang=%s",
+            len(folders),
+            len(clusters) if isinstance(clusters, list) else "n/a",
+            str(req.lang or ""),
+        )
+
+        # Graph cache (best-effort): cache by topic_cluster_cache_key + lang + version.
+        graph_cache_key = None
+        if topic_cluster_cache_key:
+            try:
+                graph_cache_key_hash = hashlib.md5(
+                    json.dumps(
+                        {
+                            "v": TAG_GRAPH_CACHE_VERSION,
+                            "topic_cluster_cache_key": topic_cluster_cache_key,
+                            "lang": str(req.lang or ""),
+                        },
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    ).encode("utf-8")
+                ).hexdigest()
+                graph_cache_key = f"tag_graph_v{TAG_GRAPH_CACHE_VERSION}_{graph_cache_key_hash}"
+                cached_graph = GlobalSetting.get_setting(conn, graph_cache_key)
+                if cached_graph:
+                    cached_graph_obj = json.loads(cached_graph) if isinstance(cached_graph, str) else cached_graph
+                    if isinstance(cached_graph_obj, dict) and "layers" in cached_graph_obj and "links" in cached_graph_obj:
+                        cached_graph_obj.setdefault("stats", {})
+                        if isinstance(cached_graph_obj["stats"], dict):
+                            cached_graph_obj["stats"].setdefault("topic_cluster_cache_key", topic_cluster_cache_key)
+                        logger.info(
+                            "[tag_graph] cache_hit topic_cluster_cache_key=%s cost_ms=%s",
+                            topic_cluster_cache_key,
+                            int((time.time() - t0) * 1000),
+                        )
+                        return cached_graph_obj
+            except Exception:
+                pass
+
         # === Layer 0: Cluster Nodes ===
         top_clusters = sorted(clusters, key=lambda c: c.get("size", 0), reverse=True)
 
@@ -299,8 +335,6 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
             cluster_title = cluster.get("title", "Untitled")
             cluster_size = cluster.get("size", 0)
             keywords = cluster.get("keywords", [])
-            paths = cluster.get("paths", [])
-
             node_id = f"cluster_{cluster_id}"
             cluster_nodes.append(LayerNode(
                 id=node_id,
@@ -309,7 +343,8 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                 metadata={
                     "type": "cluster",
                     "image_count": cluster_size,
-                    "paths": paths
+                    # Do NOT include full paths list here (can be huge); fetch on demand.
+                    "cluster_id": cluster_id,
                 }
             ))
 
@@ -382,14 +417,41 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
         abstract_layers = []
         layer1_to_2_links = []
 
-        if len(selected_tags) > 3:  # Only abstract if we have enough tags
+        # LLM abstraction: for large datasets, do TopK by total_images (frequency/weight) instead of skipping.
+        # This keeps response useful while controlling LLM latency and prompt size.
+        llm_tags = [t for (t, _stats) in sorted_tags][: max(0, int(_TOPK_TAGS_FOR_LLM))]
+        llm_tags_set = set(llm_tags)
+        # IMPORTANT: Do not gate LLM by total tag count; only use TopK tags for LLM input.
+        # Otherwise, large datasets would "skip" abstraction even though we already limited llm_tags.
+        should_use_llm = (
+            len(llm_tags) > 3
+            and len(llm_tags) <= _MAX_TAGS_FOR_LLM
+            and bool(openai_api_key)
+            and bool(openai_base_url)
+        )
+        if not should_use_llm:
+            logger.info(
+                "[tag_graph] llm_disabled reasons={topk_tags:%s,max:%s,has_key:%s,has_base:%s}",
+                len(llm_tags),
+                _MAX_TAGS_FOR_LLM,
+                bool(openai_api_key),
+                bool(openai_base_url),
+            )
+        logger.info(
+            "[tag_graph] tags_total=%s tags_for_llm=%s llm_enabled=%s",
+            len(selected_tags),
+            len(llm_tags),
+            bool(should_use_llm),
+        )
+
+        if should_use_llm:
             # Use language from request
             lang = req.lang or "en"
 
             # Generate cache key for this set of tags (with version)
             import hashlib
-            tags_sorted = sorted(selected_tags)
-            cache_input = f"v{TAG_ABSTRACTION_CACHE_VERSION}|{ai_model}|{lang}|{','.join(tags_sorted)}"
+            tags_sorted = sorted(llm_tags_set)
+            cache_input = f"v{TAG_ABSTRACTION_CACHE_VERSION}|{ai_model}|{lang}|topk={len(tags_sorted)}|{','.join(tags_sorted)}"
             cache_key_hash = hashlib.md5(cache_input.encode()).hexdigest()
             cache_key = f"tag_abstraction_v{TAG_ABSTRACTION_CACHE_VERSION}_{cache_key_hash}"
 
@@ -404,13 +466,23 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
 
             # Call LLM if not cached
             if not abstraction:
-                abstraction = await _call_llm_for_abstraction(
-                    list(selected_tags),
-                    lang,
-                    ai_model,
-                    openai_base_url,
-                    openai_api_key
-                )
+                t_llm = time.time()
+                try:
+                    abstraction = await _call_llm_for_abstraction(
+                        list(llm_tags_set),
+                        lang,
+                        ai_model,
+                        openai_base_url,
+                        openai_api_key
+                    )
+                except Exception as e:
+                    logger.exception(
+                        "[tag_graph] llm_call_failed cost_ms=%s err=%s",
+                        int((time.time() - t_llm) * 1000),
+                        f"{type(e).__name__}: {e}",
+                    )
+                    raise
+                logger.info("[tag_graph] llm_done cost_ms=%s cached=%s", int((time.time() - t_llm) * 1000), False)
 
                 # Save to cache if successful
                 if abstraction and isinstance(abstraction, dict) and abstraction.get("layers"):
@@ -418,6 +490,8 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                         GlobalSetting.save_setting(conn, cache_key, json.dumps(abstraction, ensure_ascii=False))
                     except Exception:
                         pass
+            else:
+                logger.info("[tag_graph] llm_done cost_ms=%s cached=%s", 0, True)
 
             # Build abstract layers from LLM response
             llm_layers = abstraction.get("layers", [])
@@ -443,7 +517,7 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                         total_size = sum(
                             tag_stats.get(tag, {}).get("total_images", 0)
                             for tag in contained_tags
-                            if tag in selected_tags
+                            if tag in llm_tags_set
                         )
 
                         abstract_nodes.append(LayerNode(
@@ -455,7 +529,7 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
 
                         # Create links from tags to this abstract node
                         for tag in contained_tags:
-                            if tag in selected_tags:
+                            if tag in llm_tags_set:
                                 tag_id = f"tag_{tag}"
                                 layer1_to_2_links.append(GraphLink(
                                     source=tag_id,
@@ -511,15 +585,79 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
 
         all_links = [link.dict() for link in (layer0_to_1_links + layer1_to_2_links)]
 
-        return TagGraphResp(
+        stats = {
+            "total_clusters": len(clusters),
+            "selected_clusters": len(cluster_nodes),
+            "total_tags": len(tag_stats),
+            "selected_tags": len(tag_nodes),
+            "abstraction_layers": len(abstract_layers),
+            "total_links": len(all_links),
+        }
+        if topic_cluster_cache_key:
+            stats["topic_cluster_cache_key"] = topic_cluster_cache_key
+
+        resp_obj = TagGraphResp(
             layers=layers,
             links=all_links,
-            stats={
-                "total_clusters": len(clusters),
-                "selected_clusters": len(cluster_nodes),
-                "total_tags": len(tag_stats),
-                "selected_tags": len(tag_nodes),
-                "abstraction_layers": len(abstract_layers),
-                "total_links": len(all_links),
-            }
+            stats=stats,
+        ).dict()
+
+        # Save graph cache (best-effort)
+        if graph_cache_key:
+            try:
+                GlobalSetting.save_setting(conn, graph_cache_key, json.dumps(resp_obj, ensure_ascii=False))
+                conn.commit()
+            except Exception:
+                pass
+
+        logger.info(
+            "[tag_graph] done nodes=%s links=%s abstraction_layers=%s cost_ms=%s",
+            sum(len(l.get("nodes") or []) for l in (resp_obj.get("layers") or []) if isinstance(l, dict)),
+            len(resp_obj.get("links") or []),
+            int((resp_obj.get("stats") or {}).get("abstraction_layers") or 0),
+            int((time.time() - t0) * 1000),
         )
+        return resp_obj
+
+    class ClusterPathsReq(BaseModel):
+        topic_cluster_cache_key: str
+        cluster_id: str
+
+    @app.post(
+        f"{db_api_base}/cluster_tag_graph_cluster_paths",
+        dependencies=[Depends(verify_secret)],
+    )
+    async def cluster_tag_graph_cluster_paths(req: ClusterPathsReq):
+        """
+        Fetch full paths for a specific cluster from cached clustering result.
+        This avoids returning huge "paths" arrays inside cluster_tag_graph response.
+        """
+        ck = str(req.topic_cluster_cache_key or "").strip()
+        cid = str(req.cluster_id or "").strip()
+        if not ck or not cid:
+            raise HTTPException(400, "topic_cluster_cache_key and cluster_id are required")
+        conn = DataBase.get_conn()
+        from contextlib import closing
+        with closing(conn.cursor()) as cur:
+            cur.execute("SELECT result FROM topic_cluster_cache WHERE cache_key = ?", (ck,))
+            row = cur.fetchone()
+        if not row:
+            raise HTTPException(404, "topic_cluster_cache not found")
+        try:
+            result_obj = json.loads(row[0]) if isinstance(row[0], str) else row[0]
+        except Exception:
+            result_obj = None
+        if not isinstance(result_obj, dict):
+            raise HTTPException(400, "invalid cached result")
+        clusters = result_obj.get("clusters", [])
+        if not isinstance(clusters, list):
+            clusters = []
+        for c in clusters:
+            if not isinstance(c, dict):
+                continue
+            if str(c.get("id", "")) == cid:
+                paths = c.get("paths", [])
+                if not isinstance(paths, list):
+                    paths = []
+                return {"paths": [str(p) for p in paths if p]}
+        raise HTTPException(404, "cluster not found")

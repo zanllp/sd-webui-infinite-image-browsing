@@ -350,10 +350,26 @@ export interface TagGraphResp {
     selected_tags: number
     abstraction_layers: number
     total_links: number
+    topic_cluster_cache_key?: string
   }
 }
 
 export const getClusterTagGraph = async (req: TagGraphReq) => {
-  const resp = await axiosInst.value.post('/db/cluster_tag_graph', req, { timeout: 60000 })
+  // Large datasets can take longer to build / transfer; keep a generous timeout.
+  const resp = await axiosInst.value.post('/db/cluster_tag_graph', req, { timeout: 300000 })
   return resp.data as TagGraphResp
+}
+
+export interface TagGraphClusterPathsReq {
+  topic_cluster_cache_key: string
+  cluster_id: string
+}
+
+export interface TagGraphClusterPathsResp {
+  paths: string[]
+}
+
+export const getClusterTagGraphClusterPaths = async (req: TagGraphClusterPathsReq) => {
+  const resp = await axiosInst.value.post('/db/cluster_tag_graph_cluster_paths', req, { timeout: 300000 })
+  return resp.data as TagGraphClusterPathsResp
 }

@@ -67,7 +67,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, watch, nextTick, onUnmounted } from 'vue'
-import { getClusterTagGraph, type TagGraphReq, type TagGraphResp } from '@/api/db'
+import { getClusterTagGraph, getClusterTagGraphClusterPaths, type TagGraphReq, type TagGraphResp } from '@/api/db'
 import { message } from 'ant-design-vue'
 import * as echarts from 'echarts'
 import { t } from '@/i18n'
@@ -166,7 +166,13 @@ const fetchGraphData = async () => {
     graphData.value = await getClusterTagGraph(req)
     displayGraphData.value = graphData.value
   } catch (err: any) {
-    error.value = err.response?.data?.detail || err.message || 'Failed to load graph'
+    const detail = err.response?.data?.detail
+    error.value =
+      typeof detail === 'string'
+        ? detail
+        : detail
+          ? JSON.stringify(detail)
+          : (err.message || 'Failed to load graph')
     message.error(error.value)
   } finally {
     loading.value = false
@@ -585,15 +591,33 @@ const renderChart = () => {
         hideTipOnly()
       } else if (action === 'openCluster' && idx != null) {
         const meta = (nodes[idx] && nodes[idx].metadata) || {}
-        const paths = (meta.paths || []) as string[]
         const title = (nodes[idx] && nodes[idx].name) || ''
-        const size = Number(meta.image_count || paths.length || 0)
-        if (paths && paths.length) {
-          emit('openCluster', { title, paths, size })
-        } else {
-          message.warning('No images found in this cluster')
+        const size = Number(meta.image_count || 0)
+        const topicClusterCacheKey = String(displayGraphData.value?.stats?.topic_cluster_cache_key || '')
+        const clusterId = String(meta.cluster_id || '')
+        if (!topicClusterCacheKey || !clusterId) {
+          message.warning('Cluster data is incomplete, please re-generate clustering result')
+          hideTipOnly()
+          return
         }
-        hideTipOnly()
+        void (async () => {
+          const hide = message.loading('Loading cluster images...', 0)
+          try {
+            const resp = await getClusterTagGraphClusterPaths({
+              topic_cluster_cache_key: topicClusterCacheKey,
+              cluster_id: clusterId
+            })
+            const paths: string[] = Array.isArray(resp?.paths) ? resp.paths : []
+            if (paths.length) {
+              emit('openCluster', { title, paths, size: size || paths.length })
+            } else {
+              message.warning('No images found in this cluster')
+            }
+            hideTipOnly()
+          } finally {
+            hide?.()
+          }
+        })()
       } else if (action === 'close') {
         hideTipOnly()
       }
