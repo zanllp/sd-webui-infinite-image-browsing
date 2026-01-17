@@ -573,6 +573,25 @@ class TopicTitleCache:
                 (cluster_hash, title, kw, model, updated_at),
             )
 
+    @classmethod
+    def update_keywords(
+        cls,
+        conn: Connection,
+        cluster_hash: str,
+        keywords: List[str],
+        updated_at: Optional[str] = None,
+    ):
+        """
+        Update only the keywords for an existing cluster cache entry.
+        """
+        updated_at = updated_at or datetime.now().isoformat()
+        kw = json.dumps([str(x) for x in (keywords or [])], ensure_ascii=False)
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                "UPDATE topic_title_cache SET keywords = ?, updated_at = ? WHERE cluster_hash = ?",
+                (kw, updated_at, cluster_hash),
+            )
+
 
 class TopicClusterCache:
     """
@@ -1300,3 +1319,4 @@ class GlobalSetting:
             for row in rows:
                 settings[row[1]] = json.loads(row[0])
             return settings
+

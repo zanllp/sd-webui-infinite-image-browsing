@@ -38,6 +38,16 @@ const hideRequirements = () => {
   showRequirements.value = false
 }
 
+// Cache result collapsed state
+const _CACHE_COLLAPSED_KEY = 'iib_topic_search_cache_collapsed_v1'
+const cacheResultCollapsed = useLocalStorage<boolean>(_CACHE_COLLAPSED_KEY, false)
+const expandCacheResult = () => {
+  cacheResultCollapsed.value = false
+}
+const collapseCacheResult = () => {
+  cacheResultCollapsed.value = true
+}
+
 const job = ref<ClusterIibOutputJobStatusResp | null>(null)
 const jobId = ref<string>('')
 let _jobTimer: any = null
@@ -446,22 +456,75 @@ watch(
       </template>
     </a-alert>
 
-    <a-alert
-      v-if="cacheInfo?.cache_hit && cacheInfo?.stale"
-      type="warning"
-      show-icon
-      style="margin: 10px 0 0 0;"
-      :message="$t('topicSearchCacheStale')"
+    <!-- Stale cache banner -->
+    <div
+      v-if="cacheInfo?.cache_hit && cacheInfo?.stale && !cacheResultCollapsed"
+      style="margin: 10px 0 0 0; position: relative;"
     >
-      <template #description>
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <span style="opacity: 0.85;">{{ $t('topicSearchCacheStaleDesc') }}</span>
+      <a-alert
+        type="warning"
+        show-icon
+        :message="$t('topicSearchCacheStale')"
+        :description="$t('topicSearchCacheStaleDesc')"
+      >
+        <template #action>
           <a-button size="small" :loading="loading || jobRunning" :disabled="g.conf?.is_readonly" @click="refresh">
             {{ $t('topicSearchCacheUpdate') }}
           </a-button>
-        </div>
-      </template>
-    </a-alert>
+        </template>
+      </a-alert>
+      <a-button
+        size="small"
+        style="position: absolute; top: 8px; right: 8px; z-index: 1;"
+        @click="collapseCacheResult"
+      >
+        ^
+      </a-button>
+    </div>
+
+    <!-- Collapsed stale cache -->
+    <div
+      v-if="cacheInfo?.cache_hit && cacheInfo?.stale && cacheResultCollapsed"
+      style="margin: 10px 0 0 0; padding: 8px 12px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; display: flex; align-items: center; gap: 10px;"
+    >
+      <span>💾</span>
+      <a-button size="small" :loading="loading || jobRunning" :disabled="g.conf?.is_readonly" @click="refresh">
+        {{ $t('topicSearchCacheUpdate') }}
+      </a-button>
+      <a-button size="small" @click="expandCacheResult">
+        v
+      </a-button>
+    </div>
+
+    <!-- Fresh cache banner -->
+    <div
+      v-if="cacheInfo?.cache_hit && !cacheInfo?.stale && !cacheResultCollapsed"
+      style="margin: 10px 0 0 0; position: relative;"
+    >
+      <a-alert
+        type="success"
+        show-icon
+        :message="$t('topicSearchCacheHit')"
+      />
+      <a-button
+        size="small"
+        style="position: absolute; top: 8px; right: 8px; z-index: 1;"
+        @click="collapseCacheResult"
+      >
+        ^
+      </a-button>
+    </div>
+
+    <!-- Collapsed fresh cache -->
+    <div
+      v-if="cacheInfo?.cache_hit && !cacheInfo?.stale && cacheResultCollapsed"
+      style="margin: 10px 0 0 0; padding: 8px 12px; background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 8px; display: flex; align-items: center; gap: 10px;"
+    >
+      <span>✅</span>
+      <a-button size="small" @click="expandCacheResult">
+        v
+      </a-button>
+    </div>
 
     <div v-if="jobRunning" style="margin: 10px 0 0 0;">
       <a-alert type="info" show-icon :message="jobStageText" :description="jobDesc" />
@@ -469,7 +532,7 @@ watch(
     </div>
 
     <!-- View Switcher -->
-    <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+    <div style="margin : 10px 0; display: flex; align-items: center; gap: 8px;">
       <span style="font-size: 13px; color: #666;">View:</span>
       <a-switch
         v-model:checked="activeTab"

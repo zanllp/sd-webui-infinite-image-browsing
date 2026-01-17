@@ -45,6 +45,15 @@
               style="width: 92px;"
               :title="t('tagGraphFilterHopsTitle')"
             />
+            <a-input-number
+              v-model:value="filterKeywordLimit"
+              size="small"
+              :min="10"
+              :max="1000"
+              :step="10"
+              style="width: 100px;"
+              :title="t('tagGraphKeywordLimitTitle')"
+            />
             <a-button size="small" @click="applyFilterManual">{{ t('tagGraphFilterApply') }}</a-button>
             <a-button size="small" @click="resetFilter">{{ t('tagGraphFilterReset') }}</a-button>
             <a-button
@@ -66,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+/* eslint-disable */
 import { computed, ref, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import { getClusterTagGraph, getClusterTagGraphClusterPaths, type TagGraphReq, type TagGraphResp } from '@/api/db'
 import { message } from 'ant-design-vue'
@@ -104,6 +114,12 @@ const filterKeyword = ref<string>('')
 const filterHops = ref<number>(3)
 // When set, filter is anchored to this exact node id (so same-layer only keeps that node itself)
 const filterExactNodeId = ref<string>('')
+// Maximum number of keywords to display in Tag layer (prevents ECharts performance issues)
+// Higher = more keywords but slower rendering. 200 is a good balance for typical image datasets.
+const filterKeywordLimit = ref<number>(200)
+// Temporary storage for expansion hops when filtering by node
+const _tempHopsUp = ref<number>(0)
+const _tempHopsDown = ref<number>(0)
 const isFullscreen = ref(false)
 
 const toggleFullscreen = async () => {
@@ -142,6 +158,8 @@ const layerColors = [
   '#7B68EE', // Layer 1: Tags - Purple
   '#50C878', // Layer 2: Abstract-1 - Green
   '#FF6B6B', // Layer 3: Abstract-2 - Red
+  '#FFD700', // Layer 4: Abstract-3 - Yellow
+  '#FF8C00', // Layer 5: Abstract-4 - Dark Orange
 ]
 
 const getLayerColor = (layer: number): string => {
@@ -164,7 +182,10 @@ const fetchGraphData = async () => {
     }
 
     graphData.value = await getClusterTagGraph(req)
-    displayGraphData.value = graphData.value
+    displayGraphData.value = {
+      ...graphData.value,
+      layers: limitTagLayer(graphData.value.layers as any[], filterKeywordLimit.value || 200)
+    }
   } catch (err: any) {
     const detail = err.response?.data?.detail
     error.value =
@@ -186,16 +207,34 @@ const refreshChart = () => {
   })
 }
 
+const limitTagLayer = (layers: any[], keywordLimit: number): any[] => {
+  const result: any[] = []
+  for (const l of layers) {
+    let nodes = l?.nodes ?? []
+    const layerLevel = Number(l?.level ?? 0)
+    if (layerLevel === 1 && nodes.length > keywordLimit) {
+      nodes = nodes.sort((a: any, b: any) => (b.size || 0) - (a.size || 0)).slice(0, keywordLimit)
+    }
+    if (nodes.length) {
+      result.push({ ...l, nodes })
+    }
+  }
+  return result
+}
+
 const applyFilterCore = () => {
   const raw = graphData.value
   if (!raw) return
   const keyword = (filterKeyword.value || '').trim().toLowerCase()
   const layer = filterLayer.value
-  const hops = Math.max(1, Math.min(20, Number(filterHops.value || 1)))
+  const keywordLimit = filterKeywordLimit.value || 200
 
-  // No filter -> show all
+  // No filter -> show all but still apply keyword limit
   if (!filterExactNodeId.value && !keyword && (layer === '__all__' || !layer)) {
-    displayGraphData.value = raw
+    displayGraphData.value = {
+      ...raw,
+      layers: limitTagLayer(raw.layers as any[], keywordLimit)
+    }
     refreshChart()
     return
   }
@@ -231,7 +270,7 @@ const applyFilterCore = () => {
   }
 
   const links = raw.links as any[]
-  // 2) include matched + N-hop neighbors (both directions)
+  // 2) Build adjacency for direction-aware filtering
   const adj = new Map<string, Set<string>>()
   const addEdge = (a: string, b: string) => {
     if (!a || !b) return
@@ -247,28 +286,105 @@ const applyFilterCore = () => {
   }
 
   const include = new Set<string>()
-  const q: Array<{ id: string; d: number }> = []
-  for (const id of matched) {
-    include.add(id)
-    q.push({ id, d: 0 })
-  }
-  while (q.length) {
-    const cur = q.shift()!
-    if (cur.d >= hops) continue
-    const ns = adj.get(cur.id)
-    if (!ns) continue
-    for (const nxt of ns) {
-      if (!include.has(nxt)) {
-        include.add(nxt)
-        q.push({ id: nxt, d: cur.d + 1 })
+
+  if (filterExactNodeId.value) {
+    // 3) Direction-aware BFS for exact node filtering
+    const startNode = nodeById.get(filterExactNodeId.value)
+    if (!startNode) return
+
+    const hopsUp = _tempHopsUp.value
+    const hopsDown = _tempHopsDown.value
+
+    // Separate upward expansion (to higher levels)
+    const expandUpward = (startId: string, maxHops: number) => {
+      const visited = new Set<string>([startId])
+      const q: Array<{ id: string; d: number }> = [{ id: startId, d: 0 }]
+
+      while (q.length) {
+        const cur = q.shift()!
+        if (cur.d >= maxHops) continue
+        const ns = adj.get(cur.id)
+        if (!ns) continue
+
+        const curNode = nodeById.get(cur.id)
+        const curLevel = curNode?.layerLevel ?? 0
+
+        for (const nxt of ns) {
+          if (visited.has(nxt)) continue
+
+          const nxtNode = nodeById.get(nxt)
+          const nxtLevel = nxtNode?.layerLevel ?? 0
+
+          // Only allow upward moves (to higher levels)
+          if (nxtLevel > curLevel) {
+            visited.add(nxt)
+            include.add(nxt)
+            q.push({ id: nxt, d: cur.d + 1 })
+          }
+        }
       }
+    }
+
+    // Separate downward expansion (to lower levels)
+    const expandDownward = (startId: string, maxHops: number) => {
+      const visited = new Set<string>([startId])
+      const q: Array<{ id: string; d: number }> = [{ id: startId, d: 0 }]
+
+      while (q.length) {
+        const cur = q.shift()!
+        if (cur.d >= maxHops) continue
+        const ns = adj.get(cur.id)
+        if (!ns) continue
+
+        const curNode = nodeById.get(cur.id)
+        const curLevel = curNode?.layerLevel ?? 0
+
+        for (const nxt of ns) {
+          if (visited.has(nxt)) continue
+
+          const nxtNode = nodeById.get(nxt)
+          const nxtLevel = nxtNode?.layerLevel ?? 0
+
+          // Only allow downward moves (to lower levels)
+          if (nxtLevel < curLevel) {
+            visited.add(nxt)
+            include.add(nxt)
+            q.push({ id: nxt, d: cur.d + 1 })
+          }
+        }
+      }
+    }
+
+    // Add start node
+    include.add(filterExactNodeId.value)
+
+    // Expand upward
+    if (hopsUp > 0) {
+      expandUpward(filterExactNodeId.value, hopsUp)
+    }
+
+    // Expand downward
+    if (hopsDown > 0) {
+      expandDownward(filterExactNodeId.value, hopsDown)
+    }
+  } else {
+    // Manual mode: include all matched nodes (no hops limit)
+    for (const id of matched) {
+      include.add(id)
     }
   }
 
-  // 3) filter layers/nodes
+  // 4) filter layers/nodes
   const filteredLayers: any[] = []
+  
   for (const l of raw.layers as any[]) {
-    const nodes = (l?.nodes ?? []).filter((n: any) => include.has(String(n?.id ?? '')))
+    let nodes = (l?.nodes ?? []).filter((n: any) => include.has(String(n?.id ?? '')))
+    
+    const layerLevel = Number(l?.level ?? 0)
+    if (layerLevel === 1 && nodes.length > keywordLimit) {
+      nodes = nodes.sort((a: any, b: any) => (b.size || 0) - (a.size || 0)).slice(0, keywordLimit)
+    }
+    
     if (nodes.length) {
       filteredLayers.push({ ...l, nodes })
     }
@@ -300,12 +416,26 @@ const applyFilterByNode = (nodeId: string, layerName: string, nodeName: string, 
   filterKeyword.value = nodeName || ''
   filterExactNodeId.value = nodeId
 
-  // Suggested hops to reach Abstract-2 from different starting layers:
-  // cluster -> tag -> abstract-1 -> abstract-2 : 3 hops
-  // tag -> abstract-1 -> abstract-2 : 2 hops
-  // abstract-1 -> abstract-2 : 1 hop
-  const suggested = nodeType === 'cluster' ? 3 : (nodeType === 'tag' ? 2 : (nodeType === 'abstract' ? 1 : 2))
-  filterHops.value = Math.max(Number(filterHops.value || 1), suggested)
+  // Calculate hops based on node type to show full hierarchy path
+  // cluster (0) -> needs hopsUp=3 to reach abstract-2 (3)
+  // tag (1) -> needs hopsUp=2 to reach abstract-2 (3), hopsDown=1 to reach clusters (0)
+  // abstract-1 (2) -> needs hopsUp=1 to reach abstract-2 (3), hopsDown=2 to reach clusters (0)
+  // abstract-2 (3) -> needs hopsDown=3 to reach clusters (0)
+
+  if (nodeType === 'cluster') {
+    _tempHopsUp.value = 3
+    _tempHopsDown.value = 0
+  } else if (nodeType === 'tag') {
+    _tempHopsUp.value = 2
+    _tempHopsDown.value = 1
+  } else if (nodeType === 'abstract') {
+    _tempHopsUp.value = 1
+    _tempHopsDown.value = 2
+  } else {
+    _tempHopsUp.value = 2
+    _tempHopsDown.value = 2
+  }
+
   applyFilterCore()
 }
 
@@ -314,7 +444,12 @@ const resetFilter = () => {
   filterKeyword.value = ''
   filterHops.value = 3
   filterExactNodeId.value = ''
-  if (graphData.value) displayGraphData.value = graphData.value
+  if (graphData.value) {
+    displayGraphData.value = {
+      ...graphData.value,
+      layers: limitTagLayer(graphData.value.layers as any[], filterKeywordLimit.value || 200)
+    }
+  }
   refreshChart()
 }
 
@@ -331,32 +466,109 @@ const renderChart = () => {
   chartInstance = echarts.init(chartRef.value)
 
   const layers = displayGraphData.value.layers
-  // Reverse to show abstract on left
+  // Reverse to show abstract on left (Cluster layer on rightmost after reverse)
   const reversedLayers = [...layers].reverse()
 
-  // Build nodes with scattered positions for better visualization
+  // Build nodes with improved layer-based layout
   const nodes: any[] = []
-  const layerSpacing = 1500 / (reversedLayers.length + 1)  // Increased from 1000 to 1200
-  const horizontalRange = 200 // Horizontal scatter range
+
+  // Canvas height for node placement
+  const graphHeight = 2400
+
+  // Minimum/maximum horizontal distance between nodes within the same layer
+  // Adjusted dynamically based on number of nodes to fit more in limited space
+  const minNodeSpacing = 120
+  const maxNodeSpacing = 180
+
   _indexById = {}
 
-  reversedLayers.forEach((layer, layerIdx) => {
-    const baseX = layerSpacing * (layerIdx + 1)
+  // First pass: calculate layer widths for spacing
+  const layerWidths: number[] = []
+  for (const layer of reversedLayers) {
     const numNodes = layer.nodes.length
-    const verticalSpacing = 800 / (numNodes + 1)
+    if (numNodes === 0) {
+      layerWidths.push(0)
+      continue
+    }
+    const spacingFactor = Math.max(0.3, 1 - numNodes / 500)
+    const nodeSpacing = minNodeSpacing + (maxNodeSpacing - minNodeSpacing) * spacingFactor
+    const gridSize = Math.ceil(Math.sqrt(numNodes))
+    const cols = gridSize
+    layerWidths.push(cols * nodeSpacing)
+  }
 
+  // Second pass: calculate positions with uniform gap based on adjacent layers
+  const layerPositions: Array<{ startX: number; width: number }> = []
+  let currentX = 300
+
+  reversedLayers.forEach((_, idx) => {
+    const layerWidth = layerWidths[idx]
+    if (layerWidth === 0) return
+
+    // Uniform gap: average of current and next layer width, multiplied by spacing factor
+    // This ensures consistent visual gap regardless of layer size differences
+    const nextLayerWidth = layerWidths[idx + 1] ?? layerWidth
+    const gapFactor = 0.5
+    const actualLayerSpacing = (layerWidth + nextLayerWidth) * gapFactor
+
+    layerPositions.push({ startX: currentX, width: layerWidth })
+    currentX += layerWidth + actualLayerSpacing
+  })
+
+  // Second pass: place nodes
+  reversedLayers.forEach((layer, layerIdx) => {
+    const numNodes = layer.nodes.length
+    if (numNodes === 0) return
+
+    const layerInfo = layerPositions[layerIdx]
+    const startX = layerInfo.startX
+
+    const spacingFactor = Math.max(0.3, 1 - numNodes / 500)  * (layer.name.toLowerCase().includes("abstract") ? 2 : 1)
+
+    const nodeSpacing = minNodeSpacing + (maxNodeSpacing - minNodeSpacing) * spacingFactor
+
+    const gridSize = Math.ceil(Math.sqrt(numNodes))
+    const cols = gridSize
+    const rows = Math.ceil(numNodes / cols)
+    const layerHeight = rows * nodeSpacing
+
+    // Add vertical randomness to avoid perfect centering
+    const layerSeed = layer.nodes.reduce((acc, n) => acc + n.id.charCodeAt(0), 0)
+    const verticalOffset = ((layerSeed * 7) % 500) - 250  // -250 to +250
+    const startY = (graphHeight - layerHeight) / 2 + verticalOffset
+
+    // Place nodes with natural randomness to avoid perfect grid appearance
     layer.nodes.forEach((node, nodeIdx) => {
-      const y = verticalSpacing * (nodeIdx + 1)
+      const row = Math.floor(nodeIdx / cols)
+      const col = nodeIdx % cols
 
-      // Add horizontal offset for visual spacing
-      // Alternate left/right based on index, with some randomness based on node id
-      const hashOffset = node.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-      const horizontalOffset = ((hashOffset % horizontalRange) - horizontalRange / 2)
-      const x = baseX + horizontalOffset
+      // Base grid position
+      let gridX = (col - (cols - 1) / 2) * nodeSpacing
+      let gridY = row * nodeSpacing
 
-      // Calculate size with max 3x ratio
+      // Deterministic random based on node ID
+      const seed = node.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+
+      // Add larger random offset (up to 80% of node spacing)
+      const randomAngle = (seed * 37.5) % (Math.PI * 2)
+      const randomRadius = nodeSpacing * 0.8 * ((seed * 13) % 100) / 100
+
+      // Also perturb grid position directly for more irregular layout
+      const gridPerturbX = nodeSpacing * 0.4 * ((seed * 23) % 100) / 100 - nodeSpacing * 0.2
+      const gridPerturbY = nodeSpacing * 0.4 * ((seed * 41) % 100) / 100 - nodeSpacing * 0.2
+
+      gridX += gridPerturbX
+      gridY += gridPerturbY
+
+      const offsetX = gridX + Math.cos(randomAngle) * randomRadius
+      const offsetY = gridY + Math.sin(randomAngle) * randomRadius
+
+      const x = startX + nodeSpacing / 2 + offsetX
+      const y = startY + offsetY
+
+      // Node size based on frequency (size = sqrt(frequency) scaled)
       const minSize = 20
-      const maxSize = 60  // 3x ratio: 60 / 20 = 3
+      const maxSize = 60
       const normalizedSize = Math.sqrt(node.size) / 5
       const clampedSize = Math.max(minSize, Math.min(maxSize, minSize + normalizedSize))
 
@@ -654,6 +866,16 @@ watch(
       nextTick(() => {
         renderChart()
       })
+    }
+  }
+)
+
+// Watch for keyword limit changes and apply filter immediately
+watch(
+  filterKeywordLimit,
+  () => {
+    if (displayGraphData.value) {
+      applyFilterCore()
     }
   }
 )

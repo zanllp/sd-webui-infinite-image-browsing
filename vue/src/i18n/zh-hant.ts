@@ -42,6 +42,10 @@ export const zhHant: Partial<IIBI18nMap> = {
   topicSearchCacheStale: '已顯示快取結果（可更新）',
   topicSearchCacheStaleDesc: '偵測到範圍內資料夾可能有變更，快取可能已過期。可點擊更新重新生成主題（會先更新索引）。',
   topicSearchCacheUpdate: '更新快取',
+  topicSearchCacheHit: '已顯示快取結果',
+  topicSearchCacheHitDesc: '顯示之前的快取主題。點擊更新重新生成。',
+  topicSearchCollapse: '收合',
+  topicSearchExpand: '展開',
 
   topicSearchGuideTitle: '快速上手（實驗性）',
   topicSearchGuideStep1: '選擇要分析的資料夾範圍（可多選）',
@@ -288,6 +292,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   tagGraphAllLayers: '全部層級',
   tagGraphFilterPlaceholder: '關鍵字過濾（命中 + 上下游）',
   tagGraphFilterHopsTitle: '擴展層數（N 跳）',
+  tagGraphKeywordLimitTitle: '標籤層最大顯示關鍵詞數',
   tagGraphFilterApply: '篩選',
   tagGraphFilterReset: '重置',
   tagGraphTooltipFilter: '過濾',

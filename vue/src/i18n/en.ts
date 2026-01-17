@@ -42,6 +42,10 @@ export const en: IIBI18nMap = {
   topicSearchCacheStale: 'Showing cached result (update available)',
   topicSearchCacheStaleDesc: 'Folders in the selected scope may have changed. The cache may be stale. Click Update to regenerate topics (will update index first).',
   topicSearchCacheUpdate: 'Update cache',
+  topicSearchCacheHit: 'Showing cached result',
+  topicSearchCacheHitDesc: 'Displaying cached topics from previous analysis. Click Update to regenerate.',
+  topicSearchCollapse: 'Collapse',
+  topicSearchExpand: 'Expand',
 
   topicSearchGuideTitle: 'Quick Start (Experimental)',
   topicSearchGuideStep1: 'Select the scope folders to analyze (multi-select)',
@@ -264,6 +268,7 @@ You can specify which snapshot to restore to when starting IIB in the global set
   tagGraphAllLayers: 'All layers',
   tagGraphFilterPlaceholder: 'Keyword filter (match + neighbors)',
   tagGraphFilterHopsTitle: 'Expand hops (N)',
+  tagGraphKeywordLimitTitle: 'Maximum keywords to display in Tag layer',
   tagGraphFilterApply: 'Filter',
   tagGraphFilterReset: 'Reset',
   tagGraphTooltipFilter: 'Filter',

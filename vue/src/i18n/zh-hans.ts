@@ -40,6 +40,10 @@ export const zhHans = {
   topicSearchCacheStale: '已显示缓存结果（可更新）',
   topicSearchCacheStaleDesc: '检测到范围内文件夹可能有变更，缓存可能已过期。可点击更新重新生成主题（会先更新索引）。',
   topicSearchCacheUpdate: '更新缓存',
+  topicSearchCacheHit: '已显示缓存结果',
+  topicSearchCacheHitDesc: '显示之前的缓存主题。点击更新重新生成。',
+  topicSearchCollapse: '收起',
+  topicSearchExpand: '展开',
 
   topicSearchGuideTitle: '快速上手（实验性）',
   topicSearchGuideStep1: '选择要分析的文件夹范围（可多选）',
@@ -281,6 +285,7 @@ export const zhHans = {
   tagGraphAllLayers: '全部层级',
   tagGraphFilterPlaceholder: '关键字过滤（命中 + 上下游）',
   tagGraphFilterHopsTitle: '扩展层数（N 跳）',
+  tagGraphKeywordLimitTitle: '标签层最大显示关键词数',
   tagGraphFilterApply: '筛选',
   tagGraphFilterReset: '重置',
   tagGraphTooltipFilter: '过滤',

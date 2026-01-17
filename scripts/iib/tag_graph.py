@@ -6,25 +6,25 @@ Builds a multi-layer neural-network-style visualization with LLM-driven abstract
 import hashlib
 import json
 import os
+import re
 import time
 from typing import Dict, List, Optional
 from pydantic import BaseModel
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
 
 from scripts.iib.db.datamodel import DataBase, GlobalSetting
-from scripts.iib.tool import normalize_output_lang
+from scripts.iib.tool import normalize_output_lang, accumulate_streaming_response
 from scripts.iib.logger import logger
 
 # Cache version for tag abstraction - increment to invalidate all caches
 TAG_ABSTRACTION_CACHE_VERSION = 2.1
 TAG_GRAPH_CACHE_VERSION = 1
-_MAX_TAGS_FOR_LLM = int(os.getenv("IIB_TAG_GRAPH_MAX_TAGS_FOR_LLM", "300") or "300")
-_TOPK_TAGS_FOR_LLM = int(os.getenv("IIB_TAG_GRAPH_TOPK_TAGS_FOR_LLM", "300") or "300")
+_MAX_TAGS_FOR_LLM = int(os.getenv("IIB_TAG_GRAPH_MAX_TAGS_FOR_LLM", "500") or "500")
+_TOPK_TAGS_FOR_LLM = int(os.getenv("IIB_TAG_GRAPH_TOPK_TAGS_FOR_LLM", "500") or "500")
 _LLM_REQUEST_TIMEOUT_SEC = int(os.getenv("IIB_TAG_GRAPH_LLM_TIMEOUT_SEC", "180") or "180")
 _LLM_MAX_ATTEMPTS = int(os.getenv("IIB_TAG_GRAPH_LLM_MAX_ATTEMPTS", "5") or "5")
 
-
+ 
 class TagGraphReq(BaseModel):
     folder_paths: List[str]
     lang: Optional[str] = "en"  # Language for LLM output
@@ -97,11 +97,20 @@ def mount_tag_graph_routes(
             # Normalize language for consistent LLM output
             normalized_lang = normalize_output_lang(lang)
             print(f"tags length: {len(tags)}")
+            # Determine Level 2 requirement based on tag count
+            level2_requirement = ""
+            if len(tags) <= 8:
+                level2_requirement = "Level 2 is optional; only create if categories naturally form clear super-groups."
+            elif len(tags) <= 64:
+                level2_requirement = "Level 2 is recommended; create 2-5 super-categories to group Level 1 categories when meaningful."
+            else:
+                level2_requirement = "Level 2 is strongly recommended; create 2-5 super-categories to group the many Level 1 categories for better organization."
+
             sys_prompt = f"""You are a tag categorization assistant. Organize tags into hierarchical categories.
 
-STRICT RULES:
+GUIDELINES:
 1. Create 5-15 Level 1 categories (broad groupings)
-2. Optionally create 2-5 Level 2 super-categories IF Level 1 has 8+ categories
+2. {level2_requirement}
 3. Every tag must belong to exactly ONE Level 1 category
 4. Use {normalized_lang} for all category labels
 5. Category IDs must be simple lowercase (e.g., "style", "char", "scene1")
@@ -120,7 +129,7 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                     {"role": "user", "content": user_prompt}
                 ],
                 "temperature": 0.0,
-                "max_tokens": 8096,
+                "max_tokens": 32768,  # Increased significantly for large keyword sets
                 "stream": True,
             }
 
@@ -147,38 +156,8 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                         raise Exception(f"API client error: {resp.status_code} {body}")
 
                     # Accumulate streamed content chunks
-                    content_buffer = ""
-                    for raw in resp.iter_lines(decode_unicode=False):
-                        if not raw:
-                            continue
-                        # Ensure explicit UTF-8 decoding to avoid mojibake
-                        try:
-                            line = raw.decode('utf-8') if isinstance(raw, (bytes, bytearray)) else str(raw)
-                        except Exception:
-                            line = raw.decode('utf-8', errors='replace') if isinstance(raw, (bytes, bytearray)) else str(raw)
-                        line = line.strip()
-                        if line.startswith('data: '):
-                            line = line[6:].strip()
-                        if line == '[DONE]':
-                            break
-                        try:
-                            obj = json.loads(line)
-                        except Exception:
-                            # Some providers may return partial JSON or non-JSON lines; skip
-                            continue
-                        # Try to extract incremental content (compat with OpenAI-style streaming)
-                        delta = (obj.get('choices') or [{}])[0].get('delta') or {}
-                        chunk_text = delta.get('content') or ''
-                        if chunk_text:
-                            # Print when data chunk received (truncate for safety)
-                            try:
-                                print(f"[tag_graph] stream_chunk_received len={len(chunk_text)} snippet={chunk_text[:200]}")
-                            except Exception:
-                                pass
-                            content_buffer += chunk_text
-
-                    content = content_buffer.strip()
-                    print(f"content: {content}")
+                    content = accumulate_streaming_response(resp)
+                    print(f"[tag_graph] content: {content[:500]}...")
                     # Strategy 1: Direct parse (if response is pure JSON)
                     try:
                         result = json.loads(content)
@@ -198,8 +177,8 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                             json_str = m.group(0)
 
                     if not json_str:
-                        last_error = f"no_json_found: {content[:200]}"
-                        logger.warning("[tag_graph] llm_no_json attempt=%s err=%s", attempt, last_error)
+                        last_error = f"no_json_found: {content}"
+                        logger.warning("[tag_graph] llm_no_json attempt=%s err=%s", attempt, last_error, stack_info=True)
                         continue
 
                     # Clean up common JSON issues
@@ -210,18 +189,18 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                         result = json.loads(json_str)
                     except json.JSONDecodeError as e:
                         last_error = f"json_parse_error: {e}"
-                        logger.warning("[tag_graph] llm_json_parse_error attempt=%s err=%s json=%s", attempt, last_error, json_str[:400])
+                        logger.warning("[tag_graph] llm_json_parse_error attempt=%s err=%s json=%s", attempt, last_error, json_str[:400], stack_info=True)
                         continue
 
                     if not isinstance(result, dict) or 'layers' not in result:
                         last_error = f"invalid_structure: {str(result)[:200]}"
-                        logger.warning("[tag_graph] llm_invalid_structure attempt=%s err=%s", attempt, last_error)
+                        logger.warning("[tag_graph] llm_invalid_structure attempt=%s err=%s", attempt, last_error, stack_info=True)
                         continue
 
                     return result
                 except requests.RequestException as e:
                     last_error = f"network_error: {type(e).__name__}: {e}"
-                    logger.warning("[tag_graph] llm_request_error attempt=%s err=%s", attempt, last_error)
+                    logger.warning("[tag_graph] llm_request_error attempt=%s err=%s", attempt, last_error, stack_info=True)
                     continue
 
             # No fallback: expose error to frontend, but log enough info for debugging.
@@ -316,6 +295,8 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
             str(req.lang or ""),
         )
 
+ 
+
         # Graph cache (best-effort): cache by topic_cluster_cache_key + lang + version.
         graph_cache_key = None
         if topic_cluster_cache_key:
@@ -358,7 +339,8 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
             cluster_id = cluster.get("id", "")
             cluster_title = cluster.get("title", "Untitled")
             cluster_size = cluster.get("size", 0)
-            keywords = cluster.get("keywords", [])
+            keywords = cluster.get("keywords", []) or []
+            keywords = list(dict.fromkeys(keywords))  # Deduplicate
             node_id = f"cluster_{cluster_id}"
             cluster_nodes.append(LayerNode(
                 id=node_id,
@@ -385,7 +367,7 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
         tag_stats: Dict[str, Dict] = {}
 
         for cluster in clusters:
-            keywords = cluster.get("keywords", [])
+            keywords = cluster.get("keywords", []) or []
             cluster_size = cluster.get("size", 0)
             cluster_id = cluster.get("id", "")
 
