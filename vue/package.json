@@ -19,6 +19,7 @@
     "@zanllp/vue-virtual-scroller": "^2.0.0-beta.7",
     "ant-design-vue": "^3.2.20",
     "axios": "^1.4.0",
+    "echarts": "^6.0.0",
     "jian-pinyin": "^0.2.3",
     "js-cookie": "^3.0.5",
     "multi-nprogress": "^0.3.5",

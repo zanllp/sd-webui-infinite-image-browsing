@@ -66,6 +66,9 @@ class DataBase:
         # 创建连接并打开数据库
         conn = connect(clz.get_db_file_path())
 
+        # # 禁用 WAL 模式，使用传统的 DELETE 日志模式
+        # conn.execute("PRAGMA journal_mode=DELETE")
+
         def regexp(expr, item):
             if not isinstance(item, str):
                 return False
@@ -514,6 +517,38 @@ class TopicTitleCache:
         return {"title": title, "keywords": kw, "model": model, "updated_at": updated_at}
 
     @classmethod
+    def get_all_keywords_frequency(cls, conn: Connection, model: Optional[str] = None) -> Dict[str, int]:
+        """
+        Get keyword frequency from all cached clusters.
+        Optionally filter by model.
+        Returns a dictionary mapping keyword -> frequency.
+        """
+        with closing(conn.cursor()) as cur:
+            if model:
+                cur.execute(
+                    "SELECT keywords FROM topic_title_cache WHERE model = ?",
+                    (model,),
+                )
+            else:
+                cur.execute(
+                    "SELECT keywords FROM topic_title_cache",
+                )
+            rows = cur.fetchall()
+        
+        keyword_frequency: Dict[str, int] = {}
+        for row in rows:
+            keywords_str = row[0] if row else None
+            try:
+                keywords = json.loads(keywords_str) if isinstance(keywords_str, str) else []
+            except Exception:
+                keywords = []
+            if isinstance(keywords, list):
+                for kw in keywords:
+                    if isinstance(kw, str) and kw.strip():
+                        keyword_frequency[kw] = keyword_frequency.get(kw, 0) + 1
+        return keyword_frequency
+
+    @classmethod
     def upsert(
         cls,
         conn: Connection,
@@ -536,6 +571,25 @@ class TopicTitleCache:
                     updated_at = excluded.updated_at
                 """,
                 (cluster_hash, title, kw, model, updated_at),
+            )
+
+    @classmethod
+    def update_keywords(
+        cls,
+        conn: Connection,
+        cluster_hash: str,
+        keywords: List[str],
+        updated_at: Optional[str] = None,
+    ):
+        """
+        Update only the keywords for an existing cluster cache entry.
+        """
+        updated_at = updated_at or datetime.now().isoformat()
+        kw = json.dumps([str(x) for x in (keywords or [])], ensure_ascii=False)
+        with closing(conn.cursor()) as cur:
+            cur.execute(
+                "UPDATE topic_title_cache SET keywords = ?, updated_at = ? WHERE cluster_hash = ?",
+                (kw, updated_at, cluster_hash),
             )
 
 
@@ -1265,3 +1319,4 @@ class GlobalSetting:
             for row in rows:
                 settings[row[1]] = json.loads(row[0])
             return settings
+

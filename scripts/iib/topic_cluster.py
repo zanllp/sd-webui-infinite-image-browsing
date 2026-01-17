@@ -16,7 +16,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 
 from scripts.iib.db.datamodel import DataBase, ImageEmbedding, ImageEmbeddingFail, TopicClusterCache, TopicTitleCache
-from scripts.iib.tool import cwd
+from scripts.iib.tool import cwd, accumulate_streaming_response
 
 # Perf deps (required for this feature)
 _np = None
@@ -448,6 +448,7 @@ def _call_chat_title_sync(
     model: str,
     prompt_samples: List[str],
     output_lang: str,
+    existing_keywords: Optional[List[str]] = None,
 ) -> Optional[Dict]:
     """
     Ask LLM to generate a short topic title and a few keywords. Returns dict or None.
@@ -477,34 +478,58 @@ def _call_chat_title_sync(
         "- Do NOT output explanations. Do NOT output markdown/code fences.\n"
         "- The output MUST start with '{' and end with '}' (no leading/trailing characters).\n"
         "\n"
-        "Output STRICT JSON only:\n"
-        + json_example
     )
+    if existing_keywords:
+        # Dynamic keyword selection based on total unique count
+        unique_count = len(existing_keywords)
+        top_keywords = existing_keywords[:500]  # Relaxed to 500
+        
+        # Tiered conditions based on keyword count
+        if unique_count <= 200:
+            # First 200: Not very strict, can create new keywords if not highly relevant
+            strictness_msg = (
+                "TIP: Prioritize selecting from the existing list if they fit reasonably well. "
+                "Creating new keywords is ACCEPTABLE when existing ones don't capture the essence well.\n"
+            )
+        elif unique_count <= 500:
+            # 200-500: Moderate strictness
+            strictness_msg = (
+                "IMPORTANT: Try to select from the existing list when reasonably applicable. "
+                "Only create new keywords when existing ones clearly don't match.\n"
+            )
+        else:
+            # 500+: Very strict, only create if completely unrelated
+            strictness_msg = (
+                "CRITICAL: You MUST select from the existing list unless the theme is COMPLETELY UNRELATED to all existing keywords. "
+                "In almost all cases, use existing keywords.\n"
+            )
+        
+        sys += strictness_msg
+        sys += f"Existing keywords ({len(top_keywords)} of {unique_count} total): {', '.join(top_keywords)}\n\n"
+    sys += "Output STRICT JSON only:\n" + json_example
     user = "Prompt snippets:\n" + "\n".join([f"- {s}" for s in samples])
 
     payload = {
         "model": model,
         "messages": [{"role": "system", "content": sys}, {"role": "user", "content": user}],
-        # Prefer deterministic, JSON-only output
         "temperature": 0.0,
         "top_p": 1.0,
-        # Give enough room for JSON across providers.
-        "max_tokens": 2048,
+        "max_tokens": 4096,
+        "stream": True,  # Enable streaming
     }
     # Some OpenAI-compatible providers may use different token limit fields / casing.
-    # Set them all (still a single request; no retry/fallback).
     payload["max_output_tokens"] = payload["max_tokens"]
     payload["max_completion_tokens"] = payload["max_tokens"]
     payload["maxOutputTokens"] = payload["max_tokens"]
     payload["maxCompletionTokens"] = payload["max_tokens"]
 
-    # Parse JSON from message.content only (regex extraction).
-    # Retry up to 5 times for: network errors, API errors (non 4xx client errors), parsing failures.
+    # Parse JSON from streaming response.
+    # Retry up to 5 times for: network errors, API errors, parsing failures.
     attempt_debug: List[Dict] = []
     last_err = ""
     for attempt in range(1, 6):
         try:
-            resp = requests.post(url, json=payload, headers=headers, timeout=60)
+            resp = requests.post(url, json=payload, headers=headers, timeout=120)
         except requests.RequestException as e:
             last_err = f"network_error: {type(e).__name__}: {e}"
             attempt_debug.append({"attempt": attempt, "reason": "network_error", "error": str(e)[:400]})
@@ -522,30 +547,21 @@ def _call_chat_title_sync(
                 continue
             # 4xx (except 429): fail immediately (client error, not retriable)
             raise HTTPException(status_code=status, detail=body)
-
+ 
         try:
-            data = resp.json()
+            # Use streaming response accumulation
+            content = accumulate_streaming_response(resp)
         except Exception as e:
-            txt = (resp.text or "")[:600]
-            last_err = f"response_not_json: {type(e).__name__}: {e}; body={txt}"
-            attempt_debug.append({"attempt": attempt, "reason": "response_not_json", "error": str(e)[:200], "body": txt[:200]})
+            last_err = f"streaming_error: {type(e).__name__}: {e}"
+            attempt_debug.append({"attempt": attempt, "reason": "streaming_error", "error": str(e)[:400]})
             continue
 
-        choice0 = (data.get("choices") or [{}])[0] if isinstance(data.get("choices"), list) else {}
-        msg = (choice0 or {}).get("message") or {}
-        finish_reason = (choice0.get("finish_reason") if isinstance(choice0, dict) else None) or ""
-        content = (msg.get("content") if isinstance(msg, dict) else "") or ""
-        raw = content.strip() if isinstance(content, str) else ""
-        if not raw and isinstance(choice0, dict):
-            txt = (choice0.get("text") or "")  # legacy
-            raw = txt.strip() if isinstance(txt, str) else ""
-
-        m = re.search(r"\{[\s\S]*\}", raw)
+        # Extract JSON from content
+        m = re.search(r"\{[\s\S]*\}", content)
         if not m:
-            snippet = (raw or "")[:400].replace("\n", "\\n")
-            choice_dump = json.dumps(choice0, ensure_ascii=False)[:600] if isinstance(choice0, dict) else str(choice0)[:600]
-            last_err = f"no_json_object; finish_reason={finish_reason}; content_snippet={snippet}; choice0={choice_dump}"
-            attempt_debug.append({"attempt": attempt, "reason": "no_json_object", "finish_reason": finish_reason, "snippet": snippet})
+            snippet = (content or "")[:400].replace("\n", "\\n")
+            last_err = f"no_json_object; content_snippet={snippet}"
+            attempt_debug.append({"attempt": attempt, "reason": "no_json_object", "snippet": snippet})
             continue
 
         json_str = m.group(0)
@@ -553,22 +569,22 @@ def _call_chat_title_sync(
             obj = json.loads(json_str)
         except Exception as e:
             snippet = (json_str or "")[:400].replace("\n", "\\n")
-            last_err = f"json_parse_failed: {type(e).__name__}: {e}; finish_reason={finish_reason}; json_snippet={snippet}"
-            attempt_debug.append({"attempt": attempt, "reason": "json_parse_failed", "finish_reason": finish_reason, "snippet": snippet})
+            last_err = f"json_parse_failed: {type(e).__name__}: {e}; json_snippet={snippet}"
+            attempt_debug.append({"attempt": attempt, "reason": "json_parse_failed", "snippet": snippet})
             continue
 
         if not isinstance(obj, dict):
             snippet = (json_str or "")[:200].replace("\n", "\\n")
-            last_err = f"json_not_object; finish_reason={finish_reason}; json_snippet={snippet}"
-            attempt_debug.append({"attempt": attempt, "reason": "json_not_object", "finish_reason": finish_reason, "snippet": snippet})
+            last_err = f"json_not_object; json_snippet={snippet}"
+            attempt_debug.append({"attempt": attempt, "reason": "json_not_object", "snippet": snippet})
             continue
 
         title = str(obj.get("title") or "").strip()
         keywords = obj.get("keywords") or []
         if not title:
             snippet = (json_str or "")[:200].replace("\n", "\\n")
-            last_err = f"missing_title; finish_reason={finish_reason}; json_snippet={snippet}"
-            attempt_debug.append({"attempt": attempt, "reason": "missing_title", "finish_reason": finish_reason, "snippet": snippet})
+            last_err = f"missing_title; json_snippet={snippet}"
+            attempt_debug.append({"attempt": attempt, "reason": "missing_title", "snippet": snippet})
             continue
         if not isinstance(keywords, list):
             keywords = []
@@ -590,6 +606,7 @@ async def _call_chat_title(
     model: str,
     prompt_samples: List[str],
     output_lang: str,
+    existing_keywords: Optional[List[str]] = None,
 ) -> Dict:
     """
     Same rationale as embeddings:
@@ -603,6 +620,7 @@ async def _call_chat_title(
         model=model,
         prompt_samples=prompt_samples,
         output_lang=output_lang,
+        existing_keywords=existing_keywords,
     )
     if not isinstance(ret, dict):
         raise HTTPException(status_code=502, detail="Chat API returned empty title payload")
@@ -1412,6 +1430,15 @@ def mount_topic_cluster_routes(
         if progress_cb:
             progress_cb({"stage": "titling", "clusters_total": len(clusters)})
 
+        existing_keywords: List[str] = []
+        keyword_frequency: Dict[str, int] = TopicTitleCache.get_all_keywords_frequency(conn, model)
+
+        def _get_top_keywords() -> List[str]:
+            if not keyword_frequency:
+                return []
+            sorted_keywords = sorted(keyword_frequency.items(), key=lambda x: x[1], reverse=True)
+            return [k for k, v in sorted_keywords[:100]]
+
         for cidx, c in enumerate(clusters):
             if len(c["members"]) < min_cluster_size:
                 for mi in c["members"]:
@@ -1441,12 +1468,14 @@ def mount_topic_cluster_routes(
                 title = str(cached.get("title"))
                 keywords = cached.get("keywords") or []
             else:
+                top_keywords = _get_top_keywords()
                 llm = await _call_chat_title(
                     base_url=openai_base_url,
                     api_key=openai_api_key,
                     model=title_model,
                     prompt_samples=[rep] + texts[:5],
                     output_lang=output_lang,
+                    existing_keywords=top_keywords,
                 )
                 title = (llm or {}).get("title")
                 keywords = (llm or {}).get("keywords", [])
@@ -1458,6 +1487,9 @@ def mount_topic_cluster_routes(
                         conn.commit()
                     except Exception:
                         pass
+
+            for kw in keywords or []:
+                keyword_frequency[kw] = keyword_frequency.get(kw, 0) + 1
 
             out_clusters.append(
                 {

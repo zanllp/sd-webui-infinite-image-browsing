@@ -2,9 +2,9 @@
 import { useGlobalStore, type TabPane } from '@/store/useGlobalStore'
 import { Snapshot, useWorkspeaceSnapshot } from '@/store/useWorkspeaceSnapshot'
 import { uniqueId } from 'lodash-es'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { ok } from 'vue3-ts-util'
-import { FileDoneOutlined, LockOutlined, PlusOutlined, QuestionCircleOutlined } from '@/icon'
+import { FileDoneOutlined, GithubOutlined, LockOutlined, MailOutlined, PlusOutlined, QuestionCircleOutlined } from '@/icon'
 import { t } from '@/i18n'
 import { cloneDeep } from 'lodash-es'
 import { useImgSliStore } from '@/store/useImgSli'
@@ -34,6 +34,12 @@ onMounted(() => {
 })
 
 const sync = useSettingSync()
+
+const helpModalOpen = ref(false)
+const FAQ_URL = 'https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90'
+const ISSUES_SEARCH_URL = 'https://github.com/zanllp/sd-webui-infinite-image-browsing/issues?q='
+const NEW_ISSUE_URL = 'https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/new'
+const FEEDBACK_MAIL = 'mailto:qc@zanllp.cn'
 
 
 const compCnMap: Partial<Record<TabPane['type'], string>> = {
@@ -198,8 +204,7 @@ const modes = computed(() => {
       </a-badge>
       <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/wiki/Change-log" target="_blank"
         class="quick-action">{{ $t('changlog') }}</a>
-      <a href="https://github.com/zanllp/sd-webui-infinite-image-browsing/issues/90" target="_blank"
-        class="quick-action">{{ $t('faq') }}</a>
+      <a href="#" class="quick-action" @click.prevent="helpModalOpen = true">{{ $t('helpFeedback') }}</a>
       <div class="quick-action" v-if="!isTauri">
         {{ $t('sync') }}  <a-tooltip :title="$t('syncDesc')">
           <QuestionCircleOutlined/>
@@ -211,6 +216,48 @@ const modes = computed(() => {
         <a-radio-button value="dark">Dark</a-radio-button>
       </a-radio-group>
     </div>
+
+    <a-modal
+      v-model:visible="helpModalOpen"
+      :title="$t('helpFeedback')"
+      :footer="null"
+      :mask-closable="true"
+      width="520px"
+    >
+      <div style="display: grid; gap: 10px;">
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <QuestionCircleOutlined style="margin-top: 2px; opacity: 0.85;" />
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600;">{{ $t('helpFeedbackWay1') }}</div>
+            <div style="margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap;">
+              <a :href="FAQ_URL" target="_blank" rel="noopener noreferrer">{{ $t('faq') }}</a>
+              <a :href="ISSUES_SEARCH_URL" target="_blank" rel="noopener noreferrer">{{ $t('helpFeedbackSearchIssues') }}</a>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <GithubOutlined style="margin-top: 2px; opacity: 0.85;" />
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600;">{{ $t('helpFeedbackWay2') }}</div>
+            <div style="margin-top: 6px;">
+              <a :href="NEW_ISSUE_URL" target="_blank" rel="noopener noreferrer">{{ $t('helpFeedbackNewIssue') }}</a>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <MailOutlined style="margin-top: 2px; opacity: 0.85;" />
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600;">{{ $t('helpFeedbackWay3') }}</div>
+            <div style="margin-top: 6px;">
+              <a :href="FEEDBACK_MAIL">qc@zanllp.cn</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a-modal>
+
     <a-alert show-icon v-if="global.conf?.enable_access_control && !global.dontShowAgain">
       <template #message>
         <div class="access-mode-message">
