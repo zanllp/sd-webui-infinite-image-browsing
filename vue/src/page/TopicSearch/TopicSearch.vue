@@ -497,7 +497,7 @@ watch(
     </div>
 
     <!-- Fresh cache banner -->
-    <div
+    <!-- <div
       v-if="cacheInfo?.cache_hit && !cacheInfo?.stale && !cacheResultCollapsed"
       style="margin: 10px 0 0 0; position: relative;"
     >
@@ -513,10 +513,10 @@ watch(
       >
         ^
       </a-button>
-    </div>
+    </div> -->
 
     <!-- Collapsed fresh cache -->
-    <div
+    <!-- <div
       v-if="cacheInfo?.cache_hit && !cacheInfo?.stale && cacheResultCollapsed"
       style="margin: 10px 0 0 0; padding: 8px 12px; background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 8px; display: flex; align-items: center; gap: 10px;"
     >
@@ -524,7 +524,7 @@ watch(
       <a-button size="small" @click="expandCacheResult">
         v
       </a-button>
-    </div>
+    </div> -->
 
     <div v-if="jobRunning" style="margin: 10px 0 0 0;">
       <a-alert type="info" show-icon :message="jobStageText" :description="jobDesc" />
