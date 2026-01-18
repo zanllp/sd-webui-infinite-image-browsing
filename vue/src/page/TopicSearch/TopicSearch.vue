@@ -491,7 +491,10 @@ watch(
       <a-button size="small" :loading="loading || jobRunning" :disabled="g.conf?.is_readonly" @click="refresh">
         {{ $t('topicSearchCacheUpdate') }}
       </a-button>
-      <a-button size="small" @click="expandCacheResult">
+      <div style="flex: 1;">
+
+      </div>
+      <a-button size="small" @click="expandCacheResult"  >
         v
       </a-button>
     </div>
