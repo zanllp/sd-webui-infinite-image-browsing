@@ -517,15 +517,41 @@ def get_comfyui_exif_data(img: Image):
             return text.strip()
         except Exception as e:
             print(e)
-            return ""   
-    
-    in_node = data[str(KSampler_entry["positive"][0])]
-    if in_node["class_type"] != "FluxGuidance":
-        pos_prompt = get_text_from_clip(KSampler_entry["positive"][0])
-    else:
-        pos_prompt = get_text_from_clip(in_node["inputs"]["conditioning"][0])
+            return ""
 
-    neg_prompt = get_text_from_clip(KSampler_entry["negative"][0])
+    extract_all_prompts = os.getenv("IIB_COMFYUI_EXTRACT_ALL_PROMPTS", "false").lower() == "true"
+
+    if extract_all_prompts:
+        # 注意：此模式下无法自动区分正向和负向提示词，会全部归到正向提示词中
+        # 如需区分正负向，需根据工作流结构调整解析逻辑
+        all_prompts = []
+        for node_id, node_data in data.items():
+            try:
+                class_type = node_data.get("class_type", "")
+                inputs = node_data.get("inputs", {})
+
+                if "CLIPTextEncode" in class_type:
+                    text = inputs.get("text", "")
+                    if isinstance(text, list):
+                        text = data[text[0]]["inputs"].get("text", "")
+                    if text:
+                        all_prompts.append(text.strip())
+            except Exception as e:
+                print(e)
+                pass
+
+        all_prompts_str = "\nBREAK\n".join(all_prompts) if all_prompts else ""
+        pos_prompt = all_prompts_str
+        neg_prompt = ""
+    else:
+        in_node = data[str(KSampler_entry["positive"][0])]
+        if in_node["class_type"] != "FluxGuidance":
+            pos_prompt = get_text_from_clip(KSampler_entry["positive"][0])
+        else:
+            pos_prompt = get_text_from_clip(in_node["inputs"]["conditioning"][0])
+
+        neg_prompt = get_text_from_clip(KSampler_entry["negative"][0])
+
     pos_prompt_arr = unique_by(parse_prompt(pos_prompt)["pos_prompt"])
     return {
         "meta": meta,
