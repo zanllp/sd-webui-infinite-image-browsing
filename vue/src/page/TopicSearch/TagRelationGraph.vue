@@ -588,11 +588,9 @@ const renderChart = () => {
           show: true,
           fontSize: 11,
           color: '#fff',
-          formatter: (params: any) => {
-            const maxLen = 10
-            const name = params.name
-            return name.length > maxLen ? name.substring(0, maxLen) + '...' : name
-          }
+          position: 'inside',
+          overflow: 'truncate',
+          formatter: (params: any) => params.name
         },
         metadata: node.metadata,
         layerName: layer.name,
@@ -714,10 +712,12 @@ const renderChart = () => {
           opacity: 0.25
         }
       },
-      label: {
-        show: true,
-        position: 'inside'
-      },
+       label: {
+         show: true,
+         position: 'inside',
+         overflow: 'truncate',
+         color: '#fff'
+       },
       lineStyle: {
         color: 'source',
         curveness: 0.1
