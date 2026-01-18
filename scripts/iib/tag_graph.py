@@ -129,13 +129,21 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                     {"role": "user", "content": user_prompt}
                 ],
                 "temperature": 0.0,
-                "max_tokens": 32768,  # Increased significantly for large keyword sets
+                "max_tokens": 32768,
                 "stream": True,
             }
+
+            request_id = f"tg_{int(time.time() * 1000)}_{os.getpid()}"
+            logger.info(
+                "[tag_graph][%s] LLM request: model=%s tags_count=%s max_attempts=%s timeout=%s",
+                request_id, model, len(tags), _LLM_MAX_ATTEMPTS, _LLM_REQUEST_TIMEOUT_SEC
+            )
+            logger.debug("[tag_graph][%s] LLM request payload: %s", request_id, json.dumps(payload, ensure_ascii=False, indent=2))
 
             # Retry a few times then fallback quickly (to avoid frontend timeout on large datasets).
             # Use streaming requests to avoid blocking too long on a single non-stream response.
             last_error = ""
+            full_response_content = ""
             for attempt in range(1, _LLM_MAX_ATTEMPTS + 1):
                 try:
                     resp = requests.post(
@@ -147,24 +155,37 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                     )
                     # Check status early
                     if resp.status_code != 200:
-                        body = (resp.text or "")[:400]
+                        body = resp.text or ""
                         if resp.status_code == 429 or resp.status_code >= 500:
-                            last_error = f"api_error_retriable: status={resp.status_code}"
-                            logger.warning("[tag_graph] llm_http_error attempt=%s status=%s body=%s", attempt, resp.status_code, body)
+                            last_error = f"api_error_retriable: status={resp.status_code} body={body}"
+                            logger.warning(
+                                "[tag_graph][%s] llm_http_error attempt=%s status=%s body=%s",
+                                request_id, attempt, resp.status_code, body
+                            )
                             continue
-                        logger.error("[tag_graph] llm_http_client_error attempt=%s status=%s body=%s", attempt, resp.status_code, body)
+                        logger.error(
+                            "[tag_graph][%s] llm_http_client_error attempt=%s status=%s body=%s",
+                            request_id, attempt, resp.status_code, body
+                        )
                         raise Exception(f"API client error: {resp.status_code} {body}")
 
                     # Accumulate streamed content chunks
                     content = accumulate_streaming_response(resp)
-                    print(f"[tag_graph] content: {content[:500]}...")
+                    full_response_content = content
+                    logger.info(
+                        "[tag_graph][%s] llm_response attempt=%s content_length=%s",
+                        request_id, attempt, len(content)
+                    )
+                    logger.debug("[tag_graph][%s] llm_response content: %s", request_id, content)
+
                     # Strategy 1: Direct parse (if response is pure JSON)
                     try:
                         result = json.loads(content)
                         if isinstance(result, dict) and 'layers' in result:
+                            logger.info("[tag_graph][%s] llm_success attempt=%s layers_count=%s", request_id, attempt, len(result.get('layers', [])))
                             return result
-                    except Exception:
-                        pass
+                    except Exception as parse_err:
+                        logger.debug("[tag_graph][%s] direct_parse_failed attempt=%s err=%s", request_id, attempt, str(parse_err))
 
                     # Strategy 2: Extract JSON from markdown code blocks
                     json_str = None
@@ -178,7 +199,7 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
 
                     if not json_str:
                         last_error = f"no_json_found: {content}"
-                        logger.warning("[tag_graph] llm_no_json attempt=%s err=%s", attempt, last_error, stack_info=True)
+                        logger.warning("[tag_graph][%s] llm_no_json attempt=%s content=%s", request_id, attempt, content)
                         continue
 
                     # Clean up common JSON issues
@@ -188,27 +209,35 @@ If unsure about Level 2, OMIT it entirely. Start response with {{ and end with }
                     try:
                         result = json.loads(json_str)
                     except json.JSONDecodeError as e:
-                        last_error = f"json_parse_error: {e}"
-                        logger.warning("[tag_graph] llm_json_parse_error attempt=%s err=%s json=%s", attempt, last_error, json_str[:400], stack_info=True)
+                        last_error = f"json_parse_error: {e} json_str={json_str}"
+                        logger.warning(
+                            "[tag_graph][%s] llm_json_parse_error attempt=%s err=%s json_str=%s",
+                            request_id, attempt, str(e), json_str
+                        )
                         continue
 
                     if not isinstance(result, dict) or 'layers' not in result:
-                        last_error = f"invalid_structure: {str(result)[:200]}"
-                        logger.warning("[tag_graph] llm_invalid_structure attempt=%s err=%s", attempt, last_error, stack_info=True)
+                        last_error = f"invalid_structure: result={str(result)}"
+                        logger.warning(
+                            "[tag_graph][%s] llm_invalid_structure attempt=%s result=%s",
+                            request_id, attempt, str(result)
+                        )
                         continue
 
+                    logger.info("[tag_graph][%s] llm_success attempt=%s layers_count=%s", request_id, attempt, len(result.get('layers', [])))
                     return result
                 except requests.RequestException as e:
                     last_error = f"network_error: {type(e).__name__}: {e}"
-                    logger.warning("[tag_graph] llm_request_error attempt=%s err=%s", attempt, last_error, stack_info=True)
+                    logger.warning(
+                        "[tag_graph][%s] llm_request_error attempt=%s err=%s",
+                        request_id, attempt, str(e)
+                    )
                     continue
 
             # No fallback: expose error to frontend, but log enough info for debugging.
             logger.error(
-                "[tag_graph] llm_failed attempts=%s timeout_sec=%s last_error=%s",
-                _LLM_MAX_ATTEMPTS,
-                _LLM_REQUEST_TIMEOUT_SEC,
-                last_error,
+                "[tag_graph][%s] llm_failed all_attempts=%s timeout_sec=%s last_error=%s full_response=%s",
+                request_id, _LLM_MAX_ATTEMPTS, _LLM_REQUEST_TIMEOUT_SEC, last_error, full_response_content
             )
             raise HTTPException(
                 status_code=500,

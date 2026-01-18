@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from scripts.iib.db.datamodel import DataBase, ImageEmbedding, ImageEmbeddingFail, TopicClusterCache, TopicTitleCache
 from scripts.iib.tool import cwd, accumulate_streaming_response
+from scripts.iib.logger import logger
 
 # Perf deps (required for this feature)
 _np = None
@@ -527,75 +528,125 @@ def _call_chat_title_sync(
     # Retry up to 5 times for: network errors, API errors, parsing failures.
     attempt_debug: List[Dict] = []
     last_err = ""
+    full_response_content = ""
+    request_id = f"tc_{int(time.time() * 1000)}_{os.getpid()}"
+
+    logger.info(
+        "[topic_cluster][%s] LLM request: model=%s samples=%s existing_keywords=%s max_tokens=%s timeout=120",
+        request_id, model, len(samples), len(existing_keywords) if existing_keywords else 0, payload.get("max_tokens", "N/A")
+    )
+    logger.debug("[topic_cluster][%s] LLM request payload: %s", request_id, json.dumps(payload, ensure_ascii=False, indent=2))
+
     for attempt in range(1, 6):
         try:
             resp = requests.post(url, json=payload, headers=headers, timeout=120)
         except requests.RequestException as e:
             last_err = f"network_error: {type(e).__name__}: {e}"
-            attempt_debug.append({"attempt": attempt, "reason": "network_error", "error": str(e)[:400]})
+            attempt_debug.append({"attempt": attempt, "reason": "network_error", "error": str(e)})
+            logger.warning(
+                "[topic_cluster][%s] llm_request_error attempt=%s err=%s",
+                request_id, attempt, str(e)
+            )
             continue
 
         # Retry on server-side errors (5xx) and rate limits (429), but not client errors (4xx except 429).
         if resp.status_code != 200:
-            body = (resp.text or "")[:600]
-            # 401 -> 400 as per your requirement
+            body = resp.text or ""
             status = 400 if resp.status_code == 401 else resp.status_code
-            # Retry on 429 (rate limit) or 5xx (server error)
             if resp.status_code == 429 or resp.status_code >= 500:
-                last_err = f"api_error_retriable: status={status}; body={body}"
-                attempt_debug.append({"attempt": attempt, "reason": "api_error_retriable", "status": status, "body": body[:200]})
+                last_err = f"api_error_retriable: status={status} body={body}"
+                attempt_debug.append({"attempt": attempt, "reason": "api_error_retriable", "status": status, "body": body})
+                logger.warning(
+                    "[topic_cluster][%s] llm_http_error attempt=%s status=%s body=%s",
+                    request_id, attempt, status, body
+                )
                 continue
             # 4xx (except 429): fail immediately (client error, not retriable)
+            logger.error(
+                "[topic_cluster][%s] llm_http_client_error status=%s body=%s",
+                request_id, status, body
+            )
             raise HTTPException(status_code=status, detail=body)
- 
+
         try:
             # Use streaming response accumulation
             content = accumulate_streaming_response(resp)
+            full_response_content = content
         except Exception as e:
             last_err = f"streaming_error: {type(e).__name__}: {e}"
-            attempt_debug.append({"attempt": attempt, "reason": "streaming_error", "error": str(e)[:400]})
+            attempt_debug.append({"attempt": attempt, "reason": "streaming_error", "error": str(e)})
+            logger.warning(
+                "[topic_cluster][%s] llm_streaming_error attempt=%s err=%s",
+                request_id, attempt, str(e)
+            )
             continue
+
+        logger.info(
+            "[topic_cluster][%s] llm_response attempt=%s content_length=%s",
+            request_id, attempt, len(content)
+        )
+        logger.debug("[topic_cluster][%s] llm_response content: %s", request_id, content)
 
         # Extract JSON from content
         m = re.search(r"\{[\s\S]*\}", content)
         if not m:
-            snippet = (content or "")[:400].replace("\n", "\\n")
-            last_err = f"no_json_object; content_snippet={snippet}"
-            attempt_debug.append({"attempt": attempt, "reason": "no_json_object", "snippet": snippet})
+            last_err = f"no_json_object; content={content}"
+            attempt_debug.append({"attempt": attempt, "reason": "no_json_object", "content": content})
+            logger.warning(
+                "[topic_cluster][%s] llm_no_json attempt=%s content=%s",
+                request_id, attempt, content
+            )
             continue
 
         json_str = m.group(0)
         try:
             obj = json.loads(json_str)
         except Exception as e:
-            snippet = (json_str or "")[:400].replace("\n", "\\n")
-            last_err = f"json_parse_failed: {type(e).__name__}: {e}; json_snippet={snippet}"
-            attempt_debug.append({"attempt": attempt, "reason": "json_parse_failed", "snippet": snippet})
+            last_err = f"json_parse_failed: {type(e).__name__}: {e}; json_str={json_str}"
+            attempt_debug.append({"attempt": attempt, "reason": "json_parse_failed", "json_str": json_str, "error": str(e)})
+            logger.warning(
+                "[topic_cluster][%s] llm_json_parse_error attempt=%s err=%s json_str=%s",
+                request_id, attempt, str(e), json_str
+            )
             continue
 
         if not isinstance(obj, dict):
-            snippet = (json_str or "")[:200].replace("\n", "\\n")
-            last_err = f"json_not_object; json_snippet={snippet}"
-            attempt_debug.append({"attempt": attempt, "reason": "json_not_object", "snippet": snippet})
+            last_err = f"json_not_object; json_str={json_str}"
+            attempt_debug.append({"attempt": attempt, "reason": "json_not_object", "json_str": json_str})
+            logger.warning(
+                "[topic_cluster][%s] llm_json_not_object attempt=%s json_str=%s",
+                request_id, attempt, json_str
+            )
             continue
 
         title = str(obj.get("title") or "").strip()
         keywords = obj.get("keywords") or []
         if not title:
-            snippet = (json_str or "")[:200].replace("\n", "\\n")
-            last_err = f"missing_title; json_snippet={snippet}"
-            attempt_debug.append({"attempt": attempt, "reason": "missing_title", "snippet": snippet})
+            last_err = f"missing_title; json_str={json_str}"
+            attempt_debug.append({"attempt": attempt, "reason": "missing_title", "json_str": json_str})
+            logger.warning(
+                "[topic_cluster][%s] llm_missing_title attempt=%s json_str=%s",
+                request_id, attempt, json_str
+            )
             continue
         if not isinstance(keywords, list):
             keywords = []
         keywords = [str(x).strip() for x in keywords if str(x).strip()][:6]
+        logger.info(
+            "[topic_cluster][%s] llm_success attempt=%s title=%s keywords=%s",
+            request_id, attempt, title, keywords
+        )
         return {"title": title[:24], "keywords": keywords}
 
     # Exhausted retries
-    dbg = json.dumps(attempt_debug, ensure_ascii=False)[:1200]
+    dbg = json.dumps(attempt_debug, ensure_ascii=False)
+    logger.error(
+        "[topic_cluster][%s] llm_failed all_attempts=5 last_error=%s attempts=%s full_response=%s",
+        request_id, last_err, dbg, full_response_content
+    )
     raise HTTPException(
         status_code=502,
-        detail=f"Chat API JSON extraction failed after 5 attempts; last_error={last_err}; attempts={dbg}",
+        detail=f"Chat API JSON extraction failed after 5 attempts; request_id={request_id}; last_error={last_err}; attempts={dbg}",
     )
 
 
