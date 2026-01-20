@@ -75,6 +75,11 @@ try:
 except Exception as e:
     logger.error(e)
 
+try:
+    import pillow_jxl
+except Exception as e:
+    logger.error(e)
+
 import requests
 import dotenv
 
@@ -382,6 +387,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             "pillow": _get_dist_version("Pillow", "PIL"),
             "imageio_ffmpeg": _get_dist_version("imageio-ffmpeg", "imageio_ffmpeg"),
             "pillow_avif_plugin": _get_dist_version("pillow-avif-plugin", "pillow_avif"),
+            "pillow_jxl_plugin": _get_dist_version("pillow-jxl-plugin", "pillow_jxl"),
             "requests": _get_dist_version("requests", "requests"),
             "numpy": _get_dist_version("numpy", "numpy"),
             "hnswlib": _get_dist_version("hnswlib", "hnswlib"),
