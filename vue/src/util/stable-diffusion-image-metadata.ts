@@ -34,7 +34,7 @@ const imageMetadataKeys: Array<[string, string]> = [
   ['Size', 'size'],
 ];
 const imageMetaKeyMap = new Map<string, string>(imageMetadataKeys);
-const automaticExtraNetsRegex = /<(lora|hypernet):([a-zA-Z0-9_.-]+):([0-9.]+)>/g;
+const automaticExtraNetsRegex = /<(lora|hypernet):([a-zA-Z0-9_.-]+)(?::([0-9.]+))>/g;
 const automaticNameHash = /([a-zA-Z0-9_.]+)\(([a-zA-Z0-9]+)\)/;
 const getImageMetaKey = (key: string, keyMap: Map<string, string>) => keyMap.get(key.trim()) ?? key.trim();
 const stripKeys = ['Template: ', 'Negative Template: '] as const;
