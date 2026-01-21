@@ -764,13 +764,31 @@ class Tag:
     @classmethod
     def get_all(cls, conn):
         with closing(conn.cursor()) as cur:
-            cur.execute("SELECT * FROM tag")
-            rows = cur.fetchall()
-            print("tag")
+            cur.execute("SELECT COUNT(*) FROM tag")
+            total_count = cur.fetchone()[0]
+            
             tags: list[Tag] = []
-            for row in rows:
-                tags.append(cls.from_row(row))
-                print(f"tag{row}")
+            
+            if total_count > 4096:
+                # Get all non-pos tags
+                cur.execute("SELECT * FROM tag WHERE type != 'pos'")
+                rows = cur.fetchall()
+                for row in rows:
+                    tags.append(cls.from_row(row))
+                
+                # Get top 4096 pos tags ordered by count (descending)
+                cur.execute("SELECT * FROM tag WHERE type = 'pos' ORDER BY count DESC LIMIT 4096")
+                pos_rows = cur.fetchall()
+                for row in pos_rows:
+                    tags.append(cls.from_row(row))
+            else:
+                # Get all tags normally
+                cur.execute("SELECT * FROM tag")
+                rows = cur.fetchall()
+                for row in rows:
+                    tags.append(cls.from_row(row))
+            
+            print(f"tag: loaded {len(tags)} tags (total: {total_count})")
             return tags
 
     @classmethod
