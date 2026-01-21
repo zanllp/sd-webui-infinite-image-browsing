@@ -975,6 +975,38 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         finally:
             DataBase._initing = False
 
+    @app.get(db_api_base + "/watcher_status", dependencies=[Depends(verify_secret)])
+    async def get_watcher_status():
+        try:
+            from scripts.iib.file_watcher import get_watcher_status
+            return get_watcher_status()
+        except ImportError:
+            return {"running": False, "error": "watchdog not installed"}
+
+    @app.post(db_api_base + "/refresh_index", dependencies=[Depends(verify_secret), Depends(write_permission_required)])
+    async def refresh_index():
+        try:
+            from scripts.iib.file_watcher import stop_file_watcher, start_file_watcher
+            from scripts.iib.db.update_image_data import update_image_data
+
+            stop_file_watcher()
+
+            conn = DataBase.get_conn()
+            update_extra_paths(conn)
+            dirs = get_img_search_dirs() + mem["extra_paths"]
+            update_image_data(dirs)
+
+            start_file_watcher(
+                watch_dirs=dirs,
+                batch_size=32,
+                batch_timeout=2.0,
+                max_workers=2,
+            )
+
+            return {"status": "ok", "watching": len(dirs)}
+        except ImportError:
+            return {"status": "error", "message": "watchdog not installed"}
+
     class SearchBySubstrReq(BaseModel):
         surstr: str
         cursor: str

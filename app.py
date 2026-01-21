@@ -239,6 +239,29 @@ def setup_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Export front-end functions to enable external access through iframe.",
     )
+    parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="Enable file system watching for automatic incremental indexing.",
+    )
+    parser.add_argument(
+        "--watch_batch_size",
+        type=int,
+        default=32,
+        help="Number of file changes to batch together for processing. Default: 32",
+    )
+    parser.add_argument(
+        "--watch_batch_timeout",
+        type=float,
+        default=2.0,
+        help="Maximum seconds to wait before processing a batch of changes. Default: 2.0",
+    )
+    parser.add_argument(
+        "--watch_max_workers",
+        type=int,
+        default=2,
+        help="Maximum worker threads for processing changes. Default: 2",
+    )
     parser.add_argument("--base", type=str, help="The base URL for the IIB Api.")
     return parser
 
@@ -295,5 +318,24 @@ if __name__ == "__main__":
             verbose = args.gen_cache_verbose
         )
         exit(0)
+
+    if args_dict.get("watch"):
+        from scripts.iib.file_watcher import start_file_watcher, stop_file_watcher
+        import atexit
+        watch_dirs = get_all_img_dirs(args.sd_webui_config, args.sd_webui_path_relative_to_config)
+        if watch_dirs:
+            started = start_file_watcher(
+                watch_dirs=watch_dirs,
+                batch_size=args.watch_batch_size,
+                batch_timeout=args.watch_batch_timeout,
+                max_workers=args.watch_max_workers,
+            )
+            if started:
+                atexit.register(stop_file_watcher)
+                print(f"[IIB] File watching enabled for {len(watch_dirs)} directories")
+            else:
+                print("[IIB] File watching could not be started (watchdog not installed)")
+        else:
+            print("[IIB] No directories to watch")
 
     launch_app(**vars(args))
