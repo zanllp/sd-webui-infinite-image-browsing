@@ -709,6 +709,24 @@ class Tag:
         self.color = color
         self.display_name = tags_translate.get(name)
 
+    @staticmethod
+    def validate_tag_name(name: str):
+        if not name:
+            return None
+        
+        # Check if name starts with Chinese characters
+        if len(name) > 0 and '\u4e00' <= name[0] <= '\u9fff':
+            # Chinese starts: max 12 characters
+            if len(name) > 12:
+                return "INVALID_TAG_NAME_TOO_LONG"
+        else:
+            # Other languages: max 6 words
+            words = name.split()
+            if len(words) > 6:
+                return "INVALID_TAG_TOO_MANY_WORDS"
+        
+        return None
+
     def save(self, conn):
         with closing(conn.cursor()) as cur:
             cur.execute(
@@ -746,16 +764,43 @@ class Tag:
     @classmethod
     def get_all(cls, conn):
         with closing(conn.cursor()) as cur:
-            cur.execute("SELECT * FROM tag")
-            rows = cur.fetchall()
+            cur.execute("SELECT COUNT(*) FROM tag")
+            total_count = cur.fetchone()[0]
+            
             tags: list[Tag] = []
-            for row in rows:
-                tags.append(cls.from_row(row))
+            
+            if total_count > 4096:
+                # Get all non-pos tags
+                cur.execute("SELECT * FROM tag WHERE type != 'pos'")
+                rows = cur.fetchall()
+                for row in rows:
+                    tags.append(cls.from_row(row))
+                
+                # Get top 4096 pos tags ordered by count (descending)
+                cur.execute("SELECT * FROM tag WHERE type = 'pos' ORDER BY count DESC LIMIT 4096")
+                pos_rows = cur.fetchall()
+                for row in pos_rows:
+                    tags.append(cls.from_row(row))
+            else:
+                # Get all tags normally
+                cur.execute("SELECT * FROM tag")
+                rows = cur.fetchall()
+                for row in rows:
+                    tags.append(cls.from_row(row))
+            
+            print(f"tag: loaded {len(tags)} tags (total: {total_count})")
             return tags
 
     @classmethod
     def get_or_create(cls, conn: Connection, name: str, type: str):
         assert name and type
+        
+        # Validate tag name
+        error_name = cls.validate_tag_name(name)
+        if error_name:
+            # Use get_or_create recursively to ensure error tag has an id
+            return cls.get_or_create(conn, error_name, "error")
+        
         with closing(conn.cursor()) as cur:
             cur.execute(
                 "SELECT tag.* FROM tag WHERE name = ? and type = ?", (name, type)
