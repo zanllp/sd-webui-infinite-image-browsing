@@ -1178,6 +1178,8 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         conn = DataBase.get_conn()
         tag = Tag.get_or_create(conn, name=req.tag_name, type="custom")
         conn.commit()
+        if tag is None:
+            raise HTTPException(400, "Invalid tag name")
         return tag
     
     class RenameFileReq(BaseModel):

@@ -720,9 +720,9 @@ class Tag:
             if len(name) > 12:
                 return "INVALID_TAG_NAME_TOO_LONG"
         else:
-            # Other languages: max 6 words
+            # Other languages: max 8 words and 40 characters
             words = name.split()
-            if len(words) > 6:
+            if len(words) > 8 and len(name) > 40:
                 return "INVALID_TAG_TOO_MANY_WORDS"
         
         return None
@@ -798,8 +798,8 @@ class Tag:
         # Validate tag name
         error_name = cls.validate_tag_name(name)
         if error_name:
-            # Use get_or_create recursively to ensure error tag has an id
-            return cls.get_or_create(conn, error_name, "error")
+            # Return None for invalid tag names
+            return None
         
         with closing(conn.cursor()) as cur:
             cur.execute(
