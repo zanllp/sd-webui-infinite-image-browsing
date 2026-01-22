@@ -1177,6 +1177,9 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
     async def add_custom_tag(req: AddCustomTagReq):
         conn = DataBase.get_conn()
         tag = Tag.get_or_create(conn, name=req.tag_name, type="custom")
+        if tag is None:
+            conn.rollback()
+            return None
         conn.commit()
         return tag
     
