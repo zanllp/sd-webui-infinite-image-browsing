@@ -189,8 +189,7 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
         size_str,
         type="size",
     )
-    if size_tag is not None:
-        safe_save_img_tag(ImageTag(img.id, size_tag.id))
+    safe_save_img_tag(ImageTag(img.id, size_tag.id))
     # 确定媒体类型：Image / Video / Audio / Unknown
     if is_image_file(file_path):
         media_type_name = "Image"
@@ -201,8 +200,7 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
     else:
         media_type_name = "Unknown"
     media_type_tag = Tag.get_or_create(conn, media_type_name, 'Media Type')
-    if media_type_tag is not None:
-        safe_save_img_tag(ImageTag(img.id, media_type_tag.id))
+    safe_save_img_tag(ImageTag(img.id, media_type_tag.id))
     keys = [
         "Model",
         "Sampler",
@@ -220,27 +218,21 @@ def build_single_img_idx(conn, file_path, is_rebuild, safe_save_img_tag):
             continue
         
         tag = Tag.get_or_create(conn, str(v), k)
-        if tag is not None:
+        safe_save_img_tag(ImageTag(img.id, tag.id))
+        if "Hires upscaler" == k:
+            tag = Tag.get_or_create(conn, 'Hires All', k)
             safe_save_img_tag(ImageTag(img.id, tag.id))
-            if "Hires upscaler" == k:
-                tag = Tag.get_or_create(conn, 'Hires All', k)
-                if tag is not None:
-                    safe_save_img_tag(ImageTag(img.id, tag.id))
-            elif "Refiner" == k:
-                tag = Tag.get_or_create(conn, 'Refiner All', k)
-                if tag is not None:
-                    safe_save_img_tag(ImageTag(img.id, tag.id))
+        elif "Refiner" == k:
+            tag = Tag.get_or_create(conn, 'Refiner All', k)
+            safe_save_img_tag(ImageTag(img.id, tag.id))
     for i in lora:
         tag = Tag.get_or_create(conn, i["name"], "lora")
-        if tag is not None:
-            safe_save_img_tag(ImageTag(img.id, tag.id))
+        safe_save_img_tag(ImageTag(img.id, tag.id))
     for i in lyco:
         tag = Tag.get_or_create(conn, i["name"], "lyco")
-        if tag is not None:
-            safe_save_img_tag(ImageTag(img.id, tag.id))
+        safe_save_img_tag(ImageTag(img.id, tag.id))
     for k in pos:
         tag = Tag.get_or_create(conn, k, "pos")
-        if tag is not None:
-            safe_save_img_tag(ImageTag(img.id, tag.id))
+        safe_save_img_tag(ImageTag(img.id, tag.id))
     
     AutoTagMatcher.get_instance(conn).apply(img.id, parsed_params)

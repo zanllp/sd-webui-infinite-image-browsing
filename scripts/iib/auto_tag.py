@@ -96,7 +96,6 @@ class AutoTagMatcher:
                     tag_name = rule.get("tag")
                     if tag_name:
                         tag = Tag.get_or_create(self.conn, tag_name, "custom")
-                        if tag is not None:
-                            ImageTag(img_id, tag.id).save_or_ignore(self.conn)
+                        ImageTag(img_id, tag.id).save_or_ignore(self.conn)
             except Exception as e:
                 logger.error(f"Error applying auto tag rule {rule}: {e}")
