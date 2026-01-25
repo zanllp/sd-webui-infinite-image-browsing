@@ -402,6 +402,8 @@ export const zhHans = {
   fullscreen: '全屏',
   soundOn: '开启声音',
   soundOff: '关闭声音',
+  details: '详情',
+  info: '信息',
   like: '喜欢',
   unlike: '取消喜欢',
   tags: '标签',

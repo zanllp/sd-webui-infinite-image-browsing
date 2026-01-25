@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { DownOutlined, LeftCircleOutlined, RightCircleOutlined, ArrowLeftOutlined } from '@/icon'
 import { useGlobalStore } from '@/store/useGlobalStore'
+import { useTiktokStore } from '@/store/useTiktokStore'
 import {
   useFileTransfer,
   useFilesDisplay,
@@ -53,6 +54,8 @@ const {
   multiSelectedIdxs,
   spinning
 } = useHookShareState().toRefs()
+void scroller.value
+void stackViewEl.value
 const { currLocation, currPage, refresh, copyLocation, back, openNext, stack, quickMoveTo,
   addToSearchScanPathAndQuickMove, locInputValue, isLocationEditing,
   onLocEditEnter, onEditBtnClick, share, selectAll, onCreateFloderBtnClick, onWalkBtnClick,
@@ -74,7 +77,8 @@ const {
 } = useFilesDisplay()
 const { onDrop, onFileDragStart, onFileDragEnd } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions({ openNext })
-const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview } = usePreview()
+const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview, scrollToFileId } = usePreview()
+const tiktokStore = useTiktokStore()
 const { showMenuIdx } = useMobileOptimization()
 const { onClearAllSelected, onReverseSelect, onSelectAll } = useKeepMultiSelect()
 const { getGenDiff, changeIndchecked, seedChangeChecked, getRawGenParams, getGenDiffWatchDep } = useGenInfoDiff()
@@ -98,6 +102,18 @@ watch(
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => tiktokStore.visible,
+  (v, lv) => {
+    if (!v && lv) {
+      const id = tiktokStore.lastActiveId
+      if (id) {
+        scrollToFileId(id)
+      }
+    }
+  }
 )
 
 
