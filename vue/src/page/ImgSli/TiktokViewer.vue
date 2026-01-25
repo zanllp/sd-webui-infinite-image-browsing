@@ -11,6 +11,7 @@ import { deleteFiles } from '@/api/files'
 import { getImageGenerationInfo, openFolder, openWithDefaultApp } from '@/api'
 import { toRawFileUrl } from '@/util/file'
 import { parse } from '@/util/stable-diffusion-image-metadata'
+import { getParentDirectory } from '@/util/path'
 import { message, Modal } from 'ant-design-vue'
 import {
   CloseOutlined,
@@ -894,8 +895,10 @@ const handleDeleteCurrent = async () => {
       maskClosable: true,
       content: getCurrentDisplayName(),
       async onOk () {
+        const { events }  = await import('@/page/fileTransfer/hooks') 
         await deleteFiles([fullpath])
         message.success(t('deleteSuccess'))
+        events.emit('removeFiles', { paths: [fullpath], loc: getParentDirectory(fullpath) })
         removeCurrentItemFromList()
         showTags.value = false
         resolve()
