@@ -1184,8 +1184,11 @@ watch(() => autoPlayMode.value, () => {
       </div>
 
       <!-- 详情面板 -->
+      <Transition name="fade">
+        <div v-if="showTags" class="tiktok-panel-backdrop" @click="showTags = false" />
+      </Transition>
       <Transition name="slide-up">
-        <div v-if="showTags" class="tiktok-tags-panel">
+        <div v-if="showTags" class="tiktok-tags-panel" @click.stop>
           <div class="panel-header">
             <div class="panel-title">
               <InfoCircleOutlined />
@@ -1751,6 +1754,8 @@ watch(() => autoPlayMode.value, () => {
   padding-bottom: 50px;
   overscroll-behavior: contain;
   touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 
   &::-webkit-scrollbar {
     width: 4px;
@@ -1759,14 +1764,17 @@ watch(() => autoPlayMode.value, () => {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 2px;
   }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
 
 .panel-section {
   margin-bottom: 24px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.08);
   padding: 16px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .panel-actions {
@@ -1895,11 +1903,28 @@ watch(() => autoPlayMode.value, () => {
   padding: 8px 0;
 }
 
+.tiktok-panel-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 19;
+}
+
 
 // 动画
 .slide-up-enter-active,
 .slide-up-leave-active {
   transition: all 0.3s ease;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .slide-up-enter-from {
