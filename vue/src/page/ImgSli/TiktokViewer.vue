@@ -4,10 +4,14 @@ import { useTiktokStore, type TiktokMediaItem } from '@/store/useTiktokStore'
 import { useTagStore } from '@/store/useTagStore'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { useLocalStorage, onLongPress } from '@vueuse/core'
-import { isVideoFile, isAudioFile } from '@/util'
+import { copy2clipboardI18n, isVideoFile, isAudioFile } from '@/util'
 import { openAddNewTagModal } from '@/components/functionalCallableComp'
 import { toggleCustomTagToImg } from '@/api/db'
-import { message } from 'ant-design-vue'
+import { deleteFiles } from '@/api/files'
+import { getImageGenerationInfo, openFolder, openWithDefaultApp } from '@/api'
+import { toRawFileUrl } from '@/util/file'
+import { parse } from '@/util/stable-diffusion-image-metadata'
+import { message, Modal } from 'ant-design-vue'
 import {
   CloseOutlined,
   FullscreenOutlined,
@@ -19,7 +23,14 @@ import {
   SoundFilled,
   HeartOutlined,
   HeartFilled,
-  PlayCircleOutlined
+  PlayCircleOutlined,
+  DeleteOutlined,
+  FolderOpenOutlined,
+  AppstoreOutlined,
+  CopyOutlined,
+  LinkOutlined,
+  FileTextOutlined,
+  InfoCircleOutlined
 } from '@/icon'
 import { t } from '@/i18n'
 import type { StyleValue } from 'vue'
@@ -99,6 +110,9 @@ const dragOffset = ref(0) // 拖拽偏移量
 
 // TAG 相关状态
 const showTags = ref(false)
+const imageGenInfo = ref('')
+const promptLoading = ref(false)
+let promptRequestId = 0
 
 // 控件可见性状态（长按切换）
 const controlsVisible = ref(true)
@@ -327,6 +341,84 @@ const tagBaseStyle: StyleValue = {
   transition: '0.3s all ease',
   userSelect: 'none',
   fontSize: '14px'
+}
+
+const cleanImageGenInfo = computed(() => imageGenInfo.value.replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;'))
+const geninfoStruct = computed(() => parse(cleanImageGenInfo.value))
+
+function getTextLength (text: string): number {
+  let length = 0
+  for (const char of text) {
+    if (/[\u4e00-\u9fa5]/.test(char)) {
+      length += 3
+    } else {
+      length += 1
+    }
+  }
+  return length
+}
+
+function isTagStylePrompt (tags: string[]): boolean {
+  if (tags.length === 0) return false
+
+  let totalLength = 0
+  for (const tag of tags) {
+    const tagLength = getTextLength(tag)
+    totalLength += tagLength
+
+    if (tagLength > 50) {
+      return false
+    }
+  }
+
+  const avgLength = totalLength / tags.length
+  if (avgLength > 30) {
+    return false
+  }
+
+  return true
+}
+
+function spanWrap (text: string) {
+  if (!text) {
+    return ''
+  }
+
+  const specBreakTag = 'BREAK'
+  const values = text.replace(/&gt;\s/g, '> ,').replace(/\sBREAK\s/g, ',' + specBreakTag + ',')
+    .split(/[\n,]+/)
+    .map(v => v.trim())
+    .filter(v => v)
+
+  if (!isTagStylePrompt(values)) {
+    return text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line)
+      .map(line => `<p class="natural-text">${line}</p>`)
+      .join('')
+  }
+
+  const frags = [] as string[]
+  let parenthesisActive = false
+  for (let i = 0; i < values.length; i++) {
+    if (values[i] === specBreakTag) {
+      frags.push('<br><span class="tag" style="color:var(--zp-secondary)">BREAK</span><br>')
+      continue
+    }
+    const trimmedValue = values[i]
+    if (!parenthesisActive) parenthesisActive = trimmedValue.includes('(')
+    const classList = ['tag']
+    if (parenthesisActive) classList.push('has-parentheses')
+    if (trimmedValue.length < 32) classList.push('short-tag')
+    frags.push(`<span class="${classList.join(' ')}">${trimmedValue}</span>`)
+    if (parenthesisActive) parenthesisActive = !trimmedValue.includes(')')
+  }
+  return frags.join(global.showCommaInInfoPanel ? ',' : ' ')
 }
 
 // 切换自动轮播模式
@@ -738,6 +830,108 @@ const loadCurrentItemTags = async () => {
   }
 }
 
+const loadCurrentItemPrompt = async () => {
+  const currentItem = tiktokStore.currentItem
+  if (!currentItem) {
+    imageGenInfo.value = ''
+    return
+  }
+  const nameOrUrl = currentItem.name || currentItem.url
+  if (isVideoFile(nameOrUrl) || isAudioFile(nameOrUrl)) {
+    imageGenInfo.value = ''
+    return
+  }
+  const fullpath = (currentItem as any)?.fullpath || currentItem.id
+  if (!fullpath) {
+    imageGenInfo.value = ''
+    return
+  }
+
+  const requestId = ++promptRequestId
+  promptLoading.value = true
+  try {
+    const info = await getImageGenerationInfo(fullpath)
+    if (requestId !== promptRequestId) return
+    imageGenInfo.value = info
+  } catch (error) {
+    console.error('Load prompt error:', error)
+    if (requestId !== promptRequestId) return
+    imageGenInfo.value = ''
+  } finally {
+    if (requestId === promptRequestId) {
+      promptLoading.value = false
+    }
+  }
+}
+
+const getCurrentFullpath = () => {
+  return (currentItem.value as any)?.fullpath || currentItem.value?.id || ''
+}
+
+const getCurrentDisplayName = () => {
+  return currentItem.value?.name || getCurrentFullpath().split(/[/\\]/).pop() || ''
+}
+
+const removeCurrentItemFromList = () => {
+  const idx = tiktokStore.currentIndex
+  if (idx < 0 || idx >= tiktokStore.mediaList.length) return
+  tiktokStore.mediaList.splice(idx, 1)
+  if (tiktokStore.mediaList.length === 0) {
+    tiktokStore.closeView()
+    return
+  }
+  if (idx >= tiktokStore.mediaList.length) {
+    tiktokStore.currentIndex = tiktokStore.mediaList.length - 1
+  }
+}
+
+const handleDeleteCurrent = async () => {
+  const fullpath = getCurrentFullpath()
+  if (!fullpath) return
+  await new Promise<void>((resolve) => {
+    Modal.confirm({
+      title: t('confirmDelete'),
+      maskClosable: true,
+      content: getCurrentDisplayName(),
+      async onOk () {
+        await deleteFiles([fullpath])
+        message.success(t('deleteSuccess'))
+        removeCurrentItemFromList()
+        showTags.value = false
+        resolve()
+      },
+      onCancel () {
+        resolve()
+      }
+    })
+  })
+}
+
+const handleOpenFolder = async () => {
+  const fullpath = getCurrentFullpath()
+  if (!fullpath) return
+  await openFolder(fullpath)
+}
+
+const handleOpenWithDefaultApp = async () => {
+  const fullpath = getCurrentFullpath()
+  if (!fullpath) return
+  await openWithDefaultApp(fullpath)
+}
+
+const handleCopyPath = () => {
+  const fullpath = getCurrentFullpath()
+  if (!fullpath) return
+  copy2clipboardI18n(fullpath)
+}
+
+const handleCopyPreviewUrl = () => {
+  const file = (currentItem.value as any)?.originalFile
+  const url = file ? toRawFileUrl(file) : currentItem.value?.url
+  if (!url) return
+  copy2clipboardI18n(url)
+}
+
 // 长按切换控件可见性
 onLongPress(
   viewportRef,
@@ -778,21 +972,31 @@ onUnmounted(() => {
 
 // 监听当前项变化
 watch(() => tiktokStore.currentIndex, () => {
+  showTags.value = false
   updateBuffer()
   nextTick(() => {
     preloadMedia()
     loadCurrentItemTags()
+    loadCurrentItemPrompt()
   })
 }, { immediate: true })
 
 // 监听媒体列表变化
 watch(() => tiktokStore.mediaList, () => {
   updateBuffer()
+  nextTick(() => {
+    loadCurrentItemTags()
+    loadCurrentItemPrompt()
+  })
 }, { deep: true })
 
 // 监听组件可见性变化
 watch(() => tiktokStore.visible, (visible) => {
   if (!visible) {
+    showTags.value = false
+    imageGenInfo.value = ''
+    promptLoading.value = false
+    promptRequestId++
     // 组件隐藏时停止并清理所有视频
     videoRefs.value.forEach(video => {
       if (video) {
@@ -937,9 +1141,9 @@ watch(() => autoPlayMode.value, () => {
           <span class="autoplay-label">{{ autoPlayLabels[autoPlayMode] }}</span>
         </button>
 
-        <!-- TAG 按钮 -->
-        <button class="control-btn tags-btn" @click="showTags = !showTags" :title="$t('tags')">
-          <TagsOutlined />
+        <!-- 详情按钮 -->
+        <button class="control-btn tags-btn" @click="showTags = !showTags" :title="$t('info')">
+          <InfoCircleOutlined />
         </button>
       </div>
 
@@ -979,35 +1183,87 @@ watch(() => autoPlayMode.value, () => {
         </div>
       </div>
 
-      <!-- TAG 面板 -->
+      <!-- 详情面板 -->
       <Transition name="slide-up">
         <div v-if="showTags" class="tiktok-tags-panel">
-          <div class="tags-header">
-            <h3>{{ $t('tags') }}</h3>
+          <div class="panel-header">
+            <div class="panel-title">
+              <InfoCircleOutlined />
+              <span>{{ $t('details') }}</span>
+            </div>
             <button @click="showTags = false" class="close-tags">
               <CloseOutlined />
             </button>
           </div>
 
-          <div class="tags-content">
-            <!-- 添加新标签 -->
-            <div @click="openAddNewTagModal" :style="{
-              background: 'var(--zp-primary-background)',
-              color: 'var(--zp-luminous)',
-              border: '2px solid var(--zp-luminous)',
-              ...tagBaseStyle
-            }">
-              {{ $t('addNewCustomTag') }}
+          <div class="panel-body" @wheel.stop @touchmove.stop>
+            <div class="panel-section panel-actions">
+              <button class="panel-action-btn danger" @click="handleDeleteCurrent" :title="$t('deleteSelected')">
+                <DeleteOutlined />
+              </button>
+              <button class="panel-action-btn" @click="handleOpenFolder" :title="$t('openWithLocalFileBrowser')">
+                <FolderOpenOutlined />
+              </button>
+              <button class="panel-action-btn" @click="handleOpenWithDefaultApp" :title="$t('openWithDefaultApp')">
+                <AppstoreOutlined />
+              </button>
+              <button class="panel-action-btn" @click="handleCopyPath" :title="$t('copyFilePath')">
+                <CopyOutlined />
+              </button>
+              <button class="panel-action-btn" @click="handleCopyPreviewUrl" :title="$t('copySourceFilePreviewLink')">
+                <LinkOutlined />
+              </button>
             </div>
 
-            <!-- 现有标签 -->
-            <div v-for="tag in global.conf?.all_custom_tags || []" :key="tag.id" @click="onTagClick(tag.id)" :style="{
-              background: isTagSelected(tag.id) ? tagStore.getColor(tag) : 'var(--zp-primary-background)',
-              color: !isTagSelected(tag.id) ? tagStore.getColor(tag) : 'white',
-              border: `2px solid ${tagStore.getColor(tag)}`,
-              ...tagBaseStyle
-            }">
-              {{ tag.name }}
+            <div class="panel-section">
+              <div class="section-title">
+                <TagsOutlined /> <span>{{ $t('tags') }}</span>
+              </div>
+              <div class="tags-content">
+                <!-- 添加新标签 -->
+                <div @click="openAddNewTagModal" :style="{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'var(--zp-luminous)',
+                  border: '1px solid var(--zp-luminous)',
+                  ...tagBaseStyle
+                }">
+                  {{ $t('addNewCustomTag') }}
+                </div>
+
+                <!-- 现有标签 -->
+                <div v-for="tag in global.conf?.all_custom_tags || []" :key="tag.id" @click="onTagClick(tag.id)" :style="{
+                  background: isTagSelected(tag.id) ? tagStore.getColor(tag) : 'rgba(255, 255, 255, 0.05)',
+                  color: !isTagSelected(tag.id) ? tagStore.getColor(tag) : 'white',
+                  border: `1px solid ${tagStore.getColor(tag)}`,
+                  ...tagBaseStyle
+                }">
+                  {{ tag.name }}
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-section prompt-section">
+              <div class="section-title">
+                <FileTextOutlined /> <span>Prompt</span>
+              </div>
+              <div class="prompt-content">
+                <div v-if="promptLoading" class="prompt-empty">...</div>
+                <template v-else>
+                  <template v-if="geninfoStruct.prompt">
+                    <div class="prompt-block">
+                      <div class="prompt-label">Positive</div>
+                      <code v-html="spanWrap(geninfoStruct.prompt ?? '')"></code>
+                    </div>
+                  </template>
+                  <template v-if="geninfoStruct.negativePrompt">
+                    <div class="prompt-block">
+                      <div class="prompt-label">Negative</div>
+                      <code v-html="spanWrap(geninfoStruct.negativePrompt ?? '')"></code>
+                    </div>
+                  </template>
+                  <div v-if="!geninfoStruct.prompt && !geninfoStruct.negativePrompt" class="prompt-empty">—</div>
+                </template>
+              </div>
             </div>
           </div>
         </div>
@@ -1438,40 +1694,205 @@ watch(() => autoPlayMode.value, () => {
   left: 0;
   right: 0;
   background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(25px);
   border-radius: 20px 20px 0 0;
   padding: 20px;
-  max-height: 60vh;
-  overflow-y: auto;
+  max-height: 70vh;
+  overflow: hidden;
   z-index: 20;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
 }
 
-.tags-header {
+.panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   color: white;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
-  h3 {
-    margin: 0;
+  .panel-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-size: 18px;
+    font-weight: 500;
   }
 
   .close-tags {
-    background: none;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
     color: white;
-    font-size: 20px;
+    font-size: 18px;
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
   }
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+  padding-bottom: 50px;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+}
+
+.panel-section {
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.panel-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.panel-action-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 18px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &.danger {
+    border-color: rgba(255, 86, 86, 0.3);
+    background: rgba(255, 86, 86, 0.08);
+    color: #ff6b6b;
+
+    &:hover {
+      background: rgba(255, 86, 86, 0.15);
+      border-color: rgba(255, 86, 86, 0.5);
+    }
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .tags-content {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.prompt-content {
+  code {
+    font-size: 13px;
+    display: block;
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.6em;
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+
+    :deep() {
+      .natural-text {
+        margin: 0.5em 0;
+        line-height: 1.6em;
+        text-align: justify;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .short-tag {
+        word-break: break-all;
+        white-space: nowrap;
+      }
+
+      span.tag {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.9);
+        padding: 3px 6px;
+        border-radius: 4px;
+        margin-right: 6px;
+        margin-top: 4px;
+        line-height: 1.3em;
+        display: inline-block;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .has-parentheses.tag {
+        background: rgba(255, 100, 100, 0.15);
+        border-color: rgba(255, 100, 100, 0.2);
+      }
+    }
+  }
+}
+
+.prompt-block {
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.prompt-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.prompt-empty {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+  padding: 8px 0;
 }
 
 
@@ -1535,6 +1956,11 @@ watch(() => autoPlayMode.value, () => {
   .tiktok-tags-panel {
     padding: 15px;
     max-height: 50vh;
+  }
+
+  .panel-action-btn {
+    width: 32px;
+    height: 32px;
   }
 }
 </style>

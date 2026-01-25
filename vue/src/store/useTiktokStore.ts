@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 export interface TiktokMediaItem {
   url: string
@@ -16,11 +16,18 @@ export const useTiktokStore = defineStore('useTiktokStore', () => {
   const isFullscreen = ref(false)
   const mediaList = ref<TiktokMediaItem[]>([])
   const currentIndex = ref(0)
+  const lastActiveId = ref('')
   
   // 计算属性
   const currentItem = computed(() => {
     return mediaList.value[currentIndex.value] || null
   })
+
+  watch(currentItem, (item) => {
+    if (item?.id) {
+      lastActiveId.value = item.id
+    }
+  }, { immediate: true })
   
   const hasNext = computed(() => {
     return currentIndex.value < mediaList.value.length - 1
@@ -41,6 +48,7 @@ export const useTiktokStore = defineStore('useTiktokStore', () => {
     mediaList.value = items
     currentIndex.value = Math.max(0, Math.min(startIndex, items.length - 1))
     visible.value = true
+    lastActiveId.value = items[currentIndex.value]?.id ?? lastActiveId.value
     
     // 移动设备自动全屏
     if (isMobile.value) {
@@ -86,6 +94,7 @@ export const useTiktokStore = defineStore('useTiktokStore', () => {
     isFullscreen,
     mediaList,
     currentIndex,
+    lastActiveId,
     
     // 计算属性
     currentItem,

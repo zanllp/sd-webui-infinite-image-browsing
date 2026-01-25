@@ -31,6 +31,25 @@ export function usePreview (spec?: { loadNext?: () => void }) {
     }
   }
 
+  const scrollToIndex = (idx: number) => {
+    const s = scroller.value
+    if (!s || idx < 0) return
+    if (!(idx >= s.$_startIndex && idx <= s.$_endIndex)) {
+      s.scrollToItem(idx)
+    } else {
+      console.log('scrollToIndex already in view', idx, 's', s)
+    }
+  }
+
+  const scrollToFileId = (fullpath: string) => {
+    if (!fullpath) return
+    const idx = files.value.findIndex(v => v.fullpath === fullpath)
+    console.log('idx', {idx, files})
+    if (idx >= 0) {
+      scrollToIndex(idx)
+    }
+  }
+
   const loadNextIfNeeded = () => {
     if (canPreview('next')) {
       return
@@ -119,6 +138,8 @@ export function usePreview (spec?: { loadNext?: () => void }) {
     onPreviewVisibleChange,
     previewing,
     previewImgMove,
-    canPreview
+    canPreview,
+    scrollToIndex,
+    scrollToFileId
   }
 }

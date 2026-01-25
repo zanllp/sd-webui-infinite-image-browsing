@@ -423,6 +423,8 @@ You can specify which snapshot to restore to when starting IIB in the global set
   fullscreen: 'Fullscreen',
   soundOn: 'Sound On',
   soundOff: 'Sound Off',
+  details: 'Details',
+  info: 'Info',
   like: 'Like',
   unlike: 'Unlike',
   tags: 'Tags',
