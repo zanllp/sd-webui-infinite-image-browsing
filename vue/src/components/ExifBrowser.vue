@@ -1,10 +1,19 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
-import 'highlight.js/styles/github.css'
+import { useGlobalStore } from '@/store/useGlobalStore'
+import { FolderOutlined } from '@ant-design/icons-vue'
 
 hljs.registerLanguage('json', json)
+
+const global = useGlobalStore()
+
+onMounted(async () => {
+  await (global.computedTheme === 'dark'
+    ? import('highlight.js/styles/atom-one-dark.css')
+    : import('highlight.js/styles/github.css'))
+})
 
 interface ExifPath {
   key: string
@@ -124,9 +133,9 @@ const formatKey = (key: string): string => {
           <div class="exif-key">{{ formatKey(key) }}</div>
           <div class="exif-value">
             <div class="value-text" v-html="highlightJson(value)"></div>
-            <a-button v-if="isNavigableValue(value)" size="small" type="link"
+            <a-button v-if="isNavigableValue(value)"  type="text"
               @click="handleEnterNextLevel(String(key), value)">
-              ↓
+              <FolderOutlined style="font-size: 18px;" />
             </a-button>
           </div>
         </div>
@@ -204,15 +213,13 @@ const formatKey = (key: string): string => {
         flex: 1;
         display: flex;
         align-items: flex-start;
-        gap: 8px;
+        gap: 4px;
         color: var(--zp-primary);
         word-break: break-all;
 
         .value-text {
           flex: 1;
           white-space: pre-wrap;
-          background: var(--zp-secondary-background);
-          padding: 4px;
 
           :deep(code) {
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
@@ -222,6 +229,17 @@ const formatKey = (key: string): string => {
             padding: 0;
           }
         }
+
+        .ant-btn-text {
+          padding: 0 4px;
+          color: var(--zp-luminous);
+
+          &:hover {
+            color: var(--zp-primary);
+          }
+        }
+
+
       }
     }
 
