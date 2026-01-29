@@ -186,6 +186,11 @@ export const getImageGenerationInfo = async (path: string) => {
     .data as string
 }
 
+export const getImageExif = async (path: string) => {
+  return (await axiosInst.value.get(`/image_exif?path=${encodeURIComponent(path)}`))
+    .data as Record<string, string>
+}
+
 export const getImageGenerationInfoBatch = async (paths: string[]) => {
   if (!paths.length) {
     return {}

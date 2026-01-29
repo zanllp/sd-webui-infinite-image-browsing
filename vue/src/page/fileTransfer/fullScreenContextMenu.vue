@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { getImageGenerationInfo } from '@/api'
+import { getImageGenerationInfo, getImageExif } from '@/api'
 import type { FileNodeInfo } from '@/api/files'
+import ExifBrowser from '@/components/ExifBrowser.vue'
 import { useGlobalStore } from '@/store/useGlobalStore'
 import { useLocalStorage } from '@vueuse/core'
 import type { MenuInfo } from 'ant-design-vue/lib/menu/src/interface'
 import { debounce, throttle, last } from 'lodash-es'
-import { computed, watch } from 'vue'
+import { computed, watch, onMounted } from 'vue'
 import { ref } from 'vue'
 import { copy2clipboardI18n, type Dict } from '@/util'
 import { useResizeAndDrag } from './useResize'
@@ -48,6 +49,8 @@ const selectedTag = computed(() => tagStore.tagMap.get(props.file.fullpath) ?? [
 const currImgResolution = ref('')
 const q = createReactiveQueue()
 const imageGenInfo = ref('')
+const exifData = ref<Record<string, string>>({})
+const exifDataLoading = ref(false)
 const cleanImageGenInfo = computed(() => imageGenInfo.value.replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
   .replace(/>/g, '&gt;')
@@ -74,6 +77,22 @@ const emit = defineEmits<{
   (type: 'contextMenuClick', e: MenuInfo, file: FileNodeInfo, idx: number): void
 }>()
 
+const promptTabActivedKey = useLocalStorage('iib@fullScreenContextMenu.prompt-tab', 'structedData' as 'structedData' | 'sourceText' | 'exif')
+
+async function loadExifData() {
+  if (!props?.file?.fullpath) {
+    return
+  }
+  exifDataLoading.value = true
+  try {
+    exifData.value = await getImageExif(props.file.fullpath)
+  } catch (error) {
+    console.error('Failed to get EXIF data:', error)
+  } finally {
+    exifDataLoading.value = false
+  }
+}
+
 watch(
   () => props?.file?.fullpath,
   async (path) => {
@@ -84,10 +103,26 @@ watch(
     q.pushAction(() => getImageGenerationInfo(path)).res.then((v) => {
       imageGenInfo.value = v
     })
+    exifData.value = {}
+    if (promptTabActivedKey.value === 'exif') {
+      loadExifData()
+    }
   },
   { immediate: true }
 )
-const promptTabActivedKey = useLocalStorage('iib@fullScreenContextMenu.prompt-tab', 'structedData' as 'structedData' | 'sourceText')
+
+watch(promptTabActivedKey, async (tabKey) => {
+  if (tabKey === 'exif') {
+    loadExifData()
+  }
+})
+
+onMounted(() => {
+  if (promptTabActivedKey.value === 'exif' && props?.file?.fullpath) {
+    loadExifData()
+  }
+})
+
 const resizeHandle = ref<HTMLElement>()
 const dragHandle = ref<HTMLElement>()
 const dragInitParams = {
@@ -606,6 +641,16 @@ Please return only tag names, do not include any other content.`
           </a-tab-pane>
           <a-tab-pane key="sourceText" :tab="$t('sourceText')">
             <code>{{ imageGenInfo }}</code>
+          </a-tab-pane>
+          <a-tab-pane key="exif" :tab="'EXIF'">
+            <a-spin :spinning="exifDataLoading">
+              <div v-if="exifData && Object.keys(exifData).length">
+                <ExifBrowser :data="exifData" />
+              </div>
+              <div v-else-if="!exifDataLoading">
+                <a-empty description="No EXIF data available" />
+              </div>
+            </a-spin>
           </a-tab-pane>
         </a-tabs>
       </div>
