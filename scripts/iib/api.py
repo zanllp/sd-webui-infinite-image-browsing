@@ -825,6 +825,28 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 res[path] = ""
         return res
 
+    @app.get(api_base + "/image_exif", dependencies=[Depends(verify_secret)])
+    async def image_exif(path: str):
+        try:
+            if get_video_type(path):
+                return {}
+            with Image.open(path) as img:
+                exif_data = {}
+                try:
+                    exif_dict = img._getexif()
+                    if exif_dict:
+                        exif_data = {str(k): str(v) for k, v in exif_dict.items()}
+                except AttributeError:
+                    pass
+                
+                info_data = {k: str(v) for k, v in img.info.items() if not k.startswith('exif')}
+                exif_data.update(info_data)
+                
+                return exif_data
+        except Exception as e:
+            logger.error(f"Failed to get exif for {path}: {e}")
+            return {}
+
 
     class CheckPathExistsReq(BaseModel):
         paths: List[str]
