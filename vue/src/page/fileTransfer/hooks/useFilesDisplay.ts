@@ -15,6 +15,7 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
     sortedFiles,
     sortMethod,
     currLocation,
+    currPage,
     stackViewEl,
     canLoadNext,
     previewIdx,
@@ -115,6 +116,10 @@ export function useFilesDisplay ({ fetchNext }: {fetchNext?: () => Promise<any>}
   watch(currLocation, onViewableAreaChangeDebounced)
 
   const onScroll = debounce(async () => {
+    const s = scroller.value
+    if (s && currPage.value) {
+      currPage.value.scrollIndex = s.$_startIndex
+    }
     await fetchDataUntilViewFilled()
     onViewableAreaChangeDebounced()
   }, 150)

@@ -44,9 +44,15 @@ export function useLocation () {
   watch(
     () => stack.value.length,
     debounce((v, lv) => {
-      if (v !== lv) {
-        scroller.value?.scrollToItem(0)
+      if (v === lv) {
+        return
       }
+      if (v > lv) {
+        scroller.value?.scrollToItem(0)
+        return
+      }
+      const target = last(stack.value)?.scrollIndex ?? 0
+      delay(0).then(() => scroller.value?.scrollToItem(target))
     }, 300)
   )
   onMounted(async () => {
@@ -287,6 +293,7 @@ export function useLocation () {
   useGlobalEventListen('returnToIIB', lazyRefresh)
 
   useEventListen.value('refresh', refresh)
+  useEventListen.value('navigateUp', backToLastUseTo)
 
   const quickMoveTo = (path: string) => {
     // todo

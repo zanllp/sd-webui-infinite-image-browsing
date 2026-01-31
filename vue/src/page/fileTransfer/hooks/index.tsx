@@ -129,6 +129,7 @@ export const { useHookShareState } = createTypedShareStateHook(
       refresh (): Promise<void>
       selectAll (): void
       viewableAreaFilesChange(): void
+      navigateUp (): void
     }>()
     events.useEventListen('selectAll', () => {
       console.log(`select all 0 -> ${sortedFiles.value.length}`)
@@ -181,6 +182,7 @@ export interface Props {
 export interface Page {
   files: FileNodeInfo[]
   curr: string
+  scrollIndex?: number
 }
 
 

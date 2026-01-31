@@ -83,6 +83,14 @@ const { showMenuIdx } = useMobileOptimization()
 const { onClearAllSelected, onReverseSelect, onSelectAll } = useKeepMultiSelect()
 const { getGenDiff, changeIndchecked, seedChangeChecked, getRawGenParams, getGenDiffWatchDep } = useGenInfoDiff()
 
+const onFileListDblClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement | null
+  if (target?.closest?.('.file-item-trigger')) {
+    return
+  }
+  backToLastUseTo()
+}
+
 // TikTok View 按钮点击处理
 const onTiktokViewClick = () => {
   if (sortedFiles.value.length === 0) {
@@ -243,7 +251,7 @@ watch(
           </a-dropdown>
         </div>
       </div>
-      <div v-if="currPage" class="view">
+      <div v-if="currPage" class="view" @dblclick="onFileListDblClick">
         <RecycleScroller class="file-list" :items="sortedFiles" ref="scroller" @scroll="onScroll"
           :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second"
           :gridItems="gridItems">

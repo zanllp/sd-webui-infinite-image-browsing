@@ -95,6 +95,64 @@ const isShortcutConflict = (keyStr: string) => {
   return keyStr && keyStr in shortCutsCountRec.value && shortCutsCountRec.value[keyStr] > 1
 }
 const disableMaximize = useLocalStorage(prefix+'disable_maximize', false)
+const showPresetShortcutModal = ref(false)
+const presetShortcutGroups = computed(() => ([
+  {
+    title: t('shortcutPresetSectionBrowse'),
+    items: [
+      {
+        keys: 'PageUp / PageDown',
+        location: t('shortcutPresetLocationFileList'),
+        action: t('shortcutPresetActionPageJump')
+      },
+      {
+        keys: 'Home / End',
+        location: t('shortcutPresetLocationFileList'),
+        action: t('shortcutPresetActionHomeEnd')
+      },
+      {
+        keys: 'Backspace',
+        location: t('shortcutPresetLocationFileList'),
+        action: t('shortcutPresetActionBackspaceUp')
+      },
+      {
+        keys: 'Ctrl + A / Cmd + A',
+        location: t('shortcutPresetLocationFileList'),
+        action: t('shortcutPresetActionSelectAll')
+      }
+    ]
+  },
+  {
+    title: t('shortcutPresetSectionFullscreen'),
+    items: [
+      {
+        keys: 'ArrowLeft / ArrowRight / ArrowUp / ArrowDown',
+        location: t('shortcutPresetLocationFullscreen'),
+        action: t('shortcutPresetActionFullscreenNavigate')
+      },
+      {
+        keys: 'Esc',
+        location: t('shortcutPresetLocationFullscreen'),
+        action: t('shortcutPresetActionFullscreenExit')
+      }
+    ]
+  },
+  {
+    title: t('shortcutPresetSectionTiktok'),
+    items: [
+      {
+        keys: 'ArrowUp / ArrowDown',
+        location: t('shortcutPresetLocationTiktok'),
+        action: t('shortcutPresetActionTiktokNavigate')
+      },
+      {
+        keys: 'Esc',
+        location: t('shortcutPresetLocationTiktok'),
+        action: t('shortcutPresetActionTiktokExit')
+      }
+    ]
+  }
+]))
 
 // 自然语言分类&搜索 已提升到首页启动入口（TopicSearch），全局设置不再保留旧入口
 </script>
@@ -175,7 +233,28 @@ const disableMaximize = useLocalStorage(prefix+'disable_maximize', false)
       </a-form-item>
 
       
-      <h2>{{ t('shortcutKey') }}</h2>
+      <div class="shortcut-title-row">
+        <h2>{{ t('shortcutKey') }}</h2>
+        <a-button size="small" @click="showPresetShortcutModal = true">
+          {{ t('shortcutPresetButton') }}
+        </a-button>
+      </div>
+      <a-modal v-model:visible="showPresetShortcutModal" :title="t('shortcutPresetTitle')" width="800px" :footer="null">
+        <div class="shortcut-preset-desc">{{ t('shortcutPresetDesc') }}</div>
+        <div class="shortcut-preset-section" v-for="group in presetShortcutGroups" :key="group.title">
+          <div class="shortcut-preset-section-title">{{ group.title }}</div>
+          <div class="shortcut-preset-grid shortcut-preset-grid-header">
+            <div>{{ t('shortcutPresetHeaderKey') }}</div>
+            <div>{{ t('shortcutPresetHeaderWhere') }}</div>
+            <div>{{ t('shortcutPresetHeaderAction') }}</div>
+          </div>
+          <div class="shortcut-preset-grid" v-for="item in group.items" :key="item.keys + item.action">
+            <div class="mono">{{ item.keys }}</div>
+            <div>{{ item.location }}</div>
+            <div>{{ item.action }}</div>
+          </div>
+        </div>
+      </a-modal>
       <a-form-item :label="item.label" v-for="item in shortcutsList" :key="item.key">
         <div class="col" :class="{ conflict: isShortcutConflict(globalStore.shortcut[item.key] + '') }"
 
@@ -223,6 +302,48 @@ const disableMaximize = useLocalStorage(prefix+'disable_maximize', false)
 h2 {
   margin: 64px 0 16px;
   font-weight: bold;
+}
+
+.shortcut-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  h2 {
+    margin: 64px 0 16px;
+  }
+}
+
+.shortcut-preset-desc {
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.shortcut-preset-section {
+  margin-top: 16px;
+}
+
+.shortcut-preset-section-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.shortcut-preset-grid {
+  display: grid;
+  grid-template-columns: 220px 240px 1fr;
+  gap: 8px 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--zp-secondary-background);
+}
+
+.shortcut-preset-grid-header {
+  font-weight: 600;
+  color: #666;
+  border-bottom: 1px solid var(--zp-secondary-background);
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
 
 .row {
