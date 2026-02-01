@@ -3,12 +3,14 @@ import {
   useWatchDocument
 } from 'vue3-ts-util'
 import { FileTransferData, getFileTransferDataFromDragEvent } from '@/util/file'
+import type { FileNodeInfo } from '@/api/files'
 import { useHookShareState, global, events, sli } from '.'
 import { copyFiles, moveFiles } from '@/api/files'
 import { MultiSelectTips } from '@/components/functionalCallableComp'
 import { t } from '@/i18n'
 import { createReactiveQueue } from '@/util'
 import { Modal, Button } from 'ant-design-vue'
+import * as Path from '@/util/path'
 
 import { cloneDeep, uniqBy } from 'lodash-es'
 
@@ -67,6 +69,35 @@ export function useFileTransfer () {
     if (data.loc === toPath) {
       return
     }
+    openMoveOrCopyConfirm(data, toPath)
+  }
+
+  const onFileDropToFolder = async (e: DragEvent, target: FileNodeInfo) => {
+    if (walker.value || target.type !== 'dir') {
+      return false
+    }
+    const data = getFileTransferDataFromDragEvent(e)
+    if (!data) {
+      return false
+    }
+    const fromPath = Path.normalize(data.loc)
+    const currPath = Path.normalize(currLocation.value || '')
+    if (fromPath !== currPath) {
+      return false
+    }
+    const toPath = Path.normalize(target.fullpath)
+    const filtered = data.path
+      .map(Path.normalize)
+      .filter((p) => p !== toPath && !toPath.startsWith(p + '/'))
+    if (!filtered.length) {
+      return false
+    }
+    e.preventDefault()
+    openMoveOrCopyConfirm({ ...data, path: filtered }, toPath)
+    return true
+  }
+
+  const openMoveOrCopyConfirm = (data: FileTransferData, toPath: string) => {
     const q = createReactiveQueue()
     const onCopyBtnClick = async () => q.pushAction(async () => {
       await copyFiles(data.path, toPath)
@@ -105,6 +136,7 @@ export function useFileTransfer () {
     onFileDragStart,
     onDrop,
     multiSelectedIdxs,
-    onFileDragEnd
+    onFileDragEnd,
+    onFileDropToFolder
   }
 }

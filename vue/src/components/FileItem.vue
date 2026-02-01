@@ -66,6 +66,7 @@ const emit = defineEmits<{
   'fileItemClick': [event: MouseEvent, file: FileNodeInfo, idx: number],
   'dragstart': [event: DragEvent, idx: number],
   'dragend': [event: DragEvent, idx: number],
+  'dropToFolder': [event: DragEvent, file: FileNodeInfo, idx: number],
   'previewVisibleChange': [value: boolean, last: boolean],
   'contextMenuClick': [e: MenuInfo, file: FileNodeInfo, idx: number],
   'close-icon-click': [],
@@ -95,6 +96,25 @@ const taggleLikeTag = () => {
 }
 
 const minShowDetailWidth = 160
+
+const handleDragOver = (event: DragEvent) => {
+  if (props.file.type !== 'dir') {
+    return
+  }
+  event.preventDefault()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+}
+
+const handleDrop = (event: DragEvent) => {
+  if (props.file.type !== 'dir') {
+    return
+  }
+  event.preventDefault()
+  event.stopPropagation()
+  emit('dropToFolder', event, props.file, props.idx)
+}
 
 // 处理文件点击事件
 const handleFileClick = (event: MouseEvent) => {
@@ -151,7 +171,8 @@ const handleAudioClick = () => {
     clickable: file.type === 'dir',
     selected
   }" :data-idx="idx" :key="file.name" draggable="true" @dragstart="emit('dragstart', $event, idx)"
-      @dragend="emit('dragend', $event, idx)" @click.capture="handleFileClick($event)">
+      @dragend="emit('dragend', $event, idx)" @dragover="handleDragOver" @drop="handleDrop"
+      @click.capture="handleFileClick($event)">
 
       <div>
         <div class="close-icon" v-if="enableCloseIcon" @click="emit('close-icon-click')">

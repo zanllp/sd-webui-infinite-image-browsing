@@ -75,7 +75,7 @@ const {
   cellWidth,
   dirCoverCache
 } = useFilesDisplay()
-const { onDrop, onFileDragStart, onFileDragEnd } = useFileTransfer()
+const { onDrop, onFileDragStart, onFileDragEnd, onFileDropToFolder } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions({ openNext })
 const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview, scrollToFileId } = usePreview()
 const tiktokStore = useTiktokStore()
@@ -89,6 +89,13 @@ const onFileListDblClick = (e: MouseEvent) => {
     return
   }
   backToLastUseTo()
+}
+
+const onDropToFolder = async (e: DragEvent, file: any) => {
+  const handled = await onFileDropToFolder(e, file)
+  if (!handled) {
+    await onDrop(e)
+  }
 }
 
 // TikTok View 按钮点击处理
@@ -262,6 +269,7 @@ watch(
               v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :cell-width="cellWidth"
               @file-item-click="onFileItemClick" @dragstart="onFileDragStart" @dragend="onFileDragEnd"
               @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick"
+              @drop-to-folder="onDropToFolder"
               @tiktok-view="(_file, idx) => openTiktokViewWithFiles(sortedFiles, idx)"
               :is-selected-mutil-files="multiSelectedIdxs.length > 1"
               :enable-change-indicator="changeIndchecked"
