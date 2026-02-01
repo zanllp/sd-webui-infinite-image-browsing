@@ -75,13 +75,28 @@ const {
   cellWidth,
   dirCoverCache
 } = useFilesDisplay()
-const { onDrop, onFileDragStart, onFileDragEnd } = useFileTransfer()
+const { onDrop, onFileDragStart, onFileDragEnd, onFileDropToFolder } = useFileTransfer()
 const { onFileItemClick, onContextMenuClick, showGenInfo, imageGenInfo, q } = useFileItemActions({ openNext })
 const { previewIdx, onPreviewVisibleChange, previewing, previewImgMove, canPreview, scrollToFileId } = usePreview()
 const tiktokStore = useTiktokStore()
 const { showMenuIdx } = useMobileOptimization()
 const { onClearAllSelected, onReverseSelect, onSelectAll } = useKeepMultiSelect()
 const { getGenDiff, changeIndchecked, seedChangeChecked, getRawGenParams, getGenDiffWatchDep } = useGenInfoDiff()
+
+const onFileListDblClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement | null
+  if (target?.closest?.('.file-item-trigger')) {
+    return
+  }
+  backToLastUseTo()
+}
+
+const onDropToFolder = async (e: DragEvent, file: any) => {
+  const handled = await onFileDropToFolder(e, file)
+  if (!handled) {
+    await onDrop(e)
+  }
+}
 
 // TikTok View 按钮点击处理
 const onTiktokViewClick = () => {
@@ -162,7 +177,6 @@ watch(
         </div>
         <div class="actions">
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
-          <a class="opt" @click.prevent="onPollRefreshClick"> {{ polling ? $t('stopPollRefresh') : $t('pollRefresh')  }} </a>
           <a class="opt" @click.prevent="onTiktokViewClick">{{ $t('TikTok View') }}</a>
           <a-dropdown>
             <a class="opt" @click.prevent>
@@ -182,7 +196,6 @@ watch(
           </a-dropdown>
           <a class="opt" @click.prevent="onWalkBtnClick" v-if="showWalkButton"> Walk </a>
           <a class="opt" @click.prevent.stop="selectAll"> {{ $t('selectAll') }} </a>
-          <a class="opt" @click.prevent="share" v-if="!isTauri"> {{ $t('share') }} </a>
           <a-dropdown>
             <a class="opt" @click.prevent>
               {{ $t('quickMove') }}
@@ -235,6 +248,12 @@ watch(
                     <a @click.prevent="openFolder(currLocation + '/')">{{ $t('openWithLocalFileBrowser') }}</a>
                   </div>
                   <div style="padding: 4px;">
+                    <a @click.prevent="onPollRefreshClick">{{ polling ? $t('stopPollRefresh') : $t('pollRefresh') }}</a>
+                  </div>
+                  <div style="padding: 4px;" v-if="!isTauri">
+                    <a @click.prevent="share">{{ $t('share') }}</a>
+                  </div>
+                  <div style="padding: 4px;">
                     <a @click.prevent="onCreateFloderBtnClick">{{ $t('createFolder') }}</a>
                   </div>
                 </a-form>
@@ -243,7 +262,7 @@ watch(
           </a-dropdown>
         </div>
       </div>
-      <div v-if="currPage" class="view">
+      <div v-if="currPage" class="view" @dblclick="onFileListDblClick">
         <RecycleScroller class="file-list" :items="sortedFiles" ref="scroller" @scroll="onScroll"
           :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second"
           :gridItems="gridItems">
@@ -254,6 +273,7 @@ watch(
               v-model:show-menu-idx="showMenuIdx" :selected="multiSelectedIdxs.includes(idx)" :cell-width="cellWidth"
               @file-item-click="onFileItemClick" @dragstart="onFileDragStart" @dragend="onFileDragEnd"
               @preview-visible-change="onPreviewVisibleChange" @context-menu-click="onContextMenuClick"
+              @drop-to-folder="onDropToFolder"
               @tiktok-view="(_file, idx) => openTiktokViewWithFiles(sortedFiles, idx)"
               :is-selected-mutil-files="multiSelectedIdxs.length > 1"
               :enable-change-indicator="changeIndchecked"

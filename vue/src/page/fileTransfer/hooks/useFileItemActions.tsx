@@ -37,6 +37,7 @@ export function useFileItemActions (
     currLocation,
     spinning,
     previewing,
+    scroller,
     stackViewEl,
     eventEmitter,
     props,
@@ -285,12 +286,16 @@ export function useFileItemActions (
           tab = { panes: [], key: '', id: uniqueId() }
           global.tabList[props.value.tabIdx + 1] = tab
         }
+        const targetPath = file.type === 'dir'
+          ? file.fullpath
+          : Path.getParentDirectory(file.fullpath)
         const pane: FileTransferTabPane = {
           type: 'local',
           key: uniqueId(),
-          path: file.fullpath,
+          path: targetPath,
           name: t('local'),
-          stackKey: path
+          stackKey: path,
+          mode: props.value.mode ?? 'scanned'
         }
         tab.panes.push(pane)
         tab.key = pane.key
@@ -365,6 +370,14 @@ export function useFileItemActions (
   const { isOutside } = useMouseInElement(stackViewEl)
 
   useWatchDocument('keydown', (e) => {
+    const isEditableTarget = (target: EventTarget | null) => {
+      const el = target as HTMLElement | null
+      if (!el) {
+        return false
+      }
+      const tagName = el.tagName?.toLowerCase()
+      return tagName === 'input' || tagName === 'textarea' || el.isContentEditable
+    }
     const keysStr = getShortcutStrFromEvent(e)
     if (previewing.value) {
       if (keysStr === 'Esc') {
@@ -403,10 +416,55 @@ export function useFileItemActions (
           }
         }
       }
-    } else if (!isOutside.value && ['Ctrl + KeyA', 'Cmd + KeyA'].includes(keysStr)) {
-      e.preventDefault()
-      e.stopPropagation()
-      eventEmitter.value.emit('selectAll')
+    } else if (!isOutside.value && !isEditableTarget(e.target)) {
+      if (!e.altKey && !e.ctrlKey && !e.metaKey) {
+        const s = scroller.value
+        const total = sortedFiles.value.length
+        const maxIdx = Math.max(total - 1, 0)
+        const scrollToIndex = (idx: number) => {
+          if (!s || total === 0) {
+            return
+          }
+          const target = Math.min(Math.max(idx, 0), maxIdx)
+          s.scrollToItem(target)
+        }
+        switch (e.key) {
+          case 'PageUp': {
+            e.preventDefault()
+            e.stopPropagation()
+            const step = s ? Math.max(s.$_endIndex - s.$_startIndex, 1) : 1
+            const curr = s?.$_startIndex ?? 0
+            return scrollToIndex(curr - step)
+          }
+          case 'PageDown': {
+            e.preventDefault()
+            e.stopPropagation()
+            const step = s ? Math.max(s.$_endIndex - s.$_startIndex, 1) : 1
+            const curr = s?.$_startIndex ?? 0
+            return scrollToIndex(curr + step)
+          }
+          case 'Home': {
+            e.preventDefault()
+            e.stopPropagation()
+            return scrollToIndex(0)
+          }
+          case 'End': {
+            e.preventDefault()
+            e.stopPropagation()
+            return scrollToIndex(maxIdx)
+          }
+          case 'Backspace': {
+            e.preventDefault()
+            e.stopPropagation()
+            return eventEmitter.value.emit('navigateUp')
+          }
+        }
+      }
+      if (['Ctrl + KeyA', 'Cmd + KeyA'].includes(keysStr)) {
+        e.preventDefault()
+        e.stopPropagation()
+        eventEmitter.value.emit('selectAll')
+      }
     }
   })
 
