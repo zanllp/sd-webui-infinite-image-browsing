@@ -497,6 +497,7 @@ Please return only tag names, do not include any other content.`
                 <a-menu-item key="deleteFiles">
                   {{ $t('deleteSelected') }}
                 </a-menu-item>
+                <a-menu-item key="openWithDefaultApp">{{ $t('openWithDefaultApp') }}</a-menu-item>
                 <a-menu-item key="previewInNewWindow">{{ $t('previewInNewWindow') }}</a-menu-item>
                 <a-menu-item key="copyPreviewUrl">{{ $t('copySourceFilePreviewLink') }}</a-menu-item>
                 <a-menu-item key="copyFilePath">{{ $t('copyFilePath') }}</a-menu-item>

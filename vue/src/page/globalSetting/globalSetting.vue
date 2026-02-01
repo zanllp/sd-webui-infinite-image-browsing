@@ -233,12 +233,7 @@ const presetShortcutGroups = computed(() => ([
       </a-form-item>
 
       
-      <div class="shortcut-title-row">
-        <h2>{{ t('shortcutKey') }}</h2>
-        <a-button size="small" @click="showPresetShortcutModal = true">
-          {{ t('shortcutPresetButton') }}
-        </a-button>
-      </div>
+
       <a-modal v-model:visible="showPresetShortcutModal" :title="t('shortcutPresetTitle')" width="800px" :footer="null">
         <div class="shortcut-preset-desc">{{ t('shortcutPresetDesc') }}</div>
         <div class="shortcut-preset-section" v-for="group in presetShortcutGroups" :key="group.title">
@@ -254,7 +249,13 @@ const presetShortcutGroups = computed(() => ([
             <div>{{ item.action }}</div>
           </div>
         </div>
-      </a-modal>
+      </a-modal>      
+      <div class="shortcut-title-row">
+        <h2>{{ t('shortcutKey') }}</h2>
+      </div>
+        <a-button type="link" @click="showPresetShortcutModal = true">
+          {{ t('shortcutPresetButton') }}
+        </a-button>
       <a-form-item :label="item.label" v-for="item in shortcutsList" :key="item.key">
         <div class="col" :class="{ conflict: isShortcutConflict(globalStore.shortcut[item.key] + '') }"
 

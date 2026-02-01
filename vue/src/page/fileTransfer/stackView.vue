@@ -177,7 +177,6 @@ watch(
         </div>
         <div class="actions">
           <a class="opt" @click.prevent="refresh"> {{ $t('refresh') }} </a>
-          <a class="opt" @click.prevent="onPollRefreshClick"> {{ polling ? $t('stopPollRefresh') : $t('pollRefresh')  }} </a>
           <a class="opt" @click.prevent="onTiktokViewClick">{{ $t('TikTok View') }}</a>
           <a-dropdown>
             <a class="opt" @click.prevent>
@@ -197,7 +196,6 @@ watch(
           </a-dropdown>
           <a class="opt" @click.prevent="onWalkBtnClick" v-if="showWalkButton"> Walk </a>
           <a class="opt" @click.prevent.stop="selectAll"> {{ $t('selectAll') }} </a>
-          <a class="opt" @click.prevent="share" v-if="!isTauri"> {{ $t('share') }} </a>
           <a-dropdown>
             <a class="opt" @click.prevent>
               {{ $t('quickMove') }}
@@ -248,6 +246,12 @@ watch(
                   </div>
                   <div style="padding: 4px;">
                     <a @click.prevent="openFolder(currLocation + '/')">{{ $t('openWithLocalFileBrowser') }}</a>
+                  </div>
+                  <div style="padding: 4px;">
+                    <a @click.prevent="onPollRefreshClick">{{ polling ? $t('stopPollRefresh') : $t('pollRefresh') }}</a>
+                  </div>
+                  <div style="padding: 4px;" v-if="!isTauri">
+                    <a @click.prevent="share">{{ $t('share') }}</a>
                   </div>
                   <div style="padding: 4px;">
                     <a @click.prevent="onCreateFloderBtnClick">{{ $t('createFolder') }}</a>

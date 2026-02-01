@@ -165,6 +165,7 @@ export const zhHans = {
   sortByNameDescending: '名称降序',
   sortBySizeAscending: '大小升序',
   sortBySizeDescending: '大小降序',
+  sortByShuffle: '随机排序',
   inputAddressAndPressEnter: '输入地址回车',
   go: '前往',
   unknownError: '未知错误',

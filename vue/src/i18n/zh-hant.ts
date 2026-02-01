@@ -171,6 +171,7 @@ export const zhHant: Partial<IIBI18nMap> = {
   sortByNameDescending: '名稱降序',
   sortBySizeAscending: '大小昇序',
   sortBySizeDescending: '大小降序',
+  sortByShuffle: '隨機排序',
   inputAddressAndPressEnter: '輸入地址回車',
   go: '前往',
   unknownError: '未知錯誤',

@@ -1,5 +1,6 @@
 import type { FileNodeInfo } from '@/api/files'
 import { t } from '@/i18n'
+import { shuffle } from 'lodash-es'
 import { SearchSelectConv } from 'vue3-ts-util'
 
 export const sortMethodMap = (): Record<SortMethod, string> => ({
@@ -10,7 +11,8 @@ export const sortMethodMap = (): Record<SortMethod, string> => ({
   'size-asc': t('sortBySizeAscending'),
   'size-desc': t('sortBySizeDescending'),
   'created-time-asc': t('sortByCreatedDateAscending'),
-  'created-time-desc': t('sortByCreatedDateDescending')
+  'created-time-desc': t('sortByCreatedDateDescending'),
+  shuffle: t('sortByShuffle')
 })
 export enum SortMethod {
   DATE_ASC = 'date-asc',
@@ -20,7 +22,8 @@ export enum SortMethod {
   SIZE_ASC = 'size-asc',
   SIZE_DESC = 'size-desc',
   CREATED_TIME_ASC = 'created-time-asc',
-  CREATED_TIME_DESC = 'created-time-desc'
+  CREATED_TIME_DESC = 'created-time-desc',
+  SHUFFLE = 'shuffle'
 }
 
 export const sortMethods = Object.values(SortMethod) as SortMethod[]
@@ -79,9 +82,16 @@ export const sortFiles = (files: FileList, method: SortMethod) => {
         return compareBySize(a, b)
       case SortMethod.SIZE_DESC:
         return compareBySize(b, a)
+      case SortMethod.SHUFFLE:
+        return 0
       default:
         throw new Error(`Invalid sort method: ${method}`)
     }
+  }
+  if (method === SortMethod.SHUFFLE) {
+    const dirs = shuffle(files.filter(v => v.type === 'dir'))
+    const items = shuffle(files.filter(v => v.type !== 'dir'))
+    return dirs.concat(items)
   }
   return files.slice().sort((a, b) => compareByType(a, b) || compare(a, b))
 }

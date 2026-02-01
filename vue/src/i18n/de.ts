@@ -139,6 +139,7 @@ export const de: Partial<IIBI18nMap> = {
   sortByNameDescending: 'Name absteigend',
   sortBySizeAscending: 'Grösse aufsteigend',
   sortBySizeDescending: 'Grösse absteigend',
+  sortByShuffle: 'Zufällig',
   inputAddressAndPressEnter: 'Geben Sie die Adresse ein und drücken Sie Enter',
   go: 'Los',
   unknownError: 'Unbekannter Fehler aufgetreten',

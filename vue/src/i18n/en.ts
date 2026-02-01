@@ -347,6 +347,7 @@ You can specify which snapshot to restore to when starting IIB in the global set
   sortByNameDescending: 'Name descending',
   sortBySizeAscending: 'Size ascending',
   sortBySizeDescending: 'Size descending',
+  sortByShuffle: 'Shuffle',
   inputAddressAndPressEnter: 'Input address and press Enter',
   go: 'Go',
   unknownError: 'Unknown error',
