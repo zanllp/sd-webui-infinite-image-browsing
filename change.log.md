@@ -1,6 +1,78 @@
 [跳到中文](#中文)
 # English 
 
+## 2026-02-01
+### Drag-and-drop into folders and safer move/copy
+- Support drag-and-drop into folders with right-panel open fixes and UI adjustments.
+- Add "continue on error" option for move/copy and a preset shortcut guide.
+
+## 2026-01-30
+### Added log file output
+App now writes logs to `log.log` for easier diagnostics; UI styling refinements.
+
+## 2026-01-29
+### Added EXIF metadata browser
+Browse EXIF/metadata with nested JSON navigation and syntax highlighting.
+
+## 2026-01-26
+### Sync delete events in TikTok viewer
+Deleting items now stays in sync in TikTok-style view.
+
+## 2026-01-25
+### Refined TikTok info panel
+Backdrop/preview return behavior adjusted; panel layout polished.
+
+## 2026-01-24
+### Fixed video stream Range handling
+Improved large-file streaming throughput.
+
+## 2026-01-22
+### Tag validation, cleanup, and performance
+Validate tag names, optimize tag queries, and add null-safety for tag creation.
+
+## 2026-01-18
+### ComfyUI prompt extraction and tag relation graph improvements
+Add option to extract all ComfyUI prompts; improve tag relation graph filtering, fullscreen, and i18n.
+
+## 2026-01-10
+### Added tag relationship graph visualization
+Topic cluster graph now visualized with ECharts.
+
+## 2026-01-06
+### Optional dependency handling
+Support `IIB_SKIP_OPTIONAL_DEPS` and better optional package errors.
+
+## 2026-01-05
+### Install script refactor
+Simplified package install flow and improved error handling.
+
+## 2026-01-04
+### Downloads and dependency versioning fixes
+Fix multi-downloads, remove hardcoded test path, and lock major versions for key deps with runtime version info.
+
+## 2026-01-03
+### Topic search and clustering improvements
+Show cached topics by default, improve clustering defaults, and make LLM title generation more robust.
+
+## 2026-01-01
+### Auth modal fixes
+Avoid duplicate prompts and use proper password input.
+
+## 2025-12-31
+### Faster topic clustering
+Accelerate clustering with ANN (hnswlib).
+
+## 2025-12-29
+### Async clustering and cached results
+Run clustering jobs asynchronously with progress UI, cache embedding failures, and persist cluster results.
+
+## 2025-12-28
+### Non-blocking embeddings for topics
+Make topic embedding non-blocking and cap input length.
+
+## 2025-12-18
+### Fixed video cover generation failures
+
 ## 2025-12-15
 ### Added audio file playback support and improved TikTok view
 Now you can play audio files directly in IIB, with playback controls integrated into the TikTok-style viewer.
@@ -581,6 +653,78 @@ Triggered under the same circumstances as above, there will be a button to updat
 
 
 # 中文
+
+## 2026-02-01
+### 支持拖拽到文件夹与更安全的移动/复制
+- 支持拖拽文件到文件夹，并修复右侧打开文件夹与界面细节。
+- 新增移动/复制“出错继续”选项与预设快捷键指引。
+
+## 2026-01-30
+### 新增日志文件输出
+程序会写入 `log.log` 便于排查问题，同时优化了部分 UI 样式。
+
+## 2026-01-29
+### 新增 EXIF 元数据浏览器
+支持 EXIF/元数据分层浏览与高亮显示。
+
+## 2026-01-26
+### TikTok 视图删除同步
+删除操作在 TikTok 风格视图中保持同步。
+
+## 2026-01-25
+### TikTok 信息面板优化
+调整背景遮罩与预览返回逻辑，优化面板布局。
+
+## 2026-01-24
+### 修复视频流 Range 解析
+提升大文件视频流吞吐。
+
+## 2026-01-22
+### 标签校验、清理与性能优化
+新增标签名校验与清理，优化标签查询，并补充空值安全处理。
+
+## 2026-01-18
+### ComfyUI 提示词导出与标签关系图优化
+新增一次性提取全部 ComfyUI 提示词；改进标签关系图筛选、全屏与多语言。
+
+## 2026-01-10
+### 新增标签关系图可视化
+为 Topic 聚类提供关系图可视化（ECharts）。
+
+## 2026-01-06
+### 可选依赖处理优化
+支持 `IIB_SKIP_OPTIONAL_DEPS`，并改进可选依赖报错信息。
+
+## 2026-01-05
+### 安装脚本重构
+简化依赖安装流程并增强错误处理。
+
+## 2026-01-04
+### 下载与依赖版本修复
+修复多文件下载、移除硬编码测试路径，并锁定关键依赖主版本与运行时版本信息。
+
+## 2026-01-03
+### Topic 搜索与聚类改进
+默认展示缓存主题、优化聚类默认参数，并增强 LLM 标题生成稳定性。
+
+## 2026-01-01
+### 认证弹窗修复
+避免重复提示并使用密码输入框。
+
+## 2025-12-31
+### Topic 聚类加速
+使用 ANN（hnswlib）提升聚类性能。
+
+## 2025-12-29
+### 异步聚类与结果缓存
+聚类任务异步执行并展示进度，缓存 embedding 失败，并持久化聚类结果。
+
+## 2025-12-28
+### Topic embedding 非阻塞
+Topic embedding 改为非阻塞并限制输入长度。
+
+## 2025-12-18
+### 修复视频封面生成失败
 
 ## 2025-12-15
 ### 新增音频文件播放支持，改进TikTok视图

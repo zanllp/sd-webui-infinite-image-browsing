@@ -24,7 +24,6 @@
 If you would like to support more software, please refer to: [parsers](https://github.com/zanllp/sd-webui-infinite-image-browsing/tree/main/scripts/iib/parsers) or [pixiv_iib_plugin](https://github.com/zanllp/pixiv_iib_plugin)
 
 ## Key Features
-
 ### 🔥 Excellent Performance
 - Once caching is generated, images can be displayed in just a few milliseconds.
 - Images are displayed with thumbnails by default, with a default size of 512 pixels. You can adjust the thumbnail resolution on the global settings page.
@@ -39,13 +38,18 @@ If you would like to support more software, please refer to: [parsers](https://g
 - Support for advanced search similar to Google
 - Also supports fuzzy search, you can search by a part of the filename or generated information.
 - Support adding custom search paths for easy management of folders created by the user.
+- Media type filtering, video tag search, and random sort.
+- Auto-tagging with custom rules.
 
 ### 🖼️ View Images/Videos & `Send To`
 - Supports viewing image generation information. Also supported in full-screen preview mode.
+- EXIF/metadata is integrated in full-screen preview with nested JSON navigation and highlighting.
 - Supports sending images to other tabs and third-party extensions such as ControlNet , openOutpaint.
 - Support full-screen preview and enable custom shortcut key operations while in full-screen preview mode.
 - Support navigating to the previous or next image in full-screen preview mode by pressing arrow keys or clicking buttons.
 - Support playing video files from a remote server.
+- Support WebM videos and audio playback.
+- Improved video streaming Range handling for large files.
 
 ### 💻 Multiple Usage Methods
 - You can install it as an extension on SD-webui. 
@@ -53,6 +57,11 @@ If you would like to support more software, please refer to: [parsers](https://g
 - The desktop app version is also available.
 - Supports multiple popular AI software.
 
+
+### 🎵 TikTok-Style View
+- TikTok-style vertical browsing for images and videos.
+- Polished info panel with backdrop/preview return improvements.
+- Delete events stay in sync across the TikTok view.
 
 ### 🚶‍♀️ Walk Mode
 - Automatically load the next folder `(similar to os.walk)`, allowing you to browse all images without paging.
@@ -66,10 +75,14 @@ If you would like to support more software, please refer to: [parsers](https://g
 - Hold down the Ctrl, Shift, or Cmd key to select multiple items.
   - Supported multi-select operations include: delete, move, copy, pack download, add tags, remove tags, move to another folder, copy to another folder, drag and drop.
   - You can keep the multi-select state by clicking the "Keep Multi-Select" button in the lower right corner, allowing you to perform multiple operations on the selected file collection conveniently.
+- Drag-and-drop into folders and safer move/copy (continue on error).
 
 ### 🆚 image comparison (similar to Imgsli)
 - Provides a side-by-side comparison of two images.
 - Provides a comparison of image generation information at the same time.
+
+### 🧠 Topic/Tag Analysis
+- Tag relationship graph visualization for topic clusters.
 
 ### 🌐 Multilingual Support
 - Currently supports Simplified Chinese/Traditional Chinese/English/German.
