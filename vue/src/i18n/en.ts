@@ -356,6 +356,8 @@ You can specify which snapshot to restore to when starting IIB in the global set
   detailList: 'Detail list',
   previewGrid: 'Preview grid',
   moveSelectedFilesTo: 'Move / Copy selected files to',
+  continueOnError: 'Continue on single-file failure',
+  continueOnErrorDesc: 'Continue with remaining files; failed ones are skipped and recorded on server.',
   confirm: 'Confirm',
   download: 'Download',
   local: 'Local',

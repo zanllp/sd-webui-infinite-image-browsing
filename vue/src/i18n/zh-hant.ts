@@ -180,6 +180,8 @@ export const zhHant: Partial<IIBI18nMap> = {
   detailList: '詳情列表',
   previewGrid: '預覽網格',
   moveSelectedFilesTo: '下列文件 移動 / 複製 至',
+  continueOnError: '單個檔案失敗時繼續',
+  continueOnErrorDesc: '繼續處理剩餘檔案，失敗的會被跳過並在伺服器記錄。',
   confirm: '確定',
   download: '下載',
   local: '本地',

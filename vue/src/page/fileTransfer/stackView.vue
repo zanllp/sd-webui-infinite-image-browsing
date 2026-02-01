@@ -83,13 +83,7 @@ const { showMenuIdx } = useMobileOptimization()
 const { onClearAllSelected, onReverseSelect, onSelectAll } = useKeepMultiSelect()
 const { getGenDiff, changeIndchecked, seedChangeChecked, getRawGenParams, getGenDiffWatchDep } = useGenInfoDiff()
 
-const onFileListDblClick = (e: MouseEvent) => {
-  const target = e.target as HTMLElement | null
-  if (target?.closest?.('.file-item-trigger')) {
-    return
-  }
-  backToLastUseTo()
-}
+// 双击空白处返回容易误触，暂时禁用
 
 const onDropToFolder = async (e: DragEvent, file: any) => {
   const handled = await onFileDropToFolder(e, file)
@@ -262,7 +256,7 @@ watch(
           </a-dropdown>
         </div>
       </div>
-      <div v-if="currPage" class="view" @dblclick="onFileListDblClick">
+      <div v-if="currPage" class="view">
         <RecycleScroller class="file-list" :items="sortedFiles" ref="scroller" @scroll="onScroll"
           :item-size="itemSize.first" key-field="fullpath" :item-secondary-size="itemSize.second"
           :gridItems="gridItems">

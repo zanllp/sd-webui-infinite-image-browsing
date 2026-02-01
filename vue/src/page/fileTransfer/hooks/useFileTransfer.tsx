@@ -1,4 +1,4 @@
-import { watch } from 'vue'
+import { watch, ref } from 'vue'
 import {
   useWatchDocument
 } from 'vue3-ts-util'
@@ -9,7 +9,7 @@ import { copyFiles, moveFiles } from '@/api/files'
 import { MultiSelectTips } from '@/components/functionalCallableComp'
 import { t } from '@/i18n'
 import { createReactiveQueue } from '@/util'
-import { Modal, Button } from 'ant-design-vue'
+import { Modal, Button, Checkbox } from 'ant-design-vue'
 import * as Path from '@/util/path'
 
 import { cloneDeep, uniqBy } from 'lodash-es'
@@ -99,14 +99,15 @@ export function useFileTransfer () {
 
   const openMoveOrCopyConfirm = (data: FileTransferData, toPath: string) => {
     const q = createReactiveQueue()
+    const continueOnError = ref(false)
     const onCopyBtnClick = async () => q.pushAction(async () => {
-      await copyFiles(data.path, toPath)
+      await copyFiles(data.path, toPath, false, continueOnError.value)
       eventEmitter.value.emit('refresh')
       Modal.destroyAll()
     })
 
     const onMoveBtnClick = () => q.pushAction(async () => {
-      await moveFiles(data.path, toPath)
+      await moveFiles(data.path, toPath, false, continueOnError.value)
       events.emit('removeFiles', { paths: data.path, loc: data.loc })
       eventEmitter.value.emit('refresh')
       Modal.destroyAll()
@@ -122,6 +123,10 @@ export function useFileTransfer () {
           </ol>
         </div>
         <MultiSelectTips />
+        <div style={{ marginTop: '8px' }}>
+          <Checkbox v-model:checked={continueOnError.value}>{t('continueOnError')}</Checkbox>
+          <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>{t('continueOnErrorDesc')}</div>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }} class="actions">
           <Button onClick={Modal.destroyAll}>{t('cancel')}</Button>
           <Button type="primary" loading={!q.isIdle} onClick={onCopyBtnClick}>{t('copy')}</Button>
