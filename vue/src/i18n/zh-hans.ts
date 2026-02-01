@@ -174,6 +174,8 @@ export const zhHans = {
   detailList: '详情列表',
   previewGrid: '预览网格',
   moveSelectedFilesTo: '下列文件 移动 / 复制 至',
+  continueOnError: '单个文件失败时继续',
+  continueOnErrorDesc: '继续执行剩余文件，失败的会被跳过并在服务端记录。',
   confirm: '确定',
   download: '下载',
   local: '本地',

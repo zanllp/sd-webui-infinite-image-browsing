@@ -454,15 +454,17 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
         file_paths: List[str]
         dest: str
         create_dest_folder: Optional[bool] = False
+        continue_on_error: Optional[bool] = False
 
     @app.post(
         api_base + "/copy_files",
         dependencies=[Depends(verify_secret), Depends(write_permission_required)],
     )
     async def copy_files(req: MoveFilesReq):
+        errors = []
         for path in req.file_paths:
-            check_path_trust(path)
             try:
+                check_path_trust(path)
                 shutil.copy(path, req.dest)
                 txt_path = get_img_geninfo_txt_path(path)
                 if txt_path:
@@ -473,7 +475,11 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     if locale == "en"
                     else f"复制文件 {path} 到 {req.dest} 时出错：{e}"
                 )
+                if req.continue_on_error:
+                    errors.append(error_msg)
+                    continue
                 raise HTTPException(400, detail=error_msg)
+        return {"errors": errors}
 
     @app.post(
         api_base + "/move_files",
@@ -491,6 +497,7 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
             raise HTTPException(400, detail=error_msg)
 
         conn = DataBase.get_conn()        
+        errors = []
 
         def move_file_with_geninfo(path: str, dest: str):
             path = os.path.normpath(path)
@@ -504,10 +511,10 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                 img.update_path(conn, new_path, force=True)
 
         for path in req.file_paths:
-            check_path_trust(path)
-            path = os.path.normpath(path)
-            base_dir = os.path.dirname(path)
             try:
+                check_path_trust(path)
+                path = os.path.normpath(path)
+                base_dir = os.path.dirname(path)
                 files = list(os.walk(path))
                 is_dir = os.path.isdir(path)
                 shutil.move(path, req.dest)
@@ -531,7 +538,11 @@ def infinite_image_browsing_api(app: FastAPI, **kwargs):
                     if locale == "en"
                     else f"移动文件 {path} 到 {req.dest} 时出错：{e}"
                 )
+                if req.continue_on_error:
+                    errors.append(error_msg)
+                    continue
                 raise HTTPException(400, detail=error_msg)
+        return {"errors": errors}
 
     @app.get(api_base + "/files", dependencies=[Depends(verify_secret)])
     async def get_target_folder_files(folder_path: str):
