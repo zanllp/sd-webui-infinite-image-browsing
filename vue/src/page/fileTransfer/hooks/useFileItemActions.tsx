@@ -286,12 +286,16 @@ export function useFileItemActions (
           tab = { panes: [], key: '', id: uniqueId() }
           global.tabList[props.value.tabIdx + 1] = tab
         }
+        const targetPath = file.type === 'dir'
+          ? file.fullpath
+          : Path.getParentDirectory(file.fullpath)
         const pane: FileTransferTabPane = {
           type: 'local',
           key: uniqueId(),
-          path: file.fullpath,
+          path: targetPath,
           name: t('local'),
-          stackKey: path
+          stackKey: path,
+          mode: props.value.mode ?? 'scanned'
         }
         tab.panes.push(pane)
         tab.key = pane.key
