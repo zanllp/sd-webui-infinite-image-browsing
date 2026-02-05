@@ -9,7 +9,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest,ubuntu-22.04]
+        os: [windows-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -32,9 +32,12 @@ jobs:
           cache-dependency-path: |
             **/requirements*.txt
 
+      - name: Install FFmpeg
+        run: choco install ffmpeg -y
+
       - name: Install Dependencies
         run: |
-          
+          pip install --only-binary :all: av==14.0.1
           pip install -r requirements.txt
 
       - name: Build Executable
@@ -136,8 +139,12 @@ jobs:
           cache-dependency-path: |
             **/requirements*.txt
 
+      - name: Install FFmpeg
+        run: choco install ffmpeg -y
+
       - name: Install Dependencies
         run: |
+          pip install --only-binary :all: av==14.0.1
           pip install -r requirements.txt
 
       - uses: sayyid5416/pyinstaller@v1
@@ -215,17 +222,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: bundle-${{ env.VERSION }}-Linux
-          path: artifacts
-      
-      - uses: actions/download-artifact@v4
-        with:
           name: iib_app_cli_Windows
-          path: artifacts
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: iib_app_cli_Linux
           path: artifacts
 
       - name: Release
