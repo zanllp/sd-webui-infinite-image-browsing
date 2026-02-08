@@ -19,7 +19,9 @@ import HistoryRecord from '@/components/HistoryRecord.vue'
 import { fuzzySearchHistory, FuzzySearchHistoryRecord } from '@/store/searchHistory'
 import { openTiktokViewWithFiles } from '@/util/tiktokHelper'
 import { useTagStore } from '@/store/useTagStore'
+import { useLocalStorage } from '@vueuse/core'
 const tagStore = useTagStore()
+const showAutoUpdateFeatureTip = useLocalStorage('iib_auto_update_feature_tip_shown', false)
 const props = defineProps<{ tabIdx: number; paneIdx: number, searchScope?: string }>()
 const isRegex = ref(false)
 const substr = ref('')
@@ -77,7 +79,9 @@ const info = ref<DataBaseBasicInfo>()
 onMounted(async () => {
   info.value = await getDbBasicInfo()
   if (info.value.img_count && info.value.expired) {
-    await onUpdateBtnClick()
+    if (g.autoUpdateIndex) {
+      await onUpdateBtnClick()
+    }
   }
   if (props.searchScope) {
     await query()
@@ -178,6 +182,29 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
     </HistoryRecord>
   </a-modal>
   <div class="container" ref="stackViewEl">
+    <a-alert
+      v-if="!showAutoUpdateFeatureTip"
+      type="info"
+      show-icon
+      :message="$t('autoUpdateFeatureTip')"
+      style="margin: 8px;"
+      closable
+      @close="showAutoUpdateFeatureTip = true"
+    >
+      <template #action>
+        <a-button size="small" type="link" @click="showAutoUpdateFeatureTip = true">
+          {{ $t('gotIt') }}
+        </a-button>
+      </template>
+    </a-alert>
+    <a-alert
+      v-if="info && info.expired && !g.autoUpdateIndex"
+      type="warning"
+      show-icon
+      :message="$t('indexExpiredManualUpdate')"
+      style="margin: 8px;"
+      closable
+    />
     <MultiSelectKeep :show="!!multiSelectedIdxs.length || g.keepMultiSelect" @clear-all-selected="onClearAllSelected"
       @select-all="onSelectAll" @reverse-select="onReverseSelect" />
     <div class="search-bar"  @keydown.stop>
@@ -192,11 +219,18 @@ const { onClearAllSelected, onSelectAll, onReverseSelect } = useKeepMultiSelect(
         :title="$t('pathOnly')"><AimOutlined /></div>
       <div class="regex-icon" :class="{ selected: isRegex }" @keydown.stop @click="onRegexpClick"
         title="Use Regular Expression"> <img :src="regex"></div>
-      <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info && (info.expired || !info.img_count)">
-        {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
-      <AButton v-else type="primary" @click="query" :loading="!queue.isIdle || iter.loading"
-         >{{ $t('search') }}
-      </AButton>
+      <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary" v-if="info && !info.img_count">
+        {{ $t('generateIndexHint') }}</AButton>
+      <template v-else>
+        <AButton type="primary" @click="query" :loading="!queue.isIdle || iter.loading"
+           >{{ $t('search') }}
+        </AButton>
+        <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle"
+          v-if="info && info.expired && !g.autoUpdateIndex"
+          style="margin-left: 8px;">
+          {{ $t('UpdateIndex') }}
+        </AButton>
+      </template>
     </div>
     <div class="search-bar">
       <div class="form-name">{{ $t('searchScope') }}</div>

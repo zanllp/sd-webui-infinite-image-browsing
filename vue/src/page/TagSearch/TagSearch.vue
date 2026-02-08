@@ -25,9 +25,11 @@ import { reactive, nextTick } from 'vue'
 import { watch } from 'vue'
 import { tagSearchHistory } from '@/store/searchHistory'
 import { useTagStore } from '@/store/useTagStore'
+import { useLocalStorage } from '@vueuse/core'
 
 const props = defineProps<{ tabIdx: number; paneIdx: number, searchScope?: string }>()
 const global = useGlobalStore()
+const showAutoUpdateFeatureTip = useLocalStorage('iib_auto_update_feature_tip_shown', false)
 const tagStore = useTagStore()
 const queue = createReactiveQueue()
 const loading = computed(() => !queue.isIdle)
@@ -87,7 +89,9 @@ onMounted(async () => {
     console.log(new Date().toLocaleString())
   })
   if (info.value.img_count && info.value.expired) {
-    await onUpdateBtnClick()
+    if (global.autoUpdateIndex) {
+      await onUpdateBtnClick()
+    }
   }
   if (props.searchScope) {
     query()
@@ -245,17 +249,47 @@ const tagIdsToString = (tagIds: TagId[]) => {
   </a-modal>
     <ASelect v-if="false" />
     <template v-if="info">
+      <a-alert
+        v-if="!showAutoUpdateFeatureTip"
+        type="info"
+        show-icon
+        :message="$t('autoUpdateFeatureTip')"
+        style="margin-bottom: 8px;"
+        closable
+        @close="showAutoUpdateFeatureTip = true"
+      >
+        <template #action>
+          <a-button size="small" type="link" @click="showAutoUpdateFeatureTip = true">
+            {{ $t('gotIt') }}
+          </a-button>
+        </template>
+      </a-alert>
+      <a-alert
+        v-if="info.expired && !global.autoUpdateIndex"
+        type="warning"
+        show-icon
+        :message="$t('indexExpiredManualUpdate')"
+        style="margin-bottom: 8px;"
+        closable
+      />
       <div>
         <div class="search-bar">
           <div class="form-name">{{ $t('exactMatch') }}</div>
           <SearchSelect :conv="conv" mode="multiple" style="width: 100%" :options="tags"
             v-model:value="matchIds.and_tags" :disabled="!tags.length" :placeholder="$t('selectExactMatchTag')" />
           <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle" type="primary"
-            v-if="info.expired || !info.img_count">
-            {{ info.img_count === 0 ? $t('generateIndexHint') : $t('UpdateIndex') }}</AButton>
-          <AButton v-else type="primary" @click="query" :loading="!queue.isIdle">{{
-      $t('search') }}
-          </AButton>
+            v-if="!info.img_count">
+            {{ $t('generateIndexHint') }}</AButton>
+          <template v-else>
+            <AButton type="primary" @click="query" :loading="!queue.isIdle">{{
+        $t('search') }}
+            </AButton>
+            <AButton @click="onUpdateBtnClick" :loading="!queue.isIdle"
+              v-if="info.expired && !global.autoUpdateIndex"
+              style="margin-left: 8px;">
+              {{ $t('UpdateIndex') }}
+            </AButton>
+          </template>
         </div>
         <div class="search-bar">
           <div class="form-name">{{ $t('anyMatch') }}</div>
