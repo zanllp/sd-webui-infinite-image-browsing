@@ -186,6 +186,10 @@ const presetShortcutGroups = computed(() => ([
       <a-form-item :label="$t('rebuildImageIndex')">
         <AButton @click="openRebuildImageIndexModal">{{ $t('start') }}</AButton>
       </a-form-item>
+      <a-form-item :label="$t('autoUpdateIndex')">
+        <a-switch v-model:checked="globalStore.autoUpdateIndex" />
+        <span style="margin-left: 8px;color: #666;">{{ t('autoUpdateIndexDesc') }}</span>
+      </a-form-item>
 
       <h2>{{ t('autoRefresh') }}</h2>
       <a-form-item :label="$t('autoRefreshWalkMode')">
